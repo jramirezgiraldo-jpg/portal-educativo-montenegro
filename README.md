@@ -124,6 +124,8 @@ El proyecto incluye el archivo `render.yaml` preconfigurado para despliegue auto
 
 ---
 
-## 📄 Licencia y Reconocimientos
+## 📄 Autoría, Licencia y Reconocimientos
 
-Recurso educativo abierto desarrollado para el **Instituto Montenegro**. Se autoriza su uso, adaptación y distribución con fines pedagógicos y no comerciales.
+* **Docente y Desarrollador Pedagógico:** Juan Felipe Ramírez Giraldo
+* **Institución:** Instituto Montenegro
+* **Licencia:** Recurso educativo abierto de libre acceso, desarrollado con fines pedagógicos y no comerciales.
