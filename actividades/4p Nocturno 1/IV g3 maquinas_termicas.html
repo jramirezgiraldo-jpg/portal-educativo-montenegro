@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Máquinas Térmicas - Sopa de Letras</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --primary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --highlight-color: rgba(52, 152, 219, 0.4);
+            --found-color: rgba(46, 204, 113, 0.7);
+            --text-main: #333;
+            --grid-bg: #fff;
+            --cell-border: #ddd;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* Contenedores Principales */
+        main {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        #zona-juego {
+            background: #fff;
+            padding: clamp(10px, 3vw, 25px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: clamp(20px, 5vw, 32px);
+            margin-bottom: 5px;
+        }
+
+        .instruccion {
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: var(--primary-color);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 18px);
+        }
+
+        /* Contenedor de la Sopa de Letras */
+        .grid-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            width: 100%;
+            max-width: 600px; /* Tamaño máximo en PC */
+            background-color: var(--cell-border);
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            /* CRÍTICO: Previene el scroll al arrastrar en móviles */
+            touch-action: none;
+            user-select: none;
+        }
+
+        .cell {
+            background-color: var(--grid-bg);
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(12px, 3.5vw, 22px);
+            font-weight: bold;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        .cell.highlight { background-color: var(--highlight-color); }
+        .cell.found { background-color: var(--found-color); color: white; }
+
+        /* Lista de palabras */
+        .word-list-container {
+            margin-top: 20px;
+        }
+        .word-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            list-style: none;
+        }
+        .word-list li {
+            background: #eee;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: clamp(12px, 3vw, 16px);
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .word-list li.found-word {
+            text-decoration: line-through;
+            background: var(--found-color);
+            color: white;
+        }
+
+        /* Sistema de Calificación */
+        #rating-overlay {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            margin-top: 15px;
+            border: 2px solid var(--accent-color);
+        }
+        .stars { font-size: clamp(30px, 8vw, 40px); color: #f1c40f; margin: 10px 0;}
+
+        #zona-lectura {
+            background: #fff;
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        article h2 {
+            color: var(--primary-color);
+            font-size: clamp(22px, 5vw, 28px);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        article h2:first-child { margin-top: 0; }
+
+        article h3 {
+            color: var(--accent-color);
+            font-size: clamp(18px, 4vw, 22px);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        article p {
+            margin-bottom: 15px;
+            font-size: clamp(15px, 3.5vw, 17px);
+            text-align: justify;
+        }
+
+        article ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+            font-size: clamp(15px, 3.5vw, 17px);
+        }
+
+        article li { margin-bottom: 8px; }
+
+        .taller-caja {
+            background-color: #fcf8e3;
+            border-left: 5px solid #f1c40f;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .taller-caja h2 { border-bottom-color: #f1c40f; margin-top: 0;}
+        
+        .instruccion-taller {
+            font-weight: bold;
+            color: var(--accent-color);
+            font-size: clamp(16px, 4vw, 18px);
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px dashed var(--accent-color);
+            border-radius: 8px;
+        }
+
+        .actividad-lista {
+            list-style: none;
+            counter-reset: act-counter;
+        }
+
+        .actividad-lista li {
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+            font-size: clamp(15px, 3.5vw, 17px);
+        }
+
+        .actividad-lista li::before {
+            counter-increment: act-counter;
+            content: counter(act-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: var(--primary-color);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .badge-tipo {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: #ddd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        .badge-analisis { background: #d9edf7; color: #31708f; }
+        .badge-dibujo { background: #dff0d8; color: #3c763d; }
+        .badge-mapa { background: #f2dede; color: #a94442; }
+        .badge-directa { background: #e8d0f3; color: #6a1b9a; }
+
+    </style>
+</head>
+<body>
+
+<main>
+    <section id="zona-juego">
+        <header>
+            <h1>Máquinas Térmicas</h1>
+            <p class="instruccion">Encuentra las 10 palabras sobre el tema</p>
+            <div class="stats">
+                <div>⏱️ Tiempo: <span id="timer">00:00</span></div>
+                <div>🔍 Encontradas: <span id="counter">0</span>/10</div>
+            </div>
+        </header>
+
+        <div class="grid-wrapper">
+            <!-- La cuadrícula táctil -->
+            <div id="grid-container"></div>
+        </div>
+
+        <div class="word-list-container">
+            <ul class="word-list" id="word-list-ui">
+                <!-- Se llenará dinámicamente -->
+            </ul>
+        </div>
+
+        <div id="rating-overlay">
+            <h2 id="rating-title">¡Misión Cumplida!</h2>
+            <div class="stars" id="rating-stars"></div>
+            <p id="rating-msg"></p>
+        </div>
+    </section>
+
+    <section id="zona-lectura">
+        <article>
+            <h2>La Física del Movimiento y el Frío: Máquinas Térmicas</h2>
+            
+            <p>Desde el potente motor que permite a un Jeep escalar montañas empinadas en el Eje Cafetero, hasta la nevera que conserva frescos nuestros alimentos en casa; nuestra civilización moderna depende absolutamente de un área fascinante de la física: la <strong>Termodinámica</strong> y sus maravillosas invenciones, las <strong>máquinas térmicas</strong>.</p>
+            
+            <h3>1. ¿Qué es la Termodinámica?</h3>
+            <p>La termodinámica es la rama de la física que estudia el <strong>calor</strong>, la <strong>temperatura</strong> y cómo estos se transforman en <strong>energía</strong> y <strong>trabajo</strong>. El universo sigue reglas estrictas conocidas como las Leyes de la Termodinámica. Una de las más importantes dicta que la energía no se crea ni se destruye, solo se transforma. Otra ley fundamental (la Segunda Ley) nos advierte que el calor siempre fluye naturalmente de un objeto más caliente a uno más frío, y que ninguna máquina puede ser 100% eficiente; siempre habrá una pérdida de energía útil.</p>
+
+            <h3>2. La Máquina Térmica: De Calor a Movimiento</h3>
+            <p>En física, una <strong>máquina térmica</strong> es cualquier dispositivo que realiza trabajo (movimiento) operando entre dos temperaturas diferentes (una fuente caliente y un sumidero frío). Su principio básico es absorber calor, usar una parte de ese calor para generar un trabajo mecánico útil, y expulsar el resto del calor "sobrante" hacia un lugar más frío.</p>
+
+            <h3>3. El Motor de Combustión Interna (El corazón de un Jeep)</h3>
+            <p>Un Jeep tradicional es un ejemplo clásico del poder de las máquinas térmicas. Utiliza un <strong>motor</strong> de <strong>combustión</strong> interna. ¿Cómo funciona?</p>
+            <ul>
+                <li><strong>Admisión y Compresión:</strong> El motor mezcla aire con combustible (gasolina) dentro de un cilindro y lo comprime enormemente usando un pistón.</li>
+                <li><strong>Combustión y Trabajo:</strong> Una chispa (de la bujía) enciende la mezcla. Ocurre una explosión controlada. Esta explosión genera gases extremadamente calientes que se expanden violentamente, empujando el pistón hacia abajo. ¡Este empuje es el <strong>trabajo</strong> mecánico!</li>
+                <li><strong>Escape:</strong> Los gases calientes sobrantes son expulsados por el tubo de escape hacia el ambiente (sumidero frío).</li>
+            </ul>
+            <p>Esta transformación rápida y constante de energía química a calor, y luego a trabajo mecánico, es lo que permite que las ruedas giren y el vehículo transporte pesadas cargas.</p>
+
+            <h3>4. La Refrigeración: Trabajando "al revés"</h3>
+            <p>Si el calor fluye de lo caliente a lo frío, ¿cómo es posible que el interior de tu nevera esté frío mientras la cocina está caliente? Aquí entran las máquinas de <strong>refrigeración</strong>. Una nevera es esencialmente una máquina térmica funcionando a la inversa.</p>
+            <p>Para lograr que el calor vaya de un lugar frío (adentro de la nevera) a uno más caliente (la cocina), se necesita inyectar energía (electricidad). El sistema utiliza un <strong>compresor</strong> y un fluido refrigerante:</p>
+            <ul>
+                <li>El fluido entra al interior de la nevera como un líquido muy frío. Al pasar por unos tubos (evaporador), absorbe el calor de los alimentos y se convierte en gas.</li>
+                <li>El <strong>compresor</strong> (el motor que suena detrás de la nevera) toma este gas y lo comprime, elevando muchísimo su temperatura.</li>
+                <li>Este gas súper caliente pasa por las rejillas traseras de la nevera (condensador), liberando su calor hacia la cocina, volviendo a ser líquido para reiniciar el ciclo.</li>
+            </ul>
+
+            <h3>5. Eficiencia: El Gran Reto</h3>
+            <p>La <strong>eficiencia</strong> de estas máquinas es una preocupación global. Como hemos visto, ni el Jeep ni la nevera aprovechan toda la energía. Gran parte se disipa al ambiente. En el caso de los motores de combustión, además del calor perdido, se emiten gases de efecto invernadero. Por ello, la ciencia actual busca constantemente mejorar la eficiencia termodinámica de las máquinas o transicionar hacia tecnologías más limpias que reduzcan nuestro impacto ambiental.</p>
+        </article>
+
+        <div class="taller-caja">
+            <h2>Taller de Repaso: Máquinas Térmicas</h2>
+            <div class="instruccion-taller">
+                ⚠️ INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno de Física.
+            </div>
+            
+            <ul class="actividad-lista">
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Define con tus propias palabras qué estudia la "Termodinámica" y qué es una "Máquina Térmica".
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Según la Segunda Ley de la Termodinámica mencionada en la lectura, ¿por qué es imposible crear un motor para un Jeep que aproveche el 100% de la gasolina solo para moverse? ¿A dónde va la energía restante?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja el cilindro de un motor de combustión interna justo en el momento de la explosión. Señala con flechas hacia dónde se mueve el pistón y usa colores cálidos (rojo/naranja) para representar el calor.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Conceptual</span><br>
+                    Elabora un mapa conceptual que conecte lógicamente los siguientes conceptos: <em>Termodinámica, Máquina Térmica, Calor, Trabajo, Motor, Refrigerador</em>.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    De acuerdo con el texto, ¿cuál es la función específica del "compresor" en el ciclo de funcionamiento de una nevera?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Si dejas la puerta de tu nevera abierta en una habitación completamente cerrada y aislada, ¿se enfriará la habitación? Analiza el ciclo de refrigeración y la energía que usa el compresor para justificar por qué la habitación en realidad se calentará.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Ilustra de forma sencilla el esquema de una nevera (vista de perfil). Usa flechas rojas para indicar hacia dónde sale el calor y flechas azules para indicar dónde se absorbe el calor de los alimentos.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Mental</span><br>
+                    Diseña un mapa mental cuyo tema central sea "Desafíos de las Máquinas Térmicas". Ramifica hacia temas como: Eficiencia, impacto ambiental y pérdida de calor.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Explica cómo se transforma la energía química (combustible) hasta convertirse en trabajo mecánico en el motor de un Jeep.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Reflexiona sobre el último párrafo del artículo: Teniendo en cuenta la contaminación de los motores de combustión, ¿cómo imaginas el transporte pesado de carga (como el que hacen los Jeeps) en el futuro para que sea más amigable con el medio ambiente?
+                </li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<script>
+    // Variables globales
+    const GRID_SIZE = 15;
+    const RAW_WORDS = ["TERMODINAMICA", "CALOR", "TEMPERATURA", "MOTOR", "COMBUSTION", "REFRIGERACION", "ENERGIA", "TRABAJO", "EFICIENCIA", "COMPRESOR"];
+    
+    // Normalizar palabras (mayúsculas, asegurar sin tildes)
+    const WORDS = RAW_WORDS.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    
+    let grid = [];
+    let foundWords = [];
+    let timerInterval;
+    let secondsElapsed = 0;
+    
+    // Variables de interacción
+    let isDragging = false;
+    let startCell = null;
+    let currentPath = [];
+    
+    // Elementos del DOM
+    const gridContainer = document.getElementById('grid-container');
+    const wordListUI = document.getElementById('word-list-ui');
+    const counterUI = document.getElementById('counter');
+    const timerUI = document.getElementById('timer');
+    const ratingOverlay = document.getElementById('rating-overlay');
+    
+    function initializeGame() {
+        let success = false;
+        while (!success) {
+            success = tryGenerateGrid();
+        }
+        fillEmptySpaces();
+        renderGrid();
+        renderWordList();
+        startTimer();
+    }
+
+    function tryGenerateGrid() {
+        // Inicializar matriz vacía
+        grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+        
+        const directions = [
+            [0, 1], [1, 0], [1, 1], [1, -1], // horizontal, vertical, diagonales
+            [0, -1], [-1, 0], [-1, -1], [-1, 1] // inversos
+        ];
+
+        for (let word of WORDS) {
+            let placed = false;
+            let attempts = 0;
+            const MAX_ATTEMPTS = 500; // Evita ciclos infinitos si la cuadrícula está muy llena
+
+            while (!placed && attempts < MAX_ATTEMPTS) {
+                let dir = directions[Math.floor(Math.random() * directions.length)];
+                let row = Math.floor(Math.random() * GRID_SIZE);
+                let col = Math.floor(Math.random() * GRID_SIZE);
+
+                if (canPlaceWord(word, row, col, dir[0], dir[1])) {
+                    placeWord(word, row, col, dir[0], dir[1]);
+                    placed = true;
+                }
+                attempts++;
+            }
+            // Si después de 500 intentos no pudo acomodar UNA palabra, falla toda la generación y repite
+            if (!placed) return false; 
+        }
+        return true;
+    }
+
+    function canPlaceWord(word, row, col, dRow, dCol) {
+        let endRow = row + dRow * (word.length - 1);
+        let endCol = col + dCol * (word.length - 1);
+
+        // Verificar límites
+        if (endRow < 0 || endRow >= GRID_SIZE || endCol < 0 || endCol >= GRID_SIZE) return false;
+
+        // Verificar colisiones
+        for (let i = 0; i < word.length; i++) {
+            let r = row + dRow * i;
+            let c = col + dCol * i;
+            if (grid[r][c] !== '' && grid[r][c] !== word[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function placeWord(word, row, col, dRow, dCol) {
+        for (let i = 0; i < word.length; i++) {
+            grid[row + dRow * i][col + dCol * i] = word[i];
+        }
+    }
+
+    function fillEmptySpaces() {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = letters.charAt(Math.floor(Math.random() * letters.length));
+                }
+            }
+        }
+    }
+
+    function renderGrid() {
+        gridContainer.innerHTML = '';
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                let cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = grid[r][c];
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // Agregar eventos unificados (pointer events) para soportar touch y mouse
+        gridContainer.addEventListener('pointerdown', handlePointerDown);
+        // Bind to document to catch moves outside the exact initial target
+        document.addEventListener('pointermove', handlePointerMove);
+        document.addEventListener('pointerup', handlePointerUp);
+        // Evitar comportamientos por defecto que rompan el drag
+        gridContainer.addEventListener('contextmenu', e => e.preventDefault());
+    }
+
+    function renderWordList() {
+        wordListUI.innerHTML = '';
+        WORDS.forEach(word => {
+            let li = document.createElement('li');
+            li.textContent = word;
+            li.id = `word-${word}`;
+            wordListUI.appendChild(li);
+        });
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            let m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            let s = (secondsElapsed % 60).toString().padStart(2, '0');
+            timerUI.textContent = `${m}:${s}`;
+        }, 1000);
+    }
+
+    function handlePointerDown(e) {
+        if (foundWords.length >= WORDS.length) return; // Juego terminado
+        
+        const cell = getCellFromEvent(e);
+        if (!cell) return;
+        
+        isDragging = true;
+        startCell = {
+            r: parseInt(cell.dataset.row),
+            c: parseInt(cell.dataset.col)
+        };
+        updateHighlight(startCell.r, startCell.c);
+        
+        // Capturar pointer para que no se pierda si sale del grid
+        gridContainer.setPointerCapture(e.pointerId);
+    }
+
+    function handlePointerMove(e) {
+        if (!isDragging) return;
+        e.preventDefault(); // Prevenir scroll en móviles
+        
+        const cell = getCellFromEvent(e);
+        if (!cell) return;
+        
+        let currentR = parseInt(cell.dataset.row);
+        let currentC = parseInt(cell.dataset.col);
+        
+        updateHighlight(currentR, currentC);
+    }
+
+    function handlePointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        checkSelection();
+        clearHighlight();
+        gridContainer.releasePointerCapture(e.pointerId);
+    }
+
+    // Función crucial para identificar sobre qué celda está el dedo/cursor dinámicamente
+    function getCellFromEvent(e) {
+        let target = document.elementFromPoint(e.clientX, e.clientY);
+        if (target && target.classList.contains('cell')) {
+            return target;
+        }
+        return null;
+    }
+
+    function updateHighlight(endR, endC) {
+        clearHighlight();
+        currentPath = [];
+        
+        let r1 = startCell.r;
+        let c1 = startCell.c;
+        let r2 = endR;
+        let c2 = endC;
+        
+        let dr = r2 - r1;
+        let dc = c2 - c1;
+        
+        // Validar si es una línea recta (horizontal, vertical o diagonal 45 grados)
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+            // No es una línea recta válida, solo resaltamos el inicio
+            highlightCell(r1, c1);
+            currentPath.push({r: r1, c: c1});
+            return;
+        }
+        
+        let steps = Math.max(Math.abs(dr), Math.abs(dc));
+        let stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        let stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+        
+        for (let i = 0; i <= steps; i++) {
+            let r = r1 + stepR * i;
+            let c = c1 + stepC * i;
+            highlightCell(r, c);
+            currentPath.push({r, c});
+        }
+    }
+
+    function highlightCell(r, c) {
+        let cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+        if (cell && !cell.classList.contains('found')) {
+            cell.classList.add('highlight');
+        }
+    }
+
+    function clearHighlight() {
+        document.querySelectorAll('.cell.highlight').forEach(cell => {
+            cell.classList.remove('highlight');
+        });
+    }
+
+    function checkSelection() {
+        if (currentPath.length < 2) return;
+        
+        // Construir la palabra formada por la selección
+        let selectedWord = "";
+        currentPath.forEach(pos => {
+            selectedWord += grid[pos.r][pos.c];
+        });
+        
+        let reverseWord = selectedWord.split('').reverse().join('');
+        
+        // Verificar si coincide con alguna palabra de la lista que no haya sido encontrada
+        let found = WORDS.find(w => (w === selectedWord || w === reverseWord) && !foundWords.includes(w));
+        
+        if (found) {
+            markWordAsFound(found, currentPath);
+        }
+    }
+
+    function markWordAsFound(word, path) {
+        foundWords.push(word);
+        
+        // Marcar UI de la cuadricula
+        path.forEach(pos => {
+            let cell = document.querySelector(`.cell[data-row="${pos.r}"][data-col="${pos.c}"]`);
+            if (cell) {
+                cell.classList.remove('highlight');
+                cell.classList.add('found');
+            }
+        });
+        
+        // Tachar palabra en la lista
+        let li = document.getElementById(`word-${word}`);
+        if (li) li.classList.add('found-word');
+        
+        // Actualizar contador
+        counterUI.textContent = foundWords.length;
+        
+        // Verificar victoria
+        if (foundWords.length === WORDS.length) {
+            endGame();
+        }
+    }
+
+    function endGame() {
+        clearInterval(timerInterval);
+        
+        let stars = "";
+        let msg = "";
+        
+        // Sistema de calificación basado en tiempo
+        if (secondsElapsed <= 120) { // Menos de 2 mins
+            stars = "⭐⭐⭐⭐⭐";
+            msg = "¡Excelente! Eres un maestro de la termodinámica.";
+        } else if (secondsElapsed <= 240) { // Menos de 4 mins
+            stars = "⭐⭐⭐⭐";
+            msg = "¡Muy bien! Tienes un motor muy eficiente.";
+        } else if (secondsElapsed <= 420) { // Menos de 7 mins
+            stars = "⭐⭐⭐";
+            msg = "¡Buen trabajo! Has completado el ciclo.";
+        } else {
+            stars = "⭐⭐";
+            msg = "¡Lo lograste! La perseverancia es clave.";
+        }
+        
+        document.getElementById('rating-stars').textContent = stars;
+        document.getElementById('rating-msg').textContent = msg;
+        ratingOverlay.style.display = "block";
+        
+        // Desplazar ligeramente hacia el mensaje
+        ratingOverlay.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    }
+
+    // Iniciar el juego al cargar la página
+    window.onload = function() {
+        initializeGame();
+    };
+
+</script>
+
+</body>
+</html>

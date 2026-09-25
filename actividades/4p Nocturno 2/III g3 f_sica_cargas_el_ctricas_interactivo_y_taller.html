@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Cargas Eléctricas</title>
+    <style>
+        :root {
+            --bg-color: #f0fdf4;
+            --text-main: #1e293b;
+            --text-light: #475569;
+            --primary: #d97706; /* Amber for electricity theme */
+            --primary-hover: #b45309;
+            --success: #10b981;
+            --error: #ef4444;
+            --card-front: #0f172a;
+            --card-back: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .game-header h1 {
+            font-size: clamp(22px, 4vw, 30px);
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .game-header p {
+            font-size: clamp(14px, 3vw, 16px);
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        .stats-board {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-weight: bold;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+
+        .game-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            /* CRÍTICO: Prevención de bugs táctiles solicitada */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .card {
+            perspective: 1000px;
+            aspect-ratio: 3 / 4;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+        }
+
+        .card-front {
+            background-color: var(--card-front);
+            background-image: repeating-linear-gradient(45deg, #1e293b 25%, transparent 25%, transparent 75%, #1e293b 75%, #1e293b), repeating-linear-gradient(45deg, #1e293b 25%, var(--card-front) 25%, var(--card-front) 75%, #1e293b 75%, #1e293b);
+            background-position: 0 0, 10px 10px;
+            background-size: 20px 20px;
+        }
+
+        .card-front svg {
+            width: 50%;
+            height: 50%;
+            fill: #f59e0b;
+        }
+
+        .card-back {
+            background-color: var(--card-back);
+            color: var(--text-main);
+            transform: rotateY(180deg);
+            font-size: clamp(10px, 2.5vw, 13px);
+            font-weight: 600;
+            word-wrap: break-word;
+            border: 2px solid #cbd5e1;
+            padding: 5px;
+        }
+
+        .card.matched .card-back {
+            background-color: #ecfdf5;
+            border-color: var(--success);
+            color: #065f46;
+        }
+
+        .card.incorrect .card-back {
+            background-color: #fef2f2;
+            border-color: var(--error);
+            color: #991b1b;
+        }
+
+        .btn-restart {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            box-shadow: 0 4px 6px rgba(217, 119, 6, 0.3);
+        }
+        
+        .btn-restart:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 40px 20px;
+            border-top: 4px solid #fcd34d;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .article-container h2 {
+            font-size: clamp(24px, 5vw, 32px);
+            color: var(--primary-hover);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        .article-container h3 {
+            font-size: clamp(18px, 4vw, 24px);
+            color: #1e293b;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 3.5vw, 18px);
+            margin-bottom: 16px;
+            line-height: 1.8;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+
+        .article-container li {
+            font-size: clamp(16px, 3.5vw, 18px);
+            margin-bottom: 10px;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .workshop-section {
+            background-color: #f8fafc;
+            border: 2px dashed #94a3b8;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+
+        .workshop-notice {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            padding: 15px;
+            border-left: 5px solid #3b82f6;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: clamp(15px, 3vw, 17px);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: custom-counter;
+        }
+
+        .workshop-list li {
+            position: relative;
+            margin-bottom: 25px;
+            padding-left: 45px;
+            font-size: clamp(15px, 3.5vw, 17px);
+        }
+
+        .workshop-list li::before {
+            counter-increment: custom-counter;
+            content: counter(custom-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: #475569;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .activity-type {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #0f172a;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Física: Cargas Eléctricas</h1>
+                <p>Toca las cartas para voltearlas y encuentra los pares (Concepto - Definición).</p>
+                <div class="stats-board">
+                    <span>Movimientos: <span id="moves-count">0</span></span>
+                    <span>Aciertos: <span id="matches-count">0</span>/10</span>
+                    <span>Calificación: <span id="score-display">--</span></span>
+                </div>
+            </div>
+            
+            <div class="game-grid" id="game-board">
+                <!-- Las cartas se inyectarán aquí vía JS -->
+            </div>
+
+            <button class="btn-restart" onclick="initGame()">Reiniciar Juego</button>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>El Poder Oculto de la Materia: La Fuerza Eléctrica</h2>
+                
+                <p>Desde la antigüedad, la humanidad se ha maravillado con fenómenos que parecían mágicos. Los antiguos griegos notaron que al frotar un trozo de ámbar (una resina fósil) con una piel de animal, el ámbar adquiría la misteriosa capacidad de atraer objetos ligeros como plumas o pequeños pedazos de paja. Lo que observaban sin saberlo era una manifestación fundamental de la naturaleza: la electricidad estática. De hecho, la palabra "electricidad" proviene del vocablo griego <em>elektron</em>, que significa precisamente "ámbar".</p>
+                
+                <h3>El Átomo: La Fuente de la Carga</h3>
+                
+                <p>Para comprender cómo un cuerpo se carga eléctricamente, debemos hacer un viaje al interior de la materia, hasta llegar a su componente básico: <strong>el átomo</strong>. Toda la materia que nos rodea, incluyéndonos a nosotros mismos, está formada por átomos. A su vez, los átomos están compuestos por partículas aún más pequeñas, algunas de las cuales poseen una propiedad fundamental llamada "carga eléctrica".</p>
+                
+                <ul>
+                    <li><strong>Protones:</strong> Se encuentran en el núcleo (el centro) del átomo y poseen una carga eléctrica <strong>positiva (+)</strong>. Son pesados y están fuertemente unidos, por lo que no suelen moverse de un átomo a otro.</li>
+                    <li><strong>Electrones:</strong> Giran alrededor del núcleo en órbitas a grandes velocidades y poseen una carga eléctrica <strong>negativa (-)</strong>. Son mucho más ligeros y, en ciertos materiales, pueden saltar fácilmente de un átomo a otro.</li>
+                    <li><strong>Neutrones:</strong> También están en el núcleo, pero como su nombre indica, son neutros, es decir, <strong>no tienen carga</strong> eléctrica.</li>
+                </ul>
+
+                <p>En su estado normal, un átomo tiene la misma cantidad de protones que de electrones. La carga positiva cancela a la carga negativa, haciendo que el átomo, y por ende el cuerpo material, sea <strong>eléctricamente neutro</strong>. No ejerce fuerzas eléctricas perceptibles sobre su entorno.</p>
+
+                <h3>Cómo se Cargan los Cuerpos</h3>
+                
+                <p>La materia posee una "energía estática oculta". Esta energía se manifiesta cuando alteramos el equilibrio natural entre protones y electrones. El método más común para lograrlo es el <strong>frotamiento o fricción</strong>.</p>
+                
+                <p>Cuando frotas un globo contra tu cabello, no estás creando electricidad de la nada. Lo que ocurre es un robo a nivel microscópico. El material del globo tiene mayor afinidad por los electrones que tu cabello. Por lo tanto, durante la fricción, el globo arranca electrones (cargas negativas) de tu pelo. Como resultado, el globo termina con un exceso de electrones y queda cargado negativamente. Por su parte, tu cabello, al haber perdido electrones, queda con un exceso de protones y se carga positivamente.</p>
+
+                <h3>La Ley Fundamental: Atracción y Repulsión</h3>
+                
+                <p>Una vez que los cuerpos están cargados, interactúan con su entorno de manera muy específica siguiendo una regla de oro en la física, conocida como la Ley de las Cargas Eléctricas:</p>
+                
+                <ul>
+                    <li><strong>Cargas del mismo signo se repelen:</strong> Si acercas dos cuerpos con carga positiva, o dos cuerpos con carga negativa, experimentarán una fuerza que los empuja a separarse.</li>
+                    <li><strong>Cargas de distinto signo se atraen:</strong> Si acercas un cuerpo con carga positiva a uno con carga negativa, experimentarán una fuerza que los tira a juntarse.</li>
+                </ul>
+
+                <p>Esta es la razón por la que, después de frotar el globo en tu cabeza, tus cabellos se levantan intentando alcanzar el globo (cargas opuestas se atraen), pero al mismo tiempo, los cabellos se separan entre sí porque todos quedaron cargados positivamente (cargas iguales se repelen).</p>
+
+                <p>Comprender las cargas eléctricas no solo explica el chisporroteo al quitarnos un suéter de lana en un día seco, sino que es la base para entender cómo funcionan los rayos durante una tormenta, cómo operan nuestros electrodomésticos y cómo las células de nuestro sistema nervioso se comunican mediante pequeños impulsos eléctricos. La electricidad estática es el primer paso para dominar una fuerza que mueve al mundo moderno.</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso y Afianzamiento</h2>
+                    
+                    <div class="workshop-notice">
+                        📝 INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno de Ciencias Naturales / Física.
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Explica, utilizando la etimología mencionada en el texto, de dónde proviene la palabra "electricidad" y qué conexión tiene con un fenómeno observado en la antigüedad.
+                        </li>
+                        <li>
+                            <span class="activity-type">Dibujo / Ilustración</span><br>
+                            Dibuja un modelo simple de un átomo. Señala con diferentes colores el núcleo y las órbitas, y ubica dónde se encuentran los protones, electrones y neutrones. Indica al lado de cada partícula qué tipo de carga tienen (+, - o neutra).
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Si los protones (positivos) y los electrones (negativos) se atraen entre sí según la ley de las cargas, ¿por qué los electrones no caen de inmediato hacia el núcleo y chocan contra los protones? (Piensa en el movimiento descrito en la lectura).
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual sobre la "Carga Eléctrica de la Materia". Debe incluir ramificaciones que expliquen el estado "Neutro", el estado "Cargado Positivamente" y el estado "Cargado Negativamente" basándote en la cantidad de electrones.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Describe paso a paso, a nivel subatómico, qué es lo que realmente sucede cuando frotamos un globo contra el cabello para que ambos queden cargados.
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración y Análisis</span><br>
+                            Dibuja dos situaciones: A) Dos esferas cargadas negativamente una cerca de la otra. B) Una esfera positiva cerca de una esfera negativa. Dibuja flechas grandes indicando la dirección de la fuerza que experimentan en cada situación (¿se acercan o se alejan?).
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Basándote en el texto, explica científicamente por qué después de frotar un peine de plástico en el cabello seco, este es capaz de atraer pedacitos de papel que están en estado neutro.
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Mental</span><br>
+                            Crea un mapa mental con el concepto central "Ley Fundamental de las Cargas". Ramifica en dos grandes brazos ("Atracción" y "Repulsión") e incluye ejemplos de la vida diaria o del texto donde se evidencien.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            ¿Por qué es mucho más común que los cuerpos se carguen eléctricamente por el movimiento de los electrones y no por el movimiento de los protones?
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis y Aplicación</span><br>
+                            Escribe un párrafo de 5 líneas mencionando al menos tres ejemplos de la vida cotidiana o de la naturaleza, mencionados en la lectura final, donde se evidencie la importancia de comprender las cargas eléctricas.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fase 1: 10 conceptos y 10 definiciones cortas sobre Cargas Eléctricas
+        const gameData = [
+            { id: 1, text: "Electricidad Estática", type: "concept", matchId: 1 },
+            { id: 2, text: "Acumulación de cargas en la superficie de un objeto.", type: "def", matchId: 1 },
+            
+            { id: 3, text: "Protón", type: "concept", matchId: 2 },
+            { id: 4, text: "Partícula del núcleo atómico con carga positiva (+).", type: "def", matchId: 2 },
+            
+            { id: 5, text: "Electrón", type: "concept", matchId: 3 },
+            { id: 6, text: "Partícula ligera que orbita el núcleo con carga negativa (-).", type: "def", matchId: 3 },
+            
+            { id: 7, text: "Neutrón", type: "concept", matchId: 4 },
+            { id: 8, text: "Partícula del núcleo que carece de carga eléctrica.", type: "def", matchId: 4 },
+            
+            { id: 9, text: "Cuerpo Neutro", type: "concept", matchId: 5 },
+            { id: 10, text: "Tiene igual cantidad de protones y electrones.", type: "def", matchId: 5 },
+            
+            { id: 11, text: "Carga Positiva", type: "concept", matchId: 6 },
+            { id: 12, text: "Estado de un cuerpo tras perder electrones.", type: "def", matchId: 6 },
+            
+            { id: 13, text: "Carga Negativa", type: "concept", matchId: 7 },
+            { id: 14, text: "Estado de un cuerpo tras ganar electrones extra.", type: "def", matchId: 7 },
+            
+            { id: 15, text: "Atracción", type: "concept", matchId: 8 },
+            { id: 16, text: "Fuerza entre cargas de distinto signo (+ y -).", type: "def", matchId: 8 },
+            
+            { id: 17, text: "Repulsión", type: "concept", matchId: 9 },
+            { id: 18, text: "Fuerza que separa cargas del mismo signo (+ y +).", type: "def", matchId: 9 },
+            
+            { id: 19, text: "Frotamiento", type: "concept", matchId: 10 },
+            { id: 20, text: "Método que transfiere electrones por fricción.", type: "def", matchId: 10 }
+        ];
+
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let isLocked = false;
+
+        const board = document.getElementById('game-board');
+        const movesEl = document.getElementById('moves-count');
+        const matchesEl = document.getElementById('matches-count');
+        const scoreEl = document.getElementById('score-display');
+
+        // Icono SVG de un rayo incrustado
+        const svgIcon = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        </svg>`;
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            board.innerHTML = '';
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            isLocked = false;
+            
+            updateStats();
+            
+            cards = shuffle([...gameData]);
+
+            cards.forEach((data, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.index = index;
+                card.dataset.matchId = data.matchId;
+
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-front">${svgIcon}</div>
+                        <div class="card-face card-back">${data.text}</div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => flipCard(card));
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (isLocked) return;
+            if (card === flippedCards[0]) return;
+            if (card.classList.contains('matched')) return;
+
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            isLocked = true;
+            moves++;
+            updateStats();
+
+            const matchId1 = flippedCards[0].dataset.matchId;
+            const matchId2 = flippedCards[1].dataset.matchId;
+
+            if (matchId1 === matchId2) {
+                // Correcto
+                setTimeout(() => {
+                    flippedCards[0].classList.add('matched');
+                    flippedCards[1].classList.add('matched');
+                    matchedPairs++;
+                    updateStats();
+                    resetBoard();
+                    checkWin();
+                }, 400);
+            } else {
+                // Incorrecto (Validation con color rojo y flip back)
+                setTimeout(() => {
+                    flippedCards[0].classList.add('incorrect');
+                    flippedCards[1].classList.add('incorrect');
+                }, 400);
+
+                setTimeout(() => {
+                    flippedCards[0].classList.remove('flipped', 'incorrect');
+                    flippedCards[1].classList.remove('flipped', 'incorrect');
+                    resetBoard();
+                }, 1500); // 1.5 segudos de pausa
+            }
+        }
+
+        function resetBoard() {
+            flippedCards = [];
+            isLocked = false;
+        }
+
+        function updateStats() {
+            movesEl.textContent = moves;
+            matchesEl.textContent = matchedPairs;
+            
+            // Calculo de calificación (1.0 a 5.0)
+            if (moves === 0) {
+                scoreEl.textContent = "--";
+            } else {
+                // Mínimo de movimientos posibles es 10
+                // Por cada movimiento extra, restamos 0.15 para hacer la curva de calificación.
+                let score = 5.0 - ((moves - 10) * 0.15);
+                score = Math.max(1.0, score); // Nota mínima 1.0
+                score = Math.min(5.0, score); // Nota máxima 5.0
+                
+                scoreEl.textContent = score.toFixed(1);
+            }
+        }
+
+        function checkWin() {
+            if (matchedPairs === 10) {
+                setTimeout(() => {
+                    const finalScore = scoreEl.textContent;
+                    // Mostrar retroalimentación en el tablero
+                    board.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <h2 style="color: var(--success); font-size: 32px; margin-bottom: 10px;">¡Completado!</h2>
+                            <p style="font-size: 18px; margin-bottom: 10px;">Encontraste todos los pares de Cargas Eléctricas.</p>
+                            <p style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">Tu calificación es: ${finalScore} / 5.0</p>
+                            <button class="btn-restart" onclick="initGame()">Jugar de Nuevo</button>
+                            <p style="margin-top: 20px; font-size: 15px; color: #475569; font-weight: bold;">👇 Ahora desliza hacia abajo y lee el artículo para resolver el taller.</p>
+                        </div>
+                    `;
+                }, 500);
+            }
+        }
+
+        // Iniciar el juego cuando carga la página
+        window.onload = initGame;
+    </script>
+</body>
+</html>

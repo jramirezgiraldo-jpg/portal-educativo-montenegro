@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Estación de Aprendizaje: Revolución Industrial</title>
+    <style>
+        :root {
+            --primary: #b45309;
+            --primary-hover: #92400e;
+            --primary-light: rgba(180, 83, 9, 0.1);
+            --bg-main: #fcfaf8;
+            --card-bg: #ffffff;
+            --text-main: #1c1917;
+            --text-muted: #78716c;
+            --border-color: #e7e5e4;
+            --success: #15803d;
+            --error: #b91c1c;
+            --modal-bg: rgba(0, 0, 0, 0.6);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #d97706;
+                --primary-hover: #b45309;
+                --primary-light: rgba(217, 119, 6, 0.15);
+                --bg-main: #1c1917;
+                --card-bg: #292524;
+                --text-main: #f5f5f4;
+                --text-muted: #a8a29e;
+                --border-color: #44403c;
+                --success: #22c55e;
+                --error: #ef4444;
+                --modal-bg: rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: clamp(12px, 3vw, 24px);
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        header {
+            text-align: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: clamp(16px, 4vw, 24px);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: clamp(1.25rem, 3vw, 1.85rem);
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .subtitle {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .instruction-banner {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .game-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: clamp(16px, 4vw, 24px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            user-select: none;
+            touch-action: none;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            font-weight: 600;
+        }
+
+        .stats-badge {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .trivia-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(8px, 2vw, 16px);
+        }
+
+        @media (max-width: 640px) {
+            .trivia-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .category-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .category-title {
+            font-weight: 700;
+            font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+            text-align: center;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 8px;
+            border-radius: 8px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .trivia-card {
+            background: var(--bg-main);
+            border: 2px solid var(--border-color);
+            padding: clamp(12px, 2.5vw, 18px);
+            border-radius: 10px;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            min-height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            touch-action: manipulation;
+        }
+
+        .trivia-card:hover:not(.disabled) {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .trivia-card.disabled {
+            background: var(--border-color);
+            color: var(--text-muted);
+            border-color: var(--border-color);
+            cursor: default;
+            opacity: 0.6;
+        }
+
+        .game-footer {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .btn-reset {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+        }
+
+        .btn-reset:hover {
+            background: var(--primary-hover);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            padding: clamp(20px, 4vw, 32px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .modal-question {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: var(--bg-main);
+            border: 2px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-main);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .option-btn.correct {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: var(--success);
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .option-btn.incorrect {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .modal-feedback {
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-align: center;
+            min-height: 24px;
+        }
+
+        .modal-close-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            align-self: flex-end;
+            display: none;
+        }
+
+        .modal-close-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .reading-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: clamp(20px, 5vw, 36px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .reading-section h2 {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+
+        .reading-section h3 {
+            font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .reading-section p {
+            margin-bottom: 1rem;
+            font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        .reading-section ul {
+            margin-bottom: 1.2rem;
+            padding-left: 1.5rem;
+            font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+        }
+
+        .reading-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .workshop-box {
+            margin-top: 2.5rem;
+            background: var(--primary-light);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: clamp(16px, 4vw, 24px);
+        }
+
+        .workshop-box h3 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        .instruction-notebook {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .instruction-notebook {
+                background: rgba(245, 158, 11, 0.15);
+                border-color: rgba(245, 158, 11, 0.4);
+                color: #fcd34d;
+            }
+        }
+
+        .activity-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: clamp(0.85rem, 2.1vw, 1rem);
+        }
+
+        .activity-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+            }
+            .game-section, header .instruction-banner, .modal-overlay {
+                display: none !important;
+            }
+            .reading-section {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <header>
+            <h1>Revolución Industrial: El Despertar del Mundo Moderno</h1>
+            <p class="subtitle">Estación de Aprendizaje interactiva sobre transformaciones tecnológicas y sociales</p>
+            <div class="instruction-banner">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Toca una casilla, lee la pista y selecciona la respuesta correcta.</span>
+            </div>
+        </header>
+
+        <section id="zona-juego" class="game-section">
+            <div class="game-header">
+                <div class="stats-badge">
+                    <span>⭐ Puntos:</span> <span id="score-display">0</span> / 2400
+                </div>
+                <div class="stats-badge">
+                    <span>🎯 Respondidas:</span> <span id="answered-count">0</span> / 12
+                </div>
+                <div class="stats-badge">
+                    <span>🏆 Calificación:</span> <span id="rating-display">--</span>
+                </div>
+            </div>
+
+            <div class="trivia-grid" id="trivia-board">
+                <!-- Grid columns and tiles will be injected via JavaScript -->
+            </div>
+
+            <div class="game-footer">
+                <span id="game-status" style="font-size: 0.9rem; color: var(--text-muted);">Selecciona una casilla para comenzar el reto.</span>
+                <button class="btn-reset" onclick="resetGame()">Reiniciar Trivia</button>
+            </div>
+        </section>
+
+        <div id="question-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="modal-category-tag">CATEGORÍA</span>
+                    <span id="modal-points-tag">100 PTS</span>
+                </div>
+                <div class="modal-question" id="modal-question-text">
+                    Aquí aparecerá la pregunta del reto...
+                </div>
+                <div class="options-list" id="modal-options-list">
+                    <!-- Options injected dynamically -->
+                </div>
+                <div class="modal-feedback" id="modal-feedback"></div>
+                <button class="modal-close-btn" id="modal-close-btn" onclick="closeModal()">Continuar</button>
+            </div>
+        </div>
+
+        <section id="zona-lectura" class="reading-section">
+            <h2>Marco Teórico: La Revolución Industrial y la Transformación del Trabajo</h2>
+            <p>
+                La Primera Revolución Industrial, iniciada en Gran Bretaña a mediados del siglo XVIII (aproximadamente entre 1760 y 1840), representó un punto de inflexión radical en la historia de la humanidad. Hasta entonces, la economía mundial se basaba fundamentalmente en la agricultura de subsistencia, la ganadería y la producción artesanal realizada en pequeños talleres mediante herramientas manuales. La introducción de la energía mecánica impulsada por el vapor y el uso masivo del carbón transformaron por completo la estructura social, económica y tecnológica de las naciones.
+            </p>
+            <p>
+                Este proceso no consistió meramente en la invención de nuevas máquinas, sino en una reestructuración profunda de la forma en que los seres humanos producen bienes, se relacionan con el medio ambiente y se organizan en sociedad. El taller artesanal dio paso a la gran fábrica, donde la concentración de obreros y maquinaria permitió multiplicar exponencialmente la capacidad de producción en serie.
+            </p>
+
+            <h3>La Era del Carbón, el Hierro y la Máquina de Vapor</h3>
+            <p>
+                El motor indiscutible de esta transformación fue la máquina de vapor, perfeccionada de manera determinante por el ingeniero escocés James Watt en la década de 1770. Al convertir la energía térmica del vapor de agua en energía mecánica, la máquina de vapor liberó a la producción industrial de la dependencia de fuentes naturales limitadas como la fuerza hidráulica de los ríos o el viento.
+            </p>
+            <ul>
+                <li><strong>El Carbón como Combustible:</strong> Las minas de carbón mineral se convirtieron en el corazón energético del nuevo sistema, alimentando tanto las calderas industriales como las fundiciones de hierro.</li>
+                <li><strong>La Siderurgia:</strong> El hierro y posteriormente el acero permitieron construir maquinarias más resistentes, puentes colosales y redes ferroviarias que unieron territorios distantes.</li>
+                <li><strong>El Telar Mecánico y la Industria Textil:</strong> El sector algodonero británico fue pionero en la mecanización, reduciendo drásticamente los tiempos de hilado y tejido, lo que abarató los costos de las telas a escala global.</li>
+            </ul>
+
+            <h3>Transformaciones Sociales: Urbanización y Nuevas Clases</h3>
+            <p>
+                Los cambios tecnológicos vinieron acompañados de profundas alteraciones demográficas y sociales. Millones de campesinos, desplazados por las leyes de cercamiento de tierras y atraídos por la promesa de empleo en las urbes, protagonizaron un éxodo masivo hacia las ciudades industriales. Esto generó un fenómeno sin precedentes de rápida urbanización.
+            </p>
+            <p>
+                En este nuevo escenario surgieron dos clases sociales fundamentales que marcarían el devenir político y económico contemporáneo:
+            </p>
+            <ul>
+                <li><strong>La Burguesía Industrial:</strong> Propietarios de las fábricas, las minas, los medios de producción y el capital financiero, que acumularon un gran poder económico y político.</li>
+                <li><strong>El Proletariado:</strong> Trabajadores urbanos y obreros industriales que, al no poseer medios de producción propios, dependían exclusivamente de la venta de su fuerza de trabajo a cambio de salarios exiguos, enfrentando largas jornadas laborales en condiciones de precariedad e insalubridad.</li>
+            </ul>
+
+            <h3>El Impacto en el Transporte y el Legado Ambiental</h3>
+            <p>
+                El transporte experimentó una revolución paralela gracias al ferrocarril y al barco de vapor. Las distancias terrestres se redujeron drásticamente, facilitando el comercio interior y exterior de mercancías y materias primas. Sin embargo, este progreso tecnológico tuvo un costo ambiental oculto: la quema desmedida de combustibles fósiles inició el proceso de emisiones masivas de gases de efecto invernadero y la contaminación sistemática de los ríos urbanos, legando a las generaciones futuras tanto el dinamismo económico moderno como los retos ecológicos actuales.
+            </p>
+
+            <div class="workshop-box">
+                <div class="instruction-notebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><path d="M6 6h10"></path><path d="M6 10h10"></path></svg>
+                    <span>Escribe y resuelve estas actividades en tu cuaderno.</span>
+                </div>
+
+                <h3>Taller de Repaso y Consolidación</h3>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Respuesta directa</span>
+                    <p><strong>1.</strong> ¿Cuáles fueron los factores geográficos, políticos y económicos que hicieron que Gran Bretaña fuera el epicentro de la Primera Revolución Industrial?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Análisis crítico</span>
+                    <p><strong>2.</strong> Reflexiona sobre las condiciones de trabajo de los obreros (incluyendo niños y mujeres) durante el siglo XIX frente a las leyes de protección laboral actuales.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Dibujo / Ilustración</span>
+                    <p><strong>3.</strong> Realiza un esquema comparativo en tu cuaderno detallando las diferencias estructurales entre un taller artesanal tradicional y una fábrica industrial mecanizada.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Mapa conceptual</span>
+                    <p><strong>4.</strong> Elabora un mapa mental que conecte las fuentes de energía (carbón, vapor) con el desarrollo tecnológico del transporte (ferrocarril y barco de vapor).</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Respuesta directa</span>
+                    <p><strong>5.</strong> Explica con tus propias palabras el impacto técnico y económico de la máquina de vapor perfeccionada por James Watt en la producción mundial.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Análisis crítico</span>
+                    <p><strong>6.</strong> ¿De qué manera la migración masiva del campo a la ciudad (urbanización) transformó la estructura de las familias y la vida cotidiana en el siglo XIX?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Dibujo / Ilustración</span>
+                    <p><strong>7.</strong> Diseña un boceto conceptual de una locomotora a vapor de la época e identifica visualmente sus partes principales (caldera, pistones, chimenea).</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Mapa conceptual</span>
+                    <p><strong>8.</strong> Crea una red conceptual que relacione los siguientes términos: <em>Burguesía industrial</em>, <em>Proletariado</em>, <em>Medios de producción</em> y <em>Salario</em>.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Respuesta directa</span>
+                    <p><strong>9.</strong> ¿Qué papel jugaron la industria textil algodonera y el telar mecánico en el despegue económico e industrial de Gran Bretaña?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Análisis crítico / Síntesis</span>
+                    <p><strong>10.</strong> Escribe una conclusión personal de al menos 5 líneas sobre cómo la Revolución Industrial moldeó el mundo tecnológico y ambiental en el que vivimos hoy.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const triviaData = [
+            {
+                category: "Innovaciones",
+                questions: [
+                    {
+                        points: 100,
+                        question: "¿Qué ingeniero escocés perfeccionó de manera determinante la máquina de vapor en la década de 1770?",
+                        options: ["James Watt", "Thomas Edison", "Nikola Tesla", "Alexander Graham Bell"],
+                        correct: 0,
+                        hint: "Su apellido hoy en día da nombre a la unidad internacional de potencia eléctrica."
+                    },
+                    {
+                        points: 200,
+                        question: "¿Cuál fue el sector industrial pionero en la mecanización masiva en Gran Bretaña?",
+                        options: ["La industria siderúrgica", "La industria textil del algodón", "La industria automotriz", "La industria petroquímica"],
+                        correct: 1,
+                        hint: "Involucraba el hilado y tejido de fibras naturales para producir ropa en serie."
+                    },
+                    {
+                        points: 300,
+                        question: "¿Qué innovación técnica permitió a las fábricas instalarse lejos de los cauces fluviales y ríos rápidos?",
+                        options: ["La rueda hidráulica", "La máquina de vapor", "El panel solar", "La turbina eólica"],
+                        correct: 1,
+                        hint: "Liberó a la producción industrial de la dependencia directa de la fuerza del agua corriente."
+                    }
+                ]
+            },
+            {
+                category: "Sociedad",
+                questions: [
+                    {
+                        points: 100,
+                        question: "¿Cómo se denominó a la nueva clase social formada por los dueños de las fábricas y medios de producción?",
+                        options: ["Proletariado", "Burguesía industrial", "Aristocracia feudal", "Campesinado"],
+                        correct: 1,
+                        hint: "Poseían el capital económico y acumulaban las riquezas generadas por las industrias."
+                    },
+                    {
+                        points: 200,
+                        question: "¿Cuál fue una de las principales consecuencias demográficas del inicio de la industrialización?",
+                        options: ["El éxodo masivo del campo a las ciudades (urbanización)", "La despoblación total de Europa", "El abandono de las actividades mineras", "La ruralización de la sociedad"],
+                        correct: 0,
+                        hint: "Las ciudades crecieron de forma acelerada debido a la búsqueda de empleo obrero."
+                    },
+                    {
+                        points: 300,
+                        question: "¿Qué características definieron inicialmente las condiciones de trabajo del proletariado industrial?",
+                        options: ["Jornadas cortas y altos salarios", "Largas jornadas, precariedad e insalubridad laboral", "Trabajo remoto desde el hogar", "Estrictas leyes de protección infantil"],
+                        correct: 1,
+                        hint: "Incluían turnos de hasta 14 horas diarias en ambientes peligrosos sin seguridad social."
+                    }
+                ]
+            },
+            {
+                category: "Energía y Transporte",
+                questions: [
+                    {
+                        points: 100,
+                        question: "¿Qué mineral fósil se convirtió en el combustible principal para las calderas y la siderurgia?",
+                        options: ["Petróleo crudo", "Carbón mineral", "Gas natural", "Uranio enriquecido"],
+                        correct: 1,
+                        hint: "Abundaba en el subsuelo británico y alimentaba tanto las máquinas como las fundiciones."
+                    },
+                    {
+                        points: 200,
+                        question: "¿Qué medio de transporte terrestre revolucionó el comercio y la conexión territorial en el siglo XIX?",
+                        options: ["El automóvil de combustión", "El ferrocarril a vapor", "El tranvía eléctrico", "La bicicleta de montaña"],
+                        correct: 1,
+                        hint: "Se desplazaba sobre rieles de hierro impulsado por locomotoras pesadas."
+                    },
+                    {
+                        points: 300,
+                        question: "¿Qué metal sustituyó progresivamente al hierro en la construcción de maquinaria pesada y grandes infraestructuras?",
+                        options: ["El aluminio", "El acero", "El bronce", "El oro"],
+                        correct: 1,
+                        hint: "Es una aleación más resistente y flexible obtenida al refinar el arrabio en convertidores."
+                    }
+                ]
+            },
+            {
+                category: "Legado e Impacto",
+                questions: [
+                    {
+                        points: 100,
+                        question: "¿En qué país europeo se originó y despegó la Primera Revolución Industrial a mediados del siglo XVIII?",
+                        options: ["Francia", "Alemania", "Gran Bretaña", "España"],
+                        correct: 2,
+                        hint: "Una isla con abundantes yacimientos de carbón y hierro y un gran imperio comercial."
+                    },
+                    {
+                        points: 200,
+                        question: "¿Qué proceso económico y social impulsó la Revolución Industrial frente al anterior modelo artesanal?",
+                        options: ["La producción en serie a gran escala en fábricas", "La economía de subsistencia agraria", "El trueque tradicional de mercancías", "El aislamiento comercial internacional"],
+                        correct: 0,
+                        hint: "Se fabricaban miles de productos idénticos en menor tiempo gracias a la división del trabajo."
+                    },
+                    {
+                        points: 300,
+                        question: "¿Cuál fue uno de los impactos ecológicos colaterales y de largo plazo iniciados en este periodo?",
+                        options: ["La reforestación masiva de los continentes", "La emisión masiva de gases contaminantes y quema de combustibles fósiles", "La purificación automática de los océanos", "La eliminación de residuos plásticos"],
+                        correct: 1,
+                        hint: "Marcó el inicio geológico de alteraciones climáticas globales asociadas a la contaminación."
+                    }
+                ]
+            }
+        ];
+
+        let totalScore = 0;
+        let answeredCount = 0;
+        const maxScore = 2400; // 4 categories * (100+200+300) = 2400 max
+        const totalQuestions = 12;
+
+        let currentActiveQuestion = null;
+
+        const boardEl = document.getElementById('trivia-board');
+        const scoreDisplayEl = document.getElementById('score-display');
+        const answeredCountEl = document.getElementById('answered-count');
+        const ratingDisplayEl = document.getElementById('rating-display');
+        const gameStatusEl = document.getElementById('game-status');
+
+        const modalEl = document.getElementById('question-modal');
+        const modalCategoryTag = document.getElementById('modal-category-tag');
+        const modalPointsTag = document.getElementById('modal-points-tag');
+        const modalQuestionText = document.getElementById('modal-question-text');
+        const modalOptionsList = document.getElementById('modal-options-list');
+        const modalFeedback = document.getElementById('modal-feedback');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        function initGame() {
+            boardEl.innerHTML = '';
+            totalScore = 0;
+            answeredCount = 0;
+            scoreDisplayEl.textContent = '0';
+            answeredCountEl.textContent = '0';
+            ratingDisplayEl.textContent = '--';
+            gameStatusEl.textContent = 'Selecciona una casilla para comenzar el reto.';
+
+            triviaData.forEach((cat, catIndex) => {
+                const col = document.createElement('div');
+                col.className = 'category-column';
+
+                const title = document.createElement('div');
+                title.className = 'category-title';
+                title.textContent = cat.category;
+                col.appendChild(title);
+
+                cat.questions.forEach((q, qIndex) => {
+                    const card = document.createElement('div');
+                    card.className = 'trivia-card';
+                    card.textContent = `${q.points} PTS`;
+                    card.dataset.cat = catIndex;
+                    card.dataset.q = qIndex;
+                    card.addEventListener('click', () => openQuestionModal(catIndex, qIndex, card));
+                    col.appendChild(card);
+                });
+
+                boardEl.appendChild(col);
+            });
+        }
+
+        function openQuestionModal(catIndex, qIndex, cardElement) {
+            if (cardElement.classList.contains('disabled')) return;
+
+            const qData = triviaData[catIndex].questions[qIndex];
+            currentActiveQuestion = { catIndex, qIndex, cardElement, qData };
+
+            modalCategoryTag.textContent = triviaData[catIndex].category.toUpperCase();
+            modalPointsTag.textContent = `${qData.points} PUNTOS`;
+            modalQuestionText.textContent = qData.question;
+            modalFeedback.textContent = `Pista: ${qData.hint}`;
+            modalFeedback.style.color = 'var(--text-muted)';
+            modalCloseBtn.style.display = 'none';
+
+            modalOptionsList.innerHTML = '';
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.addEventListener('click', () => handleAnswer(idx, btn));
+                modalOptionsList.appendChild(btn);
+            });
+
+            modalEl.classList.add('active');
+        }
+
+        function handleAnswer(selectedIndex, selectedBtn) {
+            const { qData, cardElement } = currentActiveQuestion;
+            const optionButtons = modalOptionsList.querySelectorAll('.option-btn');
+
+            // Disable all option buttons after selection
+            optionButtons.forEach(b => b.disabled = true);
+
+            if (selectedIndex === qData.correct) {
+                selectedBtn.classList.add('correct');
+                modalFeedback.textContent = `¡Correcto! Has ganado ${qData.points} puntos.`;
+                modalFeedback.style.color = 'var(--success)';
+                totalScore += qData.points;
+            } else {
+                selectedBtn.classList.add('incorrect');
+                optionButtons[qData.correct].classList.add('correct');
+                modalFeedback.textContent = `Incorrecto. La respuesta correcta era: ${qData.options[qData.correct]}`;
+                modalFeedback.style.color = 'var(--error)';
+            }
+
+            cardElement.classList.add('disabled');
+            answeredCount++;
+
+            scoreDisplayEl.textContent = totalScore;
+            answeredCountEl.textContent = answeredCount;
+            calculateRating();
+
+            modalCloseBtn.style.display = 'block';
+
+            if (answeredCount === totalQuestions) {
+                gameStatusEl.textContent = '¡Trivia completada! Revisa tu calificación y tu reporte.';
+            }
+        }
+
+        function closeModal() {
+            modalEl.classList.remove('active');
+            currentActiveQuestion = null;
+        }
+
+        function calculateRating() {
+            const percentage = (totalScore / maxScore) * 100;
+            let rating = 1;
+            if (percentage >= 80) rating = 5;
+            else if (percentage >= 65) rating = 4;
+            else if (percentage >= 50) rating = 3;
+            else if (percentage >= 30) rating = 2;
+
+            let stars = '⭐'.repeat(rating);
+            ratingDisplayEl.textContent = `${stars} (${rating}/5)`;
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        // Initialize on load
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>

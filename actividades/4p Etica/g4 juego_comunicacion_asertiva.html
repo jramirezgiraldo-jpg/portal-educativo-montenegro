@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Meta viewport para prevención de zoom y bugs táctiles en móviles -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Comunicación Asertiva: El Malentendido en Chat</title>
+    
+    <style>
+        /* Variables CSS para una paleta de colores moderna y calmante (Comunicación) */
+        :root {
+            --primary: #4F46E5;       /* Azul índigo para temas principales */
+            --primary-dark: #3730A3;
+            --primary-light: #E0E7FF;
+            --secondary: #0D9488;     /* Verde azulado para elementos secundarios */
+            --secondary-light: #CCFBF1;
+            --bg-color: #F8FAFC;      /* Fondo claro casi blanco */
+            --card-bg: #FFFFFF;
+            --text-main: #1E293B;     /* Texto oscuro para alta legibilidad */
+            --text-muted: #64748B;
+            --success: #16A34A;       /* Verde éxito */
+            --danger: #DC2626;        /* Rojo error */
+            --warning: #F59E0B;
+        }
+
+        /* Reset básico y tipografías seguras del sistema (OFFLINE) */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden; /* Previene scroll horizontal accidental */
+        }
+
+        /* ====== FASE 2: ZONA DE JUEGO (JEOPARDY) ====== */
+        #zona-juego {
+            position: relative;
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 1.5rem 1rem 3rem;
+            min-height: 100vh; /* Ocupa al menos la pantalla completa al inicio */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .game-header {
+            text-align: center;
+            color: white;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-header h1 {
+            /* Tipografía elástica */
+            font-size: clamp(22px, 6vw, 36px);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instruction {
+            font-size: clamp(14px, 4vw, 18px);
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: inline-block;
+            backdrop-filter: blur(5px);
+        }
+
+        .scoreboard {
+            background: var(--warning);
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: clamp(16px, 4vw, 20px);
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .jeopardy-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 800px;
+            /* CRÍTICO: Prevención de comportamientos indeseados en táctiles */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .category-header {
+            background-color: var(--card-bg);
+            color: var(--primary-dark);
+            text-align: center;
+            padding: 1rem 0.5rem;
+            border-radius: 8px 8px 0 0;
+            font-weight: 800;
+            font-size: clamp(12px, 3.5vw, 16px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 60px;
+            line-height: 1.2;
+        }
+
+        .jeopardy-cell {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: var(--warning);
+            font-size: clamp(24px, 6vw, 36px);
+            font-weight: 900;
+            padding: 1.5rem 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .jeopardy-cell:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+
+        .jeopardy-cell:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .jeopardy-cell:disabled {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-color: transparent;
+            color: transparent;
+            cursor: default;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .jeopardy-cell:disabled::after {
+            /* Indicador visual de que la casilla ya fue jugada */
+            content: '✓';
+            color: rgba(255,255,255,0.2);
+            font-size: 2rem;
+            position: absolute;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-color);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .question-text {
+            font-size: clamp(18px, 5vw, 24px);
+            color: var(--text-main);
+            margin-bottom: 2rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background-color: var(--bg-color);
+            border: 2px solid var(--primary-light);
+            color: var(--text-main);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-size: clamp(15px, 4vw, 18px);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover {
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .option-btn:active {
+            transform: scale(0.98);
+        }
+
+        .option-btn.correct {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        /* Toast de Justificación */
+        .feedback-toast {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .btn-continue {
+            margin-top: 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            display: none;
+        }
+
+        /* Pantalla final dentro del modal */
+        .grade-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 1.5rem auto;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .scroll-down-hint {
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ====== FASE 3: ZONA DE LECTURA Y TALLER ====== */
+        #zona-lectura {
+            width: 100%;
+            background-color: var(--bg-color);
+            padding: 3rem 1rem 5rem;
+            border-top: 5px solid var(--warning);
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .article-container h2 {
+            color: var(--primary-dark);
+            font-size: clamp(24px, 6vw, 32px);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .article-container h3 {
+            color: var(--secondary);
+            font-size: clamp(20px, 5vw, 24px);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 4.5vw, 18px);
+            line-height: 1.8;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            font-size: clamp(16px, 4.5vw, 18px);
+            line-height: 1.8;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+
+        .article-container li {
+            margin-bottom: 0.8rem;
+        }
+
+        /* Estilos del Taller */
+        .workshop-box {
+            background-color: var(--secondary-light);
+            border: 2px dashed var(--secondary);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 5vw, 2.5rem);
+            margin-top: 4rem;
+        }
+
+        .workshop-box h3 {
+            margin-top: 0;
+            color: var(--secondary);
+            text-align: center;
+            font-size: clamp(22px, 6vw, 28px);
+        }
+
+        .workshop-instruction {
+            background-color: var(--secondary);
+            color: white;
+            text-align: center;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-size: clamp(15px, 4vw, 18px);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .workshop-list li {
+            background: white;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 6px solid var(--secondary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            font-size: clamp(16px, 4.5vw, 18px);
+        }
+
+        .task-type {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+            color: var(--primary);
+            display: inline-block;
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Comunicación Asertiva en Chat</h1>
+                <div class="instruction">
+                    Toca una casilla, lee el caso y elige la opción correcta para ganar puntos.
+                </div>
+            </div>
+
+            <div class="scoreboard" id="score-display">Puntos: 0</div>
+
+            <div class="jeopardy-board" id="board">
+                <!-- Los encabezados de categoría -->
+                <div class="category-header">El Poder del Tono</div>
+                <div class="category-header">Barreras Digitales</div>
+                <div class="category-header">Resolución Pacífica</div>
+
+                <!-- Celdas de 100 Puntos -->
+                <button class="jeopardy-cell" data-cat="0" data-pts="100">100</button>
+                <button class="jeopardy-cell" data-cat="1" data-pts="100">100</button>
+                <button class="jeopardy-cell" data-cat="2" data-pts="100">100</button>
+
+                <!-- Celdas de 200 Puntos -->
+                <button class="jeopardy-cell" data-cat="0" data-pts="200">200</button>
+                <button class="jeopardy-cell" data-cat="1" data-pts="200">200</button>
+                <button class="jeopardy-cell" data-cat="2" data-pts="200">200</button>
+
+                <!-- Celdas de 300 Puntos -->
+                <button class="jeopardy-cell" data-cat="0" data-pts="300">300</button>
+                <button class="jeopardy-cell" data-cat="1" data-pts="300">300</button>
+                <button class="jeopardy-cell" data-cat="2" data-pts="300">300</button>
+            </div>
+        </section>
+
+        <!-- Modal de Pregunta -->
+        <div class="modal-overlay" id="question-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="modal-category">Categoría</span>
+                    <span id="modal-points">0 Pts</span>
+                </div>
+                <div class="question-text" id="modal-question">¿Pregunta de prueba?</div>
+                <div class="options-grid" id="modal-options">
+                    <!-- Los botones de opciones se inyectan aquí con JS -->
+                </div>
+                <div class="feedback-toast" id="modal-feedback"></div>
+                <button class="btn-continue" id="btn-continue">Continuar</button>
+            </div>
+        </div>
+
+        <!-- Modal de Resultado Final -->
+        <div class="modal-overlay" id="result-modal">
+            <div class="modal-content" style="text-align: center;">
+                <h2 style="color: var(--primary-dark); font-size: 28px;">¡Juego Terminado!</h2>
+                <p style="margin-top: 10px; font-size: 18px;">Has analizado todos los casos de comunicación digital.</p>
+                <div class="grade-circle" id="final-grade">5.0</div>
+                <p id="grade-message" style="font-size: 20px; font-weight: bold; margin-bottom: 20px;">¡Excelente trabajo!</p>
+                
+                <div class="scroll-down-hint">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M19 12l-7 7-7-7"/>
+                    </svg>
+                    <p>Desliza hacia abajo para leer el artículo y hacer el taller</p>
+                </div>
+                <button class="btn-continue" style="display: block; margin-top: 20px;" onclick="closeResultModal()">Ver la teoría</button>
+            </div>
+        </div>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Comunicación Asertiva en la Era Digital: Evitando la Guerra en el Chat</h2>
+                
+                <p>En la actualidad, gran parte de nuestra interacción con amigos, familiares y compañeros ocurre a través de pantallas. Aplicaciones como WhatsApp o Instagram nos permiten estar conectados todo el tiempo, pero también han introducido un nuevo desafío en nuestras vidas: <strong>el malentendido digital.</strong> ¿Alguna vez un mensaje de texto te ha arruinado el día, iniciado una pelea o terminado una amistad? Para entender por qué ocurre esto y cómo evitarlo, debemos explorar las barreras de la comunicación escrita y el poder de la asertividad.</p>
+
+                <h3>1. El abismo entre lo que se escribe y lo que se lee</h3>
+                <p>Cuando hablamos cara a cara, las palabras que usamos representan solo una pequeña fracción del mensaje. El cerebro humano se apoya fuertemente en el <strong>lenguaje corporal</strong> (gestos, postura) y el <strong>tono de voz</strong> (volumen, pausas, sarcasmo) para interpretar la intención real detrás de una frase. En un mensaje de texto básico, el 90% de esa información emocional desaparece por completo.</p>
+                <p>Por ejemplo, si alguien escribe "Está bien.", dependiendo de quién lo lea y su estado de ánimo en ese momento, puede interpretarse como una aceptación tranquila, o como un acto de rabia pasivo-agresiva. Esta carencia de contexto emocional convierte a los chats en un terreno fértil para la confusión y las ofensas accidentales.</p>
+
+                <h3>2. Barreras comunes en la comunicación digital</h3>
+                <p>Además de la falta de tono y lenguaje corporal, existen otras barreras que dificultan entendernos por chat:</p>
+                <ul>
+                    <li><strong>La velocidad y la falta de atención:</strong> Muchas veces leemos mensajes de prisa mientras caminamos, escuchamos música o hacemos tareas. Esto genera un "ruido de atención" donde omitimos palabras o no captamos el sentido completo de la idea.</li>
+                    <li><strong>El "Dejado en visto":</strong> La ansiedad de la respuesta inmediata nos hace crear historias falsas en nuestra cabeza. Asumimos que si alguien leyó el mensaje y no respondió en un minuto, significa desinterés o enojo, ignorando por completo que esa persona puede estar ocupada, manejando o sin batería.</li>
+                    <li><strong>El uso erróneo de las mayúsculas:</strong> En el lenguaje de internet, escribir TODO EN MAYÚSCULAS equivale visualmente a estar gritando. Usarlas para un mensaje común puede generar defensividad inmediata en el receptor.</li>
+                </ul>
+
+                <h3>3. El peligro de asumir intenciones</h3>
+                <p>El mayor detonante de conflictos en los chats es nuestra tendencia a <em>asumir</em> en lugar de <em>preguntar</em>. Cuando recibimos un mensaje ambiguo o cortante, nuestra mente suele inclinarse hacia la peor interpretación posible (sesgo de negatividad). En lugar de pensar "quizás está ocupado", pensamos "está enojado conmigo y me quiere ignorar". Reaccionar impulsivamente a estas suposiciones con otro mensaje agresivo inicia un efecto dominó que escala rápidamente a una pelea real.</p>
+
+                <h3>4. Estrategias para una comunicación asertiva y pacífica</h3>
+                <p>La <strong>comunicación asertiva</strong> es la habilidad de expresar tus pensamientos, sentimientos y necesidades de forma clara, directa y respetuosa, sin agredir a los demás y sin someterte pasivamente. Para aplicarla en entornos digitales, puedes seguir estas estrategias:</p>
+                <ul>
+                    <li><strong>La regla de la pausa:</strong> Si un mensaje te altera o te enoja, nunca respondas inmediatamente. Deja el celular a un lado por 10 minutos. Una mente calmada previene respuestas de las que te puedas arrepentir.</li>
+                    <li><strong>Preguntar para aclarar:</strong> Si un mensaje suena raro, agresivo o muy cortante, usa frases asertivas antes de atacar. Por ejemplo: <em>"Me sentí confundido cuando leí tu último mensaje, ¿me puedes explicar a qué te refieres?"</em></li>
+                    <li><strong>Usa "Mensajes Yo":</strong> En lugar de acusar diciendo "Tú siempre me ignoras", expresa cómo te afecta la situación: <em>"Yo me siento ignorado cuando veo que lees los mensajes y no me respondes; me gustaría saber si todo está bien"</em>.</li>
+                    <li><strong>El poder del contexto:</strong> Usa emojis cuidadosamente para devolverle la emoción a las palabras. Un simple "No puedo ir 😊" se percibe mucho más amable que un frío "No puedo ir". Si el tema es muy complejo o emocional, la mejor estrategia es siempre <strong>hacer una llamada o enviar un audio</strong>; la voz humana sigue siendo la mejor herramienta para evitar conflictos.</li>
+                </ul>
+                <p><strong>Conclusión:</strong> La claridad y el respeto son escudos contra el conflicto. Comprender que detrás de cada pantalla hay un ser humano con sus propios problemas y rutinas nos ayuda a ser más empáticos y a comunicarnos de forma constructiva.</p>
+
+                <div class="workshop-box">
+                    <h3>Taller de Repaso y Aplicación</h3>
+                    <div class="workshop-instruction">
+                        ¡ATENCIÓN! Escribe el título "Taller: Comunicación Asertiva" en tu cuaderno y resuelve allí cada una de las siguientes actividades basándote en la lectura.
+                    </div>
+                    
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="task-type">✏️ Responde Directamente</span>
+                            <strong>1.</strong> Según el texto, ¿por qué los mensajes de texto son un terreno tan fácil para crear malentendidos comparados con hablar cara a cara? Menciona los dos elementos que se pierden.
+                        </li>
+                        <li>
+                            <span class="task-type">🎨 Ilustra y Ejemplifica</span>
+                            <strong>2.</strong> Dibuja un cómic corto (2 viñetas) que muestre un malentendido digital. En la viñeta 1, una persona envía un mensaje con buena intención. En la viñeta 2, la otra persona lo recibe y lo interpreta de la peor manera posible. Escribe los mensajes en globos de texto.
+                        </li>
+                        <li>
+                            <span class="task-type">🔍 Analiza</span>
+                            <strong>3.</strong> Explica con tus palabras qué es el "ruido de atención" en la comunicación digital y da un ejemplo personal de cuándo te ha ocurrido.
+                        </li>
+                        <li>
+                            <span class="task-type">🧠 Mapa Conceptual</span>
+                            <strong>4.</strong> Elabora un esquema o mapa conceptual que explique las 3 "Barreras comunes en la comunicación digital" mencionadas en el texto.
+                        </li>
+                        <li>
+                            <span class="task-type">✏️ Responde Directamente</span>
+                            <strong>5.</strong> ¿Qué significa usar "Mensajes Yo" en lugar de acusar al otro? Escribe la diferencia basándote en la lectura.
+                        </li>
+                        <li>
+                            <span class="task-type">🔍 Analiza y Reescribe</span>
+                            <strong>6.</strong> Lee el siguiente mensaje agresivo: <em>"¡ERES EL PEOR COMPAÑERO, NUNCA HACES TU PARTE DEL TRABAJO, HAZLO YA!"</em>. Reescribe este mensaje aplicando las técnicas de comunicación asertiva del texto para pedir lo mismo pero con respeto.
+                        </li>
+                        <li>
+                            <span class="task-type">🎨 Ilustra</span>
+                            <strong>7.</strong> Dibuja un celular en tu cuaderno y dentro de la pantalla escribe un consejo útil que le darías a un amigo que se acaba de enojar por algo que leyó en un grupo de WhatsApp. Basa tu consejo en "La regla de la pausa".
+                        </li>
+                        <li>
+                            <span class="task-type">🧠 Mapa Mental</span>
+                            <strong>8.</strong> Crea un mapa mental sobre "Estrategias para una comunicación pacífica". El centro debe ser el teléfono, y las ramas deben incluir la pausa, preguntar, el uso de emojis y cuándo es mejor hacer una llamada.
+                        </li>
+                        <li>
+                            <span class="task-type">✏️ Responde Directamente</span>
+                            <strong>9.</strong> Si recibes el mensaje "Está bien." y sientes que la persona está enojada contigo, ¿cuál es el paso más inteligente que debes dar en lugar de asumir lo peor y atacarlo?
+                        </li>
+                        <li>
+                            <span class="task-type">🔍 Analiza y Reflexiona</span>
+                            <strong>10.</strong> Escribe un párrafo reflexivo (5 a 6 líneas) explicando por qué crees que aplicar la empatía y no asumir las intenciones de los demás puede mejorar las relaciones entre los estudiantes de tu colegio.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Base de datos de preguntas y respuestas
+        const gameData = [
+            {
+                category: "El Poder del Tono",
+                questions: {
+                    100: {
+                        text: "¿Qué elemento crucial de la comunicación cara a cara se pierde completamente en un mensaje de texto básico?",
+                        options: [
+                            { text: "A) El lenguaje corporal y tono de voz.", correct: true },
+                            { text: "B) El idioma y la gramática.", correct: false },
+                            { text: "C) La ortografía del emisor.", correct: false }
+                        ],
+                        feedback: "¡Correcto! Sin el tono de voz ni el lenguaje corporal, perdemos el 90% del sentido emocional de las palabras."
+                    },
+                    200: {
+                        text: "Escribir un mensaje de texto TODO EN MAYÚSCULAS generalmente se interpreta en internet como:",
+                        options: [
+                            { text: "A) Amabilidad extrema.", correct: false },
+                            { text: "B) Un grito, enojo o agresividad.", correct: true },
+                            { text: "C) Una muestra de tristeza.", correct: false }
+                        ],
+                        feedback: "¡Exacto! Las mayúsculas sostenidas son equivalentes a gritar visualmente, generando estrés en quien lee."
+                    },
+                    300: {
+                        text: "Un amigo te responde solo 'Ok.' a un mensaje largo. La mejor forma de evitar un conflicto es:",
+                        options: [
+                            { text: "A) Bloquearlo por no valorar tu tiempo.", correct: false },
+                            { text: "B) Asumir que te odia e insultarlo.", correct: false },
+                            { text: "C) Preguntarle asertivamente si está ocupado o si todo está bien.", correct: true }
+                        ],
+                        feedback: "¡Muy bien! Nunca asumas malas intenciones de inmediato. Siempre pregunta para aclarar la situación pacíficamente."
+                    }
+                }
+            },
+            {
+                category: "Barreras Digitales",
+                questions: {
+                    100: {
+                        text: "Leer un mensaje rápido mientras haces otra cosa y entenderlo mal es un claro ejemplo de:",
+                        options: [
+                            { text: "A) Comunicación súper efectiva.", correct: false },
+                            { text: "B) Ruido o barrera de atención.", correct: true },
+                            { text: "C) Empatía tecnológica.", correct: false }
+                        ],
+                        feedback: "¡Correcto! Leer sin concentración nos hace saltar palabras y cambiar por completo el sentido de una idea."
+                    },
+                    200: {
+                        text: "¿Por qué los emojis son herramientas útiles en la comunicación escrita informal?",
+                        options: [
+                            { text: "A) Para confundir deliberadamente al otro.", correct: false },
+                            { text: "B) Para reemplazar palabras difíciles.", correct: false },
+                            { text: "C) Para añadir contexto emocional y evitar malentendidos.", correct: true }
+                        ],
+                        feedback: "¡Así es! Los emojis actúan como pequeños reemplazos de nuestros gestos faciales, dando contexto (broma, alegría, amor)."
+                    },
+                    300: {
+                        text: "Ves que tu amigo leyó tu mensaje hace 1 hora pero no responde. El error que genera conflicto aquí es:",
+                        options: [
+                            { text: "A) Asumir y crear historias de que te está ignorando a propósito.", correct: true },
+                            { text: "B) Pensar que se le acabó la batería.", correct: false },
+                            { text: "C) Dejar tu teléfono a un lado y continuar con tu vida.", correct: false }
+                        ],
+                        feedback: "¡Excelente! Asumir lo peor nos llena de ansiedad y rabia injustificada. Cada persona tiene su propia rutina y tiempos."
+                    }
+                }
+            },
+            {
+                category: "Resolución Pacífica",
+                questions: {
+                    100: {
+                        text: "La 'comunicación asertiva' en la resolución de problemas se basa principalmente en:",
+                        options: [
+                            { text: "A) Ganar siempre la discusión e imponerse.", correct: false },
+                            { text: "B) Expresar tus ideas y molestias con claridad y respeto.", correct: true },
+                            { text: "C) Quedarse callado para evitar cualquier molestia.", correct: false }
+                        ],
+                        feedback: "¡Verdad! La asertividad es el equilibrio perfecto: no atacar (agresivo) ni dejarte pisotear (pasivo), solo hablar con respeto."
+                    },
+                    200: {
+                        text: "Si un chat grupal se vuelve muy agresivo, la estrategia inmediata más inteligente es:",
+                        options: [
+                            { text: "A) Tomar una pausa, soltar el celular y no responder con ira.", correct: true },
+                            { text: "B) Unirse a las burlas para encajar.", correct: false },
+                            { text: "C) Responder con mayúsculas para asustarlos.", correct: false }
+                        ],
+                        feedback: "¡Correcto! La regla de la pausa evita que digas cosas enojado de las que luego te arrepentirás. Calmarse es vital."
+                    },
+                    300: {
+                        text: "¿Cuál de estas frases es un ejemplo de comunicación asertiva ante un malentendido?",
+                        options: [
+                            { text: "A) 'Tú siempre me haces enojar, eres terrible.'", correct: false },
+                            { text: "B) 'Eres pésimo explicando, no entiendo nada.'", correct: false },
+                            { text: "C) 'Me sentí confundido al leer tu mensaje, ¿me aclaras qué quisiste decir?'", correct: true }
+                        ],
+                        feedback: "¡Perfecto! Hablar desde el 'Yo me sentí...' sin acusar directamente al otro abre la puerta al diálogo y apaga el fuego."
+                    }
+                }
+            }
+        ];
+
+        // Variables de estado
+        let score = 0;
+        let questionsAnswered = 0;
+        const totalQuestions = 9;
+        const maxScore = 1800; // (100+200+300) * 3 categorías
+
+        // Referencias DOM
+        const scoreDisplay = document.getElementById('score-display');
+        const modal = document.getElementById('question-modal');
+        const modalCategory = document.getElementById('modal-category');
+        const modalPoints = document.getElementById('modal-points');
+        const modalQuestion = document.getElementById('modal-question');
+        const modalOptions = document.getElementById('modal-options');
+        const modalFeedback = document.getElementById('modal-feedback');
+        const btnContinue = document.getElementById('btn-continue');
+        const resultModal = document.getElementById('result-modal');
+        
+        let currentCell = null;
+
+        // Inicializar eventos de las celdas
+        document.querySelectorAll('.jeopardy-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                if (this.disabled) return;
+                
+                const catIndex = this.getAttribute('data-cat');
+                const points = this.getAttribute('data-pts');
+                openQuestion(catIndex, points, this);
+            });
+        });
+
+        function openQuestion(catIndex, points, cellElement) {
+            const data = gameData[catIndex].questions[points];
+            const categoryName = gameData[catIndex].category;
+            currentCell = cellElement;
+
+            modalCategory.innerText = categoryName;
+            modalPoints.innerText = `${points} Pts`;
+            modalQuestion.innerText = data.text;
+            
+            // Limpiar opciones previas
+            modalOptions.innerHTML = '';
+            modalFeedback.style.display = 'none';
+            btnContinue.style.display = 'none';
+
+            // Crear botones de opciones
+            data.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => handleAnswer(opt, btn, data.feedback, parseInt(points));
+                modalOptions.appendChild(btn);
+            });
+
+            modal.classList.add('active');
+        }
+
+        function handleAnswer(selectedOption, btnElement, feedbackText, points) {
+            // Deshabilitar todos los botones para evitar múltiples clics
+            const allBtns = modalOptions.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+            // Mostrar feedback visual
+            if (selectedOption.correct) {
+                btnElement.classList.add('correct');
+                score += points;
+                scoreDisplay.innerText = `Puntos: ${score}`;
+                showFeedback(true, feedbackText);
+            } else {
+                btnElement.classList.add('incorrect');
+                // Resaltar la respuesta correcta
+                allBtns.forEach(b => {
+                    if (gameData[currentCell.getAttribute('data-cat')].questions[points].options.find(o => o.text === b.innerText).correct) {
+                        b.classList.add('correct');
+                    }
+                });
+                showFeedback(false, "Respuesta incorrecta. " + feedbackText);
+            }
+
+            // Marcar celda del tablero como jugada
+            currentCell.disabled = true;
+            questionsAnswered++;
+
+            // Mostrar botón continuar
+            btnContinue.style.display = 'block';
+        }
+
+        function showFeedback(isCorrect, text) {
+            modalFeedback.style.display = 'block';
+            modalFeedback.style.backgroundColor = isCorrect ? 'var(--secondary-light)' : '#FEE2E2';
+            modalFeedback.style.color = isCorrect ? 'var(--secondary)' : 'var(--danger)';
+            modalFeedback.innerText = (isCorrect ? "¡CORRECTO! " : "¡FALLASTE! ") + text;
+        }
+
+        btnContinue.addEventListener('click', () => {
+            modal.classList.remove('active');
+            
+            // Revisar fin del juego tras una breve pausa de animación
+            setTimeout(() => {
+                if (questionsAnswered === totalQuestions) {
+                    showFinalResults();
+                }
+            }, 300);
+        });
+
+        function showFinalResults() {
+            // Calculo de nota escala 1.0 a 5.0 basada en puntaje máximo posible
+            const rawGrade = (score / maxScore) * 4.0 + 1.0;
+            const finalGrade = rawGrade.toFixed(1);
+            
+            document.getElementById('final-grade').innerText = finalGrade;
+            
+            let message = "";
+            if (rawGrade >= 4.5) message = "¡Experto en comunicación asertiva!";
+            else if (rawGrade >= 3.5) message = "¡Muy bien! Tienes buena inteligencia emocional.";
+            else if (rawGrade >= 3.0) message = "Aprobado. Hay conceptos que debes repasar.";
+            else message = "Debes repasar. Lee atentamente la teoría.";
+            
+            document.getElementById('grade-message').innerText = message;
+            resultModal.classList.add('active');
+        }
+
+        function closeResultModal() {
+            resultModal.classList.remove('active');
+            // Hacer scroll suave hacia la zona de lectura
+            document.getElementById('zona-lectura').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

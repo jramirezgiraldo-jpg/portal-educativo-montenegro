@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Investigación Guiada: La variable espacial (Altura)</title>
+    <style>
+        :root {
+            --primary: #00695c; /* Teal oscuro elegante */
+            --primary-light: #e0f2f1;
+            --accent: #d84315; /* Naranja oscuro contrastante */
+            --success: #2e7d32;
+            --text-dark: #263238;
+            --text-light: #455a64;
+            --bg-color: #eceff1;
+            --card-bg: #ffffff;
+            --border-color: #cfd8dc;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --cell-size: clamp(20px, 6vw, 40px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .header-panel {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            border: 2px solid var(--border-color);
+            border-top: 5px solid var(--primary);
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            background-color: var(--primary-light);
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            font-weight: bold;
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .star-icon {
+            width: 24px;
+            height: 24px;
+            fill: #ccc;
+            transition: fill 0.3s ease;
+        }
+        
+        .star-icon.active {
+            fill: #ffd700;
+        }
+
+        #zona-juego {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (min-width: 900px) {
+            #zona-juego {
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: center;
+            }
+        }
+
+        .grid-container {
+            /* CRÍTICO: Prevención de bugs en móviles (scroll y zoom accidental) */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            
+            background-color: var(--card-bg);
+            padding: clamp(0.5rem, 2vw, 1rem);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid var(--border-color);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        #word-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            width: 100%;
+            background-color: var(--border-color);
+            border: 2px solid var(--border-color);
+        }
+
+        .cell {
+            background-color: #fff;
+            aspect-ratio: 1; /* Celdas siempre cuadradas */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(12px, 3.5vw, 22px);
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        .cell.highlight {
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .cell.found {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .cell.found.highlight {
+            background-color: #1b5e20; /* Tono más oscuro al cruzar selecciones */
+        }
+
+        .words-container {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid var(--border-color);
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .words-container h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        #word-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .word-item {
+            background-color: var(--bg-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            font-weight: 600;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .word-item.found-word {
+            background-color: var(--success);
+            color: white;
+            text-decoration: line-through;
+            border-color: var(--success);
+        }
+
+        #zona-lectura {
+            display: block; /* Siempre visible, independiente del juego */
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border-top: 5px solid var(--primary);
+            margin-top: 2rem;
+        }
+
+        article {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        article h2 {
+            color: var(--primary);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        article h3 {
+            color: var(--text-dark);
+            font-size: clamp(1.4rem, 3vw, 1.8rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        article p {
+            font-size: clamp(1rem, 2vw, 1.15rem);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            text-align: justify;
+        }
+        
+        article ul {
+            margin-left: 2rem;
+            margin-bottom: 2rem;
+            color: var(--text-light);
+            font-size: clamp(1rem, 2vw, 1.15rem);
+        }
+        
+        article li {
+            margin-bottom: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .equation-box {
+            background-color: var(--primary-light);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            font-weight: bold;
+            color: var(--primary);
+            margin: 2rem 0;
+            border: 2px dashed var(--primary);
+        }
+
+        .workshop-section {
+            margin-top: 4rem;
+            background-color: #fff8e1; /* Fondo amarillo muy suave */
+            border: 2px dashed var(--accent);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .workshop-section h3 {
+            color: var(--accent);
+            text-align: center;
+            font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+            margin-bottom: 1rem;
+            margin-top: 0;
+        }
+
+        .workshop-instruction {
+            text-align: center;
+            background-color: var(--accent);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            margin-bottom: 2.5rem;
+            box-shadow: 0 4px 6px rgba(216, 67, 21, 0.2);
+        }
+
+        .activity-list {
+            list-style: none;
+            counter-reset: custom-counter;
+        }
+
+        .activity-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 3.5rem;
+            font-size: clamp(1rem, 2.2vw, 1.1rem);
+            color: var(--text-dark);
+            line-height: 1.6;
+            background-color: rgba(255, 255, 255, 0.6);
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            padding-right: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(216, 67, 21, 0.1);
+        }
+
+        .activity-item::before {
+            counter-increment: custom-counter;
+            content: counter(custom-counter);
+            position: absolute;
+            left: -0.5rem; /* Posicionamiento ligeramente saliente */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3rem;
+            height: 3rem;
+            background-color: var(--accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .format-badge {
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.85rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* SVG utilitarios */
+        .svg-icon {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <header class="header-panel">
+            <h1>La Variable Espacial (Altura)</h1>
+            <p class="instruction">Instrucción: Encuentra las 10 palabras clave ocultas en la cuadrícula.</p>
+            
+            <div class="stats-container">
+                <div class="stat-box">
+                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Tiempo: <span id="timer">00:00</span>
+                </div>
+                <div class="stat-box">
+                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Encontradas: <span id="counter">0/10</span>
+                </div>
+                <div class="stat-box">
+                    Calificación:
+                    <div class="rating-stars" id="rating-stars">
+                        <!-- 5 Estrellas SVG en gris (se iluminan por JS) -->
+                        <svg class="star-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg class="star-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg class="star-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg class="star-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg class="star-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section id="zona-juego">
+            <div class="grid-container">
+                <div id="word-grid"></div>
+            </div>
+            
+            <div class="words-container">
+                <h3>Palabras Ocultas</h3>
+                <div id="word-list">
+                    <!-- Palabras renderizadas dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article>
+                <h2>La Variable Espacial: Altura y Energía Potencial Gravitacional</h2>
+                
+                <p>Imagina que tienes una roca pesada en el suelo y decides levantarla con tus manos hasta colocarla sobre una mesa alta. Al hacer esto, sientes que debes aplicar una fuerza en contra de algo que tira hacia abajo. Ese esfuerzo físico que realizas no desaparece en el vacío; en términos físicos, has "almacenado" energía en la roca. A esta energía acumulada, que depende estrictamente de la posición del objeto, se le conoce como <strong>Energía Potencial Gravitacional</strong>.</p>
+
+                <h3>1. La Gravedad: La fuerza invisible que nos ancla</h3>
+                <p>Para comprender la energía potencial, primero debemos entender el escenario donde ocurre. Vivimos en un planeta masivo que ejerce una fuerza de atracción constante sobre todo lo que tiene <strong>masa</strong>. Esta fuerza es la gravedad. Cualquier <strong>cuerpo</strong> que posea masa y esté bajo la influencia de la gravedad terrestre es susceptible de adquirir energía potencial si modificamos su posición en el espacio respecto al centro de la Tierra.</p>
+
+                <h3>2. La Altura: La variable espacial determinante</h3>
+                <p>En el estudio del movimiento y la energía, las variables espaciales nos dicen "dónde" está un objeto. En el caso de la energía potencial gravitacional, la variable espacial clave es la <strong>posición vertical</strong> o, más comúnmente, la <strong>altura</strong> (representada usualmente con la letra <em>h</em>). La altura representa la distancia vertical entre el cuerpo y un nivel base específico.</p>
+                <p>La energía potencial que tiene un objeto no depende de cómo llegó hasta allí (si fue levantado en línea recta, o transportado por una rampa en zigzag); depende única y exclusivamente de la altura final a la que se encuentre estacionado. Mientras mayor sea la altura en la <strong>vertical</strong>, mayor será la "potencia" o capacidad del objeto para realizar un <strong>trabajo</strong> o causar un impacto al caer.</p>
+
+                <h3>3. Una relación matemáticamente proporcional</h3>
+                <p>La física describe esta fascinante realidad mediante una fórmula matemática sencilla pero profunda:</p>
+                
+                <div class="equation-box">
+                    E<sub>p</sub> = m × g × h
+                </div>
+
+                <p>Donde <em>m</em> es la masa, <em>g</em> es la aceleración de la gravedad y <em>h</em> es la altura. Como puedes observar, la altura se multiplica directamente con los otros factores. Esto establece una relación <strong>proporcional</strong> y directa. ¿Qué significa esto en la vida real?</p>
+                <ul>
+                    <li>Si mantienes la misma roca y la elevas al doble de su altura original, su <strong>energía</strong> potencial se duplicará automáticamente.</li>
+                    <li>Si la subes al triple de la altura, su energía será tres veces mayor.</li>
+                    <li>Si la roca está en el suelo (altura cero), multiplicar por cero anula el resultado: no hay energía potencial gravitacional acumulada.</li>
+                </ul>
+
+                <h3>4. El Sistema de Referencia: El punto cero</h3>
+                <p>Una característica muy especial de la altura (y por ende de la energía potencial) es que es "relativa". Esto significa que no tiene un valor absoluto en el universo, sino que depende del <strong>sistema de referencia</strong> que elijamos.</p>
+                <p>Piénsalo así: si tienes un libro sobre tu escritorio en el tercer piso de un colegio. Si tu sistema de <strong>referencia</strong> es el piso del salón, la altura del libro es quizás 1 metro. Pero si tu sistema de referencia es la calle en la planta baja, la altura del libro es de 10 metros. Ambas medidas son correctas, pero arrojan cálculos de energía potencial distintos. Por ello, en física, siempre debemos establecer claramente cuál es nuestro nivel cero o suelo antes de medir la altura.</p>
+
+                <h3>Conclusión</h3>
+                <p>La variable espacial vertical, la altura, actúa como una cuenta de ahorros para la energía. Al alejar un objeto del centro de la Tierra venciendo la gravedad, estamos depositando energía potencial en él de forma matemáticamente proporcional. Cuando el objeto cae, la altura disminuye, pero esa energía no se pierde; se transforma en energía de movimiento, demostrando la hermosa precisión con la que funciona nuestro <strong>sistema</strong> físico.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h3>Taller de Repaso y Análisis</h3>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Escribe y resuelve de forma ordenada estas actividades en tu cuaderno de apuntes.
+                </div>
+                
+                <ol class="activity-list">
+                    <li class="activity-item">
+                        <span class="format-badge">Respuesta Directa</span><br>
+                        Basado en el texto leído, define con tus propias palabras qué es la Energía Potencial Gravitacional y menciona un ejemplo de la vida diaria donde la experimentes.
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Dibujo / Ilustración</span><br>
+                        Dibuja un edificio de 4 pisos. Dibuja la misma caja fuerte cayendo desde el piso 1 y luego desde el piso 4. Usa tamaños de flechas de impacto o "estrellas" para ilustrar visualmente en cuál caída hay más energía acumulada.
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Análisis Crítico</span><br>
+                        Si un estudiante sube una maleta de 5kg por una rampa muy larga e inclinada hasta una mesa de 2 metros de alto, y otro estudiante levanta la misma maleta en línea recta verticalmente hasta la misma mesa, ¿Quién le dio más Energía Potencial Gravitacional a la maleta? Justifica tu respuesta usando el texto.
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Mapa Mental</span><br>
+                        Elabora un mapa mental colorido en tu cuaderno que conecte las siguientes palabras clave y conceptos: Gravedad, Masa, Variable Espacial (Altura), y Energía Potencial.
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Respuesta Directa</span><br>
+                        El texto menciona que la relación entre la Altura y la Energía Potencial es "Directamente Proporcional". Escribe qué pasaría con la energía de un balón si lo subes a un balcón que está a 4 veces la altura de tu ventana.
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Dibujo / Ilustración</span><br>
+                        Ilustra un experimento sobre "Sistemas de Referencia". Dibuja a un gato sobre una repisa en una habitación, e indica con líneas punteadas dos alturas diferentes dependiendo de si tomas como referencia: a) El sofá que está debajo, o b) El suelo de la habitación.
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Análisis Crítico</span><br>
+                        Analiza la fórmula (Ep = m × g × h). Si tú estás sosteniendo una roca a nivel del suelo (altura = 0), ¿Qué resultado matemático da la ecuación? ¿Qué significa esto físicamente para la roca?
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Mapa Conceptual</span><br>
+                        Construye un pequeño mapa conceptual jerárquico. En la cima pon "Cálculo de la Energía Potencial", y desglosa los 3 factores que necesitas conocer para resolver la ecuación matemática.
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Respuesta Directa</span><br>
+                        Explica por qué es imposible calcular la energía potencial de un objeto si antes no hemos definido un "Sistema de referencia" (o punto cero).
+                    </li>
+                    <li class="activity-item">
+                        <span class="format-badge">Dibujo / Ilustración</span><br>
+                        Dibuja un pequeño cómic de 3 viñetas. Viñeta 1: Un personaje se esfuerza subiendo un yunque a lo alto de una montaña (acumulando energía). Viñeta 2: El yunque en la cima con un letrero que diga "Mucha Altura, Mucha Energía". Viñeta 3: El yunque cayendo, transformando su energía en movimiento.
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // FASE 1: Variables y Configuración exactas pedidas (10 palabras)
+        const keywords = [
+            "ALTURA", "ENERGIA", "POTENCIAL", "POSICION", "VERTICAL", 
+            "REFERENCIA", "PROPORCIONAL", "GRAVEDAD", "CUERPO", "SISTEMA"
+        ];
+        
+        const GRID_SIZE = 15;
+        let grid = [];
+        let foundWords = new Set();
+        let wordPaths = {}; 
+        
+        // Variables para la interacción (Pointer events)
+        let isSelecting = false;
+        let startCell = null;
+        let currentSelectionPath = [];
+        
+        // Variables para temporizador y flujo del juego
+        let startTime = null;
+        let timerInterval = null;
+        let gameActive = true;
+
+        // Elementos del DOM
+        const gridElement = document.getElementById('word-grid');
+        const wordListElement = document.getElementById('word-list');
+        const timerElement = document.getElementById('timer');
+        const counterElement = document.getElementById('counter');
+        const stars = document.querySelectorAll('.star-icon');
+
+        function generateGrid() {
+            let placedAll = false;
+            let totalAttempts = 0;
+
+            // Bucle maestro: Aseguramiento matemático de colocación sin bugs.
+            while (!placedAll) {
+                totalAttempts++;
+                grid = Array.from({length: GRID_SIZE}, () => Array(GRID_SIZE).fill(''));
+                let wordsSuccessfullyPlaced = 0;
+
+                for (let word of keywords) {
+                    let placed = false;
+                    let wordAttempts = 0;
+                    
+                    // 500 intentos por palabra en esta matriz
+                    while (!placed && wordAttempts < 500) {
+                        wordAttempts++;
+                        // Direcciones: 0=Horizontal, 1=Vertical, 2=Diagonal ↘, 3=Diagonal ↗
+                        const direction = Math.floor(Math.random() * 4);
+                        const row = Math.floor(Math.random() * GRID_SIZE);
+                        const col = Math.floor(Math.random() * GRID_SIZE);
+
+                        if (canPlaceWord(word, row, col, direction)) {
+                            placeWord(word, row, col, direction);
+                            placed = true;
+                            wordsSuccessfullyPlaced++;
+                        }
+                    }
+                    if (!placed) break; // Fracasó una palabra, reinicia el grid
+                }
+
+                if (wordsSuccessfullyPlaced === keywords.length) {
+                    placedAll = true;
+                }
+                
+                // Salvavidas de ciclo infinito (muy raro para matriz 15x15)
+                if (totalAttempts > 1000) {
+                    console.error("Límite de intentos alcanzado. Regenerando grid base.");
+                    break;
+                }
+            }
+
+            // Rellenar espacios sobrantes
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    }
+                }
+            }
+        }
+
+        function canPlaceWord(word, row, col, direction) {
+            const len = word.length;
+            if (direction === 0 && col + len > GRID_SIZE) return false; 
+            if (direction === 1 && row + len > GRID_SIZE) return false; 
+            if (direction === 2 && (row + len > GRID_SIZE || col + len > GRID_SIZE)) return false; 
+            if (direction === 3 && (row - len + 1 < 0 || col + len > GRID_SIZE)) return false; 
+
+            for (let i = 0; i < len; i++) {
+                let r = row, c = col;
+                if (direction === 0) c += i;
+                if (direction === 1) r += i;
+                if (direction === 2) { r += i; c += i; }
+                if (direction === 3) { r -= i; c += i; }
+
+                if (grid[r][c] !== '' && grid[r][c] !== word[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function placeWord(word, row, col, direction) {
+            for (let i = 0; i < word.length; i++) {
+                let r = row, c = col;
+                if (direction === 0) c += i;
+                if (direction === 1) r += i;
+                if (direction === 2) { r += i; c += i; }
+                if (direction === 3) { r -= i; c += i; }
+                grid[r][c] = word[i];
+            }
+        }
+
+        function renderUI() {
+            gridElement.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    cell.textContent = grid[r][c];
+                    gridElement.appendChild(cell);
+                }
+            }
+
+            wordListElement.innerHTML = '';
+            keywords.forEach(word => {
+                const badge = document.createElement('div');
+                badge.className = 'word-item';
+                badge.id = `word-${word}`;
+                badge.textContent = word;
+                wordListElement.appendChild(badge);
+            });
+
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Cancelar comportamientos táctiles default (zoom/scroll) sobre la matriz
+            gridElement.addEventListener('touchstart', (e) => { e.preventDefault(); }, {passive: false});
+            gridElement.addEventListener('touchmove', (e) => { e.preventDefault(); }, {passive: false});
+
+            gridElement.addEventListener('pointerdown', handlePointerDown);
+            window.addEventListener('pointermove', handlePointerMove); 
+            window.addEventListener('pointerup', handlePointerUp);
+            // Cancelar selección si se sale bruscamente del contexto
+            window.addEventListener('pointercancel', handlePointerUp); 
+        }
+
+        function getCellFromEvent(e) {
+            // Mapeo universal que soporta touch, pen, y mouse.
+            const x = e.clientX || (e.touches && e.touches.length > 0 ? e.touches[0].clientX : 0);
+            const y = e.clientY || (e.touches && e.touches.length > 0 ? e.touches[0].clientY : 0);
+            
+            if(!x || !y) return null;
+            
+            const element = document.elementFromPoint(x, y);
+            if (element && element.classList.contains('cell')) {
+                return {
+                    r: parseInt(element.dataset.r),
+                    c: parseInt(element.dataset.c),
+                    el: element
+                };
+            }
+            return null;
+        }
+
+        function handlePointerDown(e) {
+            if (!gameActive) return;
+            startTimer();
+            
+            const cellData = getCellFromEvent(e);
+            if (!cellData) return;
+
+            isSelecting = true;
+            startCell = cellData;
+            clearHighlight();
+            highlightCell(cellData.r, cellData.c);
+            currentSelectionPath = [cellData];
+            
+            // Bloqueo de scroll preventivo en móviles antiguos
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function handlePointerMove(e) {
+            if (!isSelecting || !gameActive) return;
+
+            const currentCell = getCellFromEvent(e);
+            if (!currentCell) return;
+
+            const deltaR = currentCell.r - startCell.r;
+            const deltaC = currentCell.c - startCell.c;
+
+            // Verificación matemática estricta: Horizontal, Vertical o Diagonal (45°)
+            const isHorizontal = deltaR === 0;
+            const isVertical = deltaC === 0;
+            const isDiagonal = Math.abs(deltaR) === Math.abs(deltaC);
+
+            if (isHorizontal || isVertical || isDiagonal) {
+                clearHighlight();
+                currentSelectionPath = [];
+                
+                const steps = Math.max(Math.abs(deltaR), Math.abs(deltaC));
+                const stepR = deltaR === 0 ? 0 : (deltaR > 0 ? 1 : -1);
+                const stepC = deltaC === 0 ? 0 : (deltaC > 0 ? 1 : -1);
+
+                for (let i = 0; i <= steps; i++) {
+                    const r = startCell.r + (i * stepR);
+                    const c = startCell.c + (i * stepC);
+                    const el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                    currentSelectionPath.push({r, c, el});
+                    highlightCell(r, c);
+                }
+            }
+        }
+
+        function handlePointerUp(e) {
+            if (!isSelecting) return;
+            isSelecting = false;
+            document.body.style.overflow = ''; // Devolver scroll natural al usuario
+            
+            if (!gameActive) return;
+
+            const selectedWord = currentSelectionPath.map(cell => grid[cell.r][cell.c]).join('');
+            const reversedWord = selectedWord.split('').reverse().join('');
+
+            let foundMatch = null;
+            if (keywords.includes(selectedWord) && !foundWords.has(selectedWord)) {
+                foundMatch = selectedWord;
+            } else if (keywords.includes(reversedWord) && !foundWords.has(reversedWord)) {
+                foundMatch = reversedWord;
+            }
+
+            if (foundMatch) {
+                foundWords.add(foundMatch);
+                markAsFound(currentSelectionPath);
+                updateCounter();
+                
+                const wordElement = document.getElementById(`word-${foundMatch}`);
+                if (wordElement) wordElement.classList.add('found-word');
+
+                checkWinCondition();
+            } else {
+                clearHighlight();
+            }
+            
+            currentSelectionPath = [];
+        }
+
+        function highlightCell(r, c) {
+            const el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+            if (el) el.classList.add('highlight');
+        }
+
+        function clearHighlight() {
+            document.querySelectorAll('.cell.highlight').forEach(el => {
+                el.classList.remove('highlight');
+            });
+        }
+
+        function markAsFound(path) {
+            path.forEach(cell => {
+                cell.el.classList.add('found');
+            });
+        }
+
+        function startTimer() {
+            if (!startTime) {
+                startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                    const secs = String(elapsed % 60).padStart(2, '0');
+                    timerElement.textContent = `${mins}:${secs}`;
+                }, 1000);
+            }
+        }
+
+        function updateCounter() {
+            counterElement.textContent = `${foundWords.size}/${keywords.length}`;
+        }
+
+        function checkWinCondition() {
+            if (foundWords.size === keywords.length) {
+                gameActive = false;
+                clearInterval(timerInterval);
+                calculateRating();
+                
+                // Efecto de desvanecimiento sutil a letras no encontradas
+                setTimeout(() => {
+                    document.querySelectorAll('.cell').forEach(el => {
+                        if (!el.classList.contains('found')) {
+                            el.style.opacity = '0.15';
+                            el.style.transition = 'opacity 1s ease';
+                        }
+                    });
+                }, 400);
+            }
+        }
+
+        function calculateRating() {
+            const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+            let starCount = 1;
+            
+            // Evaluador de tiempos razonables para una matriz 15x15 de 7mo grado
+            if (elapsedSeconds <= 120) { starCount = 5; } // < 2 mins
+            else if (elapsedSeconds <= 180) { starCount = 4; } // < 3 mins
+            else if (elapsedSeconds <= 300) { starCount = 3; } // < 5 mins
+            else if (elapsedSeconds <= 480) { starCount = 2; } // < 8 mins
+
+            for (let i = 0; i < starCount; i++) {
+                setTimeout(() => {
+                    stars[i].classList.add('active');
+                }, i * 300);
+            }
+        }
+
+        // Arrancar el motor lógico al cargar la página
+        window.onload = () => {
+            generateGrid();
+            renderUI();
+        };
+    </script>
+</body>
+</html>

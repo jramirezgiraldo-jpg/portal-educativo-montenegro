@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física 6°: El fenómeno cotidiano de la estática</title>
+    
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --primary-color: #2b1d52; /* Tono morado oscuro / noche */
+            --accent-color: #f1c40f; /* Amarillo eléctrico */
+            --correct-color: #27ae60;
+            --error-color: #c0392b;
+            --card-front: #3d2a71;
+            --text-main: #333;
+            --grid-bg: #fff;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(20px, 4vw, 40px);
+            padding: clamp(10px, 3vw, 20px);
+        }
+
+        section {
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--grid-bg);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            padding: clamp(15px, 4vw, 35px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: clamp(22px, 5vw, 34px);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .instruccion {
+            font-size: clamp(15px, 3.5vw, 18px);
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-around;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 18px);
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .stats-panel span { color: var(--accent-color); }
+
+        #game-board {
+            display: grid;
+            /* CRÍTICO: Grid fluido con auto-fit y minmax según los requisitos */
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 12px;
+            width: 100%;
+            /* CRÍTICO: Evitar zoom/scroll táctil accidental en el tablero */
+            touch-action: none;
+            user-select: none;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, var(--card-front) 0%, #1e113a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #5a4099;
+        }
+
+        .card-front svg {
+            width: 55%;
+            height: 55%;
+            fill: var(--accent-color);
+            opacity: 0.8;
+            filter: drop-shadow(0 0 5px rgba(241, 196, 15, 0.5));
+        }
+
+        .card-back {
+            background-color: #fff;
+            color: var(--primary-color);
+            transform: rotateY(180deg);
+            border: 2px solid var(--accent-color);
+            /* Tipografía elástica para ajustarse a cartas de distinto tamaño */
+            font-size: clamp(9px, 2.5vw, 14px);
+            font-weight: bold;
+            word-break: break-word;
+            hyphens: auto;
+            flex-direction: column;
+            line-height: 1.15;
+            text-align: center;
+        }
+
+        .card.matched .card-back {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: #1a7740;
+        }
+
+        .card.mismatch .card-back {
+            background-color: var(--error-color);
+            color: white;
+            border-color: #8c271d;
+        }
+
+        .card-type-badge {
+            font-size: clamp(8px, 2vw, 10px);
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin-bottom: 4px;
+            background: rgba(0,0,0,0.06);
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: #666;
+        }
+        
+        .card.matched .card-type-badge, .card.mismatch .card-type-badge {
+            color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.2);
+        }
+
+        #rating-overlay {
+            display: none;
+            text-align: center;
+            padding: clamp(15px, 4vw, 30px);
+            background: #fff;
+            border-radius: 12px;
+            margin-top: 25px;
+            border: 3px solid var(--correct-color);
+            animation: popIn 0.5s ease-out;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .stars { font-size: clamp(35px, 8vw, 55px); color: var(--accent-color); margin: 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .rating-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: clamp(14px, 4vw, 16px);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        .rating-btn:active { transform: scale(0.95); }
+
+        #zona-lectura {
+            margin-top: 10px;
+        }
+
+        article h2 {
+            color: var(--primary-color);
+            font-size: clamp(24px, 5vw, 32px);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        article h3 {
+            color: #4a3485;
+            font-size: clamp(19px, 4vw, 24px);
+            margin-top: 28px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        article h3::before {
+            content: '⚡';
+            font-size: 0.9em;
+        }
+
+        article p {
+            margin-bottom: 18px;
+            font-size: clamp(16px, 3.5vw, 18px);
+            text-align: justify;
+            color: #444;
+        }
+
+        article ul {
+            margin-left: 25px;
+            margin-bottom: 22px;
+            font-size: clamp(16px, 3.5vw, 18px);
+        }
+
+        article li { margin-bottom: 10px; color: #444; }
+        
+        .resaltado {
+            background-color: rgba(241, 196, 15, 0.2);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .taller-caja {
+            background-color: #f9f7ff;
+            border-left: 6px solid var(--primary-color);
+            padding: clamp(15px, 4vw, 30px);
+            margin-top: 45px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 3px 3px 15px rgba(0,0,0,0.06);
+        }
+
+        .taller-caja h2 { 
+            border-bottom-color: var(--primary-color); 
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .instruccion-taller {
+            font-weight: bold;
+            color: #d35400;
+            font-size: clamp(16px, 4vw, 19px);
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 2px dashed #d35400;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .actividad-lista {
+            list-style: none;
+            counter-reset: act-counter;
+        }
+
+        .actividad-lista li {
+            margin-bottom: 25px;
+            padding-left: clamp(45px, 10vw, 55px);
+            position: relative;
+            font-size: clamp(16px, 3.5vw, 18px);
+            background: #fff;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            padding-right: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #e0dced;
+        }
+
+        .actividad-lista li::before {
+            counter-increment: act-counter;
+            content: counter(act-counter);
+            position: absolute;
+            left: 10px;
+            top: 15px;
+            background: var(--primary-color);
+            color: var(--accent-color);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .badge-tipo {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: #eee;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-directa { background: #e8d0f3; color: #6a1b9a; border: 1px solid #dcb5ed; }
+        .badge-analisis { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1;}
+        .badge-dibujo { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6;}
+        .badge-mapa { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc;}
+
+    </style>
+</head>
+<body>
+
+<main>
+    <section id="zona-juego">
+        <header>
+            <h1>La Magia de la Estática</h1>
+            <p class="instruccion">Toca las cartas para voltearlas y encuentra los 10 pares (Concepto - Definición).</p>
+            <div class="stats-panel">
+                <div>Movimientos: <span id="moves">0</span></div>
+                <div>Errores: <span id="errors">0</span></div>
+                <div>Pares: <span id="matches">0</span>/10</div>
+            </div>
+        </header>
+
+        <div id="game-board">
+            <!-- Las cartas se inyectan dinámicamente aquí vía JS -->
+        </div>
+
+        <div id="rating-overlay">
+            <h2 id="rating-title" style="color: var(--primary-color);">¡Misión Cumplida!</h2>
+            <div class="stars" id="rating-stars"></div>
+            <p id="rating-msg" style="font-size: 18px; margin-bottom: 15px; font-weight: bold;"></p>
+            <button class="rating-btn" onclick="initGame()">Volver a Jugar</button>
+        </div>
+    </section>
+
+    <section id="zona-lectura">
+        <article>
+            <h2>Magia Cotidiana: El Mundo Oculto de la Electrostática</h2>
+            
+            <p>¿Alguna vez te has quitado un saco de lana en la oscuridad y has escuchado pequeños chasquidos o visto diminutas chispas? ¿O quizás has frotado una bomba de plástico contra tu cabello y has visto cómo este se levanta como por arte de magia? Aunque parecieran trucos, la ciencia tiene un nombre para todos estos eventos cotidianos: los llamamos <strong>fenómenos electrostáticos</strong>.</p>
+            
+            <h3>El Corazón de la Materia: El Átomo</h3>
+            <p>Para entender la estática, debemos viajar a un mundo invisible para nuestros ojos: el mundo subatómico. Absolutamente todo lo que te rodea, desde la pantalla donde lees esto hasta tu propio cuerpo, está hecho de partículas minúsculas llamadas <span class="resaltado">átomos</span>.</p>
+            <p>Imagina al átomo como un diminuto sistema solar. En su centro tiene un núcleo firme donde viven los <strong>protones</strong>, que tienen carga eléctrica positiva (+). Girando velozmente alrededor de este núcleo, como planetas orbitando el sol, se encuentran los <strong>electrones</strong>, que poseen carga eléctrica negativa (-). En su estado normal o "neutro", un átomo tiene exactamente la misma cantidad de protones y electrones, por lo que sus cargas se cancelan.</p>
+
+            <h3>¿Cómo se cargan los objetos? La Fuerza de la Fricción</h3>
+            <p>Si los objetos son neutros, ¿por qué un globo atrae mi cabello? El secreto está en la <span class="resaltado">fricción</span> (frotamiento). Los electrones, al estar en la parte más externa del átomo, a veces son un poco "inestables". Cuando frotas vigorosamente dos materiales diferentes (como plástico y cabello), literalmente <strong>arrancas</strong> electrones de un material y se los pasas al otro.</p>
+            <ul>
+                <li>El material que gana electrones extra se carga <strong>negativamente</strong>.</li>
+                <li>El material que pierde electrones queda cargado <strong>positivamente</strong>.</li>
+            </ul>
+            <p>Aquí entra la regla de oro del universo eléctrico: <strong>Las cargas opuestas se atraen (positivo y negativo se buscan) y las cargas iguales se repelen (negativo empuja a negativo).</strong> Por eso tu cabello (ahora positivo) persigue al globo (ahora negativo): experimentan una fuerza de <strong>atracción</strong> invisible pero real.</p>
+
+            <h3>Conductores y Aislantes: Los guardianes de la energía</h3>
+            <p>Te preguntarás por qué esta carga estática se queda acumulada en el globo, pero no ocurre lo mismo si frotas una cuchara de metal. Esto sucede porque los materiales se dividen en dos bandos:</p>
+            <p>Los <strong>Aislantes</strong> (como el plástico del globo, la goma, el vidrio y el aire) son materiales celosos con sus electrones; no los dejan moverse fácilmente. Por lo tanto, si un globo gana electrones extra, estos se quedan "atascados" o estáticos allí (de ahí el nombre electro-estática).</p>
+            <p>En cambio, los <strong>Conductores</strong> (como el cobre, el aluminio, el agua y el cuerpo humano) permiten que los electrones fluyan libremente a través de ellos, repartiendo rápidamente cualquier carga acumulada.</p>
+
+            <h3>El Toque Final: La Descarga Electrostática</h3>
+            <p>¿Qué pasa cuando la carga acumulada en un objeto aislante es demasiada? La naturaleza siempre busca el equilibrio. Si caminas en calcetines sobre una alfombra (acumulando electrones mediante fricción) y luego tocas la perilla de metal de una puerta (un buen conductor), todos esos electrones acumulados saltan rápidamente de tu dedo al metal.</p>
+            <p>Ese salto repentino y veloz se llama <span class="resaltado">descarga electrostática</span>. Lo sientes como un pequeño choque o un "corrientazo". ¡Un rayo durante una tormenta eléctrica es exactamente el mismo fenómeno! Solo que a una escala gigantesca: las nubes se frotan acumulando cargas, y cuando ya no pueden sostenerlas, lanzan una descarga masiva hacia la tierra.</p>
+        </article>
+
+        <div class="taller-caja">
+            <h2>Taller de Repaso</h2>
+            <div class="instruccion-taller">
+                📝 INSTRUCCIÓN: Escribe y resuelve de forma completa estas 10 actividades en tu cuaderno de Ciencias/Física.
+            </div>
+            
+            <ul class="actividad-lista">
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Según el texto, ¿cómo es el estado "neutro" de un átomo normal respecto a sus protones y electrones?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Si después de frotar una regla de plástico con tu suéter la regla atrae pedacitos de papel, ¿qué regla de oro del universo eléctrico está actuando? Explica por qué ocurre la atracción.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja el modelo básico de un átomo (como un sistema solar en miniatura). Identifica claramente con colores y signos el núcleo (+ protones) y los orbitales (- electrones).
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Conceptual</span><br>
+                    Elabora un mapa conceptual pequeño utilizando estos 5 términos: <em>Materia, Átomos, Protones (+), Electrones (-), Estado Neutro</em>.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Explica con tus propias palabras qué ocurre a nivel atómico con los electrones cuando generamos "fricción" entre dos materiales distintos.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Teniendo en cuenta las características de los materiales <strong>aislantes</strong>, argumenta por qué los cables de electricidad que vemos en las calles siempre están cubiertos de caucho o plástico.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja dos globos colgando de hilos que acaban de ser frotados con la misma tela (es decir, tienen la misma carga negativa). Dibuja flechas que indiquen hacia dónde se moverán debido a la fuerza de <strong>repulsión</strong>.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Mental</span><br>
+                    Crea un mapa mental cuyo centro sea "Materiales". De ahí saca dos grandes ramas: "Conductores" y "Aislantes". En cada rama, escribe su definición breve y dibuja dos ejemplos de la lectura.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    ¿Qué es una "descarga electrostática" y por qué se produce?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    El texto dice que un rayo es como el "corrientazo" que te da una perilla, pero a gran escala. Analiza y redacta: ¿De dónde crees que sacan la "fricción" las nubes para cargarse eléctricamente antes de lanzar un rayo?
+                </li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<script>
+    // 10 Conceptos y Definiciones obligatorios
+    const pairsData = [
+        { c: "Electrostática", d: "Estudio de las cargas eléctricas que están en reposo." },
+        { c: "Átomo", d: "La partícula más pequeña que compone toda la materia." },
+        { c: "Electrón", d: "Partícula subatómica con carga eléctrica negativa (-)." },
+        { c: "Protón", d: "Partícula subatómica con carga eléctrica positiva (+)." },
+        { c: "Fricción", d: "Acción de frotar cuerpos transfiriendo sus electrones." },
+        { c: "Atracción", d: "Fuerza invisible que une a cargas de diferente signo." },
+        { c: "Repulsión", d: "Fuerza que separa o aleja cargas del mismo signo." },
+        { c: "Conductor", d: "Material que permite el paso libre de los electrones." },
+        { c: "Aislante", d: "Material que dificulta o bloquea el flujo de cargas." },
+        { c: "Descarga", d: "Liberación o salto repentino de electrones acumulados." }
+    ];
+
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+    let errors = 0;
+    let isBoardLocked = false;
+
+    const cardPatternSVG = `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Rayo / Electricidad -->
+            <path d="M55,10 L30,55 L50,55 L45,90 L75,45 L55,45 Z" fill="currentColor" stroke="#fff" stroke-width="2"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="8 4" opacity="0.6"/>
+        </svg>
+    `;
+
+    function initGame() {
+        const board = document.getElementById('game-board');
+        board.innerHTML = '';
+        cards = [];
+        flippedCards = [];
+        matchedPairs = 0;
+        moves = 0;
+        errors = 0;
+        isBoardLocked = false;
+        
+        updateStats();
+        document.getElementById('rating-overlay').style.display = 'none';
+
+        // Crear array de 20 cartas (10 pares) vinculadas por ID
+        pairsData.forEach((pair, index) => {
+            cards.push({ id: index, text: pair.c, type: 'Concepto' });
+            cards.push({ id: index, text: pair.d, type: 'Definición' });
+        });
+
+        // Algoritmo Fisher-Yates para mezclar aleatoriamente el mazo
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+
+        cards.forEach((cardData, index) => {
+            const cardEl = document.createElement('div');
+            cardEl.classList.add('card');
+            cardEl.dataset.index = index;
+            cardEl.dataset.matchId = cardData.id;
+
+            cardEl.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        ${cardPatternSVG}
+                    </div>
+                    <div class="card-back">
+                        <span class="card-type-badge">${cardData.type}</span>
+                        <span>${cardData.text}</span>
+                    </div>
+                </div>
+            `;
+            
+            // pointerdown: Evento táctil nativo sin latencia para mejor respuesta en móviles
+            cardEl.addEventListener('pointerdown', handleCardClick);
+            board.appendChild(cardEl);
+        });
+    }
+
+    function handleCardClick(e) {
+        e.preventDefault(); 
+        
+        if (isBoardLocked) return;
+        
+        const currentCard = e.target.closest('.card');
+        
+        if (!currentCard) return;
+        // Evitar clic en la misma carta o en cartas ya emparejadas
+        if (currentCard.classList.contains('flipped') || currentCard.classList.contains('matched')) return;
+
+        currentCard.classList.add('flipped');
+        flippedCards.push(currentCard);
+
+        if (flippedCards.length === 2) {
+            moves++;
+            updateStats();
+            checkForMatch();
+        }
+    }
+
+    function checkForMatch() {
+        isBoardLocked = true;
+        const [card1, card2] = flippedCards;
+        const id1 = card1.dataset.matchId;
+        const id2 = card2.dataset.matchId;
+
+        if (id1 === id2) {
+            // MATCH CORRECTO: Se tintan de verde
+            setTimeout(() => {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                updateStats();
+                resetBoard();
+                if (matchedPairs === 10) endGame();
+            }, 350);
+        } else {
+            // ERROR: Se tintan de rojo y se ocultan a los 1.5 seg
+            errors++;
+            updateStats();
+            
+            setTimeout(() => {
+                card1.classList.add('mismatch');
+                card2.classList.add('mismatch');
+            }, 250);
+
+            setTimeout(() => {
+                card1.classList.remove('flipped', 'mismatch');
+                card2.classList.remove('flipped', 'mismatch');
+                resetBoard();
+            }, 1500);
+        }
+    }
+
+    function resetBoard() {
+        flippedCards = [];
+        isBoardLocked = false;
+    }
+
+    function updateStats() {
+        document.getElementById('moves').textContent = moves;
+        document.getElementById('errors').textContent = errors;
+        document.getElementById('matches').textContent = matchedPairs;
+    }
+
+    function endGame() {
+        const overlay = document.getElementById('rating-overlay');
+        const starsEl = document.getElementById('rating-stars');
+        const msgEl = document.getElementById('rating-msg');
+        
+        let stars = "";
+        let msg = "";
+        
+        // Puntuación matemática basada en la cantidad de fallos
+        if (errors <= 4) {
+            stars = "⭐⭐⭐⭐⭐";
+            msg = "¡Descarga Perfecta! Eres un genio de la electricidad.";
+        } else if (errors <= 9) {
+            stars = "⭐⭐⭐⭐";
+            msg = "¡Excelente corriente! Tienes gran memoria.";
+        } else if (errors <= 15) {
+            stars = "⭐⭐⭐";
+            msg = "¡Bien hecho! Buen voltaje cerebral.";
+        } else {
+            stars = "⭐⭐";
+            msg = "¡Circuito completado! Sigue repasando los conceptos.";
+        }
+        
+        starsEl.textContent = stars;
+        msgEl.textContent = msg;
+        overlay.style.display = "block";
+        
+        // Auto-scroll al mensaje final
+        setTimeout(() => {
+            overlay.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }, 300);
+    }
+
+    // Inicializar el interactivo tan pronto cargue el DOM
+    document.addEventListener('DOMContentLoaded', initGame);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Interactivo: Ley de Cargas y Vectores</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --primary: #4361ee;
+            --success: #2ec4b6;
+            --danger: #e71d36;
+            --warning: #ff9f1c;
+            --text-dark: #1d3557;
+            --text-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            /* Permite el scroll vertical normal para la sección de lectura */
+            overflow-x: hidden; 
+        }
+
+        #zona-juego {
+            width: 100%;
+            height: 100vh;
+            min-height: 600px;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden; /* Evita que las tarjetas salgan de este contenedor visiblemente */
+        }
+
+        .header-juego {
+            padding: 1.5rem 1rem;
+            text-align: center;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .header-juego h1 {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .progreso-container {
+            width: 80%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .progreso-barra {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .area-tarjetas {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .tarjeta-sombra {
+            position: absolute;
+            width: 85%;
+            height: 65%;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transform: translateY(10px) scale(0.95);
+            z-index: 1;
+        }
+
+        .tarjeta {
+            position: absolute;
+            width: 85%;
+            height: 65%;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            z-index: 2;
+            cursor: grab;
+            /* CRÍTICO: Previene scroll y zoom en móviles al arrastrar */
+            touch-action: none;
+            user-select: none;
+            will-change: transform;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .tarjeta:active {
+            cursor: grabbing;
+        }
+
+        .tarjeta p {
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            font-weight: 500;
+            color: #333;
+            pointer-events: none; /* Evita que el texto interfiera con el drag */
+        }
+
+        .controles {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .btn-control {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .btn-control:active {
+            transform: scale(0.9);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .btn-falso { background-color: var(--danger); }
+        .btn-verdadero { background-color: var(--success); }
+
+        .btn-control svg {
+            width: 35px;
+            height: 35px;
+            stroke-width: 3;
+        }
+
+        .toast {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .pantalla-final {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .pantalla-final.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .nota-circulo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin: 1.5rem 0;
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+
+        #zona-lectura {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            background-color: var(--card-bg);
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.02);
+        }
+
+        .articulo-teorico h2 {
+            color: var(--primary);
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--warning);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .articulo-teorico h3 {
+            color: var(--text-dark);
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            margin: 2rem 0 1rem 0;
+        }
+
+        .articulo-teorico p {
+            margin-bottom: 1.2rem;
+            font-size: 1.1rem;
+            color: #444;
+            text-align: justify;
+        }
+
+        .articulo-teorico ul {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+        
+        .articulo-teorico li {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            color: #444;
+        }
+
+        .caja-destacada {
+            background: #eef2ff;
+            border-left: 5px solid var(--primary);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .taller-repaso {
+            margin-top: 4rem;
+            background: #fff8e1;
+            padding: 2.5rem 2rem;
+            border-radius: 15px;
+            border: 2px dashed var(--warning);
+        }
+
+        .taller-repaso h2 {
+            color: #f57f17;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .instruccion-taller {
+            background: var(--danger);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .pregunta-item {
+            margin-bottom: 1.5rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .tipo-actividad {
+            display: inline-block;
+            background: var(--text-dark);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        /* Animaciones para el drag */
+        .swipe-left { transform: translateX(-150vw) rotate(-30deg) !important; opacity: 0; }
+        .swipe-right { transform: translateX(150vw) rotate(30deg) !important; opacity: 0; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="header-juego">
+                <h1>Fuerzas en Acción</h1>
+                <p style="margin-bottom: 10px; font-size: 0.9rem; color: #555;">Desliza a la derecha si es Verdad, a la izquierda si es Falso.</p>
+                <div class="progreso-container">
+                    <div class="progreso-barra" id="barra-progreso"></div>
+                </div>
+            </div>
+
+            <div class="area-tarjetas" id="area-tarjetas">
+                <div class="tarjeta-sombra"></div>
+                <div class="tarjeta" id="tarjeta-activa">
+                    <p id="texto-afirmacion">Cargando...</p>
+                </div>
+            </div>
+
+            <div class="controles">
+                <button class="btn-control btn-falso" id="btn-izq">
+                    <!-- Icono SVG X incrustado -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <button class="btn-control btn-verdadero" id="btn-der">
+                    <!-- Icono SVG Check incrustado -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="toast" class="toast">Mensaje de justificación</div>
+
+            <div class="pantalla-final" id="pantalla-final">
+                <h2>¡Actividad Completada!</h2>
+                <p>Tu calificación final es:</p>
+                <div class="nota-circulo" id="nota-final">5.0</div>
+                <p id="mensaje-final" style="color: #666; max-width: 80%; margin: 10px auto;">Excelente trabajo reconociendo las interacciones.</p>
+                <button style="margin-top:20px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 5px; font-size: 1.1rem; cursor: pointer;" onclick="location.reload()">Jugar de Nuevo</button>
+                <p style="margin-top: 20px; font-weight: bold; color: var(--danger);">⬇ Continúa leyendo la teoría abajo ⬇</p>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="articulo-teorico">
+                <h2>La Danza Invisible: Fuerzas, Cargas y Vectores</h2>
+                
+                <p>¿Alguna vez te has quitado un suéter de lana en la oscuridad y has escuchado pequeños chasquidos o visto chispas? ¿O has frotado un globo contra tu cabello y luego este se queda pegado a la pared? Estos fenómenos cotidianos, que a veces parecen magia, son en realidad la manifestación de una de las fuerzas más fundamentales del universo: la <strong>fuerza eléctrica</strong>.</p>
+                
+                <p>A diferencia de cuando empujas una silla con tus manos, donde hay un contacto físico directo, las fuerzas eléctricas son <strong>fuerzas de interacción a distancia</strong>. Esto significa que los objetos no necesitan tocarse para empujarse o jalarse entre sí. Ocurre a través del espacio vacío, de manera invisible, pero con efectos muy reales.</p>
+                
+                <h3>El Origen: Las Cargas Eléctricas</h3>
+                <p>Para entender esta danza invisible, debemos mirar de qué están hechas las cosas. Todo en el universo está formado por átomos. Imagina el átomo como un sistema solar diminuto. En el centro (el núcleo) hay partículas con <strong>carga positiva</strong> llamadas protones. Orbitando alrededor de ese centro, hay partículas mucho más pequeñas con <strong>carga negativa</strong> llamadas electrones.</p>
+                
+                <p>Normalmente, los objetos tienen la misma cantidad de cargas positivas y negativas, por lo que decimos que son neutros. Sin embargo, cuando frotamos ciertos materiales (como el globo en tu cabello), le arrancamos electrones a uno y se los pasamos al otro. Uno queda cargado positivamente (porque perdió electrones) y el otro negativamente (porque ganó electrones).</p>
+                
+                <div class="caja-destacada">
+                    <strong>La Ley Fundamental de Cargas</strong><br>
+                    La naturaleza tiene una regla inquebrantable sobre cómo interactúan estas cargas, conocida como la Ley Cualitativa de Cargas. La regla es simple:<br><br>
+                    <strong>"Cargas del mismo signo se repelen, y cargas de signos opuestos se atraen".</strong>
+                </div>
+
+                <p>Esto significa que si acercamos dos globos cargados negativamente, experimentarán una <strong>fuerza de repulsión</strong> (se empujarán hacia afuera). Si acercamos un globo negativo a un pedazo de vidrio cargado positivamente, experimentarán una <strong>fuerza de atracción</strong> (se jalarán mutuamente).</p>
+                
+                <h3>Representando lo Invisible: Vectores de Fuerza</h3>
+                <p>Dado que no podemos ver la fuerza eléctrica con nuestros ojos, los científicos e ingenieros utilizan una herramienta matemática y gráfica para dibujarla: <strong>los vectores</strong>.</p>
+                
+                <p>Un vector se representa simplemente como una <strong>flecha</strong>. Pero no es cualquier flecha, cada parte de ella nos da información crucial sobre la fuerza:</p>
+                <ul>
+                    <li><strong>El punto de origen (la cola):</strong> Nos indica exactamente sobre qué objeto está actuando la fuerza.</li>
+                    <li><strong>La dirección y sentido (la punta de la flecha):</strong> Nos dice hacia dónde empuja o jala la fuerza. Si hay atracción, las flechas de dos objetos apuntarán la una hacia la otra. Si hay repulsión, las flechas apuntarán alejándose.</li>
+                    <li><strong>La magnitud (el largo de la flecha):</strong> Esto es muy importante. Entre más larga dibujemos la flecha, más intensa o fuerte es la fuerza. Una flecha corta indica una fuerza débil.</li>
+                </ul>
+                
+                <h3>La Distancia Importa</h3>
+                <p>Aunque la fuerza eléctrica actúa a distancia, no tiene un alcance infinito con la misma intensidad. Charles-Augustin de Coulomb, un físico francés, descubrió que la fuerza depende de dos cosas: la cantidad de carga que tengan los objetos y la distancia que los separa.</p>
+                
+                <p>Si alejas dos imanes, sientes que la fuerza entre ellos se vuelve más débil. Con las cargas eléctricas pasa exactamente lo mismo. <strong>A medida que aumenta la distancia entre dos cargas, la fuerza disminuye rápidamente</strong>. Si estuviéramos dibujando los vectores de fuerza para dos objetos que se están alejando, tendríamos que dibujar las flechas cada vez más cortas a medida que aumenta la separación.</p>
+                
+                <p>En conclusión, el mundo que nos rodea está lleno de interacciones invisibles. Comprender que las fuerzas pueden actuar a distancia y saber cómo representarlas usando vectores (flechas que indican intensidad y dirección) es el primer gran paso para entender cómo está estructurado el universo material.</p>
+            </article>
+
+            <div class="taller-repaso">
+                <h2>Taller de Repaso y Afianzamiento</h2>
+                <div class="instruccion-taller">
+                    📝 ATENCIÓN: Escribe y resuelve estas actividades en tu cuaderno de apuntes.
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>1.</strong> Según la lectura, ¿cuál es la diferencia principal entre empujar una silla y la interacción entre dos cargas eléctricas?</p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Dibujar / Ilustrar</span>
+                    <p><strong>2.</strong> Dibuja dos círculos, uno con un signo "+" y otro con un signo "-". Dibuja los vectores de fuerza (flechas) sobre cada círculo mostrando qué tipo de interacción ocurre entre ellos.</p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Análisis Crítico</span>
+                    <p><strong>3.</strong> Si frotas una regla de plástico con tu suéter y luego la acercas a pedacitos de papel que están en la mesa (y que son neutros), los papeles saltan hacia la regla. ¿Por qué crees que ocurre esta atracción si los papeles no estaban cargados inicialmente? <em>(Pista: Piensa en qué pasa con los electrones del papel cuando la regla cargada se acerca).</em></p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Mapa Mental</span>
+                    <p><strong>4.</strong> Elabora en tu cuaderno un mapa mental que tenga en el centro la palabra "Átomo" y que se ramifique mostrando las cargas de los protones, los electrones y cómo se logra que un objeto quede cargado positiva o negativamente.</p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>5.</strong> Escribe con tus propias palabras la "Ley Fundamental de Cargas".</p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Dibujar / Ilustrar</span>
+                    <p><strong>6.</strong> Dibuja dos escenarios. Escenario A: Dos cargas negativas separadas por 2 centímetros. Escenario B: Las mismas dos cargas separadas por 10 centímetros. ¿En qué escenario los vectores de fuerza (las flechas) deben dibujarse más largos y por qué?</p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Análisis Crítico</span>
+                    <p><strong>7.</strong> La gravedad hace que las cosas caigan al suelo sin necesidad de hilos o cuerdas, ¿podemos decir que la gravedad también es una "interacción a distancia" al igual que la fuerza eléctrica? Justifica tu respuesta.</p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Mapa Conceptual</span>
+                    <p><strong>8.</strong> Crea un pequeño mapa conceptual sobre los "Vectores". Debe incluir sus tres características principales mencionadas en la lectura (origen, dirección/sentido, y magnitud).</p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>9.</strong> Si observas un diagrama donde la flecha (vector) de fuerza sobre un objeto es extremadamente corta, ¿qué te está diciendo eso sobre la intensidad de la fuerza?</p>
+                </div>
+
+                <div class="pregunta-item">
+                    <span class="tipo-actividad">Dibujar / Ilustrar</span>
+                    <p><strong>10.</strong> Crea una pequeña tira cómica de 3 viñetas. En la primera, dos globos felices frotándose contra el cabello. En la segunda, los globos descubren que ambos quedaron con el mismo tipo de carga. En la tercera, muestra su reacción (usando vectores) aplicando la Ley de Cargas.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Datos de las afirmaciones (10 en total: 5 Verdaderas, 5 Falsas)
+        const baseDeDatos = [
+            { texto: "Si acerco dos globos frotados con el mismo material, se empujarán mutuamente debido a la fuerza de repulsión.", respuesta: true, justificacion: "Correcto. Cargas iguales se repelen según la Ley de Cargas." },
+            { texto: "La fuerza de atracción entre dos imanes o cargas desaparece completamente si los separo tan solo un centímetro.", respuesta: false, justificacion: "Falso. La fuerza disminuye con la distancia, pero sigue existiendo una interacción a distancia." },
+            { texto: "Un vector de fuerza se dibuja como una flecha. Su tamaño indica la cantidad de fuerza y su punta hacia dónde empuja.", respuesta: true, justificacion: "Correcto. Los vectores tienen magnitud (tamaño) y dirección (punta)." },
+            { texto: "Si tengo una carga positiva y una negativa, los vectores de fuerza apuntarán alejándose el uno del otro.", respuesta: false, justificacion: "Falso. Cargas opuestas se atraen, los vectores apuntarían el uno hacia el otro." },
+            { texto: "Entre más cerca estén dos cargas opuestas, más grande debemos dibujar el vector de fuerza que las atrae.", respuesta: true, justificacion: "Correcto. A menor distancia, la fuerza aumenta, por lo que el vector es más largo." },
+            { texto: "Las fuerzas eléctricas solo actúan si los objetos cargados se están tocando físicamente.", respuesta: false, justificacion: "Falso. La fuerza eléctrica es una interacción 'a distancia', no necesita contacto." },
+            { texto: "Si acercamos un peine cargado a pedacitos de papel neutros, el peine puede atraerlos.", respuesta: true, justificacion: "Correcto. Ocurre por un fenómeno llamado polarización o inducción." },
+            { texto: "Para representar la fuerza con la que se repelen dos cargas, dibujamos una flecha curva.", respuesta: false, justificacion: "Falso. Los vectores de fuerza eléctrica se dibujan como flechas rectas." },
+            { texto: "La Ley de Cargas dice: 'Cargas iguales se repelen, cargas opuestas se atraen'.", respuesta: true, justificacion: "Correcto. Esa es la regla fundamental de las interacciones eléctricas." },
+            { texto: "Si aumentamos la cantidad de carga de un objeto, la fuerza con la que atrae o repele será más pequeña.", respuesta: false, justificacion: "Falso. A mayor cantidad de carga, la fuerza de interacción es más grande." }
+        ];
+
+        let mazo = []; // Cola de preguntas a responder
+        let preguntasHistorial = []; // Para rastrear aciertos al primer intento
+        let aciertosPrimeraVez = 0;
+        let totalPreguntas = baseDeDatos.length;
+        
+        // Elementos DOM
+        const tarjeta = document.getElementById('tarjeta-activa');
+        const textoAfirmacion = document.getElementById('texto-afirmacion');
+        const btnIzq = document.getElementById('btn-izq');
+        const btnDer = document.getElementById('btn-der');
+        const toast = document.getElementById('toast');
+        const barraProgreso = document.getElementById('barra-progreso');
+
+        // Variables de Drag (Touch/Mouse)
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        const threshold = 100; // Pixeles necesarios para validar el swipe
+
+        function inicializarJuego() {
+            // Clonar y barajar (Fisher-Yates)
+            let arrayMezclado = [...baseDeDatos];
+            for (let i = arrayMezclado.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arrayMezclado[i], arrayMezclado[j]] = [arrayMezclado[j], arrayMezclado[i]];
+            }
+            
+            // Preparar el mazo con un estado de "intentos"
+            mazo = arrayMezclado.map(q => ({ ...q, intentos: 0 }));
+            aciertosPrimeraVez = 0;
+            actualizarUI();
+        }
+
+        function actualizarUI() {
+            if (mazo.length === 0) {
+                mostrarPantallaFinal();
+                return;
+            }
+            
+            // Actualizar tarjeta
+            tarjeta.style.transition = 'none';
+            tarjeta.className = 'tarjeta'; // reset clases
+            tarjeta.style.transform = 'translateX(0px) rotate(0deg)';
+            textoAfirmacion.textContent = mazo[0].texto;
+            
+            // Actualizar barra (basado en preguntas que ya no están en el mazo)
+            const respondidas = totalPreguntas - mazo.length;
+            const porcentaje = (respondidas / totalPreguntas) * 100;
+            barraProgreso.style.width = `${porcentaje}%`;
+
+            // Forzar reflow para asegurar que las transiciones funcionen al soltar
+            void tarjeta.offsetWidth; 
+            tarjeta.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        }
+
+        function mostrarToast(mensaje, esCorrecto) {
+            toast.textContent = mensaje;
+            toast.style.background = esCorrecto ? 'rgba(46, 196, 182, 0.9)' : 'rgba(231, 29, 54, 0.9)';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function procesarRespuesta(eleccionUsuario) {
+            if (mazo.length === 0) return;
+
+            const preguntaActual = mazo[0];
+            const esCorrecto = eleccionUsuario === preguntaActual.respuesta;
+
+            // Animación de salida
+            tarjeta.classList.add(eleccionUsuario ? 'swipe-right' : 'swipe-left');
+
+            setTimeout(() => {
+                if (esCorrecto) {
+                    mostrarToast(preguntaActual.justificacion, true);
+                    if (preguntaActual.intentos === 0) {
+                        aciertosPrimeraVez++;
+                    }
+                    mazo.shift(); // Elimina del mazo
+                } else {
+                    mostrarToast("Incorrecto. " + preguntaActual.justificacion, false);
+                    preguntaActual.intentos++;
+                    const fallada = mazo.shift(); // Saca del inicio
+                    mazo.push(fallada); // Va al fondo del mazo (Lógica requerida)
+                }
+                actualizarUI();
+            }, 300); // Esperar que termine la animación
+        }
+
+        function onDragStart(e) {
+            if (mazo.length === 0) return;
+            isDragging = true;
+            startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+            tarjeta.style.transition = 'none'; // Quitar transición suave al arrastrar
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            // Prevenir comportamiento default solo si estamos arrastrando horizontalmente
+            // La propiedad touch-action: none en CSS ya ayuda mucho con esto
+            e.preventDefault(); 
+            
+            const x = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+            currentX = x - startX;
+            
+            // Calcular rotación basada en el movimiento (efecto Tinder)
+            const rotate = currentX * 0.1;
+            tarjeta.style.transform = `translateX(${currentX}px) rotate(${rotate}deg)`;
+        }
+
+        function onDragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            tarjeta.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+            if (currentX > threshold) {
+                // Swipe Derecha (Verdadero)
+                procesarRespuesta(true);
+            } else if (currentX < -threshold) {
+                // Swipe Izquierda (Falso)
+                procesarRespuesta(false);
+            } else {
+                // No movió suficiente, regresar al centro
+                tarjeta.style.transform = 'translateX(0px) rotate(0deg)';
+            }
+            currentX = 0;
+        }
+
+        // Eventos Touch
+        tarjeta.addEventListener('touchstart', onDragStart, {passive: false});
+        tarjeta.addEventListener('touchmove', onDragMove, {passive: false});
+        tarjeta.addEventListener('touchend', onDragEnd);
+
+        // Eventos Mouse (para PC)
+        tarjeta.addEventListener('mousedown', onDragStart);
+        document.addEventListener('mousemove', onDragMove);
+        document.addEventListener('mouseup', onDragEnd);
+
+        // Eventos Botones
+        btnIzq.addEventListener('click', () => procesarRespuesta(false));
+        btnDer.addEventListener('click', () => procesarRespuesta(true));
+
+        function mostrarPantallaFinal() {
+            const pantalla = document.getElementById('pantalla-final');
+            const notaElement = document.getElementById('nota-final');
+            const msjElement = document.getElementById('mensaje-final');
+            
+            barraProgreso.style.width = '100%';
+
+            // Calificación de 1.0 a 5.0 basada en aciertos al PRIMER intento
+            // Formula: ((aciertos / total) * 4) + 1
+            let nota = ((aciertosPrimeraVez / totalPreguntas) * 4) + 1;
+            nota = Math.max(1.0, Math.min(5.0, nota)); // Asegurar limites
+            
+            notaElement.textContent = nota.toFixed(1);
+
+            if (nota >= 4.0) {
+                notaElement.style.background = 'var(--success)';
+                msjElement.textContent = "¡Excelente! Has comprendido muy bien la Ley de Cargas.";
+            } else if (nota >= 3.0) {
+                notaElement.style.background = 'var(--warning)';
+                msjElement.textContent = "Buen trabajo, aunque repasaste algunos conceptos sobre la marcha.";
+            } else {
+                notaElement.style.background = 'var(--danger)';
+                msjElement.textContent = "Te recomendamos leer la teoría abajo con detenimiento e intentar de nuevo.";
+            }
+
+            pantalla.classList.add('show');
+        }
+
+        // Iniciar
+        window.onload = inicializarJuego;
+
+    </script>
+</body>
+</html>

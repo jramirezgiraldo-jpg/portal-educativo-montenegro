@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Homeostasis Corporal</title>
+    
+    <style>
+        :root {
+            --primary: #059669; /* Esmeralda oscuro */
+            --primary-dark: #047857;
+            --secondary: #0284c7; /* Azul cielo oscuro */
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --grid-line: #cbd5e1;
+            --highlight: rgba(5, 150, 105, 0.2);
+            --found: rgba(16, 185, 129, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* Fuente de sistema para modo OFFLINE total */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f172a, #064e3b);
+            color: white;
+            padding: 1.25rem 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: clamp(0.75rem, 2vw, 0.85rem);
+            color: #6ee7b7;
+            margin-top: 0.2rem;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding: 1.5rem 1rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        #zona-juego {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            /* CRÍTICO PARA MÓVILES: Bloquear scroll al jugar */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .instruction-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #ecfdf5;
+            color: var(--primary-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            font-weight: 700;
+            border: 1px solid #a7f3d0;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: var(--bg-body);
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-val {
+            color: var(--text-main);
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        /* Grid de la Sopa de Letras */
+        .word-search-container {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            background-color: var(--grid-line);
+            border: 2px solid var(--grid-line);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .ws-cell {
+            background-color: #ffffff;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(12px, 3.5vw, 22px);
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: background-color 0.1s, color 0.1s, transform 0.1s;
+        }
+
+        .ws-cell.selected {
+            background-color: var(--highlight);
+            color: var(--primary-dark);
+        }
+
+        .ws-cell.found {
+            background-color: var(--found);
+            color: #064e3b;
+            font-weight: 900;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Lista de Palabras */
+        .word-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 1rem;
+        }
+
+        .word-item {
+            background: white;
+            border: 1px solid var(--border-light);
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-size: clamp(0.7rem, 2vw, 0.85rem);
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .word-item.found-word {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        #zona-lectura {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 1.25rem;
+            padding: 2rem 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .article-badge {
+            display: inline-flex;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .article-title {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-body {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            line-height: 1.8;
+            color: #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .article-body h2 {
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+            font-weight: 800;
+            color: #1e293b;
+            margin-top: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .article-body h3 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-top: 0.5rem;
+        }
+
+        .article-body p {
+            text-align: justify;
+        }
+
+        .article-body ul {
+            padding-left: 1.5rem;
+            background: #f8fafc;
+            padding: 1.5rem 1.5rem 1.5rem 2.5rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .article-body li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Estilos del Taller */
+        .workshop-container {
+            margin-top: 3rem;
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 1rem;
+            padding: 2rem 1.5rem;
+        }
+
+        .workshop-title-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .workshop-title-area svg {
+            width: 40px;
+            height: 40px;
+            color: var(--secondary);
+        }
+
+        .notebook-alert {
+            background: #fffbeb;
+            border-left: 5px solid #f59e0b;
+            padding: 1.25rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .notebook-alert p {
+            font-weight: 700;
+            color: #b45309;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .activity-grid {
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .activity-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .act-direct { border-left-color: var(--secondary); }
+        .act-critical { border-left-color: #f59e0b; }
+        .act-draw { border-left-color: var(--primary); }
+        .act-map { border-left-color: #8b5cf6; }
+
+        .activity-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .act-direct .activity-badge { background: #e0f2fe; color: #0369a1; }
+        .act-critical .activity-badge { background: #fef3c7; color: #b45309; }
+        .act-draw .activity-badge { background: #dcfce3; color: #15803d; }
+        .act-map .activity-badge { background: #f3e8ff; color: #6d28d9; }
+
+        .activity-card p {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2.5rem 2rem;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-title { font-size: 1.75rem; font-weight: 900; color: #0f172a; margin-bottom: 0.5rem; }
+        .modal-score { font-size: 3.5rem; font-weight: 900; color: var(--success); margin: 1rem 0; font-family: monospace; line-height: 1;}
+        
+        .btn-restart {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+        .btn-restart:hover { background: var(--primary-dark); }
+
+        #confetti {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 101;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="header-icon">
+                <!-- Icono de Biología / Cuerpo / Temperatura (SVG Incrustado Offline) -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+            </div>
+            <div>
+                <h1>Biología: Homeostasis Corporal</h1>
+                <p class="subtitle">Regulación de funciones y trabajo de los sistemas de órganos</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <div class="instruction-badge">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10.4 12.6a2 2 0 1 1 3 3L8 21l-4 1 1-4Z"></path>
+                    </svg>
+                    <span>Instrucción: Arrastra el dedo o mouse para encontrar las 10 palabras ocultas.</span>
+                </div>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-pill">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Tiempo: <span id="ui-time" class="stat-val">00:00</span>
+                </div>
+                <div class="stat-pill">
+                    Encontradas: <span id="ui-found" class="stat-val">0 / 10</span>
+                </div>
+                <div class="stat-pill" style="color: var(--primary-dark); border-color: #6ee7b7; background: #ecfdf5;">
+                    Nota: <span id="ui-grade" class="stat-val" style="color: var(--primary-dark);">5.0</span>
+                </div>
+            </div>
+
+            <!-- Contenedor del Grid 15x15 -->
+            <div id="word-search" class="word-search-container">
+                <!-- Celdas generadas por JS -->
+            </div>
+
+            <!-- Lista de Palabras -->
+            <div id="word-list" class="word-list">
+                <!-- Items generados por JS -->
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <span class="article-badge">Lectura Obligatoria</span>
+            <h1 class="article-title">Homeostasis: La Ingeniería Perfecta del Cuerpo Humano en el Trabajo Físico</h1>
+
+            <article class="article-body">
+                <p>
+                    Imagina que estás corriendo una carrera en un día caluroso o trabajando intensamente bajo el sol. A medida que tus músculos se esfuerzan, generan una enorme cantidad de calor. Sin embargo, tu sangre no comienza a hervir. Tu cuerpo logra mantener un ambiente interno estable, sin importar el caos externo o el desgaste físico. Esta increíble capacidad de autorregulación se conoce como <strong>homeostasis</strong>, un término que proviene del griego y significa "mantenerse igual".
+                </p>
+                
+                <p>
+                    La homeostasis no es un estado estático, sino un <strong>equilibrio dinámico</strong>. Para lograrlo, los sistemas de órganos de nuestro cuerpo no trabajan de manera aislada; se comunican constantemente como si fueran los departamentos de una fábrica de alta tecnología. Las dos variables más críticas que el cuerpo debe regular durante el trabajo físico son la temperatura y la hidratación.
+                </p>
+
+                <h2>Termorregulación: El Termostato Biológico</h2>
+                <p>
+                    El cuerpo humano está diseñado para operar óptimamente a una temperatura cercana a los 37°C. El centro de control de este sistema es el <strong>hipotálamo</strong>, una pequeña región en el cerebro que actúa como un termostato maestro.
+                </p>
+                <p>
+                    Cuando realizas una actividad física intensa, tus células aumentan su <strong>metabolismo</strong>, quemando glucosa y oxígeno para producir energía. Un subproducto inevitable de esta combustión química es el calor. Si el hipotálamo detecta (a través de la sangre) que la temperatura está subiendo peligrosamente, desata una serie de órdenes en cadena:
+                </p>
+                <ul>
+                    <li><strong>Vasodilatación:</strong> El sistema nervioso ordena a los capilares sanguíneos cercanos a la piel que se ensanchen (dilaten). Esto permite que más sangre caliente fluya hacia la superficie del cuerpo, liberando el calor hacia el aire exterior (por eso nos ponemos "rojos" al hacer ejercicio).</li>
+                    <li><strong>Sudoración (Transpiración):</strong> Las glándulas sudoríparas en la piel comienzan a secretar agua y sales. A medida que este sudor se evapora en contacto con el aire, absorbe el calor de la piel, produciendo un efecto de enfriamiento vital.</li>
+                </ul>
+
+                <h2>Osmorregulación y el Papel de los Riñones</h2>
+                <p>
+                    La sudoración nos salva de un golpe de calor, pero trae un problema secundario: la pérdida masiva de agua. Aquí es donde entra en juego la <strong>osmorregulación</strong> (control de los niveles de agua y sales), liderada por el sistema excretor y endocrino.
+                </p>
+                <p>
+                    A medida que el nivel de agua en la sangre disminuye (deshidratación), la glándula pituitaria libera la <strong>Hormona Antidiurética (ADH)</strong>. Esta hormona viaja por el torrente sanguíneo hasta los <strong>riñones</strong> y les da una instrucción clara: "Retengan toda el agua posible". Como resultado, los riñones reabsorben agua de regreso a la sangre en lugar de enviarla a la vejiga. Es por esto que, después de sudar mucho, producimos muy poca orina, y esta suele ser de un color amarillo muy oscuro y concentrado.
+                </p>
+
+                <h2>La Sinergia de los Sistemas</h2>
+                <p>
+                    Para que la homeostasis ocurra, la <strong>circulación</strong> de la sangre es el medio de transporte absoluto. El corazón bombea más rápido durante el ejercicio, no solo para llevar oxígeno a los músculos, sino para transportar eficientemente el calor hacia la piel y mover las hormonas (como la ADH) a sus órganos diana.
+                </p>
+                <p>
+                    En conclusión, la homeostasis demuestra que la biología no es una colección de órganos independientes. El sistema nervioso monitorea, el sistema endocrino envía señales químicas, el sistema circulatorio reparte estas señales y transporta la energía, mientras que los riñones y la piel ejecutan los ajustes finales de <strong>excreción</strong> e hidratación. Comprender este delicado equilibrio es fundamental para entender por qué debemos ayudar a nuestro cuerpo mediante una correcta hidratación y descanso tras el trabajo físico.
+                </p>
+            </article>
+
+            <!-- Taller de Repaso -->
+            <div class="workshop-container">
+                <div class="workshop-title-area">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <h2>Taller de Repaso y Consolidación</h2>
+                </div>
+
+                <div class="notebook-alert">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <p>INSTRUCCIÓN OBLIGATORIA: Lee atentamente cada punto, copia la actividad en tu cuaderno de apuntes y resuélvela basándote EXCLUSIVAMENTE en la lectura anterior.</p>
+                </div>
+
+                <div class="activity-grid">
+                    <!-- Alternancia obligatoria: 1. Directo, 2. Crítico, 3. Dibujo, 4. Mapa, etc. -->
+                    
+                    <div class="activity-card act-direct">
+                        <span class="activity-badge">Respuesta Directa</span>
+                        <p>1. Con base en el primer párrafo, ¿cuál es la definición del término "homeostasis" y de qué idioma proviene?</p>
+                    </div>
+
+                    <div class="activity-card act-critical">
+                        <span class="activity-badge">Análisis Crítico</span>
+                        <p>2. Analiza: ¿Por qué la homeostasis se define como un "equilibrio dinámico" en lugar de un "estado estático" o quieto? Justifica tu respuesta.</p>
+                    </div>
+
+                    <div class="activity-card act-draw">
+                        <span class="activity-badge">Dibujo Explicativo</span>
+                        <p>3. Dibuja un esquema del proceso de "Termorregulación" mostrando el recorrido desde que el músculo genera calor, pasa por el Hipotálamo, hasta que ocurre la vasodilatación y sudoración en la piel.</p>
+                    </div>
+
+                    <div class="activity-card act-map">
+                        <span class="activity-badge">Mapa Conceptual</span>
+                        <p>4. Elabora un mapa conceptual que conecte los siguientes términos: Homeostasis, Hipotálamo, Metabolismo, Vasodilatación y Sudoración.</p>
+                    </div>
+
+                    <div class="activity-card act-direct">
+                        <span class="activity-badge">Respuesta Directa</span>
+                        <p>5. ¿Qué significa la sigla ADH, qué glándula la libera y hacia qué órgano específico viaja?</p>
+                    </div>
+
+                    <div class="activity-card act-critical">
+                        <span class="activity-badge">Análisis Crítico</span>
+                        <p>6. Deduce a partir del texto: Si una persona está deshidratada tras hacer mucho ejercicio y no toma agua, ¿por qué su orina será muy oscura y escasa? ¿Qué órgano es responsable de esto?</p>
+                    </div>
+
+                    <div class="activity-card act-draw">
+                        <span class="activity-badge">Dibujo Ilustrativo</span>
+                        <p>7. Ilustra, usando dos viñetas o dibujos comparativos, la diferencia entre un vaso sanguíneo normal y uno experimentando "Vasodilatación" para liberar calor.</p>
+                    </div>
+
+                    <div class="activity-card act-map">
+                        <span class="activity-badge">Mapa Mental</span>
+                        <p>8. Crea un mapa mental cuyo centro sea "Sinergia de los Sistemas" e ilustra cómo colaboran el sistema nervioso, endocrino, circulatorio y excretor en el cuerpo humano.</p>
+                    </div>
+
+                    <div class="activity-card act-direct">
+                        <span class="activity-badge">Respuesta Directa</span>
+                        <p>9. Según la lectura, menciona dos razones principales por las cuales el corazón bombea sangre más rápido durante el ejercicio.</p>
+                    </div>
+
+                    <div class="activity-card act-critical">
+                        <span class="activity-badge">Análisis Crítico</span>
+                        <p>10. Concluye argumentando: ¿Por qué es un error afirmar en biología que un solo órgano trabaja de manera totalmente independiente y aislada del resto del cuerpo?</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Victoria -->
+    <div id="victory-modal" class="modal-overlay">
+        <canvas id="confetti"></canvas>
+        <div class="modal-card">
+            <h2 class="modal-title">¡Misión Completada!</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Has encontrado todas las palabras clave sobre homeostasis.</p>
+            <div id="final-score" class="modal-score">5.0</div>
+            <p id="final-time" style="font-weight: 600; margin-bottom: 1.5rem;">Tiempo: 00:00</p>
+            <button onclick="window.location.reload()" class="btn-restart">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.65-5.65"></path>
+                </svg>
+                Jugar de Nuevo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de la Sopa de Letras
+        const WORDS = [
+            "HOMEOSTASIS", "SUDORACION", "HIPOTALAMO", "TEMPERATURA", "HIDRATACION", 
+            "RINONES", "CIRCULACION", "METABOLISMO", "TRANSPIRACION", "EQUILIBRIO"
+        ];
+        const ROWS = 15;
+        const COLS = 15;
+        let grid = [];
+        let wordsToFind = [...WORDS];
+        let foundWords = [];
+        
+        // Direcciones posibles (Fila, Columna)
+        const DIRS = [
+            [0, 1],   // Derecha
+            [1, 0],   // Abajo
+            [1, 1],   // Diagonal Abajo-Derecha
+            [-1, 1],  // Diagonal Arriba-Derecha
+            [0, -1],  // Izquierda
+            [-1, 0],  // Arriba
+            [-1, -1], // Diagonal Arriba-Izquierda
+            [1, -1]   // Diagonal Abajo-Izquierda
+        ];
+
+        // Estado de Interacción
+        let isDragging = false;
+        let startCell = null;
+        let currentPath = [];
+
+        // Estado del Juego
+        let startTime;
+        let timerInterval;
+        let secondsElapsed = 0;
+        let currentGrade = 5.0;
+        let gameActive = true;
+
+        // Elementos del DOM
+        const gridEl = document.getElementById('word-search');
+        const wordListEl = document.getElementById('word-list');
+        const timeEl = document.getElementById('ui-time');
+        const foundEl = document.getElementById('ui-found');
+        const gradeEl = document.getElementById('ui-grade');
+
+        function initGame() {
+            let placed = false;
+            let attempts = 0;
+            // Ciclo exhaustivo para garantizar que todas las palabras se coloquen
+            while (!placed && attempts < 100) {
+                placed = generateBoard();
+                attempts++;
+            }
+            
+            if (!placed) {
+                console.error("Fallo al generar tablero tras múltiples intentos.");
+                // Fallback de emergencia, limpiar y forzar un tablero más pequeño teóricamente no pasará en 15x15
+            }
+
+            fillEmptySpaces();
+            renderBoard();
+            renderWordList();
+            
+            // Iniciar temporizador
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function generateBoard() {
+            // Inicializar grid vacío
+            grid = Array(ROWS).fill(null).map(() => Array(COLS).fill(''));
+            
+            // Mezclar palabras para aleatoriedad
+            const shuffledWords = [...WORDS].sort(() => Math.random() - 0.5);
+
+            for (let word of shuffledWords) {
+                let placed = false;
+                let wordAttempts = 0;
+
+                while (!placed && wordAttempts < 200) {
+                    let dir = DIRS[Math.floor(Math.random() * DIRS.length)];
+                    let startR = Math.floor(Math.random() * ROWS);
+                    let startC = Math.floor(Math.random() * COLS);
+
+                    if (canPlaceWord(word, startR, startC, dir)) {
+                        placeWord(word, startR, startC, dir);
+                        placed = true;
+                    }
+                    wordAttempts++;
+                }
+
+                // Si una sola palabra falla en colocarse, descartar este tablero entero
+                if (!placed) return false; 
+            }
+            return true;
+        }
+
+        function canPlaceWord(word, r, c, dir) {
+            let [dRow, dCol] = dir;
+            for (let i = 0; i < word.length; i++) {
+                let newR = r + i * dRow;
+                let newC = c + i * dCol;
+                
+                // Fuera de límites
+                if (newR < 0 || newR >= ROWS || newC < 0 || newC >= COLS) return false;
+                // Colisión letal
+                if (grid[newR][newC] !== '' && grid[newR][newC] !== word[i]) return false;
+            }
+            return true;
+        }
+
+        function placeWord(word, r, c, dir) {
+            let [dRow, dCol] = dir;
+            for (let i = 0; i < word.length; i++) {
+                grid[r + i * dRow][c + i * dCol] = word[i];
+            }
+        }
+
+        const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+        function fillEmptySpaces() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+                    }
+                }
+            }
+        }
+
+        function renderBoard() {
+            gridEl.innerHTML = '';
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    let cell = document.createElement('div');
+                    cell.className = 'ws-cell';
+                    cell.textContent = grid[r][c];
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function renderWordList() {
+            wordListEl.innerHTML = '';
+            WORDS.forEach(word => {
+                let span = document.createElement('span');
+                span.className = 'word-item';
+                span.textContent = word;
+                span.id = `word-${word}`;
+                wordListEl.appendChild(span);
+            });
+        }
+
+        // Usar eventos de puntero (pointer events) para soporte unificado mouse/touch
+        gridEl.addEventListener('pointerdown', handlePointerDown);
+        window.addEventListener('pointermove', handlePointerMove); // window para capturar drag fuera del contenedor
+        window.addEventListener('pointerup', handlePointerUp);
+
+        // Prevenir comportamiento default táctil que interrumpa el drag
+        gridEl.addEventListener('touchstart', (e) => e.preventDefault(), {passive: false});
+
+        function handlePointerDown(e) {
+            if (!gameActive || e.button !== 0 && e.pointerType === 'mouse') return; // Solo clic izquierdo
+            
+            const cell = document.elementFromPoint(e.clientX, e.clientY);
+            if (!cell || !cell.classList.contains('ws-cell')) return;
+
+            isDragging = true;
+            startCell = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
+            clearSelection();
+            selectCell(cell);
+            e.preventDefault();
+        }
+
+        function handlePointerMove(e) {
+            if (!isDragging || !startCell) return;
+
+            const target = document.elementFromPoint(e.clientX, e.clientY);
+            if (!target || !target.classList.contains('ws-cell')) return;
+
+            const endR = parseInt(target.dataset.r);
+            const endC = parseInt(target.dataset.c);
+
+            calculatePath(startCell.r, startCell.c, endR, endC);
+        }
+
+        function handlePointerUp(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            if (currentPath.length > 0) {
+                checkWordMatch();
+            }
+            startCell = null;
+        }
+
+        function calculatePath(r1, c1, r2, c2) {
+            clearSelection();
+            
+            const dRow = r2 - r1;
+            const dCol = c2 - c1;
+            
+            // Validar que sea una línea recta permitida: 
+            // horizontal (dRow=0), vertical (dCol=0) o diagonal (abs(dRow)==abs(dCol))
+            if (dRow === 0 || dCol === 0 || Math.abs(dRow) === Math.abs(dCol)) {
+                
+                const steps = Math.max(Math.abs(dRow), Math.abs(dCol));
+                const stepR = dRow === 0 ? 0 : dRow / Math.abs(dRow);
+                const stepC = dCol === 0 ? 0 : dCol / Math.abs(dCol);
+
+                for (let i = 0; i <= steps; i++) {
+                    const currR = r1 + (i * stepR);
+                    const currC = c1 + (i * stepC);
+                    const cellEl = document.querySelector(`.ws-cell[data-r="${currR}"][data-c="${currC}"]`);
+                    if (cellEl) {
+                        cellEl.classList.add('selected');
+                        currentPath.push(cellEl);
+                    }
+                }
+            }
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.ws-cell.selected').forEach(el => el.classList.remove('selected'));
+            currentPath = [];
+        }
+
+        function checkWordMatch() {
+            // Extraer string leido del DOM en orden de selección
+            let selectedWord = currentPath.map(cell => cell.textContent).join('');
+            let reversedWord = selectedWord.split('').reverse().join('');
+
+            // Verificar si coinciden con alguna palabra no encontrada
+            let matchedWord = null;
+            if (wordsToFind.includes(selectedWord)) matchedWord = selectedWord;
+            else if (wordsToFind.includes(reversedWord)) matchedWord = reversedWord;
+
+            if (matchedWord) {
+                // Éxito
+                currentPath.forEach(cell => {
+                    cell.classList.remove('selected');
+                    cell.classList.add('found');
+                });
+                
+                // Actualizar listas
+                wordsToFind = wordsToFind.filter(w => w !== matchedWord);
+                foundWords.push(matchedWord);
+                
+                // Tacharla de la UI inferior
+                document.getElementById(`word-${matchedWord}`).classList.add('found-word');
+                
+                updateStatsUI();
+
+                if (wordsToFind.length === 0) {
+                    winGame();
+                }
+            } else {
+                // Fallo
+                clearSelection();
+            }
+        }
+
+        function updateTimer() {
+            if(!gameActive) return;
+            secondsElapsed++;
+            
+            const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+            timeEl.textContent = `${mins}:${secs}`;
+
+            // Penalización de nota con base en el tiempo (Base ideal: 90 segundos = 5.0)
+            if (secondsElapsed > 90) {
+                // Restar 0.1 por cada 15 segundos adicionales
+                const penalization = Math.floor((secondsElapsed - 90) / 15) * 0.1;
+                currentGrade = Math.max(1.0, 5.0 - penalization);
+                gradeEl.textContent = currentGrade.toFixed(1);
+                
+                if(currentGrade < 3.0) {
+                    gradeEl.style.color = 'var(--danger)';
+                    gradeEl.parentElement.style.borderColor = '#fca5a5';
+                    gradeEl.parentElement.style.backgroundColor = '#fef2f2';
+                }
+            }
+        }
+
+        function updateStatsUI() {
+            foundEl.textContent = `${foundWords.length} / 10`;
+        }
+
+        function winGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            setTimeout(() => {
+                document.getElementById('final-score').textContent = currentGrade.toFixed(1);
+                document.getElementById('final-time').textContent = `Tiempo: ${timeEl.textContent}`;
+                document.getElementById('victory-modal').classList.add('active');
+                startConfetti();
+            }, 500);
+        }
+
+        let confettiLoop;
+        function startConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            const colors = ['#059669', '#10b981', '#0284c7', '#38bdf8', '#fbbf24'];
+
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    r: Math.random() * 6 + 4,
+                    dx: Math.random() * 3 - 1.5,
+                    dy: Math.random() * 3 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                    p.x += p.dx;
+                    p.y += p.dy;
+                    if (p.y > canvas.height) {
+                        p.y = -10;
+                        p.x = Math.random() * canvas.width;
+                    }
+                });
+                confettiLoop = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // Inicializar el juego al cargar la página
+        window.addEventListener('DOMContentLoaded', initGame);
+
+    </script>
+</body>
+</html>

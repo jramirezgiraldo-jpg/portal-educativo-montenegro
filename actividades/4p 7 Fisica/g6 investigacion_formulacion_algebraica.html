@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Investigación Guiada: Formulación Algebraica (E = mgh)</title>
+    <style>
+        :root {
+            /* Tema Cyberpunk - Juego */
+            --cp-bg: #0b0c10;
+            --cp-dark: #1f2833;
+            --cp-neon-cyan: #66fcf1;
+            --cp-neon-blue: #45a29e;
+            --cp-neon-green: #39ff14;
+            --cp-neon-red: #ff073a;
+            --cp-text: #c5c6c7;
+            
+            /* Tema Lectura - Teoría */
+            --read-bg: #f9fafb;
+            --read-card: #ffffff;
+            --read-text: #1f2937;
+            --read-title: #111827;
+            --read-accent: #2563eb;
+            --read-border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            color: var(--cp-text);
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #zona-juego {
+            background-color: var(--cp-bg);
+            background-image: 
+                linear-gradient(rgba(102, 252, 241, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 252, 241, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 20px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 4px solid var(--cp-neon-cyan);
+            box-shadow: 0 4px 15px rgba(102, 252, 241, 0.2);
+            touch-action: none; 
+            user-select: none;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 650px;
+            background-color: rgba(31, 40, 51, 0.9);
+            border: 2px solid var(--cp-neon-blue);
+            border-radius: 12px;
+            padding: clamp(15px, 4vw, 25px);
+            box-shadow: 0 0 20px rgba(69, 162, 158, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--cp-neon-blue);
+            padding-bottom: 10px;
+        }
+
+        .instruction-banner {
+            background: rgba(102, 252, 241, 0.1);
+            border-left: 3px solid var(--cp-neon-cyan);
+            padding: 10px;
+            font-size: clamp(12px, 3vw, 14px);
+            color: var(--cp-neon-cyan);
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .score-indicator {
+            font-family: monospace;
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--cp-neon-green);
+        }
+
+        .game-status {
+            font-family: monospace;
+            font-size: clamp(12px, 3vw, 15px);
+            color: var(--cp-text);
+        }
+
+        /* Pool of unassigned items */
+        .items-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 90px;
+            padding: 10px;
+            background: var(--cp-dark);
+            border: 1px dashed var(--cp-neon-blue);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+            align-content: center;
+        }
+
+        .chip {
+            background-color: rgba(102, 252, 241, 0.08);
+            border: 2px solid var(--cp-neon-blue);
+            color: var(--cp-neon-cyan);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: clamp(12px, 2.8vw, 14px);
+            font-family: monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chip.selected {
+            background-color: var(--cp-neon-cyan);
+            color: var(--cp-bg);
+            border-color: #fff;
+            box-shadow: 0 0 10px var(--cp-neon-cyan);
+            transform: scale(1.05);
+        }
+
+        /* Categories Drop/Target Containers */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 12px;
+        }
+
+        @media(min-width: 500px) {
+            .categories-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .category-box {
+            background-color: var(--cp-dark);
+            border: 2px solid var(--cp-neon-blue);
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-box:hover {
+            border-color: var(--cp-neon-cyan);
+            box-shadow: 0 0 8px rgba(102, 252, 241, 0.2);
+        }
+
+        .category-title {
+            font-size: clamp(11px, 2.5vw, 13px);
+            font-weight: bold;
+            color: var(--cp-neon-cyan);
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(102, 252, 241, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .category-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            flex-grow: 1;
+            align-content: flex-start;
+        }
+
+        .category-items .chip {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: rgba(57, 255, 20, 0.1);
+            border-color: var(--cp-neon-green);
+            color: var(--cp-neon-green);
+            cursor: default;
+        }
+
+        .success-anim {
+            animation: flash-green 0.6s ease-out;
+        }
+        .fail-anim {
+            animation: shake-red 0.4s ease-in-out;
+        }
+
+        @keyframes flash-green {
+            0% { box-shadow: 0 0 0 rgba(57, 255, 20, 0); }
+            50% { box-shadow: 0 0 30px rgba(57, 255, 20, 0.8); border-color: var(--cp-neon-green); }
+            100% { box-shadow: 0 0 0 rgba(57, 255, 20, 0); }
+        }
+
+        @keyframes shake-red {
+            0%, 100% { transform: translateX(0); box-shadow: 0 0 0 transparent; }
+            20%, 60% { transform: translateX(-8px); box-shadow: 0 0 15px rgba(255, 7, 58, 0.6); border-color: var(--cp-neon-red); }
+            40%, 80% { transform: translateX(8px); box-shadow: 0 0 15px rgba(255, 7, 58, 0.6); border-color: var(--cp-neon-red); }
+        }
+
+        #game-complete {
+            display: none;
+            text-align: center;
+            font-family: monospace;
+        }
+        #game-complete h2 { color: var(--cp-neon-green); margin-bottom: 15px; font-size: 22px; }
+        #game-complete p { color: var(--cp-text); margin-bottom: 10px; }
+
+        /* ZONA DE LECTURA E HISTORIA */
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(30px, 6vw, 60px) clamp(15px, 4vw, 30px);
+            flex-grow: 1;
+        }
+
+        .reading-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--read-card);
+            border-radius: 16px;
+            padding: clamp(20px, 5vw, 40px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--read-border);
+        }
+
+        .reading-container h1 {
+            color: var(--read-title);
+            font-size: clamp(22px, 5vw, 30px);
+            margin-bottom: 20px;
+            line-height: 1.2;
+            border-bottom: 3px solid var(--read-accent);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reading-container h2 {
+            color: var(--read-title);
+            font-size: clamp(18px, 4vw, 22px);
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .reading-container h3 {
+            color: var(--read-accent);
+            font-size: clamp(16px, 3.5vw, 19px);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .reading-container p {
+            margin-bottom: 16px;
+            font-size: clamp(15px, 2.8vw, 17px);
+            line-height: 1.7;
+            text-align: justify;
+        }
+
+        .reading-container ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .reading-container li {
+            margin-bottom: 8px;
+            font-size: clamp(15px, 2.8vw, 17px);
+        }
+
+        .formula-box {
+            background: #eff6ff;
+            border: 2px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-family: monospace;
+            font-size: clamp(18px, 4vw, 24px);
+            color: #1e40af;
+            margin: 20px 0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .workshop-section {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px dashed #cbd5e1;
+        }
+
+        .workshop-instruction {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--read-accent);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-weight: 600;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .activity-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .activity-type {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .type-direct { background: #dbeafe; color: #1e40af; }
+        .type-draw { background: #dcfce7; color: #166534; }
+        .type-analyze { background: #fee2e2; color: #991b1b; }
+        .type-map { background: #f3e8ff; color: #6b21a8; }
+        
+        .icon { width: 24px; height: 24px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- ZONA DE JUEGO SUPERIOR (Tap & Sort Interactivo) -->
+        <section id="zona-juego">
+            <div class="game-container" id="game-container">
+                <div class="game-header">
+                    <div class="game-status">Clasificación: <span id="progress-count">0</span>/12</div>
+                    <div class="score-indicator">Nota: <span id="score-val">5.0</span></div>
+                </div>
+
+                <div class="instruction-banner">
+                    💡 <strong>Instrucción:</strong> Toca un elemento de la lista central y luego toca el contenedor correcto al que pertenece.
+                </div>
+
+                <!-- Piscina de elementos sin clasificar -->
+                <div class="items-pool" id="items-pool">
+                    <!-- Generados por JS -->
+                </div>
+
+                <!-- Contenedores / Categorías -->
+                <div class="categories-grid" id="categories-grid">
+                    <div class="category-box" onclick="selectCategory('variables')">
+                        <div class="category-title">Variables de la Ecuación</div>
+                        <div class="category-items" id="cat-variables"></div>
+                    </div>
+                    <div class="category-box" onclick="selectCategory('unidades')">
+                        <div class="category-title">Unidades de Medida</div>
+                        <div class="category-items" id="cat-unidades"></div>
+                    </div>
+                    <div class="category-box" onclick="selectCategory('conceptos')">
+                        <div class="category-title">Conceptos Físicos</div>
+                        <div class="category-items" id="cat-conceptos"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pantalla final del juego -->
+            <div class="game-container" id="game-complete">
+                <h2>¡SISTEMA COMPLETADO!</h2>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:60px;height:60px;margin: 0 auto 15px auto;color:var(--cp-neon-green);display:block;">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <p>Has clasificado correctamente todos los componentes de la energía potencial gravitacional.</p>
+                <p>Tu nota final es: <strong id="final-score" style="color:var(--cp-neon-green); font-size:20px;"></strong></p>
+                <p style="margin-top:20px; font-size: 13px; color: var(--cp-neon-blue);">Desliza hacia abajo para acceder al material teórico y al taller de repaso.</p>
+            </div>
+        </section>
+
+        <!-- ZONA DE LECTURA TEÓRICA Y TALLER (SIEMPRE VISIBLE) -->
+        <section id="zona-lectura">
+            <div class="reading-container">
+                
+                <h1>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12zm10-5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 8c-2.76 0-5 2.24-5 5v1h10v-1c0-2.76-2.24-5-5-5z"/></svg>
+                    Formulación Algebraica: La Energía Potencial Gravitacional ($E = mgh$)
+                </h1>
+                
+                <p>En el estudio de la física, uno de los conceptos más fascinantes es la energía. La energía no se crea ni se destruye; simplemente se transforma. Entre las formas mecánicas que adquiere un cuerpo debido a su posición o estado de movimiento, destaca la <strong>energía potencial gravitacional</strong>. Esta es la energía almacenada en un objeto como resultado de su posición vertical en un campo gravitatorio, frente a un punto de referencia considerado como cero (por ejemplo, el suelo).</p>
+
+                <h2>1. ¿Qué significa cada término en la ecuación?</h2>
+                <p>La formulación matemática que describe y permite calcular con precisión cuánta energía potencial gravitacional almacena un cuerpo fue deducida a partir de las leyes de la mecánica clásica. Su expresión algebraica es elegante y compacta:</p>
+                
+                <div class="formula-box">
+                    $E_p = m \cdot g \cdot h$
+                </div>
+
+                <p>Analicemos detalladamente cada una de las variables que componen esta poderosa expresión algebraica:</p>
+                <ul>
+                    <li><strong>$E_p$ (Energía Potencial):</strong> Se mide en Joules (J) en el Sistema Internacional de Unidades. Representa la capacidad que tiene el cuerpo para realizar un trabajo mecánico debido a su altura.</li>
+                    <li><strong>$m$ (Masa):</strong> Se mide en kilogramos (kg). Indica la cantidad de materia que posee el objeto. A mayor masa, mayor será la fuerza de atracción gravitatoria sobre él y, por ende, mayor su energía potencial acumulada.</li>
+                    <li><strong>$g$ (Aceleración de la gravedad):</strong> En la superficie de la Tierra, es una constante física cuyo valor aproximado estándar es $9.8 \, \text{m/s}^2$ (o $9.81 \, \text{m/s}^2$). Representa qué tan rápido acelera un cuerpo en caída libre debido a la atracción del planeta.</li>
+                    <li><strong>$h$ (Altura):</strong> Se mide en metros (m). Corresponde a la distancia vertical que separa al objeto del punto de referencia seleccionado. Si un objeto está apoyado en el suelo ($h = 0$), su energía potencial gravitacional respecto al suelo es nula.</li>
+                </ul>
+
+                <h2>2. Relación de Proporcionalidad en el Sistema</h2>
+                <p>La fórmula $E = mgh$ nos enseña cómo interactúan las variables físicas mediante relaciones de proporcionalidad directa:</p>
+                <ul>
+                    <li><strong>Proporcionalidad con la masa ($m$):</strong> Si duplicamos la masa de un objeto (por ejemplo, cargando dos rocas idénticas en lugar de una) a la misma altura, su energía potencial almacenada se duplica exactamente.</li>
+                    <li><strong>Proporcionalidad con la altura ($h$):</strong> Si elevamos un mismo objeto al doble de altura (pasando de un piso a otro en un edificio), su capacidad para realizar trabajo al caer también se duplica de manera lineal.</li>
+                </ul>
+
+                <h2>3. Aplicaciones en el Mundo Real</h2>
+                <p>Comprender esta fórmula no es un mero ejercicio teórico de salón de clases; tiene aplicaciones industriales y tecnológicas vitales:</p>
+                <p>Piensa en las <strong>centrales hidroeléctricas</strong>. El agua es almacenada a gran altura en embalses montañosos ($h$ elevado). Al dejar caer el agua a través de enormes tuberías forzadas hacia las turbinas, esa gigantesca energía potencial gravitacional se convierte en energía cinética y posteriormente en energía eléctrica que ilumina ciudades enteras. De igual forma, los ingenieros calculan la energía potencial al diseñar montañas rusas, asegurándose de que el primer carro sea arrastrado a la cima más alta para acumular la energía necesaria que impulse el recorrido completo sin motores adicionales.</p>
+
+                <h2>4. Conservación de la Energía Mecánica</h2>
+                <p>Cuando un objeto cae libremente desde una altura $h$, la altura disminuye (por lo que $E_p$ se reduce), pero su velocidad aumenta. Esto significa que la energía potencial gravitacional no se pierde, sino que se transforma dinámicamente en <strong>energía cinética</strong> (la energía del movimiento). La suma de ambas energías permanece constante en ausencia de fricción significativa, demostrando la armonía matemática de las leyes de la naturaleza.</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso: Investigación y Consolidación</h2>
+                    
+                    <div class="workshop-instruction">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno.
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>1.</strong> Según la lectura, ¿qué mide exactamente la energía potencial gravitacional y en qué unidades del Sistema Internacional se expresa?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-draw">Dibujo / Ilustración</span>
+                        <p><strong>2.</strong> Dibuja un sistema con un objeto pesado a cierta altura $h$ del suelo. Señala con flechas los tres factores de la fórmula ($m$, $g$ y $h$).</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analyze">Análisis Crítico</span>
+                        <p><strong>3.</strong> Razona y explica por qué un objeto ubicado sobre una mesa tiene mayor energía potencial gravitacional que el mismo objeto cuando cae y reposa en el piso.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-map">Mapa Conceptual</span>
+                        <p><strong>4.</strong> Elabora un mapa mental que conecte los términos: Energía Potencial, Masa, Gravedad, Altura y Unidades de Medida.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>5.</strong> ¿Cuál es el valor estándar de la aceleración gravitacional en la superficie de la Tierra mencionado en el texto?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analyze">Análisis Crítico</span>
+                        <p><strong>6.</strong> Si un objeto duplica su masa pero mantiene exactamente la misma altura, ¿qué le ocurre matemáticamente a su energía potencial gravitacional? Justifica tu respuesta.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-draw">Dibujo / Ilustración</span>
+                        <p><strong>7.</strong> Ilustra una central hidroeléctrica explicando mediante esquemas visuales dónde se maximiza la altura ($h$) y cómo se aprovecha la fórmula.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-map">Cuadro Comparativo</span>
+                        <p><strong>8.</strong> Crea una tabla comparativa de dos columnas diferenciando la variable "Masa ($m$)" (definición y unidad) frente a la variable "Altura ($h$)" (definición y unidad).</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>9.</strong> Explica brevemente cómo se relaciona la energía potencial gravitacional con la energía cinética durante la caída libre de un cuerpo.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-draw">Dibujo / Ilustración</span>
+                        <p><strong>10.</strong> ¡Diseño de Ingeniería! Dibuja una montaña rusa futurista y señala con marcas de color en qué punto exacto los carros acumulan la mayor energía potencial gravitacional.</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Datos de los 12 conceptos para el juego Tap & Sort
+        const allItems = [
+            // Variables de la Ecuación
+            { id: 1, text: "Energía Potencial (Ep)", cat: "variables" },
+            { id: 2, text: "Masa (m)", cat: "variables" },
+            { id: 3, text: "Gravedad (g)", cat: "variables" },
+            { id: 4, text: "Altura (h)", cat: "variables" },
+            
+            // Unidades de Medida
+            { id: 5, text: "Joules (J)", cat: "unidades" },
+            { id: 6, text: "Kilogramos (kg)", cat: "unidades" },
+            { id: 7, text: "m/s²", cat: "unidades" },
+            { id: 8, text: "Metros (m)", cat: "unidades" },
+            
+            // Conceptos Físicos
+            { id: 9, text: "Trabajo mecánico", cat: "conceptos" },
+            { id: 10, text: "Conservación de energía", cat: "conceptos" },
+            { id: 11, text: "Campo gravitatorio", cat: "conceptos" },
+            { id: 12, text: "Caída libre", cat: "conceptos" }
+        ];
+
+        let pool = [...allItems];
+        // Mezclar aleatoriamente el pool inicial
+        pool.sort(() => Math.random() - 0.5);
+
+        let selectedItem = null;
+        let score = 5.0; // Sistema de notas de 1 a 5
+        let sortedCount = 0;
+
+        const poolContainer = document.getElementById("items-pool");
+        const progressCount = document.getElementById("progress-count");
+        const scoreVal = document.getElementById("score-val");
+        const gameContainer = document.getElementById("game-container");
+
+        function renderPool() {
+            poolContainer.innerHTML = "";
+            if (pool.length === 0) {
+                poolContainer.innerHTML = `<span style="font-size:12px; color:var(--cp-neon-green); font-family:monospace;">¡Todos los elementos clasificados!</span>`;
+                return;
+            }
+
+            pool.forEach(item => {
+                const chip = document.createElement("div");
+                chip.className = `chip ${selectedItem && selectedItem.id === item.id ? 'selected' : ''}`;
+                chip.innerText = item.text;
+                chip.onclick = (e) => {
+                    e.stopPropagation();
+                    selectItem(item);
+                };
+                poolContainer.appendChild(chip);
+            });
+        }
+
+        function selectItem(item) {
+            if (selectedItem && selectedItem.id === item.id) {
+                selectedItem = null; // Deseleccionar si se vuelve a tocar
+            } else {
+                selectedItem = item;
+            }
+            renderPool();
+        }
+
+        function selectCategory(categoryKey) {
+            if (!selectedItem) {
+                // Sin elemento seleccionado, no hacer nada o dar pequeño aviso
+                return;
+            }
+
+            // Validar si el elemento pertenece a esta categoría
+            if (selectedItem.cat === categoryKey) {
+                // Correcto
+                gameContainer.classList.remove("fail-anim");
+                void gameContainer.offsetWidth;
+                gameContainer.classList.add("success-anim");
+
+                // Mover a la categoría correspondiente visualmente
+                const targetCatContainer = document.getElementById(`cat-${categoryKey}`);
+                const successChip = document.createElement("div");
+                successChip.className = "chip";
+                successChip.innerText = selectedItem.text;
+                targetCatContainer.appendChild(successChip);
+
+                // Remover del pool
+                pool = pool.filter(i => i.id !== selectedItem.id);
+                sortedCount++;
+                progressCount.innerText = sortedCount;
+
+                selectedItem = null;
+                renderPool();
+
+                // Verificar si terminó el juego
+                if (sortedCount === allItems.length) {
+                    setTimeout(showGameComplete, 700);
+                }
+            } else {
+                // Incorrecto: Animación de fallo, penalización en nota
+                gameContainer.classList.remove("success-anim");
+                gameContainer.classList.remove("fail-anim");
+                void gameContainer.offsetWidth;
+                gameContainer.classList.add("fail-anim");
+
+                score = Math.max(1.0, score - 0.4);
+                scoreVal.innerText = score.toFixed(1);
+
+                selectedItem = null;
+                renderPool();
+            }
+        }
+
+        function showGameComplete() {
+            document.getElementById("game-container").style.display = "none";
+            const completeScreen = document.getElementById("game-complete");
+            completeScreen.style.display = "block";
+            document.getElementById("final-score").innerText = score.toFixed(1) + " / 5.0";
+        }
+
+        // Inicializar al cargar
+        window.onload = () => {
+            renderPool();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Exploración: Energía Mecánica</title>
+    <style>
+        :root {
+            --bg-main: #f0fdfa;
+            --text-main: #0f172a;
+            --text-light: #475569;
+            --primary: #0284c7; /* Blue */
+            --primary-hover: #0369a1;
+            --secondary: #059669; /* Emerald */
+            --tertiary: #d97706; /* Amber */
+            --success: #16a34a; /* Green */
+            --error: #dc2626; /* Red */
+            --warning: #ea580c; /* Orange */
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 0.75rem;
+            --radius-full: 9999px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Prevención de bugs táctiles solicitada */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .game-header h1 {
+            font-size: clamp(24px, 5vw, 36px);
+            color: var(--primary);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .game-header p {
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--text-light);
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .stats-board {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            background: var(--card-bg);
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-md);
+            font-weight: bold;
+            font-size: clamp(14px, 3vw, 16px);
+            border: 2px solid #e2e8f0;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .game-arena {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .pool-container {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            border: 2px dashed #94a3b8;
+            min-height: 180px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            align-content: center;
+            gap: 12px;
+        }
+
+        .chip {
+            background-color: #f8fafc;
+            color: var(--text-main);
+            padding: 12px 20px;
+            border-radius: var(--radius-full);
+            font-size: clamp(13px, 3vw, 16px);
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid #cbd5e1;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            user-select: none;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            background-color: #e0f2fe;
+            border-color: var(--primary);
+            color: var(--primary-hover);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3);
+            transform: scale(1.05) translateY(-2px);
+        }
+
+        .chip.correct-anim {
+            opacity: 0;
+            transform: scale(0.5) translateY(-20px);
+            pointer-events: none;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--error) !important;
+            background-color: #fef2f2 !important;
+            color: var(--error) !important;
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .category-btn {
+            flex: 1 1 200px;
+            background-color: var(--card-bg);
+            border: 3px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn h3 {
+            font-size: clamp(15px, 3.5vw, 18px);
+            color: var(--text-main);
+            pointer-events: none;
+        }
+
+        .category-btn p {
+            font-size: clamp(12px, 2.5vw, 14px);
+            color: var(--text-light);
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        .category-btn:active {
+            transform: scale(0.97);
+        }
+
+        .category-btn.highlight {
+            border-color: var(--success);
+            background-color: #f0fdf4;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-restart {
+            margin-top: 30px;
+            padding: 12px 32px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-restart:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        .btn-restart:active {
+            transform: scale(0.95);
+        }
+
+        #win-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 40px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            border: 3px solid var(--success);
+            margin-top: 20px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 60px 20px;
+            border-top: 6px solid var(--primary);
+            box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.05);
+            /* Reactivamos scroll y selección en la zona de lectura */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .article-container h2 {
+            font-size: clamp(28px, 6vw, 40px);
+            color: var(--primary);
+            margin-bottom: 30px;
+            border-bottom: 3px solid #e0f2fe;
+            padding-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .article-container h3 {
+            font-size: clamp(22px, 5vw, 28px);
+            color: var(--secondary);
+            margin-top: 40px;
+            margin-bottom: 18px;
+            line-height: 1.4;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 4vw, 19px);
+            margin-bottom: 22px;
+            line-height: 1.8;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-bottom: 25px;
+            padding-left: 25px;
+        }
+
+        .article-container li {
+            font-size: clamp(16px, 4vw, 19px);
+            margin-bottom: 12px;
+            color: #334155;
+            line-height: 1.7;
+        }
+
+        .highlight-box {
+            background-color: #f8fafc;
+            border-left: 6px solid var(--tertiary);
+            padding: 20px 25px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 30px 0;
+            font-style: italic;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workshop-section {
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--radius-md);
+            padding: clamp(25px, 5vw, 45px);
+            margin-top: 60px;
+        }
+
+        .workshop-section h2 {
+            border-bottom-color: #cbd5e1;
+            color: var(--text-main);
+        }
+
+        .workshop-notice {
+            background-color: #fffbeb;
+            color: #92400e;
+            padding: 18px 25px;
+            border-left: 6px solid var(--tertiary);
+            font-weight: bold;
+            border-radius: 6px;
+            margin-bottom: 35px;
+            font-size: clamp(16px, 4vw, 18px);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: custom-counter;
+        }
+
+        .workshop-list li {
+            position: relative;
+            margin-bottom: 35px;
+            padding-left: clamp(45px, 8vw, 60px);
+            font-size: clamp(16px, 4vw, 18px);
+            line-height: 1.6;
+            color: #1e293b;
+        }
+
+        .workshop-list li::before {
+            counter-increment: custom-counter;
+            content: counter(custom-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: var(--primary);
+            color: white;
+            width: clamp(32px, 6vw, 40px);
+            height: clamp(32px, 6vw, 40px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: clamp(15px, 4vw, 18px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .activity-type {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #0f172a;
+            padding: 5px 12px;
+            border-radius: var(--radius-full);
+            font-size: clamp(11px, 2.5vw, 13px);
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* Iconos SVG */
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .icon-large {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Clasificador de Energía Mecánica</h1>
+                <p>1️⃣ <strong>Toca</strong> un concepto de la lista central. 2️⃣ <strong>Toca</strong> el contenedor correcto al que pertenece.</p>
+                <div class="stats-board">
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--primary);" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                        Faltan: <span id="remaining-count">15</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--error);" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2S22 6.477 22 12S17.523 22 12 22ZM11 15V17H13V15H11ZM11 7V13H13V7H11Z"/></svg>
+                        Errores: <span id="mistakes-count">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--success);" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/></svg>
+                        Nota: <span id="score-display">5.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="game-arena">
+                <!-- Lista central de conceptos mezclados -->
+                <div class="pool-container" id="concepts-pool">
+                    <!-- Los chips se inyectarán aquí vía JS -->
+                </div>
+
+                <!-- Contenedores de Categorías -->
+                <div class="categories-container" id="categories-board">
+                    <div class="category-btn" data-category="1" style="border-top: 5px solid var(--secondary);">
+                        <svg class="icon icon-large" style="color: var(--secondary);" viewBox="0 0 24 24"><path d="M13 2.03998C17.446 2.53697 20.9413 5.92543 21.6033 10.3341L22.9515 9.77382C22.2573 4.88725 18.3615 1.05949 13.5 0.354126V2.03998ZM10.5 2.03998V0.354126C5.63851 1.05949 1.74269 4.88725 1.04853 9.77382L2.39673 10.3341C3.05872 5.92543 6.55404 2.53697 11 2.03998H10.5ZM12 22C6.47715 22 2 17.5228 2 12H4C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12H22C22 17.5228 17.5228 22 12 22Z"/></svg>
+                        <h3>Potencial Gravitacional</h3>
+                        <p>Depende de la Altura</p>
+                    </div>
+                    <div class="category-btn" data-category="2" style="border-top: 5px solid var(--tertiary);">
+                        <svg class="icon icon-large" style="color: var(--tertiary);" viewBox="0 0 24 24"><path d="M4.25776 10.4285C5.83648 8.01956 8.35821 6 12.0007 6C15.6432 6 18.1649 8.01956 19.7436 10.4285L21.4116 9.33649C19.5888 6.55589 16.5186 4 12.0007 4C7.48275 4 4.41258 6.55589 2.58984 9.33649L4.25776 10.4285ZM21.4117 14.6635L19.7437 13.5715C18.165 15.9805 15.6432 18 12.0007 18C8.35826 18 5.83652 15.9805 4.2578 13.5715L2.58984 14.6635C4.41261 17.4441 7.48281 20 12.0007 20C16.5186 20 19.5888 17.4441 21.4117 14.6635Z"/></svg>
+                        <h3>Potencial Elástica</h3>
+                        <p>Depende de la Deformación</p>
+                    </div>
+                    <div class="category-btn" data-category="3" style="border-top: 5px solid var(--primary);">
+                        <svg class="icon icon-large" style="color: var(--primary);" viewBox="0 0 24 24"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM11 10.5183L14.7738 12L11 13.4817V10.5183ZM9 7.74712L17.849 11.1601C18.4239 11.3818 18.4239 12.6181 17.849 12.8398L9 16.2528C8.3371 16.5085 7.64332 15.9427 7.77123 15.2444L8.43167 12H11C11.5523 12 12 11.5523 12 11C12 10.4477 11.5523 10 11 10H8.43167L7.77123 8.75549C7.64332 8.05721 8.3371 7.49141 9 7.74712Z"/></svg>
+                        <h3>Energía Cinética</h3>
+                        <p>Energía del Movimiento</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="win-message">
+                <h2 style="color: var(--success); font-size: clamp(24px, 6vw, 32px); margin-bottom: 10px;">¡Clasificación Completa!</h2>
+                <p style="font-size: clamp(16px, 4vw, 20px); margin-bottom: 15px;">Has comprendido los estados de la Energía Mecánica.</p>
+                <p style="font-size: clamp(20px, 5vw, 26px); font-weight: bold; color: var(--primary);">Tu nota final: <span id="final-score">5.0</span> / 5.0</p>
+                <button class="btn-restart" onclick="initGame()">Jugar de Nuevo</button>
+                <p style="margin-top: 25px; font-size: clamp(14px, 3.5vw, 16px); color: var(--text-light); font-weight: bold;">
+                    👇 Desliza hacia abajo para leer el artículo y resolver el taller.
+                </p>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>La Energía Mecánica: El Poder Oculto y el Movimiento</h2>
+                
+                <p>Si miras a tu alrededor, el universo entero es un escenario donde constantemente ocurren cambios y movimientos. Un balón que vuela por el aire, una montaña rusa que desciende a toda velocidad, o incluso un arco a punto de disparar una flecha; todos estos eventos están gobernados por una de las fuerzas más fundamentales de la física: <strong>la Energía Mecánica</strong>.</p>
+                
+                <p>En términos sencillos, la energía mecánica es la capacidad que tiene un cuerpo o conjunto de cuerpos para realizar un trabajo o producir movimiento. Para los científicos, la energía mecánica total de un objeto es simplemente la suma de dos tipos de energía que trabajan en conjunto como un equipo inseparable: la <strong>Energía Potencial</strong> y la <strong>Energía Cinética</strong>.</p>
+
+                <h3>Energía Potencial: El Estado Latente</h3>
+                
+                <p>Imagina que tienes una roca pesada en tus manos y la levantas sobre tu cabeza. Mientras la sostienes, la roca no se mueve, pero sabes instintivamente que posee un "poder oculto". Si la sueltas, ese poder se liberará. A esta energía acumulada y guardada le llamamos <strong>Energía Potencial</strong>.</p>
+
+                <p>La energía potencial es el estado latente de la energía mecánica. "Latente" significa que está ahí, escondida, lista para ser usada, pero no se está manifestando en movimiento todavía. Lo fascinante de la energía potencial es que se basa puramente en <strong>coordenadas espaciales</strong>. Es decir, depende de la posición, la altura o la forma de un objeto, no de su velocidad. Existen dos grandes tipos que debes conocer:</p>
+                
+                <ul>
+                    <li><strong>Energía Potencial Gravitacional:</strong> Depende exclusivamente de la altura a la que se encuentre un objeto respecto al suelo y de la gravedad del planeta. Una manzana colgando de la rama más alta de un árbol tiene mucha energía potencial gravitacional. Entre más alto esté el objeto y más pesado sea (su masa), más energía acumulará en secreto.</li>
+                    <li><strong>Energía Potencial Elástica:</strong> Esta depende de la deformación espacial de un objeto. Cuando estiras una banda de goma, la deformas. Sus coordenadas espaciales cambian, y en ese esfuerzo, acumulas energía potencial elástica. Un resorte comprimido dentro de un juguete de cuerda o un trampolín hundido justo antes de empujar a un gimnasta hacia arriba, son claros ejemplos de esta energía en espera.</li>
+                </ul>
+
+                <h3>Energía Cinética: El Poder en Acción</h3>
+                
+                <p>Si la energía potencial es la energía "escondida" por la posición, la <strong>Energía Cinética</strong> es la energía en pura acción. Es la energía que posee cualquier cuerpo debido a su movimiento.</p>
+                
+                <p>Volvamos a la roca que sostienes sobre tu cabeza. Al soltarla, esa energía potencial gravitacional oculta comienza a transformarse inmediatamente en energía cinética a medida que la roca cae y gana velocidad. La energía cinética depende de dos factores cruciales: la <strong>masa del objeto</strong> y su <strong>velocidad</strong>. Un tren moviéndose lentamente tiene mucha energía cinética porque es masivo, mientras que una bala disparada también tiene muchísima energía cinética, no por su tamaño, sino por su increíble velocidad.</p>
+
+                <div class="highlight-box">
+                    <strong>¡El Principio de la Conservación!</strong> La magia de la física dicta que la energía no se crea ni se destruye, solo se transforma. En un sistema perfecto (sin fricción), si un objeto pierde energía potencial porque está cayendo, ganará exactamente la misma cantidad en energía cinética (velocidad). Ambas forman la Energía Mecánica.
+                </div>
+
+                <p>Comprender que la energía potencial es un estado latente basado en el espacio nos ayuda a entender cómo funcionan las presas hidroeléctricas (agua acumulada en altura lista para caer) o cómo los relojes de péndulo pueden seguir funcionando durante días. Todo se resume en la hermosa danza entre la posición (potencial) y el movimiento (cinética).</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso y Afianzamiento</h2>
+                    
+                    <div class="workshop-notice">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                        <span><strong>INSTRUCCIÓN OBLIGATORIA:</strong> Escribe, dibuja y resuelve estas 10 actividades ordenadamente en tu cuaderno de Ciencias Naturales / Física.</span>
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Define con tus propias palabras: ¿Qué es la Energía Mecánica y cuáles son los dos grandes tipos de energía que la componen sumados?
+                        </li>
+                        <li>
+                            <span class="activity-type">Dibujo / Ilustración</span><br>
+                            Dibuja una escena donde un objeto tenga mucha <strong>Energía Potencial Gravitacional</strong>. Explica en un pequeño cuadro de texto al lado de tu dibujo por qué escogiste ese ejemplo y dónde está "escondida" su energía.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Si un arquero sostiene un arco con la flecha puesta, pero NO tira de la cuerda (no la tensa), ¿puede la flecha salir disparada? Explica esto usando los conceptos de "deformación" y "energía latente".
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual que tenga como título central "Energía Potencial". Ramifícalo en sus dos tipos principales (Gravitacional y Elástica). Para cada tipo, escribe de qué depende (ej. altura o deformación) y da un ejemplo de la vida diaria distinto a los de la lectura.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Según el artículo, ¿cuáles son los dos factores físicos de los que depende exclusivamente la <strong>Energía Cinética</strong> de un objeto en movimiento?
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración y Análisis</span><br>
+                            Dibuja una montaña rusa con subidas y bajadas. Dibuja un carrito en el punto más alto (punto A) y el mismo carrito en el punto más bajo a máxima velocidad (punto B). Escribe al lado de cada carrito qué tipo de energía domina en ese momento exacto.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Imagina un resorte muy comprimido dentro del mecanismo de un reloj de juguete que aún no ha sido encendido. Aunque el juguete no se esté moviendo en absoluto, ¿tiene energía? Justifica tu respuesta basándote en la lectura.
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Mental</span><br>
+                            Crea un mapa mental cuyo centro sea la palabra "Energía Cinética". Añade al menos 5 ramas con ejemplos ilustrados o descritos de objetos cotidianos que posean mucha energía cinética en un momento dado.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            En el artículo se afirma que la energía potencial depende puramente de las "coordenadas espaciales" de un objeto. Explica brevemente qué quiere decir esta frase.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis de Caso Complejo</span><br>
+                            Un halcón vuela a 100 metros de altura sobre el suelo y se desplaza a una velocidad de 60 km/h. Analizando su situación, ¿Qué tipos de energía posee el ave en ese momento exacto y por qué? Argumenta tu respuesta.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fase 1: Datos - 15 conceptos (5 por cada de las 3 categorías)
+        const rawData = [
+            // Categoría 1: Potencial Gravitacional (Altura)
+            { id: 1, text: "Manzana colgando en el árbol", category: 1 },
+            { id: 2, text: "Agua en la cima de una represa", category: 1 },
+            { id: 3, text: "Paracaidista en el avión (antes de saltar)", category: 1 },
+            { id: 4, text: "Piedra pesada en la punta del monte", category: 1 },
+            { id: 5, text: "Maceta en el balcón del 5to piso", category: 1 },
+            
+            // Categoría 2: Potencial Elástica (Deformación)
+            { id: 6, text: "Resorte comprimido en un juguete", category: 2 },
+            { id: 7, text: "Banda de goma estirada", category: 2 },
+            { id: 8, text: "Cuerda de arco de flecha tensada", category: 2 },
+            { id: 9, text: "Trampolín hundido por el peso", category: 2 },
+            { id: 10, text: "Cuerda de guitarra templada", category: 2 },
+            
+            // Categoría 3: Energía Cinética (Movimiento)
+            { id: 11, text: "Automóvil a 100 km/h en autopista", category: 3 },
+            { id: 12, text: "Balón de fútbol volando al arco", category: 3 },
+            { id: 13, text: "Agua cayendo por una cascada", category: 3 },
+            { id: 14, text: "Corredor olímpico a máxima velocidad", category: 3 },
+            { id: 15, text: "Viento fuerte moviendo los árboles", category: 3 }
+        ];
+
+        let gameData = [];
+        let selectedChip = null;
+        let mistakes = 0;
+        let correctCount = 0;
+        let totalItems = rawData.length;
+        let isAnimating = false;
+
+        // Referencias al DOM
+        const poolContainer = document.getElementById('concepts-pool');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const countEl = document.getElementById('remaining-count');
+        const mistakesEl = document.getElementById('mistakes-count');
+        const scoreEl = document.getElementById('score-display');
+        const winMessage = document.getElementById('win-message');
+        const finalScoreEl = document.getElementById('final-score');
+        const gameArena = document.querySelector('.game-arena');
+
+        // Utilidad para mezclar array de forma aleatoria (Algoritmo de Fisher-Yates)
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Inicializar o reiniciar juego
+        function initGame() {
+            // Reset de estado del juego
+            selectedChip = null;
+            mistakes = 0;
+            correctCount = 0;
+            isAnimating = false;
+            
+            // Reset de UI
+            winMessage.style.display = 'none';
+            gameArena.style.display = 'flex';
+            poolContainer.innerHTML = '';
+            
+            // Limpiar estilos de las categorías
+            categoryBtns.forEach(btn => btn.classList.remove('highlight'));
+            
+            updateStats();
+
+            // Preparar datos mezclados e inyectarlos en el HTML
+            gameData = shuffle([...rawData]);
+            
+            gameData.forEach(item => {
+                const chip = document.createElement('div');
+                chip.classList.add('chip');
+                chip.textContent = item.text;
+                chip.dataset.id = item.id;
+                chip.dataset.category = item.category;
+                
+                // Asignar Evento Tap (Click)
+                chip.addEventListener('click', () => handleChipTap(chip));
+                
+                poolContainer.appendChild(chip);
+            });
+        }
+
+        // Manejo de la selección de un concepto
+        function handleChipTap(chip) {
+            if (isAnimating) return;
+            
+            // Si el chip tocado ya estaba seleccionado, se deselecciona
+            if (selectedChip === chip) {
+                chip.classList.remove('selected');
+                selectedChip = null;
+                return;
+            }
+
+            // Quitar clase 'selected' al chip anterior (si existía)
+            if (selectedChip) {
+                selectedChip.classList.remove('selected');
+            }
+
+            // Aplicar selección al nuevo chip
+            chip.classList.add('selected');
+            selectedChip = chip;
+        }
+
+        // Manejo del tap/click en una categoría de destino
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Solo ejecutar si hay un chip seleccionado y no hay animaciones bloqueantes
+                if (!selectedChip || isAnimating) return;
+
+                const targetCategory = btn.dataset.category;
+                const correctCategory = selectedChip.dataset.category;
+
+                // Validación
+                if (targetCategory === correctCategory) {
+                    handleCorrectMatch(selectedChip, btn);
+                } else {
+                    handleIncorrectMatch(selectedChip);
+                }
+            });
+        });
+
+        // Lógica de respuesta correcta
+        function handleCorrectMatch(chip, btn) {
+            isAnimating = true; // Bloquea interacciones temporales
+            
+            // Efecto visual de acierto en el botón contenedor
+            btn.classList.add('highlight');
+            
+            // Animación de desaparición del chip
+            chip.classList.add('correct-anim');
+            
+            // Timeout para esperar la animación CSS antes de manipular el DOM
+            setTimeout(() => {
+                chip.remove();
+                selectedChip = null;
+                correctCount++;
+                updateStats();
+                
+                // Restaurar estilo del botón contenedor
+                btn.classList.remove('highlight');
+                
+                isAnimating = false; // Desbloquear interacción
+                checkWin(); // Revisar si el juego terminó
+            }, 300); // Milisegundos de la transición CSS
+        }
+
+        // Lógica de respuesta incorrecta
+        function handleIncorrectMatch(chip) {
+            isAnimating = true;
+            mistakes++;
+            updateStats();
+            
+            // Aplicar animación de error (Shake y color Rojo)
+            chip.classList.add('shake-error');
+            chip.classList.remove('selected');
+            selectedChip = null;
+            
+            // Remover la clase de error tras finalizar la animación
+            setTimeout(() => {
+                chip.classList.remove('shake-error');
+                isAnimating = false;
+            }, 400); // Duración de la animación CSS 'shake'
+        }
+
+        // Actualización del panel de estadísticas
+        function updateStats() {
+            const remaining = totalItems - correctCount;
+            countEl.textContent = remaining;
+            mistakesEl.textContent = mistakes;
+            
+            // Sistema de calificación estándar Colombiano: Inicia en 5.0. 
+            // Cada error resta 0.2 puntos. Tope mínimo 1.0.
+            let calcScore = 5.0 - (mistakes * 0.2);
+            calcScore = Math.max(1.0, calcScore); // Limitar mínimo a 1.0
+            calcScore = Math.min(5.0, calcScore); // Limitar máximo a 5.0
+            
+            const displayScore = calcScore.toFixed(1);
+            scoreEl.textContent = displayScore;
+            finalScoreEl.textContent = displayScore;
+            
+            // Cambiar color de nota según el rendimiento del estudiante
+            if (calcScore >= 4.0) scoreEl.style.color = "var(--success)";
+            else if (calcScore >= 3.0) scoreEl.style.color = "var(--warning)";
+            else scoreEl.style.color = "var(--error)";
+        }
+
+        // Validación de condición de victoria
+        function checkWin() {
+            if (correctCount === totalItems) {
+                setTimeout(() => {
+                    gameArena.style.display = 'none';
+                    winMessage.style.display = 'flex';
+                }, 350);
+            }
+        }
+
+        // Arrancar juego al cargar el documento (modo offline seguro)
+        window.onload = initGame;
+    </script>
+</body>
+</html>

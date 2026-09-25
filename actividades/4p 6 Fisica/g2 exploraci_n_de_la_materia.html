@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Exploración: ¿Qué hay dentro de la materia?</title>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --text-main: #1e293b;
+            --text-light: #475569;
+            --primary: #3b82f6; /* Blue */
+            --primary-hover: #2563eb;
+            --secondary: #8b5cf6; /* Purple */
+            --success: #10b981; /* Green */
+            --error: #ef4444; /* Red */
+            --warning: #f59e0b; /* Amber */
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 0.5rem;
+            --radius-full: 9999px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Prevención de bugs táctiles solicitada */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .game-header h1 {
+            font-size: clamp(24px, 5vw, 36px);
+            color: var(--secondary);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .game-header p {
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--text-light);
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .stats-board {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            background: var(--card-bg);
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-md);
+            font-weight: bold;
+            font-size: clamp(14px, 3vw, 16px);
+            border: 2px solid #e2e8f0;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .game-arena {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .pool-container {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            border: 2px dashed #cbd5e1;
+            min-height: 150px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            align-content: center;
+            gap: 12px;
+        }
+
+        .chip {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+            font-size: clamp(13px, 3vw, 16px);
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid #cbd5e1;
+            transition: all 0.2s ease-in-out;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            background-color: #eff6ff;
+            border-color: var(--primary);
+            color: var(--primary-hover);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            transform: scale(1.05);
+        }
+
+        .chip.correct-anim {
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .category-btn {
+            flex: 1 1 250px;
+            background-color: var(--card-bg);
+            border: 3px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-btn h3 {
+            font-size: clamp(16px, 4vw, 20px);
+            color: var(--text-main);
+            pointer-events: none;
+        }
+
+        .category-btn p {
+            font-size: clamp(12px, 2.5vw, 14px);
+            color: var(--text-light);
+            pointer-events: none;
+        }
+
+        .category-btn:active {
+            transform: scale(0.98);
+        }
+
+        .category-btn.highlight {
+            border-color: var(--primary);
+            background-color: #f0f9ff;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--error) !important;
+            background-color: #fef2f2 !important;
+            color: var(--error) !important;
+        }
+
+        .btn-restart {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-restart:hover {
+            background-color: #7c3aed;
+        }
+        
+        .btn-restart:active {
+            transform: scale(0.95);
+        }
+
+        #win-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            border: 2px solid var(--success);
+            margin-top: 20px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 50px 20px;
+            border-top: 6px solid var(--secondary);
+            box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.05);
+            /* Permitir scroll y selección aquí */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .article-container h2 {
+            font-size: clamp(26px, 6vw, 36px);
+            color: var(--secondary);
+            margin-bottom: 25px;
+            border-bottom: 3px solid #e2e8f0;
+            padding-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .article-container h3 {
+            font-size: clamp(20px, 5vw, 26px);
+            color: var(--primary-hover);
+            margin-top: 35px;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 4vw, 19px);
+            margin-bottom: 20px;
+            line-height: 1.8;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-bottom: 25px;
+            padding-left: 25px;
+        }
+
+        .article-container li {
+            font-size: clamp(16px, 4vw, 19px);
+            margin-bottom: 12px;
+            color: #334155;
+            line-height: 1.7;
+        }
+
+        .highlight-box {
+            background-color: #f8fafc;
+            border-left: 5px solid var(--warning);
+            padding: 20px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 25px 0;
+            font-style: italic;
+        }
+
+        .workshop-section {
+            background-color: #f8fafc;
+            border: 2px dashed #94a3b8;
+            border-radius: var(--radius-md);
+            padding: clamp(20px, 5vw, 40px);
+            margin-top: 50px;
+        }
+
+        .workshop-notice {
+            background-color: #eff6ff;
+            color: #1e3a8a;
+            padding: 15px 20px;
+            border-left: 6px solid var(--primary);
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            font-size: clamp(16px, 4vw, 18px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: custom-counter;
+        }
+
+        .workshop-list li {
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: clamp(40px, 8vw, 55px);
+            font-size: clamp(16px, 4vw, 18px);
+            line-height: 1.6;
+        }
+
+        .workshop-list li::before {
+            counter-increment: custom-counter;
+            content: counter(custom-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: var(--secondary);
+            color: white;
+            width: clamp(28px, 6vw, 36px);
+            height: clamp(28px, 6vw, 36px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: clamp(14px, 3.5vw, 16px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .activity-type {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #0f172a;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: clamp(11px, 2.5vw, 13px);
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* Utilidades de Iconos SVG incrustados */
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Clasificador Atómico</h1>
+                <p>1️⃣ <strong>Toca</strong> un concepto de la lista. 2️⃣ <strong>Toca</strong> el contenedor correcto al que pertenece.</p>
+                <div class="stats-board">
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--primary);" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                        Faltan: <span id="remaining-count">15</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--error);" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2S22 6.477 22 12S17.523 22 12 22ZM11 15V17H13V15H11ZM11 7V13H13V7H11Z"/></svg>
+                        Errores: <span id="mistakes-count">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--success);" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/></svg>
+                        Nota: <span id="score-display">5.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="game-arena">
+                <!-- Lista central de conceptos mezclados -->
+                <div class="pool-container" id="concepts-pool">
+                    <!-- Los chips se inyectarán aquí vía JS -->
+                </div>
+
+                <!-- Contenedores de Categorías -->
+                <div class="categories-container" id="categories-board">
+                    <div class="category-btn" data-category="1">
+                        <h3>Partículas del Átomo</h3>
+                        <p>Componentes internos</p>
+                    </div>
+                    <div class="category-btn" data-category="2">
+                        <h3>Estados Eléctricos</h3>
+                        <p>Condiciones de carga</p>
+                    </div>
+                    <div class="category-btn" data-category="3">
+                        <h3>Interacciones y Procesos</h3>
+                        <p>Fenómenos dinámicos</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="win-message">
+                <h2 style="color: var(--success); font-size: clamp(24px, 6vw, 32px); margin-bottom: 10px;">¡Clasificación Completa!</h2>
+                <p style="font-size: clamp(16px, 4vw, 20px); margin-bottom: 15px;">Has ordenado correctamente el universo atómico.</p>
+                <p style="font-size: clamp(20px, 5vw, 26px); font-weight: bold; color: var(--secondary);">Tu nota final: <span id="final-score">5.0</span> / 5.0</p>
+                <button class="btn-restart" onclick="initGame()">Jugar de Nuevo</button>
+                <p style="margin-top: 25px; font-size: clamp(14px, 3.5vw, 16px); color: var(--text-light); font-weight: bold;">
+                    👇 Desliza hacia abajo para leer el artículo y resolver el taller.
+                </p>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>El Misterio de la Materia: Un Viaje al Interior del Átomo</h2>
+                
+                <p>Todo lo que puedes ver, tocar y respirar está compuesto de materia. Tu cuaderno, el aire que te rodea, el agua de los ríos y hasta tu propio cuerpo están formados por bloques de construcción invisibles a simple vista. Durante siglos, la humanidad se preguntó: "¿Qué hay dentro de la materia?". Hoy sabemos que si pudiéramos acercarnos lo suficiente a cualquier objeto, descubriríamos un universo microscópico asombroso: <strong>el mundo de los átomos</strong>.</p>
+                
+                <h3>La Estructura del Átomo: El Sistema Solar en Miniatura</h3>
+                
+                <p>Para imaginar un átomo, puedes pensar en un diminuto sistema solar. En el centro de este sistema se encuentra el <strong>Núcleo Atómico</strong>, una zona extremadamente pequeña pero muy densa y pesada. Alrededor de este núcleo, moviéndose a velocidades increíbles en lo que llamamos la <em>nube electrónica</em> u órbitas, se encuentran otras partículas más ligeras.</p>
+
+                <p>Dentro del átomo conviven tres <strong>partículas subatómicas</strong> fundamentales, cada una con un papel crucial en la naturaleza:</p>
+                <ul>
+                    <li><strong>Protones:</strong> Se encuentran atrapados en el núcleo. Tienen una masa considerable y poseen <strong>carga eléctrica positiva (+)</strong>.</li>
+                    <li><strong>Neutrones:</strong> Son los compañeros de los protones en el núcleo. Tienen un peso casi idéntico al de los protones, pero, como su nombre lo indica, son <strong>neutros</strong> (no tienen carga eléctrica). Su función principal es mantener el núcleo unido, actuando como un "pegamento" cósmico.</li>
+                    <li><strong>Electrones:</strong> Son partículas diminutas, casi sin peso comparadas con el núcleo. Giran velozmente alrededor del núcleo y poseen <strong>carga eléctrica negativa (-)</strong>. A diferencia de los protones, los electrones ubicados en las órbitas más externas pueden saltar de un átomo a otro.</li>
+                </ul>
+
+                <h3>El Equilibrio Oculto: La Materia Neutra</h3>
+                
+                <p>En su estado natural y relajado, los átomos buscan el equilibrio. Un <strong>estado neutro</strong> o cuerpo neutro significa que el átomo tiene exactamente la misma cantidad de protones (positivos) que de electrones (negativos). </p>
+                
+                <p>Imagina una balanza matemática: si tienes 6 cargas positivas en el núcleo y 6 cargas negativas orbitando, el total es cero (6 - 6 = 0). Esta es la razón por la cual, en un día normal, si tocas un libro o una mesa, no sientes un choque eléctrico. La materia que nos rodea es generalmente neutra; esconde una inmensa cantidad de energía estática en un perfecto y delicado equilibrio.</p>
+
+                <div class="highlight-box">
+                    <strong>¡Dato curioso!</strong> La fuerza que mantiene unidos a los protones y neutrones en el núcleo (Fuerza Nuclear Fuerte) es la fuerza más poderosa del universo conocido. Por eso, en los fenómenos eléctricos cotidianos, <strong>los protones NUNCA se mueven de un cuerpo a otro</strong>; están anclados. Solo los ligeros electrones tienen la libertad de viajar.
+                </div>
+
+                <h3>Rompiendo el Equilibrio: Transferencia y Dinámica de Cargas</h3>
+                
+                <p>Aunque la materia prefiere ser neutra, este equilibrio es fácil de romper mediante interacciones y procesos cotidianos, como la <strong>fricción o frotamiento</strong>.</p>
+                
+                <p>Cuando frotas tus zapatos contra una alfombra, la fricción obliga a algunos de los átomos de la alfombra a soltar sus electrones más externos. Estos electrones "sueltos" viajan hacia tu cuerpo. Es en este momento cuando la materia experimenta diferentes <strong>estados eléctricos</strong>:</p>
+                
+                <ul>
+                    <li><strong>Ion o Cuerpo Negativo:</strong> Es la materia que ha <em>ganado electrones extra</em>. Ahora tiene más cargas negativas que positivas.</li>
+                    <li><strong>Ion o Cuerpo Positivo:</strong> Es la materia que ha <em>perdido electrones</em>. Como los protones (positivos) no se movieron, al perder negativos, el cuerpo queda con un exceso de carga positiva.</li>
+                </ul>
+
+                <h3>La Danza de las Cargas: Atracción y Repulsión</h3>
+                
+                <p>Una vez que el equilibrio se rompe y los cuerpos adquieren carga, comienzan las interacciones. La regla de oro del universo eléctrico es simple pero inflexible:</p>
+                
+                <p><strong>Cargas opuestas experimentan Atracción:</strong> Un cuerpo positivo y uno negativo sentirán una fuerza invisible que los obligará a juntarse. Esta es la razón por la cual, tras frotar un globo en tu cabello (quitándole electrones al pelo), el cabello (positivo) se levanta buscando pegarse al globo (negativo).</p>
+
+                <p><strong>Cargas iguales experimentan Repulsión:</strong> Dos cuerpos positivos, o dos cuerpos negativos, se empujarán mutuamente alejándose el uno del otro. Si logras cargar dos globos con la misma carga negativa, por más que intentes juntarlos, sentirás que una fuerza invisible los separa.</p>
+
+                <p>Comprender qué hay dentro de la materia y cómo los electrones viajan de un lugar a otro es el fundamento para entender desde los molestos "toques eléctricos" en los pomos de las puertas, hasta los espectaculares relámpagos que cruzan el cielo en una tormenta. Toda esta dinámica es el resultado de la materia intentando, desesperadamente, volver a su estado de equilibrio neutro.</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso y Afianzamiento</h2>
+                    
+                    <div class="workshop-notice">
+                        <svg class="icon" viewBox="0 0 24 24" width="24" height="24">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                        <span><strong>INSTRUCCIÓN OBLIGATORIA:</strong> Escribe, dibuja y resuelve estas 10 actividades ordenadamente en tu cuaderno de Ciencias Naturales / Física.</span>
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Menciona el nombre de las tres partículas subatómicas que componen el átomo e indica qué tipo de carga eléctrica posee cada una de ellas según la lectura.
+                        </li>
+                        <li>
+                            <span class="activity-type">Dibujo / Ilustración</span><br>
+                            Dibuja el "Sistema Solar en Miniatura" (Modelo del átomo). Señala claramente con flechas y colores dónde está el <strong>Núcleo Atómico</strong> y dónde está la <strong>Nube Electrónica u Órbitas</strong>. Ubica las partículas en sus lugares correspondientes.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Basándote en el "Dato curioso" del texto, explica con tus propias palabras: ¿Por qué en un experimento de fricción (como frotar un globo) lo que viaja de un cuerpo a otro son los electrones y nunca los protones?
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual que tenga como título central "Estados Eléctricos de la Materia". Debe ramificarse en tres conceptos: <em>Estado Neutro</em>, <em>Cuerpo Positivo</em> y <em>Cuerpo Negativo</em>. Explica brevemente qué pasa con los electrones en cada caso.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Usa la matemática simple del átomo: Si un átomo de Oxígeno tiene 8 protones en su núcleo, ¿cuántos electrones debe tener girando a su alrededor para ser considerado "eléctricamente neutro"? Escribe la operación.
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración y Análisis</span><br>
+                            Dibuja dos globos colgando de hilos. En el primer dibujo, pon a ambos globos el signo (-). En el segundo dibujo, pon a un globo el signo (+) y al otro el signo (-). Dibuja flechas que indiquen hacia dónde se moverán los globos (¿se juntan o se separan?) y escribe debajo si es "Atracción" o "Repulsión".
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Si frotas fuertemente tus manos contra un abrigo de lana y tu cuerpo "gana electrones extra" provenientes de la lana, ¿En qué tipo de ion se convierte tu cuerpo? Y en consecuencia, ¿en qué estado eléctrico queda el abrigo de lana que perdió esos electrones?
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Mental</span><br>
+                            Crea un mapa mental sobre el concepto de "Fricción o Frotamiento". Incluye ramificaciones que respondan a: ¿Qué rompe? (el equilibrio), ¿Qué partícula se mueve? (electrones), y ejemplos de la vida diaria (zapatos en alfombra, globo en cabello).
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Según el texto, ¿cuál es la función principal de los neutrones si ellos no poseen carga eléctrica ni aportan a los fenómenos eléctricos cotidianos?
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis y Aplicación</span><br>
+                            Escribe un párrafo final de 4 a 6 líneas concluyendo por qué no solemos recibir descargas eléctricas al tocar los objetos normales de nuestra casa (como un libro de papel o una silla de madera) si sabemos que están llenos de protones y electrones.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fase 1: Datos - 15 conceptos (5 por cada de las 3 categorías)
+        const rawData = [
+            // Categoría 1: Partículas del Átomo
+            { id: 1, text: "Protón (+)", category: 1 },
+            { id: 2, text: "Neutrón (0)", category: 1 },
+            { id: 3, text: "Electrón (-)", category: 1 },
+            { id: 4, text: "Núcleo Atómico", category: 1 },
+            { id: 5, text: "Nube Electrónica", category: 1 },
+            
+            // Categoría 2: Estados Eléctricos
+            { id: 6, text: "Cuerpo Neutro", category: 2 },
+            { id: 7, text: "Carga Positiva", category: 2 },
+            { id: 8, text: "Carga Negativa", category: 2 },
+            { id: 9, text: "Ion (Gana electrones)", category: 2 },
+            { id: 10, text: "Ion (Pierde electrones)", category: 2 },
+            
+            // Categoría 3: Interacciones y Procesos
+            { id: 11, text: "Atracción (+ y -)", category: 3 },
+            { id: 12, text: "Repulsión (+ y +)", category: 3 },
+            { id: 13, text: "Fricción / Frotamiento", category: 3 },
+            { id: 14, text: "Transferencia de cargas", category: 3 },
+            { id: 15, text: "Búsqueda de Equilibrio", category: 3 }
+        ];
+
+        let gameData = [];
+        let selectedChip = null;
+        let mistakes = 0;
+        let correctCount = 0;
+        let totalItems = rawData.length;
+        let isAnimating = false;
+
+        // Referencias al DOM
+        const poolContainer = document.getElementById('concepts-pool');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const countEl = document.getElementById('remaining-count');
+        const mistakesEl = document.getElementById('mistakes-count');
+        const scoreEl = document.getElementById('score-display');
+        const winMessage = document.getElementById('win-message');
+        const finalScoreEl = document.getElementById('final-score');
+        const gameArena = document.querySelector('.game-arena');
+
+        // Utilidad para mezclar array
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Inicializar o reiniciar juego
+        function initGame() {
+            // Reset de variables
+            selectedChip = null;
+            mistakes = 0;
+            correctCount = 0;
+            isAnimating = false;
+            
+            // Reset UI
+            winMessage.style.display = 'none';
+            gameArena.style.display = 'flex';
+            poolContainer.innerHTML = '';
+            
+            // Remover estilos highlights de categorías
+            categoryBtns.forEach(btn => btn.classList.remove('highlight'));
+            
+            updateStats();
+
+            // Preparar e inyectar datos mezclados
+            gameData = shuffle([...rawData]);
+            
+            gameData.forEach(item => {
+                const chip = document.createElement('div');
+                chip.classList.add('chip');
+                chip.textContent = item.text;
+                chip.dataset.id = item.id;
+                chip.dataset.category = item.category;
+                
+                // Evento Tap del Chip
+                chip.addEventListener('click', () => handleChipTap(chip));
+                
+                poolContainer.appendChild(chip);
+            });
+        }
+
+        // Manejo del toque en un concepto
+        function handleChipTap(chip) {
+            if (isAnimating) return;
+            
+            // Si el chip tocado ya estaba seleccionado, deseleccionarlo
+            if (selectedChip === chip) {
+                chip.classList.remove('selected');
+                selectedChip = null;
+                return;
+            }
+
+            // Quitar selección previa a cualquier otro
+            if (selectedChip) {
+                selectedChip.classList.remove('selected');
+            }
+
+            // Seleccionar el nuevo chip
+            chip.classList.add('selected');
+            selectedChip = chip;
+        }
+
+        // Manejo del toque en una categoría
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!selectedChip || isAnimating) return;
+
+                const targetCategory = btn.dataset.category;
+                const correctCategory = selectedChip.dataset.category;
+
+                if (targetCategory === correctCategory) {
+                    handleCorrectMatch(selectedChip, btn);
+                } else {
+                    handleIncorrectMatch(selectedChip);
+                }
+            });
+        });
+
+        function handleCorrectMatch(chip, btn) {
+            isAnimating = true;
+            
+            // Efecto visual de acierto en el botón
+            btn.classList.add('highlight');
+            btn.style.borderColor = 'var(--success)';
+            btn.style.backgroundColor = '#ecfdf5';
+            
+            // Animación de desaparición del chip
+            chip.classList.add('correct-anim');
+            
+            setTimeout(() => {
+                chip.remove();
+                selectedChip = null;
+                correctCount++;
+                updateStats();
+                
+                // Restaurar botón categoría
+                btn.classList.remove('highlight');
+                btn.style.borderColor = '';
+                btn.style.backgroundColor = '';
+                
+                isAnimating = false;
+                checkWin();
+            }, 300); // Coincide con la transición CSS
+        }
+
+        function handleIncorrectMatch(chip) {
+            isAnimating = true;
+            mistakes++;
+            updateStats();
+            
+            // Animación de error (Shake y Rojo)
+            chip.classList.add('shake-error');
+            chip.classList.remove('selected');
+            selectedChip = null;
+            
+            setTimeout(() => {
+                chip.classList.remove('shake-error');
+                isAnimating = false;
+            }, 500); // Tiempo que dura el shake
+        }
+
+        function updateStats() {
+            const remaining = totalItems - correctCount;
+            countEl.textContent = remaining;
+            mistakesEl.textContent = mistakes;
+            
+            // Sistema de calificación: Inicia en 5.0. 
+            // Cada error resta 0.2 puntos. Mínimo 1.0.
+            let calcScore = 5.0 - (mistakes * 0.2);
+            calcScore = Math.max(1.0, calcScore); // Limitar mínimo
+            calcScore = Math.min(5.0, calcScore); // Limitar máximo
+            
+            const displayScore = calcScore.toFixed(1);
+            scoreEl.textContent = displayScore;
+            finalScoreEl.textContent = displayScore;
+            
+            // Cambiar color de nota según rendimiento
+            if (calcScore >= 4.0) scoreEl.style.color = "var(--success)";
+            else if (calcScore >= 3.0) scoreEl.style.color = "var(--warning)";
+            else scoreEl.style.color = "var(--error)";
+        }
+
+        function checkWin() {
+            if (correctCount === totalItems) {
+                setTimeout(() => {
+                    gameArena.style.display = 'none';
+                    winMessage.style.display = 'flex';
+                }, 300);
+            }
+        }
+
+        // Arrancar juego al cargar la página
+        window.onload = initGame;
+    </script>
+</body>
+</html>

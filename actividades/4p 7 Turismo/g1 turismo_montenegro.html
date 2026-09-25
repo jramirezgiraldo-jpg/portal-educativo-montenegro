@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Turista en tu propia tierra: Montenegro</title>
+    
+    <style>
+        :root {
+            /* Paleta de colores inspirada en la región cafetera (Quindío) */
+            --bg-color: #fcf8f2;
+            --primary-color: #2e4031; /* Verde oscuro (cafetales) */
+            --accent-color: #d35400; /* Naranja rojizo (tierra, café tostado) */
+            --correct-color: #27ae60;
+            --error-color: #c0392b;
+            --card-front: #3d5a45;
+            --text-main: #333;
+            --grid-bg: #fff;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(20px, 4vw, 40px);
+            padding: clamp(10px, 3vw, 20px);
+        }
+
+        section {
+            width: 100%;
+            max-width: 900px; /* Ancho máximo para no deformarse en PC */
+            margin: 0 auto;
+            background: var(--grid-bg);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            padding: clamp(15px, 4vw, 35px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: clamp(22px, 5vw, 34px);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .instruccion {
+            font-size: clamp(15px, 3.5vw, 18px);
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-around;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 18px);
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .stats-panel span { color: #f39c12; }
+
+        #game-board {
+            display: grid;
+            /* CRÍTICO: Grid fluido con auto-fit y minmax. Adaptable sin media queries */
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            width: 100%;
+            /* CRÍTICO: Evitar zoom/scroll táctil accidental en el tablero al arrastrar/tocar */
+            touch-action: none;
+            user-select: none;
+        }
+
+        .card {
+            aspect-ratio: 1; /* Garantiza proporción cuadrada */
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, var(--card-front) 0%, #223326 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #5a7a63;
+        }
+
+        .card-front svg {
+            width: 55%;
+            height: 55%;
+            fill: #f5b041;
+            opacity: 0.85;
+            filter: drop-shadow(0 0 5px rgba(245, 176, 65, 0.4));
+        }
+
+        .card-back {
+            background-color: #fff;
+            color: var(--primary-color);
+            transform: rotateY(180deg);
+            border: 2px solid var(--accent-color);
+            /* Tipografía elástica: Escala automáticamente con el tamaño de la carta */
+            font-size: clamp(9px, 2.4vw, 14px);
+            font-weight: bold;
+            word-break: break-word;
+            hyphens: auto;
+            flex-direction: column;
+            line-height: 1.15;
+            text-align: center;
+        }
+
+        .card.matched .card-back {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: #186a3b;
+        }
+
+        .card.mismatch .card-back {
+            background-color: var(--error-color);
+            color: white;
+            border-color: #7b241c;
+        }
+
+        .card-type-badge {
+            font-size: clamp(8px, 1.8vw, 10px);
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin-bottom: 4px;
+            background: rgba(0,0,0,0.06);
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: #666;
+        }
+        
+        .card.matched .card-type-badge, .card.mismatch .card-type-badge {
+            color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.2);
+        }
+
+        #rating-overlay {
+            display: none;
+            text-align: center;
+            padding: clamp(15px, 4vw, 30px);
+            background: #fdfefe;
+            border-radius: 12px;
+            margin-top: 25px;
+            border: 3px solid var(--correct-color);
+            animation: popIn 0.5s ease-out;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .stars { font-size: clamp(35px, 8vw, 55px); color: #f1c40f; margin: 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .rating-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: clamp(14px, 4vw, 16px);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        .rating-btn:active { transform: scale(0.95); }
+
+        #zona-lectura {
+            margin-top: 10px;
+        }
+
+        article h2 {
+            color: var(--primary-color);
+            font-size: clamp(24px, 5vw, 32px);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        article h3 {
+            color: #873600;
+            font-size: clamp(19px, 4vw, 24px);
+            margin-top: 28px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        article h3::before {
+            content: '📌';
+            font-size: 0.9em;
+        }
+
+        article p {
+            margin-bottom: 18px;
+            font-size: clamp(16px, 3.5vw, 18px);
+            text-align: justify;
+            color: #3e3e3e;
+        }
+
+        article ul {
+            margin-left: 25px;
+            margin-bottom: 22px;
+            font-size: clamp(16px, 3.5vw, 18px);
+        }
+
+        article li { margin-bottom: 10px; color: #3e3e3e; }
+        
+        .resaltado {
+            background-color: rgba(211, 84, 0, 0.12);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #873600;
+        }
+
+        .taller-caja {
+            background-color: #fdf9f4;
+            border-left: 6px solid var(--accent-color);
+            padding: clamp(15px, 4vw, 30px);
+            margin-top: 45px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 3px 3px 15px rgba(0,0,0,0.05);
+        }
+
+        .taller-caja h2 { 
+            border-bottom-color: var(--accent-color); 
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .instruccion-taller {
+            font-weight: bold;
+            color: #c0392b;
+            font-size: clamp(16px, 4vw, 19px);
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 2px dashed #e67e22;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .actividad-lista {
+            list-style: none;
+            counter-reset: act-counter;
+        }
+
+        .actividad-lista li {
+            margin-bottom: 25px;
+            padding-left: clamp(45px, 10vw, 55px);
+            position: relative;
+            font-size: clamp(16px, 3.5vw, 18px);
+            background: #fff;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            padding-right: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #f3e5d8;
+        }
+
+        .actividad-lista li::before {
+            counter-increment: act-counter;
+            content: counter(act-counter);
+            position: absolute;
+            left: 10px;
+            top: 15px;
+            background: var(--accent-color);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .badge-tipo {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: #eee;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-directa { background: #e8d0f3; color: #6a1b9a; border: 1px solid #dcb5ed; }
+        .badge-analisis { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1;}
+        .badge-dibujo { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6;}
+        .badge-mapa { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc;}
+
+    </style>
+</head>
+<body>
+
+<main>
+    <section id="zona-juego">
+        <header>
+            <h1>Ser turista en tu propia tierra</h1>
+            <p class="instruccion">Toca las cartas para voltearlas y encuentra los pares (Concepto - Definición).</p>
+            <div class="stats-panel">
+                <div>Movimientos: <span id="moves">0</span></div>
+                <div>Errores: <span id="errors">0</span></div>
+                <div>Pares: <span id="matches">0</span>/10</div>
+            </div>
+        </header>
+
+        <div id="game-board">
+            <!-- Las cartas se inyectan dinámicamente aquí vía JS -->
+        </div>
+
+        <div id="rating-overlay">
+            <h2 id="rating-title" style="color: var(--primary-color);">¡Exploración Exitosa!</h2>
+            <div class="stars" id="rating-stars"></div>
+            <p id="rating-msg" style="font-size: 18px; margin-bottom: 15px; font-weight: bold;"></p>
+            <button class="rating-btn" onclick="initGame()">Jugar de Nuevo</button>
+        </div>
+    </section>
+
+    <section id="zona-lectura">
+        <article>
+            <h2>Exploración: ¿Qué es verdaderamente ser turista en tu propia tierra?</h2>
+            
+            <p>Cuando escuchamos la palabra "turismo", nuestra mente suele viajar inmediatamente a playas lejanas, países extranjeros con idiomas extraños, o mochilas listas para subir a un avión. Sin embargo, existe una forma de explorar el mundo que a menudo ignoramos porque la tenemos literalmente frente a nuestros ojos: <strong>ser turista en nuestro propio municipio</strong>. En el caso del Quindío, y más específicamente en Montenegro, estamos rodeados de riqueza cultural, histórica y natural que muchas veces los visitantes extranjeros valoran más que nosotros mismos.</p>
+            
+            <h3>Más allá de los estereotipos: Rompiendo Preconceptos</h3>
+            <p>Un <span class="resaltado">preconcepto</span> es una idea anticipada que tenemos sobre algo sin conocerlo a fondo. Es muy común escuchar a los jóvenes decir: <em>"En Montenegro no hay nada que hacer aparte de ir a los parques de diversiones"</em>. Este es un enorme preconcepto. Aunque el Parque del Café es un atractivo ancla gigante a nivel nacional, la verdadera esencia montenegrina late en sus calles, en la arquitectura tradicional de bahareque que sobrevive en los barrios antiguos, en los paisajes de los corregimientos y en la herencia de los arrieros fundadores.</p>
+            <p>Para ser turista en tu propia tierra necesitas cambiar tu mirada. Significa salir un sábado no con la actitud de alguien aburrido que conoce cada esquina, sino con la curiosidad de un visitante. Significa detenerse a mirar los detalles de las puertas de madera tallada, preguntar a los abuelos por las historias de la fundación, o sentarse en la plaza principal a observar la dinámica de los campesinos que bajan al pueblo.</p>
+
+            <h3>El Turismo como Motor de la Economía Local</h3>
+            <p>El turismo no es solo ocio; es un poderoso intercambio económico y social. Cuando decides recorrer tu propio territorio, estás impulsando la <span class="resaltado">economía local</span> de manera circular. Cada vez que compras una oblea en la plaza, tomas un café preparado por un barista de tu municipio, o pagas un recorrido guiado por el río La Vieja, ese dinero se queda en tu comunidad. Ayuda a tu vecino, genera empleo para otros jóvenes y permite que los emprendimientos locales crezcan sin depender exclusivamente de las temporadas altas de visitantes extranjeros.</p>
+            
+            <h3>El verdadero Intercambio Cultural</h3>
+            <p>Podrías pensar: "¿Qué intercambio cultural puedo tener si todos somos de Montenegro?". La realidad es que un municipio es diverso. Las costumbres de una familia que vive en el área urbana pueden ser muy distintas a los saberes agrícolas de una familia que habita en la zona rural profunda. El <span class="resaltado">intercambio cultural</span> ocurre cuando te sientas con un recolector de café a escuchar cómo reconoce el grano maduro, o cuando aprendes cómo se preparaban los envueltos de maíz hace cincuenta años. Estas experiencias fortalecen la Identidad Quindiana.</p>
+
+            <h3>Patrimonio Natural y Sentido de Pertenencia</h3>
+            <p>Finalmente, ser turista local conlleva una gran responsabilidad: la sostenibilidad. Montenegro está abrazado por un rico <span class="resaltado">patrimonio natural</span>, lleno de fuentes hídricas, aves endémicas y guaduales exuberantes. Cuando aprendemos a admirar estos recursos como lo haría un turista maravillado, desarrollamos un profundo <strong>sentido de pertenencia</strong>. Empezamos a entender que si tiramos basura en el sendero o contaminamos el río, estamos destruyendo nuestra propia casa y, al mismo tiempo, el futuro turístico de la región.</p>
+            <p>Explorar tu tierra con ojos nuevos es el primer paso para amarla, defenderla y convertirte en el mejor embajador de Montenegro ante el mundo entero.</p>
+        </article>
+
+        <div class="taller-caja">
+            <h2>Taller de Repaso: Turista Local</h2>
+            <div class="instruccion-taller">
+                📝 INSTRUCCIÓN: Escribe y resuelve de forma completa estas 10 actividades en tu cuaderno de Ciencias Sociales/Cátedra.
+            </div>
+            
+            <ul class="actividad-lista">
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Según la lectura, ¿qué es un "preconcepto" y cuál es el preconcepto más común que se menciona sobre el municipio de Montenegro?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    ¿Por qué el texto afirma que comprar un café, una oblea o pagar un recorrido local es una forma de impulsar la economía? Analiza cómo circula ese dinero en el municipio.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja una escena urbana o rural de Montenegro que represente la "Identidad Quindiana" (puedes incluir arquitectura de bahareque, la plaza o cultivos).
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Conceptual</span><br>
+                    Elabora un mapa conceptual claro que conecte de forma lógica los siguientes términos: <em>Turismo Local, Economía, Emprendimientos, Intercambio Cultural, Saberes Agrícolas</em>.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Menciona dos ejemplos específicos del texto sobre cómo puede ocurrir un "intercambio cultural" entre habitantes del mismo municipio.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Imagina que escuchas a un compañero decir: "El turismo solo beneficia a los dueños de los grandes hoteles". Basándote en la lectura, escribe un argumento sólido para refutar (contradecir) esa idea.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Ilustra un ejemplo de "turismo irresponsable" versus un ejemplo de "turismo sostenible" enfocándote en el patrimonio natural de los ríos o guaduales de la región.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Mental</span><br>
+                    Diseña un mapa mental cuyo concepto central sea "Atractivos de Montenegro". En las ramas, no incluyas parques temáticos; incluye alternativas culturales, arquitectónicas y naturales.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    ¿Qué relación profunda existe entre mirar tu propio municipio como turista y desarrollar un fuerte "sentido de pertenencia"?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Reflexión personal: Escribe sobre un lugar de Montenegro (o del Quindío) que conoces, pero que sientes que nunca has explorado realmente con la "curiosidad de un visitante". ¿Qué harías diferente la próxima vez que vayas?
+                </li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<script>
+    // 10 Conceptos y Definiciones sobre Turismo Local (Total 20 cartas)
+    const pairsData = [
+        { c: "Turista", d: "Viajero que visita un lugar distinto a su entorno habitual." },
+        { c: "Atractivo Local", d: "Lugar o tradición de la región que despierta interés turístico." },
+        { c: "Preconcepto", d: "Idea anticipada sobre un lugar antes de conocerlo a fondo." },
+        { c: "Intercambio Cultural", d: "Compartir saberes y tradiciones entre visitantes y locales." },
+        { c: "Economía Local", d: "Dinero que circula y beneficia a los comercios del municipio." },
+        { c: "Montenegro", d: "Municipio quindiano de gran vocación turística y cafetera." },
+        { c: "Patrimonio Natural", d: "Ríos, biodiversidad y guaduales que debemos proteger." },
+        { c: "Identidad Quindiana", d: "Cultura cafetera, arquitectura y amabilidad que nos representa." },
+        { c: "Ocio", d: "Tiempo libre usado para el descanso, diversión o exploración." },
+        { c: "Pertenencia", d: "Sentir orgullo, valorar y cuidar los recursos de nuestra tierra." }
+    ];
+
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+    let errors = 0;
+    let isBoardLocked = false;
+
+    // SVG incrustado estáticamente para el frente de las cartas (Icono de Pin de Mapa y Montañas)
+    const cardPatternSVG = `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Pin de Mapa -->
+            <path d="M50 15 C35 15, 23 27, 23 42 C23 65, 50 85, 50 85 C50 85, 77 65, 77 42 C77 27, 65 15, 50 15 Z" fill="none" stroke="currentColor" stroke-width="4"/>
+            <circle cx="50" cy="40" r="10" fill="currentColor"/>
+            <!-- Montañas sutiles de fondo -->
+            <path d="M15 75 L35 50 L50 65 L70 40 L90 75" fill="none" stroke="currentColor" stroke-width="3" opacity="0.4"/>
+            <path d="M10 85 L90 85" fill="none" stroke="currentColor" stroke-width="4" opacity="0.4"/>
+        </svg>
+    `;
+
+    function initGame() {
+        const board = document.getElementById('game-board');
+        board.innerHTML = '';
+        cards = [];
+        flippedCards = [];
+        matchedPairs = 0;
+        moves = 0;
+        errors = 0;
+        isBoardLocked = false;
+        
+        updateStats();
+        document.getElementById('rating-overlay').style.display = 'none';
+
+        // Crear array de 20 cartas (10 pares) vinculadas por un ID único
+        pairsData.forEach((pair, index) => {
+            cards.push({ id: index, text: pair.c, type: 'Concepto' });
+            cards.push({ id: index, text: pair.d, type: 'Definición' });
+        });
+
+        // Mezclar aleatoriamente el mazo matemáticamente (Algoritmo Fisher-Yates)
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+
+        cards.forEach((cardData, index) => {
+            const cardEl = document.createElement('div');
+            cardEl.classList.add('card');
+            cardEl.dataset.index = index;
+            cardEl.dataset.matchId = cardData.id;
+
+            cardEl.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        ${cardPatternSVG}
+                    </div>
+                    <div class="card-back">
+                        <span class="card-type-badge">${cardData.type}</span>
+                        <span>${cardData.text}</span>
+                    </div>
+                </div>
+            `;
+            
+            // pointerdown: Evento táctil nativo sin latencia (0 lag en celulares)
+            cardEl.addEventListener('pointerdown', handleCardClick);
+            board.appendChild(cardEl);
+        });
+    }
+
+    function handleCardClick(e) {
+        e.preventDefault(); 
+        
+        if (isBoardLocked) return;
+        
+        const currentCard = e.target.closest('.card');
+        
+        if (!currentCard) return;
+        // Ignorar clics si la carta ya está volteada o emparejada
+        if (currentCard.classList.contains('flipped') || currentCard.classList.contains('matched')) return;
+
+        currentCard.classList.add('flipped');
+        flippedCards.push(currentCard);
+
+        if (flippedCards.length === 2) {
+            moves++;
+            updateStats();
+            checkForMatch();
+        }
+    }
+
+    function checkForMatch() {
+        isBoardLocked = true; // Bloquea interacción momentáneamente para evitar bugs de multiselect
+        const [card1, card2] = flippedCards;
+        const id1 = card1.dataset.matchId;
+        const id2 = card2.dataset.matchId;
+
+        if (id1 === id2) {
+            // MATCH CORRECTO: Retraso visual leve y color verde
+            setTimeout(() => {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                updateStats();
+                resetBoard();
+                if (matchedPairs === 10) endGame();
+            }, 350);
+        } else {
+            // ERROR: Retraso, color rojo y voltea de nuevo
+            errors++;
+            updateStats();
+            
+            setTimeout(() => {
+                card1.classList.add('mismatch');
+                card2.classList.add('mismatch');
+            }, 250);
+
+            // Exigencia: 1.5 seg antes de girar de vuelta para que lean el error
+            setTimeout(() => {
+                card1.classList.remove('flipped', 'mismatch');
+                card2.classList.remove('flipped', 'mismatch');
+                resetBoard();
+            }, 1500);
+        }
+    }
+
+    function resetBoard() {
+        flippedCards = [];
+        isBoardLocked = false;
+    }
+
+    function updateStats() {
+        document.getElementById('moves').textContent = moves;
+        document.getElementById('errors').textContent = errors;
+        document.getElementById('matches').textContent = matchedPairs;
+    }
+
+    function endGame() {
+        const overlay = document.getElementById('rating-overlay');
+        const starsEl = document.getElementById('rating-stars');
+        const msgEl = document.getElementById('rating-msg');
+        
+        let stars = "";
+        let msg = "";
+        
+        // Calificación matemática basada en la eficiencia de los movimientos/errores
+        if (errors <= 4) {
+            stars = "⭐⭐⭐⭐⭐";
+            msg = "¡Guía Turístico Experto! Tu memoria y conocimiento del territorio son perfectos.";
+        } else if (errors <= 9) {
+            stars = "⭐⭐⭐⭐";
+            msg = "¡Excelente Explorador! Has dominado los conceptos clave de nuestra tierra.";
+        } else if (errors <= 15) {
+            stars = "⭐⭐⭐";
+            msg = "¡Bien hecho! Buen recorrido, sigamos conociendo Montenegro.";
+        } else {
+            stars = "⭐⭐";
+            msg = "¡Viaje completado! A veces nos perdemos, pero siempre aprendemos del camino.";
+        }
+        
+        starsEl.textContent = stars;
+        msgEl.textContent = msg;
+        overlay.style.display = "block";
+        
+        // Auto-scroll táctico hacia el mensaje de éxito
+        setTimeout(() => {
+            overlay.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }, 300);
+    }
+
+    // Inicializar de forma segura después de que el DOM esté completamente cargado
+    document.addEventListener('DOMContentLoaded', initGame);
+
+</script>
+
+</body>
+</html>

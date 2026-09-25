@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Síntesis: Socialización de comprensiones</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-main: #0f172a;
+                --card-bg: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border-color: #334155;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: clamp(12px, 3vw, 24px);
+        }
+
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        header {
+            text-align: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: clamp(16px, 4vw, 24px);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .subtitle {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .instruction-banner {
+            background: rgba(79, 70, 229, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .game-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: clamp(16px, 4vw, 24px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            user-select: none;
+            touch-action: none;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            font-weight: 600;
+        }
+
+        .stats-badge {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .columns-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(12px, 3vw, 24px);
+        }
+
+        .column-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .column-title {
+            font-weight: 700;
+            font-size: clamp(0.9rem, 2vw, 1.05rem);
+            text-align: center;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        .match-card {
+            background: var(--bg-main);
+            border: 2px solid var(--border-color);
+            padding: clamp(10px, 2.5vw, 16px);
+            border-radius: 12px;
+            font-size: clamp(0.75rem, 2.2vw, 0.95rem);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 70px;
+            touch-action: manipulation;
+        }
+
+        .match-card:hover {
+            border-color: var(--primary);
+        }
+
+        .match-card.selected {
+            background: rgba(79, 70, 229, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .match-card.correct {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            color: var(--success);
+            cursor: default;
+            opacity: 0.8;
+        }
+
+        .match-card.error {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--error);
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .game-footer {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .btn-reset {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+        }
+
+        .btn-reset:hover {
+            background: var(--primary-hover);
+        }
+
+        .reading-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: clamp(20px, 5vw, 36px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .reading-section h2 {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+
+        .reading-section h3 {
+            font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .reading-section p {
+            margin-bottom: 1rem;
+            font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        .reading-section ul {
+            margin-bottom: 1.2rem;
+            padding-left: 1.5rem;
+            font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+        }
+
+        .reading-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .workshop-box {
+            margin-top: 2.5rem;
+            background: rgba(79, 70, 229, 0.04);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            border-radius: 12px;
+            padding: clamp(16px, 4vw, 24px);
+        }
+
+        .workshop-box h3 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        .instruction-notebook {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .instruction-notebook {
+                background: rgba(245, 158, 11, 0.15);
+                border-color: rgba(245, 158, 11, 0.4);
+                color: #fcd34d;
+            }
+        }
+
+        .activity-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: clamp(0.85rem, 2.1vw, 1rem);
+        }
+
+        .activity-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <header>
+            <h1>Síntesis: Socialización de comprensiones</h1>
+            <p class="subtitle">Argumenta los fundamentos atómicos y electrostáticos del proyecto diseñado</p>
+            <div class="instruction-banner">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Toca un concepto en la columna izquierda y luego su definición correspondiente en la derecha para emparejarlos.</span>
+            </div>
+        </header>
+
+        <section id="zona-juego" class="game-section">
+            <div class="game-header">
+                <div class="stats-badge">
+                    <span>⏱️ Tiempo:</span> <span id="timer">00:00</span>
+                </div>
+                <div class="stats-badge">
+                    <span>✨ Emparejados:</span> <span id="match-count">0</span> / 8
+                </div>
+                <div class="stats-badge">
+                    <span>🏆 Calificación:</span> <span id="rating-display">--</span>
+                </div>
+            </div>
+
+            <div class="columns-grid">
+                <div class="column-group">
+                    <div class="column-title">Conceptos</div>
+                    <div id="column-a" class="column-group"></div>
+                </div>
+                <div class="column-group">
+                    <div class="column-title">Definiciones</div>
+                    <div id="column-b" class="column-group"></div>
+                </div>
+            </div>
+
+            <div class="game-footer">
+                <span id="game-status" style="font-size: 0.9rem; color: var(--text-muted);">Selecciona un elemento de cada columna.</span>
+                <button class="btn-reset" onclick="resetGame()">Reiniciar Juego</button>
+            </div>
+        </section>
+
+        <section id="zona-lectura" class="reading-section">
+            <h2>Marco Teórico: El Puente Entre lo Invisible y lo Visible</h2>
+            <p>
+                A lo largo de nuestras investigaciones científicas escolares, hemos explorado cómo interactúa la materia a través de fenómenos como la electricidad estática y la detección de cargas. Sin embargo, el verdadero poder de la ciencia no radica únicamente en observar un fenómeno curioso en el laboratorio, sino en <strong>comprender y comunicar</strong> los principios fundamentales que lo explican. La socialización de comprensiones es el momento culminante donde el conocimiento individual se convierte en un saber colectivo, permitiendo argumentar con bases teóricas sólidas por qué ocurren las cosas en el mundo macroscópico.
+            </p>
+            <p>
+                Para lograr una argumentación científica exitosa, es indispensable conectar dos realidades que a simple vista parecen desconectadas: la <em>escala microscópica</em> (el dominio invisible de los átomos, protones y electrones) y la <em>realidad macroscópica</em> (el mundo tangible de los objetos, los prototipos y las experiencias cotidianas).
+            </p>
+
+            <h3>El Átomo como Motor de la Electrostática</h3>
+            <p>
+                Todo lo que observamos en nuestro entorno está compuesto por átomos. En el centro de cada átomo se encuentra un núcleo denso con carga positiva (protones y neutrones), rodeado por una nube de electrones con carga negativa. En condiciones normales, los objetos son eléctricamente neutros porque poseen un equilibrio entre cargas positivas y negativas.
+            </p>
+            <ul>
+                <li><strong>Transferencia de electrones:</strong> Cuando frotamos materiales distintos (triboelectricidad), rompemos temporalmente este equilibrio. Los electrones más externos pueden saltar de un átomo a otro.</li>
+                <li><strong>Explicación macroscópica:</strong> El exceso o déficit de electrones a nivel atómico es lo que provoca que, a escala macroscópica, un globo se adhiera a una pared, que sintamos una descarga al tocar una manija, o que las láminas de un electroscopio se separen por repulsión mutua.</li>
+                <li><strong>Modelos teóricos:</strong> Utilizar representaciones mentales y diagramas atómicos nos ayuda a visualizar lo que las manos no pueden tocar, convirtiendo conceptos abstractos en herramientas de diseño experimental.</li>
+            </ul>
+
+            <h3>El Arte de Argumentar un Proyecto Científico</h3>
+            <p>
+                Cuando construimos un dispositivo o prototipo experimental, no basta con mostrar que funciona; debemos ser capaces de explicar <strong>por qué</strong> funciona respaldándonos en las leyes de la física. Socializar un proyecto ante el grupo implica:
+            </p>
+            <p>
+                1. <strong>Definir los conceptos clave:</strong> Explicar con precisión términos como carga, inducción, conducción o campo eléctrico.<br>
+                2. <strong>Justificar las evidencias:</strong> Mostrar cómo el comportamiento observado en el proyecto confirma los modelos teóricos atómicos.<br>
+                3. <strong>Comunicar con claridad:</strong> Traducir fórmulas y conceptos complejos en un lenguaje accesible y persuasivo para los compañeros.
+            </p>
+            <p>
+                En definitiva, la socialización de comprensiones transforma el aula en una comunidad científica activa, donde cada estudiante demuestra que los modelos teóricos del átomo no son solo teoría de libros, sino la clave viviente para descifrar la realidad que nos rodea.
+            </p>
+
+            <div class="workshop-box">
+                <div class="instruction-notebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><path d="M6 6h10"></path><path d="M6 10h10"></path></svg>
+                    <span>Escribe y resuelve estas actividades en tu cuaderno.</span>
+                </div>
+
+                <h3>Taller de Repaso y Consolidación</h3>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Respuesta directa</span>
+                    <p><strong>1.</strong> ¿Por qué es fundamental conectar la escala microscópica del átomo con los fenómenos macroscópicos observados en un proyecto?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Dibujo / Ilustración</span>
+                    <p><strong>2.</strong> Diseña una infografía en tu cuaderno que muestre cómo un electrón se desplaza a nivel atómico al frotar dos materiales cotidianos.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Análisis crítico</span>
+                    <p><strong>3.</strong> Explica con tus propias palabras qué significa "socializar un proyecto científico" y por qué la argumentación basada en evidencia es clave frente al grupo.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Mapa conceptual</span>
+                    <p><strong>4.</strong> Elabora un mapa mental que vincule los conceptos de <em>átomo</em>, <em>carga eléctrica</em>, <em>proyecto experimental</em> y <em>realidad macroscópica</em>.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Respuesta directa</span>
+                    <p><strong>5.</strong> ¿Qué rol juegan los electrones libres en los materiales según los modelos teóricos estudiados en las sesiones anteriores?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Análisis crítico</span>
+                    <p><strong>6.</strong> Reflexiona sobre cómo el uso de modelos abstractos ayuda a entender fenómenos físicos invisibles a simple vista en la vida diaria.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Dibujo / Ilustración</span>
+                    <p><strong>7.</strong> Realiza un boceto esquemático de cómo presentarías tu proyecto ante tus compañeros, destacando qué elementos visuales utilizarías.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Respuesta directa</span>
+                    <p><strong>8.</strong> Describe brevemente la diferencia entre un fenómeno macroscópico y uno microscópico usando un ejemplo práctico de tu entorno.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Análisis crítico</span>
+                    <p><strong>9.</strong> ¿Por qué la física electrostática deja de ser abstracta cuando se analizan los fundamentos atómicos que la sustentan? Argumenta tu respuesta.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge">Mapa conceptual / Síntesis</span>
+                    <p><strong>10.</strong> Redacta una conclusión personal de al menos 5 líneas sintetizando qué significó para ti comprender el funcionamiento invisible de la electricidad estática.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const pairsData = [
+            { id: 1, concept: "Modelo Atómico", definition: "Representación teórica que describe la estructura interna del átomo (protones, neutrones, electrones)." },
+            { id: 2, concept: "Fundamento Electrostático", definition: "Principio físico que explica las interacciones entre cargas eléctricas en reposo." },
+            { id: 3, concept: "Socialización Científica", definition: "Proceso de comunicación y argumentación de los descubrimientos de un proyecto frente a una audiencia." },
+            { id: 4, concept: "Realidad Macroscópica", definition: "Fenómenos y objetos tangibles del mundo cotidiano que podemos observar y medir directamente." },
+            { id: 5, concept: "Escala Microscópica", definition: "Nivel de partículas subatómicas invisibles a simple vista que originan el comportamiento físico general." },
+            { id: 6, concept: "Transferencia de Carga", definition: "Movimiento de electrones entre cuerpos que genera electrización por contacto o fricción." },
+            { id: 7, concept: "Argumentación con Evidencia", definition: "Uso de principios teóricos y datos experimentales para respaldar una conclusión científica." },
+            { id: 8, concept: "Puente Teórico-Práctico", definition: "Relación lógica que conecta los modelos invisibles del átomo con los efectos visibles en un prototipo." }
+        ];
+
+        let selectedConcept = null;
+        let selectedDefinition = null;
+        let matchedCount = 0;
+        let timerSeconds = 0;
+        let timerInterval = null;
+        let gameStarted = false;
+
+        const columnA = document.getElementById('column-a');
+        const columnB = document.getElementById('column-b');
+        const matchCountEl = document.getElementById('match-count');
+        const timerEl = document.getElementById('timer');
+        const ratingDisplayEl = document.getElementById('rating-display');
+        const gameStatusEl = document.getElementById('game-status');
+
+        function initGame() {
+            columnA.innerHTML = '';
+            columnB.innerHTML = '';
+            matchedCount = 0;
+            timerSeconds = 0;
+            gameStarted = false;
+            matchCountEl.textContent = '0';
+            ratingDisplayEl.textContent = '--';
+            gameStatusEl.textContent = 'Selecciona un elemento de cada columna.';
+            if (timerInterval) clearInterval(timerInterval);
+            timerEl.textContent = '00:00';
+
+            // Shuffle data independently
+            const shuffledConcepts = [...pairsData].sort(() => Math.random() - 0.5);
+            const shuffledDefinitions = [...pairsData].sort(() => Math.random() - 0.5);
+
+            shuffledConcepts.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.textContent = item.concept;
+                card.dataset.id = item.id;
+                card.dataset.type = 'concept';
+                card.addEventListener('click', () => handleCardClick(card, 'concept'));
+                columnA.appendChild(card);
+            });
+
+            shuffledDefinitions.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.textContent = item.definition;
+                card.dataset.id = item.id;
+                card.dataset.type = 'definition';
+                card.addEventListener('click', () => handleCardClick(card, 'definition'));
+                columnB.appendChild(card);
+            });
+        }
+
+        function startTimer() {
+            if (!gameStarted) {
+                gameStarted = true;
+                timerInterval = setInterval(() => {
+                    timerSeconds++;
+                    let mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                    let secs = (timerSeconds % 60).toString().padStart(2, '0');
+                    timerEl.textContent = `${mins}:${secs}`;
+                }, 1000);
+            }
+        }
+
+        function handleCardClick(card, type) {
+            if (card.classList.contains('correct') || card.classList.contains('error')) return;
+
+            startTimer();
+
+            if (type === 'concept') {
+                if (selectedConcept) selectedConcept.classList.remove('selected');
+                selectedConcept = card;
+                card.classList.add('selected');
+            } else {
+                if (selectedDefinition) selectedDefinition.classList.remove('selected');
+                selectedDefinition = card;
+                card.classList.add('selected');
+            }
+
+            if (selectedConcept && selectedDefinition) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const conceptId = selectedConcept.dataset.id;
+            const definitionId = selectedDefinition.dataset.id;
+
+            if (conceptId === definitionId) {
+                // Correct match
+                selectedConcept.classList.remove('selected');
+                selectedDefinition.classList.remove('selected');
+                selectedConcept.classList.add('correct');
+                selectedDefinition.classList.add('correct');
+
+                selectedConcept = null;
+                selectedDefinition = null;
+                matchedCount++;
+                matchCountEl.textContent = matchedCount;
+
+                if (matchedCount === pairsData.length) {
+                    clearInterval(timerInterval);
+                    calculateRating();
+                    gameStatusEl.textContent = '¡Excelente trabajo! Has completado todos los emparejamientos.';
+                } else {
+                    gameStatusEl.textContent = '¡Correcto! Sigue emparejando.';
+                }
+            } else {
+                // Incorrect match
+                selectedConcept.classList.add('error');
+                selectedDefinition.classList.add('error');
+                gameStatusEl.textContent = 'Incorrecto. Inténtalo de nuevo.';
+
+                const cCard = selectedConcept;
+                const dCard = selectedDefinition;
+
+                selectedConcept = null;
+                selectedDefinition = null;
+
+                setTimeout(() => {
+                    cCard.classList.remove('selected', 'error');
+                    dCard.classList.remove('selected', 'error');
+                    gameStatusEl.textContent = 'Selecciona un elemento de cada columna.';
+                }, 600);
+            }
+        }
+
+        function calculateRating() {
+            let rating = 5;
+            if (timerSeconds > 60) rating = 4;
+            if (timerSeconds > 90) rating = 3;
+            if (timerSeconds > 120) rating = 2;
+            if (timerSeconds > 180) rating = 1;
+
+            let stars = '⭐'.repeat(rating);
+            ratingDisplayEl.textContent = `${stars} (${rating}/5)`;
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        // Initialize on load
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>

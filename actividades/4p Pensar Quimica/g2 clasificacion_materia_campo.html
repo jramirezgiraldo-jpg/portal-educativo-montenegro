@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clasificación de la Materia en el Campo</title>
+    <style>
+        :root {
+            /* Paleta de colores - Temática Naturaleza/Campo */
+            --bg-main: #f4f7f6; /* Gris verdoso muy claro */
+            --text-main: #2d3748; /* Gris oscuro para texto */
+            --text-light: #4a5568; 
+            --primary: #2f855a; /* Verde bosque */
+            --primary-hover: #22543d; 
+            --secondary: #d69e2e; /* Ocre/Dorado oscuro */
+            --tertiary: #2b6cb0; /* Azul fuerte */
+            --success: #38a169; /* Verde éxito */
+            --error: #e53e3e; /* Rojo error */
+            --warning: #dd6b20; /* Naranja */
+            --card-bg: #ffffff;
+            
+            /* Sombras y bordes */
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-full: 9999px;
+            
+            /* Colores de Categorías */
+            --cat1-color: #3182ce; /* Azul - Sustancias Puras */
+            --cat2-color: #d69e2e; /* Ocre - Mezclas Homogéneas */
+            --cat3-color: #805ad5; /* Morado - Mezclas Heterogéneas */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* Fuentes del sistema, 100% offline */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* CRÍTICO: Prevenir scroll y zoom en móviles durante el juego */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .game-header h1 {
+            font-size: clamp(24px, 5vw, 36px);
+            color: var(--primary);
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .game-header p {
+            font-size: clamp(15px, 3.5vw, 18px);
+            color: var(--text-light);
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        /* Panel de estadísticas */
+        .stats-board {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px 25px;
+            background: var(--card-bg);
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-md);
+            font-weight: 600;
+            font-size: clamp(14px, 3.5vw, 17px);
+            border: 2px solid #e2e8f0;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-arena {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-top: 10px;
+        }
+
+        /* Contenedor central de fichas (Flexbox wrap) */
+        .pool-container {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: 20px 15px;
+            box-shadow: inset 0 2px 5px 0 rgba(0, 0, 0, 0.05);
+            border: 2px dashed #a0aec0;
+            min-height: 200px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            align-content: center;
+            gap: 12px;
+        }
+
+        .chip {
+            background-color: #edf2f7;
+            color: var(--text-main);
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            font-size: clamp(14px, 3.5vw, 17px);
+            font-weight: 500;
+            cursor: pointer;
+            border: 2px solid #cbd5e0;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            user-select: none;
+            /* Flex-grow y max-width para adaptarse en móviles */
+            flex: 0 1 auto;
+            max-width: 100%;
+        }
+
+        .chip:active {
+            transform: scale(0.96);
+        }
+
+        /* Estado Seleccionado del Chip */
+        .chip.selected {
+            background-color: #ebf8fa;
+            border-color: var(--tertiary);
+            color: var(--tertiary);
+            box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.3);
+            transform: scale(1.05) translateY(-2px);
+            font-weight: bold;
+        }
+
+        /* Animación: Clasificación correcta */
+        .chip.correct-anim {
+            opacity: 0;
+            transform: scale(0.5) translateY(-30px);
+            pointer-events: none;
+        }
+
+        /* Animación: Clasificación incorrecta (Shake) */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--error) !important;
+            background-color: #fff5f5 !important;
+            color: var(--error) !important;
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .category-btn {
+            flex: 1 1 200px; /* Flexbox para ajuste móvil */
+            background-color: var(--card-bg);
+            border: 3px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 140px;
+        }
+
+        .category-btn h3 {
+            font-size: clamp(16px, 4vw, 20px);
+            color: var(--text-main);
+            pointer-events: none;
+            margin: 0;
+            line-height: 1.2;
+        }
+        
+        .category-btn p {
+            font-size: clamp(12px, 3vw, 14px);
+            color: var(--text-light);
+            margin: 0;
+            pointer-events: none;
+        }
+
+        .category-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Resaltado visual al acertar */
+        .category-btn.highlight {
+            border-color: var(--success) !important;
+            background-color: #f0fff4;
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Colores específicos de borde superior por categoría */
+        .cat-1 { border-top: 6px solid var(--cat1-color); }
+        .cat-2 { border-top: 6px solid var(--cat2-color); }
+        .cat-3 { border-top: 6px solid var(--cat3-color); }
+
+        /* Pantalla de Victoria */
+        #win-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 40px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            border: 4px solid var(--success);
+            margin-top: 20px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .btn-restart {
+            margin-top: 25px;
+            padding: 14px 35px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: clamp(16px, 4vw, 19px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-restart:hover { background-color: var(--primary-hover); }
+        .btn-restart:active { transform: scale(0.95); }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 60px 20px 80px;
+            border-top: 8px solid var(--primary);
+            box-shadow: 0 -10px 20px -5px rgba(0, 0, 0, 0.1);
+            /* Reactivar scroll y selección de texto para lectura */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .article-container h2 {
+            font-size: clamp(28px, 6.5vw, 42px);
+            color: var(--primary);
+            margin-bottom: 25px;
+            border-bottom: 3px solid #e2e8f0;
+            padding-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .article-container h3 {
+            font-size: clamp(22px, 5.5vw, 28px);
+            color: var(--primary-hover);
+            margin-top: 45px;
+            margin-bottom: 20px;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 4vw, 20px);
+            margin-bottom: 22px;
+            line-height: 1.75;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .article-container ul, .article-container ol {
+            margin-bottom: 25px;
+            padding-left: 25px;
+        }
+
+        .article-container li {
+            font-size: clamp(16px, 4vw, 20px);
+            margin-bottom: 12px;
+            color: #334155;
+            line-height: 1.7;
+        }
+
+        .highlight-box {
+            background-color: #f0fdf4;
+            border-left: 6px solid var(--success);
+            padding: 25px 30px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 35px 0;
+            font-style: italic;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workshop-section {
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--radius-md);
+            padding: clamp(25px, 6vw, 50px);
+            margin-top: 70px;
+        }
+
+        .workshop-section h2 {
+            border-bottom-color: #cbd5e1;
+            color: var(--tertiary);
+        }
+
+        .workshop-notice {
+            background-color: #fffbeb;
+            color: #975a16;
+            padding: 18px 25px;
+            border-left: 6px solid var(--secondary);
+            font-weight: 700;
+            border-radius: 8px;
+            margin-bottom: 35px;
+            font-size: clamp(15px, 4vw, 18px);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: workshop-counter;
+        }
+
+        .workshop-list li {
+            position: relative;
+            margin-bottom: 40px;
+            padding-left: clamp(50px, 9vw, 70px);
+            font-size: clamp(16px, 4vw, 19px);
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .workshop-list li::before {
+            counter-increment: workshop-counter;
+            content: counter(workshop-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: var(--tertiary);
+            color: white;
+            width: clamp(35px, 7vw, 45px);
+            height: clamp(35px, 7vw, 45px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: clamp(16px, 4.5vw, 20px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .activity-type {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #475569;
+            padding: 5px 12px;
+            border-radius: var(--radius-full);
+            font-size: clamp(12px, 3vw, 14px);
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* Iconos SVG incrustados */
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .icon-large {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .icon-title {
+            width: 32px;
+            height: 32px;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Clasificando la Materia en la Finca</h1>
+                <p>1️⃣ <strong>Toca</strong> un elemento de la lista. <br> 2️⃣ <strong>Toca</strong> la categoría correcta a la que pertenece.</p>
+                
+                <div class="stats-board">
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--tertiary);" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                        Faltan: <span id="remaining-count">15</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--error);" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2S22 6.477 22 12S17.523 22 12 22ZM11 15V17H13V15H11ZM11 7V13H13V7H11Z"/></svg>
+                        Errores: <span id="mistakes-count">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--success);" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/></svg>
+                        Nota: <span id="score-display">5.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="game-arena">
+                <!-- Contenedor de Elementos a Clasificar -->
+                <div class="pool-container" id="concepts-pool">
+                    <!-- Los chips se inyectarán aquí vía JavaScript -->
+                </div>
+
+                <!-- Contenedores de Categorías -->
+                <div class="categories-container" id="categories-board">
+                    <div class="category-btn cat-1" data-category="1">
+                        <svg class="icon icon-large" style="color: var(--cat1-color);" viewBox="0 0 24 24"><path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12c.4-.4.4-1.03.01-1.42zM6.92 19L5 17.08l8.06-8.06 1.92 1.92L6.92 19z"/></svg>
+                        <h3>Sustancias Puras</h3>
+                        <p>(Elementos y Compuestos)</p>
+                    </div>
+                    <div class="category-btn cat-2" data-category="2">
+                        <svg class="icon icon-large" style="color: var(--cat2-color);" viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+                        <h3>Mezclas Homogéneas</h3>
+                        <p>(No se distinguen componentes)</p>
+                    </div>
+                    <div class="category-btn cat-3" data-category="3">
+                        <svg class="icon icon-large" style="color: var(--cat3-color);" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2S22 6.477 22 12S17.523 22 12 22ZM12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM15 15.5V11H17.5L12 4.5L6.5 11H9V15.5H15Z"/></svg>
+                        <h3>Mezclas Heterogéneas</h3>
+                        <p>(Se distinguen componentes)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="win-message">
+                <h2 style="color: var(--success); font-size: clamp(24px, 6vw, 32px); margin-bottom: 12px;">¡Excelente Clasificación!</h2>
+                <p style="font-size: clamp(16px, 4vw, 19px); margin-bottom: 20px;">Has logrado identificar correctamente cómo se clasifica la materia que encontramos en nuestro entorno.</p>
+                <p style="font-size: clamp(22px, 5vw, 28px); font-weight: bold; color: var(--primary);">Tu nota final: <span id="final-score">5.0</span> / 5.0</p>
+                <button class="btn-restart" onclick="initGame()">Volver a Practicar</button>
+                <div style="margin-top: 30px; padding: 15px; background: #ebf8fa; border-left: 5px solid var(--tertiary); border-radius: 6px; width: 100%; max-width: 500px;">
+                    <p style="font-size: clamp(15px, 4vw, 17px); color: #2c5282; font-weight: bold; margin: 0;">
+                        👇 Desliza hacia abajo para leer la explicación completa y realizar el taller en tu cuaderno.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>La Química en el Campo: Comprendiendo de qué está hecho nuestro entorno</h2>
+                
+                <p>Al caminar por una finca o un cultivo, estamos rodeados de química. Todo lo que podemos ver, tocar o respirar es materia. Sin embargo, no toda la materia es igual. Los científicos clasifican todo lo que existe en dos grandes grupos principales: las <strong>Sustancias Puras</strong> y las <strong>Mezclas</strong>. Entender esta diferencia nos ayuda a comprender mejor el mundo que nos rodea, desde el agua con la que regamos las plantas hasta el suelo donde crecen.</p>
+
+                <h3>
+                    <svg class="icon icon-title" viewBox="0 0 24 24"><path d="M12 2L2 22H22L12 2Z"/></svg>
+                    1. Las Sustancias Puras: La base de todo
+                </h3>
+                <p>Las sustancias puras son aquellas que tienen una composición química fija y definida. No importa de dónde las saques o cómo las obtengas, siempre estarán formadas por las mismas partículas. Estas partículas no se pueden separar en otras más simples utilizando métodos físicos (como colar, filtrar o evaporar).</p>
+                
+                <p>Las sustancias puras se dividen en dos tipos muy importantes:</p>
+                <ul>
+                    <li><strong>Elementos Químicos:</strong> Son las sustancias más simples que existen. Están formados por un solo tipo de átomo y no se pueden descomponer en nada más simple. Son los "ladrillos" básicos del universo (los que encuentras en la Tabla Periódica). 
+                        <br><em>Ejemplos en el campo:</em> El <strong>Oxígeno</strong> (que respiramos), el <strong>Hierro</strong> (en un clavo oxidado o en la sangre de los animales), el <strong>Aluminio</strong> (en las cantinas de leche) o el <strong>Cobre</strong> (en los cables eléctricos de la casa).</li>
+                    
+                    <li><strong>Compuestos Químicos:</strong> Se forman cuando dos o más elementos diferentes se unen <em>químicamente</em> en proporciones exactas. Aunque están hechos de diferentes elementos, un compuesto en sí mismo es una sustancia pura porque sus moléculas son todas idénticas.
+                        <br><em>Ejemplos en el campo:</em> El <strong>Agua pura (H2O)</strong> (formada siempre por dos partes de hidrógeno y una de oxígeno), la <strong>Sal de cocina (Cloruro de Sodio)</strong> (que damos al ganado) o el <strong>Gas Metano</strong> (que se produce en los biodigestores a partir del estiércol).</li>
+                </ul>
+
+                <h3>
+                    <svg class="icon icon-title" viewBox="0 0 24 24"><path d="M19.06 6.5L17.5 4.94L16.44 6L18 7.56L19.06 6.5ZM21.18 8.62L19.62 7.06L18.56 8.12L20.12 9.68L21.18 8.62ZM3 13V21H11V13H3ZM9 19H5V15H9V19ZM13.88 5.62L12.82 4.56L11.76 5.62L12.82 6.68L13.88 5.62ZM16 11L14.94 12.06L16.5 13.62L17.56 12.56L16 11Z"/></svg>
+                    2. Las Mezclas: La unión física
+                </h3>
+                <p>La mayor parte de lo que vemos en el campo no son sustancias puras, sino mezclas. Una mezcla se produce cuando juntamos dos o más sustancias, pero <strong>sin que ocurra una reacción química</strong> entre ellas. Es decir, cada sustancia conserva sus propiedades originales y, con paciencia y los métodos adecuados, podríamos volver a separarlas.</p>
+
+                <p>Dependiendo de cómo se vean a simple vista, las mezclas se dividen en dos grupos:</p>
+
+                <ul>
+                    <li><strong>Mezclas Homogéneas (o Soluciones):</strong> Son aquellas en las que los componentes se mezclan tan perfectamente que no podemos distinguirlos a simple vista, ni siquiera con un microscopio. La mezcla se ve igual en todas sus partes; parece una sola sustancia.
+                        <br><em>Ejemplos cotidianos:</em> El <strong>Café tinto filtrado</strong> o el agua con azúcar (el azúcar desaparece visualmente, pero sabemos que está ahí por el sabor), el <strong>Aire puro</strong> que respiramos en la montaña (es una mezcla de oxígeno, nitrógeno y otros gases, pero se ve transparente), o el <strong>Agua con fertilizante disuelto</strong> para fumigar.</li>
+                    
+                    <li><strong>Mezclas Heterogéneas:</strong> Son aquellas donde los componentes <strong>sí</strong> se pueden distinguir a simple vista o con una lupa. Los componentes no se distribuyen de manera uniforme.
+                        <br><em>Ejemplos cotidianos:</em> El <strong>Suelo fértil o tierra</strong> (donde ves trozos de piedra, restos de hojas, arena y lombrices), una <strong>Ensalada de frutas</strong>, el <strong>Agua con aceite</strong> (que siempre se separan en dos capas), o un sancocho campesino.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>Resumen clave:</strong> Si puedes escribirle una fórmula química exacta (como H2O o NaCl) o buscarlo en la tabla periódica (como el Hierro, Fe), es una <strong>Sustancia Pura</strong>. Si está formado por varias cosas simplemente "juntas" (como tierra, aire o café), es una <strong>Mezcla</strong>. Si en esa mezcla notas sus partes a simple vista es <em>heterogénea</em>; si se ve como una sola cosa uniforme, es <em>homogénea</em>.
+                </div>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso y Consolidación</h2>
+                    
+                    <div class="workshop-notice">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 32px; height: 32px;">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                        <span><strong>INSTRUCCIÓN OBLIGATORIA:</strong> Lee cuidadosamente el texto anterior. Luego, escribe y resuelve las siguientes actividades de forma organizada en tu cuaderno de Ciencias Naturales.</span>
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Según la lectura, ¿cuál es la diferencia fundamental que existe entre una sustancia pura y una mezcla? Escríbelo con tus propias palabras.
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Conceptual</span><br>
+                            Elabora en tu cuaderno un mapa conceptual general de la lectura. El título central debe ser "Clasificación de la Materia". De ahí deben salir dos ramas ("Sustancias Puras" y "Mezclas"), y luego las subdivisiones de cada una, agregando un ejemplo de cada subgrupo.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Si preparas agua con sal (salmuera) para conservar un queso y agitas bien, ¿qué tipo de mezcla obtienes? Explica por qué se clasifica de esa manera basándote en la lectura.
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración / Dibujo</span><br>
+                            Dibuja dos frascos transparentes. En el Frasco A dibuja una representación visual de una <strong>mezcla heterogénea</strong> (ej. agua, arena y piedras). En el Frasco B dibuja una representación de una <strong>mezcla homogénea</strong> (ej. un vaso de tinto oscuro). Señala sus componentes con flechas.
+                        </li>
+                        <li>
+                            <span class="activity-type">Clasificación</span><br>
+                            De la siguiente lista de elementos presentes en una finca, clasifica cuáles son "Elementos Químicos" y cuáles son "Compuestos Químicos": <em>Agua (H2O), Alambre de cobre, Clavo de hierro, Gas metano, Sal de cocina.</em>
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Práctico</span><br>
+                            Un campesino recoge una muestra de tierra seca (suelo) para analizarla. Él afirma que la tierra es una sustancia pura porque toda viene del mismo lote. Según el texto, ¿el campesino tiene razón? Explica detalladamente tu respuesta y corrige su afirmación.
+                        </li>
+                        <li>
+                            <span class="activity-type">Cuadro Comparativo</span><br>
+                            Construye una tabla de dos columnas en tu cuaderno. En una columna pon "Mezclas Homogéneas" y en la otra "Mezclas Heterogéneas". Escribe tres (3) diferencias clave entre ellas.
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración y Explicación</span><br>
+                            Elabora un dibujo que muestre por qué un compuesto como el Agua (H2O) NO es una mezcla. (Pista: Revisa la sección que habla sobre "reacción química en proporciones exactas"). Escribe un pequeño párrafo explicando tu dibujo.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Lee de nuevo el "Resumen clave". Si encuentras un líquido desconocido pero observas que la etiqueta del envase tiene una fórmula química exacta, ¿puedes afirmar que es una mezcla? ¿Sí o no? Justifica tu respuesta.
+                        </li>
+                        <li>
+                            <span class="activity-type">Reflexión Final</span><br>
+                            Escribe un párrafo (mínimo 5 líneas) explicando por qué crees que es importante para las personas que trabajan en el campo (agricultores, ganaderos) saber distinguir entre diferentes mezclas y sustancias químicas. ¿En qué les podría ser útil este conocimiento en su trabajo diario?
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fase 1: Datos - 15 conceptos (5 por categoría) contextualizados en el campo
+        const rawData = [
+            // Categoría 1: Sustancias Puras (Elementos y Compuestos)
+            { id: 1, text: "Agua de manantial (H2O)", category: 1 },
+            { id: 2, text: "Sal de cocina (Cloruro de Sodio)", category: 1 },
+            { id: 3, text: "Alambre de Cobre (Cu)", category: 1 },
+            { id: 4, text: "Gas Metano del biodigestor", category: 1 },
+            { id: 5, text: "Clavos de Hierro (Fe)", category: 1 },
+            
+            // Categoría 2: Mezclas Homogéneas (No se distinguen componentes)
+            { id: 6, text: "Tinto colado", category: 2 },
+            { id: 7, text: "Agua con azúcar disuelta", category: 2 },
+            { id: 8, text: "Aire de la montaña", category: 2 },
+            { id: 9, text: "Agua con fertilizante disuelto", category: 2 },
+            { id: 10, text: "Suero oral (agua, sal, azúcar)", category: 2 },
+            
+            // Categoría 3: Mezclas Heterogéneas (Se distinguen componentes)
+            { id: 11, text: "Tierra del huerto", category: 3 },
+            { id: 12, text: "Sancocho de gallina", category: 3 },
+            { id: 13, text: "Agua con arena y piedras", category: 3 },
+            { id: 14, text: "Ensalada de frutas", category: 3 },
+            { id: 15, text: "Leche recién ordeñada (con nata flotando)", category: 3 }
+        ];
+
+        // Variables de estado del juego
+        let gameData = [];
+        let selectedChip = null;
+        let mistakes = 0;
+        let correctCount = 0;
+        let totalItems = rawData.length;
+        let isAnimating = false;
+
+        // Referencias a nodos del DOM
+        const poolContainer = document.getElementById('concepts-pool');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const countEl = document.getElementById('remaining-count');
+        const mistakesEl = document.getElementById('mistakes-count');
+        const scoreEl = document.getElementById('score-display');
+        const winMessage = document.getElementById('win-message');
+        const finalScoreEl = document.getElementById('final-score');
+        const gameArena = document.querySelector('.game-arena');
+
+        // Función para mezclar aleatoriamente el arreglo (Fisher-Yates)
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            // Resetear estado
+            selectedChip = null;
+            mistakes = 0;
+            correctCount = 0;
+            isAnimating = false;
+            
+            // Resetear interfaz visual
+            winMessage.style.display = 'none';
+            gameArena.style.display = 'flex';
+            poolContainer.innerHTML = '';
+            
+            categoryBtns.forEach(btn => btn.classList.remove('highlight'));
+            updateStats();
+
+            // Preparar nuevas fichas mezcladas
+            gameData = shuffle([...rawData]);
+            
+            gameData.forEach(item => {
+                const chip = document.createElement('div');
+                chip.classList.add('chip');
+                chip.textContent = item.text;
+                chip.dataset.id = item.id;
+                chip.dataset.category = item.category;
+                
+                // Evento de Tap/Click en dispositivo móvil o PC
+                chip.addEventListener('click', () => handleChipTap(chip));
+                
+                poolContainer.appendChild(chip);
+            });
+        }
+
+        // Manejo del Tap sobre una ficha de concepto
+        function handleChipTap(chip) {
+            if (isAnimating) return; // Bloquear interacción durante animaciones
+            
+            // Deseleccionar si se toca el mismo chip
+            if (selectedChip === chip) {
+                chip.classList.remove('selected');
+                selectedChip = null;
+                return;
+            }
+
+            // Deseleccionar chip anterior si existía uno
+            if (selectedChip) {
+                selectedChip.classList.remove('selected');
+            }
+
+            // Seleccionar nuevo chip
+            chip.classList.add('selected');
+            selectedChip = chip;
+        }
+
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Ignorar si no hay ficha seleccionada o si hay animación en curso
+                if (!selectedChip || isAnimating) return;
+
+                const targetCategory = parseInt(btn.dataset.category);
+                const correctCategory = parseInt(selectedChip.dataset.category);
+
+                if (targetCategory === correctCategory) {
+                    handleCorrectMatch(selectedChip, btn);
+                } else {
+                    handleIncorrectMatch(selectedChip);
+                }
+            });
+        });
+
+        // Acción cuando el usuario acierta
+        function handleCorrectMatch(chip, btn) {
+            isAnimating = true; 
+            
+            // Feedback visual de éxito en el botón
+            btn.classList.add('highlight');
+            
+            // Animación de desaparición del chip
+            chip.classList.add('correct-anim');
+            
+            setTimeout(() => {
+                chip.remove(); // Eliminar del DOM
+                selectedChip = null;
+                correctCount++;
+                updateStats();
+                
+                btn.classList.remove('highlight');
+                isAnimating = false; 
+                checkWin();
+            }, 300); // 300ms coincide con la transición CSS
+        }
+
+        // Acción cuando el usuario se equivoca
+        function handleIncorrectMatch(chip) {
+            isAnimating = true;
+            mistakes++;
+            updateStats();
+            
+            // Feedback visual de error (Shake y color rojo)
+            chip.classList.add('shake-error');
+            chip.classList.remove('selected');
+            selectedChip = null;
+            
+            setTimeout(() => {
+                chip.classList.remove('shake-error');
+                isAnimating = false;
+            }, 400); // 400ms coincide con la animación 'shake'
+        }
+
+        // Actualización de los contadores y calificación
+        function updateStats() {
+            countEl.textContent = totalItems - correctCount;
+            mistakesEl.textContent = mistakes;
+            
+            // Sistema de calificación (Inicia en 5.0, descuenta 0.2 por error)
+            let calcScore = 5.0 - (mistakes * 0.2);
+            calcScore = Math.max(1.0, calcScore); // Mínimo 1.0
+            calcScore = Math.min(5.0, calcScore); // Máximo 5.0 (por seguridad)
+            
+            const displayScore = calcScore.toFixed(1);
+            scoreEl.textContent = displayScore;
+            finalScoreEl.textContent = displayScore;
+            
+            // Cambio dinámico de color según la nota
+            if (calcScore >= 4.0) scoreEl.style.color = "var(--success)";
+            else if (calcScore >= 3.0) scoreEl.style.color = "var(--warning)";
+            else scoreEl.style.color = "var(--error)";
+        }
+
+        // Comprobación de fin de juego
+        function checkWin() {
+            if (correctCount === totalItems) {
+                setTimeout(() => {
+                    gameArena.style.display = 'none';
+                    winMessage.style.display = 'flex';
+                }, 300);
+            }
+        }
+
+        // Inicialización segura tras cargar la página
+        window.onload = initGame;
+    </script>
+</body>
+</html>

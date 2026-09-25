@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mezclas Homogéneas: Sopa de Letras y Taller</title>
+    
+    <style>
+        :root {
+            --primary: #059669; /* Verde esmeralda para química/naturaleza */
+            --primary-dark: #047857;
+            --secondary: #10b981;
+            --bg-body: #f0fdf4;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --grid-bg: #d1fae5;
+            --cell-bg: #ffffff;
+            --cell-selected: #a7f3d0;
+            --cell-found: #34d399;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            opacity: 0.9;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .stat-icon {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary);
+        }
+
+        .rating-container {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .star {
+            width: 24px;
+            height: 24px;
+            fill: #d1d5db; /* Gray default */
+            transition: fill 0.3s ease;
+        }
+
+        .star.active {
+            fill: #fbbf24; /* Gold */
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .game-layout {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .grid-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--grid-bg);
+            padding: 4px;
+            border-radius: 8px;
+            /* REQUISITO TÉCNICO CRÍTICO: Prevenir scroll al interactuar en móviles */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        #word-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr); /* Min 15x15 */
+            gap: 2px;
+            width: 100%;
+        }
+
+        .cell {
+            background-color: var(--cell-bg);
+            aspect-ratio: 1; /* Celdas cuadradas siempre */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: clamp(10px, 3.5vw, 18px); /* Texto fluido */
+            cursor: pointer;
+            border-radius: 2px;
+            color: var(--text-main);
+            transition: background-color 0.1s ease;
+        }
+
+        .cell.selected {
+            background-color: var(--cell-selected);
+            color: var(--primary-dark);
+        }
+
+        .cell.found {
+            background-color: var(--cell-found);
+            color: #064e3b;
+        }
+
+        .word-list-container {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .word-list-container h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-size: 1.2rem;
+            text-align: center;
+            border-bottom: 2px solid var(--grid-bg);
+            padding-bottom: 0.5rem;
+        }
+
+        #word-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            #word-list {
+                flex-direction: column;
+            }
+        }
+
+        .word-item {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            padding: 0.3rem 0.6rem;
+            background: var(--grid-bg);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .word-item.found {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            background: var(--cell-found);
+            opacity: 0.7;
+        }
+
+        /* Mensaje de Victoria */
+        #win-message {
+            display: none;
+            text-align: center;
+            background: #ecfdf5;
+            border: 2px solid #34d399;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        #win-message h2 { color: #064e3b; }
+
+        #zona-lectura {
+            margin-top: 3rem;
+            background: var(--bg-card);
+            padding: clamp(1.5rem, 4vw, 3rem);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        .articulo-teorico h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 0.5rem;
+        }
+
+        .articulo-teorico h3 {
+            color: var(--primary);
+            font-size: clamp(1.2rem, 3.5vw, 1.5rem);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .articulo-teorico p {
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+            text-align: justify;
+        }
+
+        .articulo-teorico ul {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .articulo-teorico li {
+            margin-bottom: 0.5rem;
+        }
+
+        .taller-repaso {
+            margin-top: 3rem;
+            background-color: #f8fafc;
+            padding: 2rem;
+            border-radius: 8px;
+            border-left: 5px solid var(--secondary);
+        }
+
+        .taller-repaso h3 {
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instruccion-taller {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #b45309; /* Amber oscuro para destacar */
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border: 1px dashed #d97706;
+        }
+
+        .actividad-item {
+            margin-bottom: 1.5rem;
+            background: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .tipo-actividad {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: white;
+            background: var(--primary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-right: 10px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Mezclas Homogéneas</h1>
+        <p>Encuentra las 10 palabras sobre las soluciones. ¡Mantén presionado y arrastra para seleccionar!</p>
+    </header>
+
+    <main>
+        <!-- FASE 1 y 2: ZONA DE JUEGO -->
+        <section id="zona-juego">
+            
+            <div id="win-message">
+                <h2>¡Excelente trabajo!</h2>
+                <p>Has encontrado todos los conceptos clave. Ahora, continúa con la lectura y el taller abajo.</p>
+            </div>
+
+            <div class="info-panel">
+                <div class="stat-box">
+                    <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/><path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z"/></svg>
+                    <span id="timer">00:00</span>
+                </div>
+                
+                <div class="stat-box">
+                    <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-2-5.586l-2.293-2.293-1.414 1.414L10 17.243l6.707-6.707-1.414-1.414z"/></svg>
+                    <span id="counter">0 / 10</span>
+                </div>
+
+                <div class="rating-container" id="stars">
+                    <!-- Estrellas (SVG Inline) -->
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                </div>
+            </div>
+
+            <div class="game-layout">
+                <div class="grid-container">
+                    <div id="word-grid"></div>
+                </div>
+                
+                <div class="word-list-container">
+                    <h3>Palabras a Encontrar</h3>
+                    <ul id="word-list">
+                        <!-- Generado por JS -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- FASE 3: ZONA DE LECTURA TEÓRICA Y TALLER -->
+        <section id="zona-lectura">
+            <article class="articulo-teorico">
+                <h2>El Mundo de las Mezclas Homogéneas y las Soluciones</h2>
+                
+                <p>Todo lo que nos rodea, desde el aire que respiramos hasta el jugo que bebemos en el recreo, está compuesto de materia. La química nos ayuda a clasificar esta materia para entender cómo interactúa. En términos generales, la materia se divide en <strong>sustancias puras</strong> (como los elementos en la tabla periódica o compuestos como el agua pura) y <strong>mezclas</strong> (combinaciones físicas de dos o más sustancias).</p>
+                
+                <p>Hoy nos enfocaremos en un tipo muy especial de mezcla: las <strong>mezclas homogéneas</strong>, también conocidas como <strong>soluciones</strong>.</p>
+
+                <h3>¿Qué es una mezcla homogénea?</h3>
+                <p>Una mezcla homogénea es aquella en la que sus componentes se combinan de manera tan íntima y uniforme que <strong>no podemos distinguir sus partes a simple vista</strong>, ni siquiera con un microscopio óptico común. Tiene una apariencia uniforme en todas sus partes (una sola fase).</p>
+                <p>Piensa en cuando preparas un café con azúcar. Al revolver bien, el azúcar "desaparece" visualmente en el líquido oscuro. Ya no ves los cristales blancos por un lado y el café por el otro; ves un solo líquido uniforme. Eso es una mezcla homogénea.</p>
+                
+                <h3>Soluto y Solvente: Los protagonistas de la Solución</h3>
+                <p>Toda solución o mezcla homogénea está formada por al menos dos componentes clave:</p>
+                <ul>
+                    <li><strong>Soluto:</strong> Es la sustancia que se disuelve. Generalmente se encuentra en menor cantidad. En nuestro ejemplo del café, el azúcar es el soluto.</li>
+                    <li><strong>Solvente (o disolvente):</strong> Es la sustancia que disuelve al soluto. Generalmente está en mayor cantidad. El agua es conocida como el "solvente universal" porque disuelve muchísimas cosas, pero también existen solventes como el alcohol o el aceite. En el ejemplo del café, el agua caliente es el solvente.</li>
+                </ul>
+
+                <h3>La Concentración: ¿Qué tan "fuerte" es la mezcla?</h3>
+                <p>La <strong>concentración</strong> de una solución nos dice qué cantidad de soluto está disuelta en una cantidad determinada de solvente. Una solución puede ser:</p>
+                <ul>
+                    <li><strong>Diluida:</strong> Tiene muy poco soluto (como un jugo de sobrecito con demasiada agua, que sabe desabrido).</li>
+                    <li><strong>Concentrada:</strong> Tiene mucho soluto en relación al solvente.</li>
+                    <li><strong>Saturada:</strong> Es el punto máximo donde el solvente ya no puede disolver ni un gramo más de soluto a esa temperatura (si le echas más azúcar al café y ésta se va al fondo, ya está saturada).</li>
+                </ul>
+
+                <h3>Aplicación práctica: Preparando Fertilizantes Líquidos</h3>
+                <p>Comprender las mezclas homogéneas es vital en la agricultura moderna y la jardinería. Las plantas necesitan nutrientes específicos (Nitrógeno, Fósforo, Potasio) para crecer sanas, los cuales a menudo se aplican mediante <strong>fertilizantes líquidos</strong>.</p>
+                <p>Para preparar un fertilizante líquido efectivo, un agricultor debe crear una mezcla homogénea (solución). Toma el fertilizante sólido en polvo o gránulos (el <strong>soluto</strong>) y lo disuelve en una gran cantidad de agua (el <strong>solvente</strong>). Es crucial que la mezcla quede <strong>uniforme</strong>.</p>
+                <p>Si la mezcla no es homogénea y el fertilizante queda asentado en el fondo, algunas plantas recibirán solo agua y no crecerán, mientras que otras, al recibir el fondo concentrado del tanque, podrían "quemarse" por exceso de químicos. Por esto, lograr una <strong>concentración uniforme</strong> asegura que cada gota de agua de riego tenga la misma cantidad exacta de nutrientes, garantizando un cultivo sano y parejo.</p>
+            </article>
+
+            <div class="taller-repaso">
+                <h3>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    Taller de Repaso y Aplicación
+                </h3>
+                
+                <div class="instruccion-taller">
+                    IMPORTANTE: Escribe y resuelve las siguientes 10 actividades de forma clara y ordenada en tu cuaderno escolar.
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>1.</strong> Según la lectura, ¿Cuál es la diferencia visual principal entre una mezcla homogénea y una mezcla donde sí se notan sus ingredientes (como una ensalada)?</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Dibujar / Ilustrar</span>
+                    <p><strong>2.</strong> Dibuja un vaso de agua con sal antes de mezclarlo y otro vaso después de revolverlo bien. Señala en tu dibujo cuál es la "mezcla homogénea".</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Analizar</span>
+                    <p><strong>3.</strong> Imagina que preparas un jugo de limón. Identifica claramente en tu cuaderno: ¿Cuál es el soluto y cuál es el solvente en esta preparación?</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Mapa Conceptual</span>
+                    <p><strong>4.</strong> Elabora un pequeño mapa conceptual que conecte las siguientes palabras: Materia, Mezclas, Mezclas Homogéneas (Soluciones), Soluto y Solvente.</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>5.</strong> Explica con tus propias palabras qué significa que una solución esté "saturada". Usa un ejemplo de la vida diaria.</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Analizar</span>
+                    <p><strong>6.</strong> En el caso de los fertilizantes para las plantas, ¿Por qué es peligroso para el cultivo que la mezcla NO sea homogénea (uniforme)?</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Dibujar / Ilustrar</span>
+                    <p><strong>7.</strong> Dibuja tres botellas iguales. Representa en la primera una solución "Diluida" (poca concentración), en la segunda una "Concentrada", y en la tercera una "Saturada". Usa colores para mostrar la diferencia.</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>8.</strong> ¿Por qué se le conoce al agua como el "solvente universal"? ¿Qué significa esto en la práctica?</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Mapa Mental</span>
+                    <p><strong>9.</strong> Crea un mapa mental centralizando la palabra "Soluciones". Agrega ramas con ejemplos de mezclas homogéneas que encuentres en tu casa (ej. en la cocina o el baño).</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Analizar</span>
+                    <p><strong>10.</strong> Piensa críticamente: El aire limpio que respiramos es una mezcla de gases (Nitrógeno, Oxígeno, etc.). ¿El aire es una mezcla homogénea o una sustancia pura? Justifica tu respuesta basándote en la lectura.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Palabras clave extraídas de la temática y la instrucción implícita
+        // Normalizadas: Mayúsculas, sin tildes, máximo 15 letras para caber en el grid 15x15
+        const RAW_WORDS = [
+            "HOMOGENEA", "MEZCLA", "SOLUCION", "SOLUTO", 
+            "SOLVENTE", "UNIFORME", "COMPUESTOS", "FERTILIZANTE", 
+            "SUSTANCIAS", "CONCENTRADA"
+        ];
+        
+        // Función auxiliar por seguridad, aunque ya estén normalizadas arriba
+        const WORDS = RAW_WORDS.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+        
+        const GRID_SIZE = 15;
+        let grid = [];
+        let wordsFound = 0;
+        let foundWordStrings = [];
+        let timerInterval;
+        let secondsElapsed = 0;
+        let gameActive = true;
+
+        // Variables de interacción táctil/ratón
+        let isSelecting = false;
+        let startCell = null;
+        let currentPath = []; // Arreglo de celdas {r, c, element}
+
+        const gridContainer = document.getElementById('word-grid');
+        const wordListContainer = document.getElementById('word-list');
+        const counterElement = document.getElementById('counter');
+        const timerElement = document.getElementById('timer');
+        const stars = document.querySelectorAll('.star');
+        const winMessage = document.getElementById('win-message');
+
+        function initGame() {
+            gameActive = true;
+            wordsFound = 0;
+            foundWordStrings = [];
+            secondsElapsed = 0;
+            updateCounter();
+            updateTimerDisplay();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            generateWordSearch();
+            renderGrid();
+            renderWordList();
+            setupInteractions();
+        }
+
+        function generateWordSearch() {
+            let attempt = 0;
+            let success = false;
+            
+            // CRÍTICO: Ciclo exhaustivo. Reintentar hasta que TODAS las 10 palabras entren
+            while (!success && attempt < 500) {
+                // Inicializar grid vacío
+                grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+                success = true;
+
+                // Ordenar palabras por longitud descendente ayuda a ubicarlas más fácil
+                let sortedWords = [...WORDS].sort((a, b) => b.length - a.length);
+
+                for (let word of sortedWords) {
+                    if (!placeWord(word)) {
+                        success = false;
+                        break; // Falló al ubicar esta palabra, abortar y reiniciar grid limpio
+                    }
+                }
+                attempt++;
+            }
+
+            if (!success) {
+                console.error("Fallo crítico: No se pudieron colocar las palabras tras 500 intentos.");
+                // Aunque es improbable en 15x15, aseguramos un tablero (incompleto en el peor caso extremo)
+            }
+
+            // Rellenar espacios vacíos con letras aleatorias
+            const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    }
+                }
+            }
+        }
+
+        function placeWord(word) {
+            // Direcciones: N, S, E, W, NE, NW, SE, SW
+            const dirs = [
+                [-1, 0], [1, 0], [0, 1], [0, -1],
+                [-1, 1], [-1, -1], [1, 1], [1, -1]
+            ];
+            
+            // Barajar direcciones para que sea aleatorio
+            dirs.sort(() => Math.random() - 0.5);
+
+            // Generar todas las posiciones posibles y barajarlas
+            let positions = [];
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    positions.push({r, c});
+                }
+            }
+            positions.sort(() => Math.random() - 0.5);
+
+            for (let pos of positions) {
+                for (let dir of dirs) {
+                    if (canPlaceWord(word, pos.r, pos.c, dir[0], dir[1])) {
+                        // Colocar la palabra en la matriz
+                        for (let i = 0; i < word.length; i++) {
+                            grid[pos.r + i * dir[0]][pos.c + i * dir[1]] = word[i];
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false; // No encontró lugar para esta palabra
+        }
+
+        function canPlaceWord(word, r, c, dr, dc) {
+            let endR = r + (word.length - 1) * dr;
+            let endC = c + (word.length - 1) * dc;
+
+            // Verificar que no se salga de los límites del grid
+            if (endR < 0 || endR >= GRID_SIZE || endC < 0 || endC >= GRID_SIZE) return false;
+
+            // Verificar colisiones de letras
+            for (let i = 0; i < word.length; i++) {
+                let currentR = r + i * dr;
+                let currentC = c + i * dc;
+                let currentCell = grid[currentR][currentC];
+                // Si la celda está ocupada y NO es la misma letra que necesitamos, falla
+                if (currentCell !== '' && currentCell !== word[i]) {
+                    return false; 
+                }
+            }
+            return true;
+        }
+
+        function renderGrid() {
+            gridContainer.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = grid[r][c];
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function renderWordList() {
+            wordListContainer.innerHTML = '';
+            WORDS.forEach(word => {
+                const li = document.createElement('li');
+                li.className = 'word-item';
+                li.id = 'word-' + word;
+                li.textContent = word;
+                wordListContainer.appendChild(li);
+            });
+        }
+
+        function setupInteractions() {
+            // pointer events abarcan ratón y táctil.
+            gridContainer.addEventListener('pointerdown', handlePointerDown);
+            // El move y up van a window para no perder el trazo si el dedo sale rápido del contenedor
+            window.addEventListener('pointermove', handlePointerMove); 
+            window.addEventListener('pointerup', handlePointerUp);
+            // Prevenir scroll en touch para iOS antiguo (el CSS touch-action:none cubre modernos)
+            gridContainer.addEventListener('touchstart', (e) => e.preventDefault(), {passive: false});
+        }
+
+        function getCellFromEvent(e) {
+            // elementFromPoint es vital en móviles para saber sobre qué elemento estamos pasando el dedo
+            // ya que el event target en touchmove siempre es el elemento donde INICIÓ el toque.
+            let target = document.elementFromPoint(e.clientX, e.clientY);
+            if (target && target.classList.contains('cell')) {
+                return {
+                    r: parseInt(target.dataset.r),
+                    c: parseInt(target.dataset.c),
+                    el: target
+                };
+            }
+            return null;
+        }
+
+        function handlePointerDown(e) {
+            if (!gameActive) return;
+            // e.preventDefault(); en pointerdown a veces causa problemas de focus, omitido si touch-action funciona.
+            
+            const cell = getCellFromEvent(e);
+            if (cell) {
+                isSelecting = true;
+                startCell = cell;
+                clearSelection();
+                currentPath = [cell];
+                cell.el.classList.add('selected');
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (!isSelecting || !gameActive) return;
+            // Prevenir comportamientos extraños del navegador al arrastrar
+            if(e.cancelable) e.preventDefault();
+
+            const currentCell = getCellFromEvent(e);
+            if (currentCell) {
+                // Verificar si forma una línea recta válida desde startCell
+                const path = calculateLine(startCell, currentCell);
+                if (path) {
+                    clearSelection();
+                    currentPath = path;
+                    currentPath.forEach(p => p.el.classList.add('selected'));
+                }
+            }
+        }
+
+        function handlePointerUp(e) {
+            if (!isSelecting) return;
+            isSelecting = false;
+            
+            if (currentPath.length > 0) {
+                // Extraer palabra de la selección actual
+                let selectedWord = currentPath.map(p => p.el.textContent).join('');
+                let reversedWord = selectedWord.split('').reverse().join('');
+
+                // Comprobar si coincide (en ambas direcciones)
+                if (WORDS.includes(selectedWord) || WORDS.includes(reversedWord)) {
+                    let wordMatched = WORDS.includes(selectedWord) ? selectedWord : reversedWord;
+                    
+                    if (!foundWordStrings.includes(wordMatched)) {
+                        markWordAsFound(wordMatched, currentPath);
+                    } else {
+                        clearSelection(); // Ya encontrada
+                    }
+                } else {
+                    clearSelection(); // No es palabra válida
+                }
+            }
+            currentPath = [];
+            startCell = null;
+        }
+
+        function calculateLine(start, end) {
+            const dr = end.r - start.r;
+            const dc = end.c - start.c;
+            
+            // Validar si es H, V o Diagonal perfecta
+            if (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc)) {
+                let steps = Math.max(Math.abs(dr), Math.abs(dc));
+                let stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+                let stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+                
+                let path = [];
+                for (let i = 0; i <= steps; i++) {
+                    let r = start.r + (stepR * i);
+                    let c = start.c + (stepC * i);
+                    let el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                    if(el) path.push({r, c, el});
+                }
+                return path;
+            }
+            return null; // El trazo no es recto
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.cell.selected').forEach(el => el.classList.remove('selected'));
+        }
+
+        function markWordAsFound(word, path) {
+            path.forEach(p => {
+                p.el.classList.remove('selected');
+                p.el.classList.add('found');
+            });
+            
+            foundWordStrings.push(word);
+            wordsFound++;
+            
+            // Tachar en UI
+            const wordEl = document.getElementById('word-' + word);
+            if(wordEl) wordEl.classList.add('found');
+            
+            updateCounter();
+
+            if (wordsFound === WORDS.length) {
+                gameWin();
+            }
+        }
+
+        function updateCounter() {
+            counterElement.textContent = `${wordsFound} / ${WORDS.length}`;
+        }
+
+        function updateTimer() {
+            secondsElapsed++;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            let m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            let s = (secondsElapsed % 60).toString().padStart(2, '0');
+            timerElement.textContent = `${m}:${s}`;
+        }
+
+        function gameWin() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            winMessage.style.display = 'block';
+
+            // Calificación (5 estrellas: < 1.5 min, 4: < 3 min, 3: < 5 min, 2: < 7 min, 1: más)
+            let activeStars = 1;
+            if (secondsElapsed <= 90) activeStars = 5;
+            else if (secondsElapsed <= 180) activeStars = 4;
+            else if (secondsElapsed <= 300) activeStars = 3;
+            else if (secondsElapsed <= 420) activeStars = 2;
+
+            stars.forEach((star, index) => {
+                if (index < activeStars) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+            
+            // Scroll suave hacia la lectura
+            setTimeout(() => {
+                document.getElementById('zona-lectura').scrollIntoView({ behavior: 'smooth' });
+            }, 1000);
+        }
+
+        // Inicialización al cargar la página
+        window.onload = initGame;
+    </script>
+</body>
+</html>

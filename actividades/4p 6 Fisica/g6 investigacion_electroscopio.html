@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Investigación Guiada: Detección de Cargas</title>
+    <style>
+        :root {
+            /* Tema Cyberpunk - Juego */
+            --cp-bg: #0b0c10;
+            --cp-dark: #1f2833;
+            --cp-neon-cyan: #66fcf1;
+            --cp-neon-blue: #45a29e;
+            --cp-neon-green: #39ff14;
+            --cp-neon-red: #ff073a;
+            --cp-text: #c5c6c7;
+            
+            /* Tema Lectura - Teoría */
+            --read-bg: #f9fafb;
+            --read-card: #ffffff;
+            --read-text: #1f2937;
+            --read-title: #111827;
+            --read-accent: #2563eb;
+            --read-border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            color: var(--cp-text);
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #zona-juego {
+            background-color: var(--cp-bg);
+            background-image: 
+                linear-gradient(rgba(102, 252, 241, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 252, 241, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 20px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 4px solid var(--cp-neon-cyan);
+            box-shadow: 0 4px 15px rgba(102, 252, 241, 0.2);
+            /* Prevención de scroll/zoom accidental en móviles */
+            touch-action: none; 
+            user-select: none;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: rgba(31, 40, 51, 0.85);
+            border: 2px solid var(--cp-neon-blue);
+            border-radius: 12px;
+            padding: clamp(15px, 4vw, 25px);
+            box-shadow: 0 0 20px rgba(69, 162, 158, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--cp-neon-blue);
+            padding-bottom: 10px;
+        }
+
+        .room-indicator {
+            font-family: monospace;
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--cp-neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .score-indicator {
+            font-family: monospace;
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--cp-neon-green);
+        }
+
+        .puzzle-area {
+            min-height: 100px;
+            margin-bottom: 25px;
+        }
+
+        .puzzle-text {
+            font-family: monospace;
+            font-size: clamp(14px, 3.5vw, 17px);
+            color: var(--cp-text);
+            text-align: justify;
+            text-shadow: 0 0 2px rgba(197, 198, 199, 0.5);
+        }
+
+        .display-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .digit-box {
+            width: clamp(40px, 12vw, 60px);
+            height: clamp(50px, 15vw, 70px);
+            background-color: var(--cp-dark);
+            border: 2px solid var(--cp-neon-cyan);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: monospace;
+            font-size: clamp(24px, 8vw, 36px);
+            color: var(--cp-neon-cyan);
+            box-shadow: inset 0 0 10px rgba(102, 252, 241, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        .key-btn {
+            background-color: transparent;
+            border: 2px solid var(--cp-neon-blue);
+            color: var(--cp-neon-cyan);
+            padding: 15px 0;
+            font-size: clamp(20px, 6vw, 24px);
+            font-family: monospace;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            text-align: center;
+        }
+
+        .key-btn:active {
+            background-color: var(--cp-neon-blue);
+            color: var(--cp-bg);
+            transform: scale(0.95);
+        }
+
+        .key-action {
+            font-weight: bold;
+        }
+        
+        .key-clear { color: var(--cp-neon-red); border-color: var(--cp-neon-red); }
+        .key-clear:active { background-color: var(--cp-neon-red); color: white; }
+        
+        .key-enter { color: var(--cp-neon-green); border-color: var(--cp-neon-green); }
+        .key-enter:active { background-color: var(--cp-neon-green); color: black; }
+
+        .success-anim {
+            animation: flash-green 0.8s ease-out;
+        }
+        .fail-anim {
+            animation: shake-red 0.5s ease-in-out;
+        }
+
+        @keyframes flash-green {
+            0% { box-shadow: 0 0 0 rgba(57, 255, 20, 0); }
+            50% { box-shadow: 0 0 40px rgba(57, 255, 20, 0.8); border-color: var(--cp-neon-green); }
+            100% { box-shadow: 0 0 0 rgba(57, 255, 20, 0); }
+        }
+
+        @keyframes shake-red {
+            0%, 100% { transform: translateX(0); box-shadow: 0 0 0 transparent; }
+            20%, 60% { transform: translateX(-10px); box-shadow: 0 0 20px rgba(255, 7, 58, 0.6); border-color: var(--cp-neon-red); }
+            40%, 80% { transform: translateX(10px); box-shadow: 0 0 20px rgba(255, 7, 58, 0.6); border-color: var(--cp-neon-red); }
+        }
+
+        #game-complete {
+            display: none;
+            text-align: center;
+            font-family: monospace;
+        }
+        #game-complete h2 { color: var(--cp-neon-green); margin-bottom: 15px; font-size: 24px; }
+        #game-complete p { color: var(--cp-text); margin-bottom: 10px; }
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(30px, 6vw, 60px) clamp(15px, 4vw, 30px);
+            flex-grow: 1;
+        }
+
+        .reading-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--read-card);
+            border-radius: 16px;
+            padding: clamp(20px, 5vw, 40px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--read-border);
+        }
+
+        .reading-container h1 {
+            color: var(--read-title);
+            font-size: clamp(24px, 5vw, 32px);
+            margin-bottom: 20px;
+            line-height: 1.2;
+            border-bottom: 3px solid var(--read-accent);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reading-container h2 {
+            color: var(--read-title);
+            font-size: clamp(20px, 4vw, 24px);
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .reading-container h3 {
+            color: var(--read-accent);
+            font-size: clamp(18px, 3.5vw, 20px);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .reading-container p {
+            margin-bottom: 16px;
+            font-size: clamp(16px, 3vw, 18px);
+            line-height: 1.7;
+            text-align: justify;
+        }
+
+        .reading-container ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .reading-container li {
+            margin-bottom: 8px;
+            font-size: clamp(16px, 3vw, 18px);
+        }
+
+        .workshop-section {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px dashed #cbd5e1;
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .workshop-instruction {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--read-accent);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-weight: 600;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .activity-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .activity-type {
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .type-direct { background: #dbeafe; color: #1e40af; }
+        .type-draw { background: #dcfce7; color: #166534; }
+        .type-analyze { background: #fee2e2; color: #991b1b; }
+        .type-map { background: #f3e8ff; color: #6b21a8; }
+        
+        /* Iconografía SVG básica incrustada para evitar dependencias */
+        .icon { width: 24px; height: 24px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- ZONA DE JUEGO SUPERIOR (Cyberpunk, Interactiva) -->
+        <section id="zona-juego">
+            <div class="game-container" id="game-container">
+                <div class="game-header">
+                    <div class="room-indicator">Sala: <span id="room-num">1</span>/4</div>
+                    <div class="score-indicator">Nota: <span id="score-val">5.0</span></div>
+                </div>
+
+                <div class="puzzle-area">
+                    <p class="puzzle-text" id="puzzle-desc">
+                        Cargando simulador...
+                    </p>
+                </div>
+
+                <div class="display-container" id="display-boxes">
+                    <div class="digit-box" id="digit-0"></div>
+                    <div class="digit-box" id="digit-1"></div>
+                    <div class="digit-box" id="digit-2"></div>
+                    <div class="digit-box" id="digit-3"></div>
+                </div>
+
+                <div class="keypad">
+                    <button class="key-btn" onclick="inputDigit('1')">1</button>
+                    <button class="key-btn" onclick="inputDigit('2')">2</button>
+                    <button class="key-btn" onclick="inputDigit('3')">3</button>
+                    <button class="key-btn" onclick="inputDigit('4')">4</button>
+                    <button class="key-btn" onclick="inputDigit('5')">5</button>
+                    <button class="key-btn" onclick="inputDigit('6')">6</button>
+                    <button class="key-btn" onclick="inputDigit('7')">7</button>
+                    <button class="key-btn" onclick="inputDigit('8')">8</button>
+                    <button class="key-btn" onclick="inputDigit('9')">9</button>
+                    <button class="key-btn key-action key-clear" onclick="clearInput()">C</button>
+                    <button class="key-btn" onclick="inputDigit('0')">0</button>
+                    <button class="key-btn key-action key-enter" onclick="checkAnswer()">OK</button>
+                </div>
+            </div>
+
+            <!-- Pantalla final del juego -->
+            <div class="game-container" id="game-complete">
+                <h2>¡SISTEMA DESBLOQUEADO!</h2>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:60px;height:60px;margin: 0 auto 15px auto;color:var(--cp-neon-green);display:block;">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <p>Has escapado exitosamente de las salas de calibración electrostática.</p>
+                <p>Tu nota final es: <strong id="final-score" style="color:var(--cp-neon-green); font-size:20px;"></strong></p>
+                <p style="margin-top:20px; font-size: 14px; color: var(--cp-neon-blue);">Desliza hacia abajo para acceder al material teórico y al taller de repaso.</p>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="reading-container">
+                
+                <h1>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12zm10-5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 8c-2.76 0-5 2.24-5 5v1h10v-1c0-2.76-2.24-5-5-5z"/></svg>
+                    Instrumentos que Ven lo Invisible: El Electroscopio
+                </h1>
+                
+                <p>El universo en el que vivimos está lleno de maravillas y fenómenos que escapan a nuestros cinco sentidos. No podemos ver las ondas de radio que transmiten música, no podemos oler el magnetismo que guía a las brújulas, y ciertamente, no podemos ver a simple vista las minúsculas partículas que conforman la electricidad. Aquí es donde la ciencia y la tecnología se convierten en nuestro "sexto sentido", creando instrumentos que amplifican nuestras capacidades para medir y comprender lo invisible.</p>
+
+                <h2>1. La naturaleza de la materia: Los Átomos</h2>
+                <p>Para entender la electricidad, primero debemos hacer un viaje al corazón de la materia. Todo lo que nos rodea, desde la pantalla que estás mirando hasta tu propio cuerpo, está compuesto por átomos. Imagina el átomo como un sistema solar diminuto.</p>
+                <p>En el centro (el núcleo) se encuentran los <strong>protones</strong>, que tienen una carga eléctrica <strong>positiva (+)</strong>, y los neutrones, que no tienen carga. Orbitando velozmente alrededor de este núcleo se encuentran los <strong>electrones</strong>, que poseen una carga eléctrica <strong>negativa (-)</strong>. En un estado normal, los átomos tienen la misma cantidad de protones y electrones, por lo que su carga es neutra; se equilibran mutuamente.</p>
+
+                <h2>2. El origen de la Electricidad Estática</h2>
+                <p>Sin embargo, los electrones que orbitan en las capas más externas del átomo a veces son "inestables" o fáciles de arrancar. Cuando frotas dos materiales diferentes (por ejemplo, al frotar un globo contra tu cabello o caminar con calcetines sobre una alfombra), la fricción arranca electrones de un material y los deposita en el otro. A este fenómeno se le conoce como el efecto triboeléctrico.</p>
+                <ul>
+                    <li>El material que <strong>pierde electrones</strong> queda con un exceso de protones, obteniendo una carga neta <strong>positiva</strong>.</li>
+                    <li>El material que <strong>gana electrones</strong> obtiene una carga neta <strong>negativa</strong>.</li>
+                </ul>
+                <p>Esta acumulación de cargas en reposo es lo que llamamos <strong>electricidad estática</strong>.</p>
+
+                <h2>3. El Electroscopio: Amplificando nuestros sentidos</h2>
+                <p>Dado que no podemos ver ni contar los electrones que un globo ha robado a nuestro cabello, ¿cómo sabemos que un objeto está cargado eléctricamente? Los científicos desarrollaron un instrumento de medición tecnológico llamado <strong>electroscopio</strong>.</p>
+                
+                <h3>¿Cómo está construido?</h3>
+                <p>Un electroscopio clásico consiste en una esfera o disco de metal en la parte superior, conectado a una varilla metálica conductora que desciende hacia el interior de un recipiente de vidrio (el vidrio aísla el sistema del viento y de otras cargas externas). En el extremo inferior de la varilla cuelgan dos láminas muy delgadas, tradicionalmente hechas de oro o aluminio, que pueden moverse libremente.</p>
+
+                <h3>El mecanismo de funcionamiento</h3>
+                <p>El principio fundamental en el que se basa el electroscopio es una ley básica de la física: <strong>Las cargas del mismo signo se repelen, y las cargas de signos opuestos se atraen.</strong></p>
+                <p>Cuando acercas un objeto cargado (digamos, un tubo de plástico con carga negativa) a la esfera superior del electroscopio sin tocarla, ocurre un fenómeno llamado <em>inducción electrostática</em>. Los electrones libres dentro del metal del electroscopio, al ser también negativos, huyen de la esfera repulsados por el tubo y se empujan hacia abajo por la varilla hasta llegar a las dos láminas del fondo.</p>
+                <p>Como resultado, ambas láminas se llenan de carga negativa. Y dado que ambas tienen el mismo tipo de carga, se repelen mutuamente, separándose y formando una "V" invertida. ¡Es magia visual! Un fenómeno microscópico invisible (el movimiento de electrones) ha sido transformado por la tecnología en un movimiento mecánico visible a gran escala (la separación de las láminas de metal).</p>
+
+                <h2>4. Conductores y Aislantes</h2>
+                <p>Para que el electroscopio funcione, la varilla y las láminas deben ser de metal. Los metales (como el cobre, el oro, el aluminio y la plata) son excelentes <strong>materiales conductores</strong>; esto significa que permiten que los electrones fluyan libremente a través de ellos. Por otro lado, materiales como el vidrio, la madera, la goma o el plástico son <strong>aislantes</strong>. Sus electrones están fuertemente unidos a sus átomos y no fluyen con facilidad. Es por esto que los cables de nuestras casas tienen cobre por dentro (para conducir la electricidad) y plástico por fuera (para aislarnos y evitar choques eléctricos).</p>
+
+                <h2>5. Conclusión: La importancia de medir</h2>
+                <p>Comprender y medir las cargas eléctricas no es solo un truco de laboratorio. Es vital para el mundo real. Gracias a instrumentos derivados de estos principios, los ingenieros pueden evitar descargas electrostáticas que podrían destruir los delicados microchips de tu celular, y los meteorólogos pueden estudiar la estática masiva en las nubes para prevenir o entender los rayos durante las tormentas. La tecnología, efectivamente, nos dota de sentidos sobrehumanos.</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso: Investigación y Consolidación</h2>
+                    
+                    <div class="workshop-instruction">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        INSTRUCCIÓN: Escribe y resuelve estas 10 actividades a mano en tu cuaderno de ciencias, basándote en la lectura anterior.
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>1.</strong> Según la lectura, ¿qué partículas conforman el centro (núcleo) de un átomo y qué carga eléctrica poseen?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-draw">Dibujo / Ilustración</span>
+                        <p><strong>2.</strong> Dibuja un átomo como si fuera un "sistema solar en miniatura". Señala claramente con flechas y nombres dónde están los protones, los neutrones y los electrones.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analyze">Análisis Crítico</span>
+                        <p><strong>3.</strong> Explica con tus propias palabras: ¿Por qué frotar un globo contra tu cabello hace que el globo quede con carga negativa? ¿Qué ocurre con los electrones en ese proceso?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-map">Mapa Conceptual</span>
+                        <p><strong>4.</strong> Elabora un pequeño mapa conceptual que conecte los siguientes términos: Átomo, Electrón, Protón, Carga Positiva, Carga Negativa.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-draw">Dibujo / Ilustración</span>
+                        <p><strong>5.</strong> Ilustra un electroscopio clásico. Nombra y señala sus tres partes principales (la esfera, la varilla conductora y las láminas móviles).</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>6.</strong> Describe exactamente qué pasa con las láminas de oro de un electroscopio si ambas se llenan de carga negativa. ¿Por qué ocurre esto?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analyze">Análisis Crítico</span>
+                        <p><strong>7.</strong> En el texto se afirma que "la tecnología es como un sexto sentido". Reflexiona y escribe un párrafo explicando cómo el electroscopio cumple esta función al detectar algo que el ojo humano no puede ver.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-map">Cuadro Comparativo</span>
+                        <p><strong>8.</strong> Crea un cuadro sinóptico o tabla dividida en dos columnas: "Materiales Conductores" y "Materiales Aislantes". Escribe la definición de cada uno y da dos ejemplos de materiales correspondientes mencionados en el texto.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>9.</strong> Menciona una aplicación del mundo real donde sea importante medir y entender la electricidad estática, según la conclusión de la lectura.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-draw">Dibujo / Ilustración</span>
+                        <p><strong>10.</strong> ¡Imaginación al poder! Dibuja un "electroscopio del futuro" para el año 2050. Agrégale pantallas, sensores o alarmas, y escribe al lado del dibujo qué nuevas funciones inventaste para que detecte mejor las cargas.</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Configuración de las salas (Escape Room)
+        const rooms = [
+            {
+                prompt: "SALA 1: PRINCIPIOS DE CARGA.\nPara estabilizar el sistema de la nave, debes calcular la carga neta acumulada. Si el sector A acumula 350 cargas negativas y el sector B acumula 520 cargas negativas, digita la suma total (4 dígitos, rellena con ceros a la izquierda si es necesario).",
+                code: "0870" // 350 + 520 = 870 -> 0870
+            },
+            {
+                prompt: "SALA 2: REPULSIÓN ELECTROSTÁTICA.\nUn instrumento detectó 1200 milivoltios de estática en la esclusa de aire. Debido a fugas, exactamente la mitad de esa carga se disipó en el espacio. Ingresa la cantidad de carga restante en milivoltios (4 dígitos).",
+                code: "0600" // 1200 / 2 = 600 -> 0600
+            },
+            {
+                prompt: "SALA 3: EL PRIMER INSTRUMENTO.\nEn la historia terrestre, William Gilbert creó el 'versorium', el primer electroscopio, revolucionando la detección invisible. Digita el año aproximado en que publicó estos estudios sobre imanes y electricidad (Año de publicación de 'De Magnete'). Pista: Inicios del siglo 17.",
+                code: "1600"
+            },
+            {
+                prompt: "SALA 4: AMPLIFICACIÓN.\nTienes 4 sensores positivos. Cada uno amplifica la señal detectada por un factor de 108 milivoltios. Multiplica la cantidad de sensores por el factor de amplificación para obtener el código de desbloqueo final.",
+                code: "0432" // 4 * 108 = 432 -> 0432
+            }
+        ];
+
+        // Estado del juego
+        let currentRoom = 0;
+        let currentInput = "";
+        let score = 5.0; // Sistema de notas (1 a 5)
+
+        // Referencias del DOM
+        const gameContainer = document.getElementById("game-container");
+        const puzzleDesc = document.getElementById("puzzle-desc");
+        const roomNum = document.getElementById("room-num");
+        const scoreVal = document.getElementById("score-val");
+        
+        const digitBoxes = [
+            document.getElementById("digit-0"),
+            document.getElementById("digit-1"),
+            document.getElementById("digit-2"),
+            document.getElementById("digit-3")
+        ];
+
+        // Inicializar la primera sala al cargar la página
+        window.onload = () => {
+            renderRoom();
+        };
+
+        function renderRoom() {
+            puzzleDesc.innerText = rooms[currentRoom].prompt;
+            roomNum.innerText = currentRoom + 1;
+            scoreVal.innerText = score.toFixed(1);
+            clearInput();
+        }
+
+        // Manejar pulsaciones del teclado virtual numérico
+        function inputDigit(digit) {
+            if (currentInput.length < 4) {
+                currentInput += digit;
+                updateDisplay();
+            }
+        }
+
+        // Limpiar pantalla
+        function clearInput() {
+            currentInput = "";
+            updateDisplay();
+        }
+
+        // Actualizar las cajas visuales `_ _ _ _`
+        function updateDisplay() {
+            for (let i = 0; i < 4; i++) {
+                if (i < currentInput.length) {
+                    digitBoxes[i].innerText = currentInput[i];
+                } else {
+                    digitBoxes[i].innerText = ""; // Vacío
+                }
+            }
+        }
+
+        // Validar el código ingresado al presionar OK
+        function checkAnswer() {
+            // Si no hay 4 dígitos, no hacer nada
+            if (currentInput.length < 4) return;
+
+            const correctCode = rooms[currentRoom].code;
+
+            if (currentInput === correctCode) {
+                // Éxito: Destello verde y avanzar
+                gameContainer.classList.remove("fail-anim");
+                void gameContainer.offsetWidth; // Forzar reflow para reiniciar animación
+                gameContainer.classList.add("success-anim");
+
+                setTimeout(() => {
+                    currentRoom++;
+                    if (currentRoom < rooms.length) {
+                        renderRoom();
+                    } else {
+                        showGameComplete();
+                    }
+                }, 800); // Esperar a que pase la animación antes de cambiar sala
+            } else {
+                // Fallo: Penalización, animación roja de temblor
+                gameContainer.classList.remove("success-anim");
+                gameContainer.classList.remove("fail-anim");
+                void gameContainer.offsetWidth; // Reflow
+                gameContainer.classList.add("fail-anim");
+
+                // Restar nota, asegurando que no baje de 1.0
+                score = Math.max(1.0, score - 0.5);
+                scoreVal.innerText = score.toFixed(1);
+                
+                // Limpiar pantalla rápidamente para que reintente
+                setTimeout(() => {
+                    clearInput();
+                }, 500);
+            }
+        }
+
+        // Pantalla final
+        function showGameComplete() {
+            document.getElementById("game-container").style.display = "none";
+            const completeScreen = document.getElementById("game-complete");
+            completeScreen.style.display = "block";
+            document.getElementById("final-score").innerText = score.toFixed(1) + " / 5.0";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crisis Climática: Visión Sistémica</title>
+    
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --text-color: #2c3e50;
+            --primary: #2980b9;
+            --secondary: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --game-bg: #e0f7fa;
+            --reading-bg: #ffffff;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background-color: #1a252f;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 10px;
+        }
+
+        .instrucciones {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: #bdc3c7;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 70vh;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+            position: relative;
+            overflow: hidden;
+            border: 4px solid #2c3e50;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            touch-action: none; /* CRÍTICO: Previene el scroll al jugar en móviles */
+            user-select: none;
+        }
+
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 10;
+            font-weight: bold;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
+            pointer-events: none;
+        }
+
+        .hud-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.7);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .word-bubble {
+            position: absolute;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #34495e;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            color: #2c3e50;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+            text-align: center;
+            /* touch-action here ensures tapping on it doesn't scroll */
+            touch-action: none;
+        }
+
+        .word-bubble:active {
+            transform: scale(0.95);
+        }
+
+        /* Animaciones para interacciones */
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); background-color: var(--danger); color: white; border-color: darkred; }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .anim-pop {
+            animation: pop 0.3s ease-out forwards;
+            pointer-events: none;
+        }
+
+        .anim-shake {
+            animation: shake 0.4s ease-in-out forwards;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #game-over h2 { font-size: 2.5rem; margin-bottom: 10px; }
+        #game-over p { font-size: 1.5rem; margin-bottom: 20px; }
+        
+        .btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: #219a52; }
+
+        #zona-lectura {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto 60px auto;
+            background-color: var(--reading-bg);
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        article h2 {
+            color: var(--primary);
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        article h3 {
+            color: #2c3e50;
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        article p {
+            margin-bottom: 15px;
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            color: #34495e;
+            text-align: justify;
+        }
+
+        article ul {
+            margin-bottom: 20px;
+            padding-left: 25px;
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            color: #34495e;
+        }
+
+        article li {
+            margin-bottom: 10px;
+        }
+
+        .taller-container {
+            margin-top: 40px;
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+        }
+
+        .instruccion-taller {
+            background-color: var(--warning);
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .actividad {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .badge-tipo {
+            display: inline-block;
+            background-color: #e2e8f0;
+            color: #4a5568;
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Crisis Climática: El Juego</h1>
+        <p class="instrucciones">
+            <strong>Instrucción:</strong> Toca y explota SOLO las palabras relacionadas con las <em>Causas, Consecuencias o Factores Negativos</em> del calentamiento global antes de que caigan. ¡Evita las soluciones o términos positivos!
+        </p>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="game-container">
+                <div id="hud">
+                    <div class="hud-item">
+                        <!-- SVG de Trofeo / Puntos incrustado -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="7"></circle>
+                            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                        </svg>
+                        <span id="score-display">0</span>
+                    </div>
+                    <div class="hud-item">
+                        <!-- SVG de Corazón / Vidas incrustado -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#e74c3c" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <span id="lives-display">5</span>
+                    </div>
+                </div>
+                
+                <!-- Contenedor donde caerán las palabras -->
+                <div id="game-area" style="width: 100%; height: 100%; position: absolute; top:0; left:0;"></div>
+
+                <div id="game-over">
+                    <h2>Juego Terminado</h2>
+                    <p>Puntuación Final: <span id="final-score">0</span></p>
+                    <p>Calificación (1 a 5): <strong id="final-grade" style="color: #f1c40f; font-size: 2rem;">1.0</strong></p>
+                    <button class="btn" id="btn-restart">Jugar de Nuevo</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article>
+                <h2>El Calentamiento Global: Una Crisis Sistémica</h2>
+                
+                <p>El calentamiento global es mucho más que el simple aumento de la temperatura promedio de nuestro planeta. Para comprender su verdadera magnitud en el Ciclo VI de educación, es fundamental analizarlo desde una <strong>visión sistémica</strong>. Esto significa que no es un fenómeno aislado, sino el resultado de una compleja red de interacciones entre nuestros modelos económicos, las estructuras sociales y los ecosistemas naturales.</p>
+
+                <h3>Dimensión Económica: El Costo del Crecimiento Infinito</h3>
+                <p>Nuestra economía globalizada se ha basado históricamente en un modelo lineal de "extraer, producir, consumir y desechar". Este enfoque extractivista asume que los recursos del planeta son infinitos, lo cual es ecológicamente imposible. La dependencia de los <strong>combustibles fósiles</strong> (carbón, petróleo y gas natural) para sostener la industrialización y el consumismo desmedido es la principal fuente de Emisiones de Gases de Efecto Invernadero (GEI), como el Dióxido de Carbono (CO2) y el Metano.</p>
+                <p>Además, prácticas económicas como la <strong>ganadería extensiva</strong> y la agricultura a gran escala impulsan la deforestación masiva. Al talar bosques, eliminamos los principales sumideros naturales de carbono, acelerando la crisis climática en nombre de la rentabilidad a corto plazo.</p>
+
+                <h3>Dimensión Social: Desigualdad y Vulnerabilidad Climática</h3>
+                <p>El cambio climático es también una crisis de justicia social. Las decisiones humanas que han provocado esta alteración provienen, en su gran mayoría, de naciones altamente industrializadas y sectores privilegiados. Sin embargo, los impactos más devastadores recaen sobre las poblaciones más vulnerables del mundo.</p>
+                <ul>
+                    <li><strong>Seguridad Alimentaria:</strong> Las comunidades rurales que dependen de la agricultura de subsistencia pierden sus cultivos debido a climas impredecibles.</li>
+                    <li><strong>Desplazamiento Forzado:</strong> El aumento del nivel del mar y la desertificación están creando "refugiados climáticos", personas obligadas a abandonar sus hogares.</li>
+                    <li><strong>Salud Pública:</strong> El estrés térmico, la mala calidad del aire y la propagación de enfermedades transmitidas por vectores (como el dengue en nuevas altitudes) afectan desproporcionadamente a los más pobres.</li>
+                </ul>
+
+                <h3>Dimensión Ambiental: La Alteración de los Regímenes de Lluvia</h3>
+                <p>A nivel de ecosistemas, la acumulación de calor en la atmósfera altera drásticamente los ciclos biogeoquímicos, especialmente el ciclo del agua. La crisis climática es una cadena de decisiones humanas que modifica los <strong>regímenes de lluvia regionales</strong>.</p>
+                <p>Al haber más energía calórica en la atmósfera, la evaporación se acelera. Esto provoca que el vapor de agua no se distribuya de manera uniforme. En algunas regiones, esto se traduce en <strong>sequías extremas y prolongadas</strong>, desertificando suelos productivos. En otras, el exceso de humedad atmosférica provoca lluvias torrenciales concentradas en poco tiempo, desatando <strong>inundaciones y deslizamientos de tierra</strong> catastróficos. La biodiversidad no puede adaptarse a cambios tan bruscos, lo que conduce al colapso de hábitats enteros.</p>
+
+                <h3>Conclusión</h3>
+                <p>Mitigar el calentamiento global requiere superar el pensamiento antropocéntrico (donde el ser humano se cree dueño de la naturaleza). Las soluciones no pueden limitarse a acciones individuales como reciclar; requieren un cambio sistémico hacia economías circulares, transición energética justa, sostenibilidad y políticas públicas que protejan la vida por encima de las ganancias económicas.</p>
+            </article>
+
+            <div class="taller-container">
+                <h2>Taller de Consolidación</h2>
+                <div class="instruccion-taller">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 10px;">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Escribe y resuelve estas actividades detalladamente en tu cuaderno.
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Análisis Crítico</span>
+                    <p><strong>1.</strong> ¿Por qué el texto afirma que el calentamiento global debe entenderse como una "crisis sistémica" y no solamente como un problema ambiental aislado?</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Mapa Conceptual</span>
+                    <p><strong>2.</strong> Elabora en tu cuaderno un mapa conceptual que conecte las tres dimensiones del calentamiento global (Económica, Social y Ambiental) usando conceptos clave del texto.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Respuesta Directa</span>
+                    <p><strong>3.</strong> Explica con tus propias palabras la relación directa entre la "ganadería extensiva" y el aumento de Gases de Efecto Invernadero (GEI).</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Ilustración</span>
+                    <p><strong>4.</strong> Dibuja dos escenarios contrastantes que ilustren cómo la crisis climática altera los regímenes de lluvia regionales (ej. sequías en un lado vs. inundaciones en otro).</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Análisis Crítico</span>
+                    <p><strong>5.</strong> Evalúa la siguiente frase basándote en la lectura: "Las acciones individuales como apagar la luz son suficientes para detener el calentamiento global". ¿Estás de acuerdo o en desacuerdo? Justifica tu respuesta.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Esquema / Dibujo</span>
+                    <p><strong>6.</strong> Realiza un esquema ilustrado del Ciclo de la Economía Lineal (Extraer, producir, consumir, desechar) y señala en qué puntos se produce el mayor daño ambiental.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Respuesta Directa</span>
+                    <p><strong>7.</strong> Enumera y explica brevemente tres impactos directos del cambio climático sobre las comunidades humanas más vulnerables (Dimensión Social).</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Mapa Mental</span>
+                    <p><strong>8.</strong> Crea un mapa mental proponiendo soluciones reales y viables para combatir la crisis desde las instituciones públicas, las empresas y las comunidades.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Análisis Crítico</span>
+                    <p><strong>9.</strong> Si fueras un líder político de una región fuertemente afectada por inundaciones repentinas, ¿qué políticas públicas priorizarías a nivel ambiental y social?</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="badge-tipo">Ilustración / Póster</span>
+                    <p><strong>10.</strong> Diseña en una página completa de tu cuaderno un mini-póster educativo cuyo mensaje principal promueva la transición hacia un modelo de vida no centrado en el consumismo.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configuración y Arrays de Palabras
+            const correctWords = [
+                "Emisiones", "Deforestación", "Sequías", "Inundaciones", 
+                "Industrialización", "Ganadería", "Gases GEI", "Fósiles", 
+                "Consumismo", "Metano", "CO2", "Sobrepoblación", 
+                "Contaminación", "Acidificación", "Extractivismo"
+            ];
+            
+            const distractorWords = [
+                "Reforestación", "Reciclaje", "Sostenibilidad", "Biodiversidad", 
+                "Energía Solar", "Energía Eólica", "Conservación", "Compostaje", 
+                "Orgánico", "Renovables", "Mitigación", "Circular", 
+                "Educación"
+            ];
+
+            // Variables de Estado
+            let score = 0;
+            let lives = 5;
+            let isPlaying = false;
+            let activeWords = [];
+            let animationFrameId;
+            let lastSpawnTime = 0;
+            let spawnInterval = 1200; // milisegundos entre creaciones
+            let baseSpeed = 0.15; // Velocidad base de caída en porcentaje (Y)
+
+            // Referencias del DOM
+            const gameArea = document.getElementById('game-area');
+            const scoreDisplay = document.getElementById('score-display');
+            const livesDisplay = document.getElementById('lives-display');
+            const gameOverScreen = document.getElementById('game-over');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const finalGradeDisplay = document.getElementById('final-grade');
+            const btnRestart = document.getElementById('btn-restart');
+
+            function startGame() {
+                score = 0;
+                lives = 5;
+                isPlaying = true;
+                activeWords = [];
+                gameArea.innerHTML = ''; // Limpiar área
+                updateHUD();
+                gameOverScreen.style.display = 'none';
+                lastSpawnTime = performance.now();
+                baseSpeed = 0.15; // Resetear velocidad
+                spawnInterval = 1200; // Resetear intervalo
+                
+                requestAnimationFrame(gameLoop);
+            }
+
+            function updateHUD() {
+                scoreDisplay.textContent = score;
+                livesDisplay.textContent = lives;
+                
+                if (lives <= 0) {
+                    endGame();
+                }
+            }
+
+            function spawnWord(currentTime) {
+                if (currentTime - lastSpawnTime > spawnInterval) {
+                    lastSpawnTime = currentTime;
+
+                    // Decidir si es correcta o distractor (50% probabilidad)
+                    const isCorrect = Math.random() > 0.4; // 60% chance de ser un objetivo
+                    const wordList = isCorrect ? correctWords : distractorWords;
+                    const text = wordList[Math.floor(Math.random() * wordList.length)];
+
+                    // Crear elemento DOM
+                    const el = document.createElement('div');
+                    el.className = 'word-bubble';
+                    el.textContent = text;
+                    
+                    // Posición X aleatoria (10% a 80% para no salirse de la pantalla)
+                    const xPos = Math.random() * 70 + 5; 
+                    
+                    // Añadir al DOM
+                    gameArea.appendChild(el);
+
+                    // Pequeña variación de velocidad individual
+                    const individualSpeed = baseSpeed + (Math.random() * 0.05);
+
+                    // Objeto lógico
+                    const wordObj = {
+                        element: el,
+                        text: text,
+                        isCorrect: isCorrect,
+                        x: xPos,
+                        y: -10, // Inicia un poco por encima del borde
+                        speed: individualSpeed,
+                        interacted: false
+                    };
+
+                    activeWords.push(wordObj);
+                    
+                    // Lógica de interacción Táctil / Click
+                    el.addEventListener('pointerdown', (e) => {
+                        e.preventDefault(); // Prevenir comportamiento por defecto
+                        handleInteraction(wordObj);
+                    });
+
+                    // Aumentar dificultad gradualmente
+                    if (spawnInterval > 600) spawnInterval -= 15;
+                    if (baseSpeed < 0.4) baseSpeed += 0.005;
+                }
+            }
+
+            function handleInteraction(wordObj) {
+                if (!isPlaying || wordObj.interacted) return;
+                wordObj.interacted = true; // Prevenir multiples clicks
+
+                if (wordObj.isCorrect) {
+                    // Acertó
+                    score++;
+                    wordObj.element.classList.add('anim-pop');
+                    updateHUD();
+                    // Eliminar del DOM tras animación
+                    setTimeout(() => {
+                        if (wordObj.element.parentNode) {
+                            wordObj.element.parentNode.removeChild(wordObj.element);
+                        }
+                    }, 300);
+                } else {
+                    // Se equivocó (Tocó distractor)
+                    lives--;
+                    wordObj.element.classList.add('anim-shake');
+                    updateHUD();
+                    
+                    setTimeout(() => {
+                        wordObj.interacted = false; // Permite que siga cayendo y vuelva a su color
+                        wordObj.element.classList.remove('anim-shake');
+                    }, 400);
+                }
+            }
+
+            function gameLoop(currentTime) {
+                if (!isPlaying) return;
+
+                spawnWord(currentTime);
+
+                // Actualizar posiciones
+                for (let i = activeWords.length - 1; i >= 0; i--) {
+                    let word = activeWords[i];
+                    
+                    // Si ya fue explotada correctamente, la ignoramos visualmente (animación se encarga)
+                    if (word.isCorrect && word.interacted) {
+                        activeWords.splice(i, 1);
+                        continue;
+                    }
+
+                    // Mover hacia abajo
+                    word.y += word.speed;
+                    word.element.style.top = `${word.y}%`;
+                    word.element.style.left = `${word.x}%`;
+
+                    // Verificar colisión con el fondo (si sale del 100%)
+                    if (word.y > 105) {
+                        // Si era correcta y se dejó caer (Malo)
+                        if (word.isCorrect && !word.interacted) {
+                            lives--;
+                            updateHUD();
+                        }
+                        // Si era distractor y cayó (Bueno, no pasa nada)
+                        
+                        // Remover del DOM y del array
+                        if (word.element.parentNode) {
+                            word.element.parentNode.removeChild(word.element);
+                        }
+                        activeWords.splice(i, 1);
+                    }
+                }
+
+                if (isPlaying) {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                }
+            }
+
+            function endGame() {
+                isPlaying = false;
+                cancelAnimationFrame(animationFrameId);
+                
+                // Limpiar eventos en las burbujas restantes
+                activeWords.forEach(w => w.element.style.pointerEvents = 'none');
+
+                // Calcular Nota (Escala 1.0 a 5.0)
+                // Asumimos que 20 puntos es un 5.0
+                let grade = 1.0 + (score / 20) * 4.0;
+                if (grade > 5.0) grade = 5.0;
+                if (grade < 1.0) grade = 1.0;
+
+                finalScoreDisplay.textContent = score;
+                finalGradeDisplay.textContent = grade.toFixed(1);
+                
+                // Colores para la nota
+                if (grade >= 4.0) finalGradeDisplay.style.color = '#2ecc71';
+                else if (grade >= 3.0) finalGradeDisplay.style.color = '#f1c40f';
+                else finalGradeDisplay.style.color = '#e74c3c';
+
+                gameOverScreen.style.display = 'flex';
+            }
+
+            // Eventos
+            btnRestart.addEventListener('click', startGame);
+
+            // Iniciar juego por primera vez
+            startGame();
+        });
+    </script>
+</body>
+</html>

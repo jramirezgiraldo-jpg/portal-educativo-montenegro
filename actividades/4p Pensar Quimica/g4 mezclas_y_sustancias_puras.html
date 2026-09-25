@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Explorando la Materia: Mezclas y Sustancias Puras</title>
+    <style>
+        /* CSS Variables for consistent theming */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #dbeafe;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --text-main: #374151;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 0.5rem;
+            --radius-lg: 1rem;
+        }
+
+        /* Base Resets and Typography */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--light);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Layout Structure */
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Typography */
+        h1, h2, h3 {
+            color: var(--dark);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            text-align: center;
+            color: var(--primary-dark);
+        }
+
+        h2 {
+            font-size: clamp(1.25rem, 4vw, 2rem);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        /* Instruction Card */
+        .instruction-card {
+            background-color: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .instruction-card p {
+            margin: 0;
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+
+        /* Game Section */
+        #zona-juego {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            /* CRÍTICO: Prevención de bugs táctiles */
+            touch-action: pan-y; /* Allow vertical scroll, disable zoom/pan-x inside game area if needed, though game itself is tap based */
+            user-select: none;
+        }
+
+        /* Score Board */
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--dark);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        
+        .score-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Game Grid */
+        .jeopardy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Category Column */
+        .category-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .category-header {
+            background-color: var(--primary);
+            color: var(--white);
+            text-align: center;
+            padding: 1rem 0.5rem;
+            border-radius: var(--radius-md);
+            font-weight: bold;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Question Buttons */
+        .question-btn {
+            background-color: var(--white);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 1.5rem 1rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+            /* Prevent accidental text selection */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .question-btn:hover:not(:disabled) {
+            background-color: var(--primary);
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .question-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .question-btn:disabled {
+            background-color: var(--border);
+            border-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .question-btn.answered-correct {
+            background-color: var(--secondary-dark);
+            border-color: var(--secondary-dark);
+            color: white;
+        }
+        
+        .question-btn.answered-wrong {
+            background-color: var(--danger);
+            border-color: var(--danger);
+            color: white;
+            opacity: 0.7;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(31, 41, 55, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: var(--white);
+            font-size: 1.5rem;
+        }
+
+        .modal-body {
+            padding: 2rem 1.5rem;
+        }
+
+        .clue-text {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            font-weight: 500;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--dark);
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background-color: var(--light);
+            border: 2px solid var(--border);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-size: 1.1rem;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .option-btn.selected-correct {
+            background-color: var(--secondary);
+            border-color: var(--secondary-dark);
+            color: white;
+        }
+        
+        .option-btn.selected-wrong {
+            background-color: var(--danger);
+            border-color: darkred;
+            color: white;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 0.5rem;
+        }
+        
+        /* Results Section */
+        #game-results {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            background: var(--light);
+            border-radius: var(--radius-md);
+            margin-top: 2rem;
+            border: 2px dashed var(--primary);
+        }
+        
+        .stars-container {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .star-svg {
+            width: 40px;
+            height: 40px;
+            fill: var(--border);
+        }
+        
+        .star-svg.filled {
+            fill: var(--warning);
+        }
+
+        /* Reading Zone */
+        #zona-lectura {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .article-content {
+            max-width: 75ch;
+            margin: 0 auto;
+        }
+
+        .article-content h3 {
+            color: var(--primary-dark);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .article-content ul, .article-content ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .highlight-box {
+            background-color: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        /* Workshop Section */
+        .workshop-section {
+            margin-top: 3rem;
+            border-top: 2px dashed var(--border);
+            padding-top: 2rem;
+        }
+
+        .workshop-instruction {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: activity-counter;
+        }
+
+        .activity-item {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--light);
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            padding-right: 1rem;
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .activity-item::before {
+            counter-increment: activity-counter;
+            content: counter(activity-counter);
+            position: absolute;
+            left: 0.75rem;
+            top: 1rem;
+            background-color: var(--secondary);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .activity-type {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--border);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .app-container {
+                padding: 0.5rem;
+            }
+            #zona-juego, #zona-lectura {
+                padding: 1rem;
+            }
+            .jeopardy-grid {
+                grid-template-columns: 1fr;
+            }
+            .score-board {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Explorando la Materia</h1>
+        <div class="instruction-card">
+            <p>🎮 Instrucciones del Juego: Toca una casilla, lee la pista atentamente y selecciona la respuesta correcta. ¡Acumula puntos para obtener la mejor calificación antes de pasar al taller!</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- FASE 1 & 2: Interactive Game Section -->
+        <section id="zona-juego">
+            <div class="score-board">
+                <span>Reto de Conocimiento</span>
+                <div class="score-display">
+                    <!-- Inline SVG for Score Icon -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    Puntos: <span id="score">0</span> / 1800
+                </div>
+            </div>
+
+            <div class="jeopardy-grid" id="game-board">
+                <!-- JavaScript will populate categories and buttons here -->
+            </div>
+            
+            <div id="game-results">
+                <h2>¡Juego Terminado!</h2>
+                <div class="stars-container" id="stars-container">
+                    <!-- Stars will be injected here -->
+                </div>
+                <p id="final-message" style="font-size: 1.2rem; font-weight: bold;"></p>
+                <p>Ahora, desplázate hacia abajo para leer la teoría y resolver el taller en tu cuaderno.</p>
+            </div>
+        </section>
+
+        <!-- Modal for Questions -->
+        <div class="modal-overlay" id="question-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-category">Categoría</h3>
+                    <button class="close-btn" id="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="clue-text" id="modal-clue">
+                        Aquí va la pregunta o pista...
+                    </div>
+                    <div class="options-grid" id="modal-options">
+                        <!-- Options injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FASE 3: Theoretical Reading and Review Workshop -->
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>Comprendiendo la Materia: De las Sustancias Puras a las Mezclas Cotidianas</h2>
+                
+                <p>Todo lo que nos rodea, desde el aire que respiramos hasta la pantalla donde lees esto, es materia. Sin embargo, no toda la materia es igual. Para entender el mundo físico, los científicos clasifican la materia basándose en su composición. Las dos grandes categorías son las <strong>sustancias puras</strong> y las <strong>mezclas</strong>.</p>
+
+                <h3>1. Sustancias Puras: La base de todo</h3>
+                <p>Una sustancia pura tiene una composición química fija y definida. Sus propiedades, como el punto de ebullición o la densidad, no cambian sin importar de dónde provenga la muestra. Las sustancias puras se dividen en dos:</p>
+                <ul>
+                    <li><strong>Elementos:</strong> Son las sustancias más simples. Están formados por un solo tipo de átomo y no pueden descomponerse en sustancias más simples por medios químicos. Ejemplos cotidianos incluyen el <strong>cobre</strong> (usado en cables eléctricos), el <strong>oro</strong> (en joyas), el <strong>oxígeno</strong> (que respiramos) y el <strong>hierro</strong>.</li>
+                    <li><strong>Compuestos:</strong> Se forman cuando dos o más elementos se unen químicamente en proporciones fijas. Aunque están hechos de diferentes elementos, un compuesto es una sustancia pura porque cada una de sus moléculas es idéntica. Ejemplos clásicos son el <strong>agua (H₂O)</strong>, la <strong>sal de mesa o cloruro de sodio (NaCl)</strong> y el <strong>dióxido de carbono (CO₂)</strong>.</li>
+                </ul>
+
+                <h3>2. Las Mezclas: La unión física</h3>
+                <p>La mayor parte de la materia en nuestro entorno no es pura, sino que consiste en combinaciones físicas de dos o más sustancias puras. En una mezcla, cada componente mantiene sus propiedades químicas individuales. A diferencia de los compuestos, las proporciones en una mezcla pueden variar. Las mezclas se clasifican según su apariencia:</p>
+                
+                <ul>
+                    <li><strong>Mezclas Homogéneas (Disoluciones):</strong> Tienen un aspecto uniforme en todas sus partes. No puedes distinguir sus componentes a simple vista, ni siquiera con un microscopio óptico, porque las partículas están mezcladas a nivel molecular. Un ejemplo clásico es el <strong>agua azucarada</strong> o el <strong>aire limpio</strong>.</li>
+                    <li><strong>Mezclas Heterogéneas:</strong> No son uniformes. Sus componentes se pueden distinguir a simple vista o con ayuda de una lupa. Las propiedades de la mezcla varían en diferentes puntos de la misma. Ejemplos comunes son una ensalada, el granito, o agua con aceite.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>¡Ojo al dato! Coloides y Suspensiones</strong>
+                    <p>Algunas mezclas heterogéneas pueden parecer homogéneas a simple vista. Por ejemplo, la <strong>mayonesa</strong> o la <strong>sangre</strong>. A estas se les llama coloides o suspensiones, y bajo el microscopio revelan su naturaleza heterogénea.</p>
+                </div>
+
+                <h3>3. Analizando Mezclas Cotidianas Complejas</h3>
+                
+                <h4>La Tierra de Cultivo</h4>
+                <p>Si tomas un puñado de tierra del jardín, estás sosteniendo una de las mezclas heterogéneas más importantes de nuestro planeta. A simple vista puedes ver piedritas, restos de hojas o raíces. La tierra de cultivo está compuesta por:</p>
+                <ul>
+                    <li><strong>Fracción mineral (Sólida):</strong> Arena, limo y arcilla (fragmentos de rocas desgastadas).</li>
+                    <li><strong>Fracción orgánica:</strong> Restos de plantas y animales en descomposición, además de humus (materia orgánica oscura y rica en nutrientes).</li>
+                    <li><strong>Agua y Aire:</strong> Ocupan los espacios porosos entre las partículas sólidas, vitales para las raíces y los microorganismos.</li>
+                </ul>
+                <p>Es claramente heterogénea porque si tomas dos muestras del mismo jardín, la proporción de arcilla, raíces o piedritas no será exactamente la misma.</p>
+
+                <h4>El Compost Orgánico</h4>
+                <p>El compost es el resultado de la descomposición controlada de materia orgánica. Es otra excelente mezcla heterogénea creada por la acción de microorganismos (bacterias y hongos). Al observar compost maduro, identificamos:</p>
+                <ul>
+                    <li><strong>Materiales "Marrones" (Ricos en Carbono):</strong> Restos de hojas secas, ramas trituradas, aserrín o trozos de cartón parcialmente descompuestos.</li>
+                    <li><strong>Materiales "Verdes" (Ricos en Nitrógeno):</strong> Restos de frutas, verduras, cáscaras de huevo o posos de café de la cocina.</li>
+                </ul>
+                <p>Al igual que la tierra, el compost es una mezcla heterogénea porque sus componentes (aunque oscurecidos por la descomposición) aún mantienen características distintas y su distribución no es uniforme en toda la pila.</p>
+                
+                <p>Comprender la diferencia entre sustancias puras y mezclas nos permite saber cómo separar materiales, cómo interactúan en la naturaleza y cómo aprovecharlos mejor en nuestra vida diaria, desde preparar una bebida hasta cultivar nuestros alimentos.</p>
+            </article>
+
+            <div class="workshop-section">
+                <div class="workshop-instruction">
+                    <!-- Inline SVG Pencil -->
+                    <svg style="vertical-align: middle; margin-right: 10px;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    ATENCIÓN: Escribe y resuelve estas actividades en tu cuaderno.
+                </div>
+
+                <ol class="activity-list">
+                    <li class="activity-item">
+                        <span class="activity-type">Responder Directamente</span><br>
+                        A partir de la lectura, define con tus propias palabras qué es una <strong>sustancia pura</strong> y escribe dos ejemplos cotidianos que no sean agua ni sal.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Mapa Conceptual</span><br>
+                        Elabora un mapa conceptual en tu cuaderno que clasifique la "Materia". Debe incluir los conceptos: Sustancias puras, Elementos, Compuestos, Mezclas, Homogéneas y Heterogéneas.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Analizar Críticamente</span><br>
+                        El artículo menciona que el agua es un compuesto y el aire es una mezcla. Explica por qué el agua (H₂O) tiene una composición química fija, mientras que el aire puede variar dependiendo de si estás en una ciudad contaminada o en un bosque.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Dibujar / Ilustrar</span><br>
+                        Dibuja dos frascos. En el primero, ilustra a nivel de partículas (usando círculos de colores) cómo se vería una mezcla homogénea (como agua con azúcar). En el segundo, ilustra una mezcla heterogénea (como agua con arena).
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Responder Directamente</span><br>
+                        Lee el recuadro "¡Ojo al dato!". ¿Por qué la mayonesa se clasifica como una mezcla heterogénea si a simple vista parece uniforme? ¿Qué instrumento necesitarías para comprobarlo?
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Analizar Críticamente</span><br>
+                        Un agricultor necesita mejorar su suelo y decide usar compost orgánico. Basado en el texto, nombra los dos tipos principales de materiales que debe mezclar y explica por qué el resultado final es una mezcla heterogénea.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Cuadro Comparativo</span><br>
+                        Construye un cuadro comparativo entre <strong>Tierra de Cultivo</strong> y <strong>Compost Orgánico</strong>, listando al menos tres componentes que se pueden identificar en cada uno.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Dibujar / Ilustrar</span><br>
+                        Realiza un dibujo detallado de un "puñado de tierra de cultivo" y señala con flechas al menos cuatro componentes diferentes (fracción mineral, orgánica, espacios de aire, etc.) mencionados en la lectura.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Responder Directamente</span><br>
+                        Si tienes una joya de oro de 24 quilates (oro puro) y una olla de acero (mezcla de hierro y carbono), ¿cuál de los dos es un elemento y cuál es una mezcla? Justifica tu respuesta según el texto.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Analizar Críticamente</span><br>
+                        Imagina que mezclas sal (un compuesto) con agua (otro compuesto) y lo revuelves bien. ¿Se ha formado un nuevo compuesto o una mezcla? Argumenta tu respuesta basándote en la definición de mezcla dada en el artículo.
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Game Data ---
+        // 3 Categories, 3 progressive questions each (100, 200, 300)
+        const gameData = [
+            {
+                category: "Puras o Mezclas",
+                questions: [
+                    {
+                        value: 100,
+                        clue: "Sustancia formada por un solo tipo de átomo, como el oxígeno (O) o el cobre (Cu), que no puede descomponerse químicamente en algo más simple.",
+                        options: ["Compuesto", "Elemento", "Mezcla Homogénea", "Coloide"],
+                        correctIndex: 1
+                    },
+                    {
+                        value: 200,
+                        clue: "Es la unión química de dos o más elementos en proporciones exactas, como la sal de cocina (NaCl) o el agua (H₂O).",
+                        options: ["Compuesto", "Elemento", "Mezcla Heterogénea", "Aleación"],
+                        correctIndex: 0
+                    },
+                    {
+                        value: 300,
+                        clue: "Tipo de mezcla donde sus componentes NO se pueden distinguir a simple vista, como el aire limpio o el agua con azúcar disuelta.",
+                        options: ["Suspensión", "Compuesto", "Mezcla Homogénea", "Mezcla Heterogénea"],
+                        correctIndex: 2
+                    }
+                ]
+            },
+            {
+                category: "Identificando",
+                questions: [
+                    {
+                        value: 100,
+                        clue: "Al observar un plato de sopa con fideos, pollo y verduras, notas que sus ingredientes se distinguen fácilmente. Esto es un ejemplo de...",
+                        options: ["Sustancia pura", "Mezcla Homogénea", "Mezcla Heterogénea", "Elemento químico"],
+                        correctIndex: 2
+                    },
+                    {
+                        value: 200,
+                        clue: "Tienes un alambre de cobre puro usado en instalaciones eléctricas. Según su clasificación en la materia, el cobre es...",
+                        options: ["Un elemento", "Un compuesto", "Una mezcla", "Un coloide"],
+                        correctIndex: 0
+                    },
+                    {
+                        value: 300,
+                        clue: "La mayonesa o la sangre parecen uniformes a simple vista, pero bajo el microscopio se ven sus distintas partes. Estas mezclas heterogéneas especiales se llaman...",
+                        options: ["Disoluciones", "Compuestos puros", "Elementos", "Coloides / Suspensiones"],
+                        correctIndex: 3
+                    }
+                ]
+            },
+            {
+                category: "Tierra y Compost",
+                questions: [
+                    {
+                        value: 100,
+                        clue: "En la tierra de cultivo podemos encontrar arena, arcilla, restos de hojas e insectos. Por lo tanto, la tierra es clasificada como:",
+                        options: ["Un compuesto", "Una mezcla homogénea", "Una mezcla heterogénea", "Un elemento"],
+                        correctIndex: 2
+                    },
+                    {
+                        value: 200,
+                        clue: "¿Cuál de estos es un componente que forma parte de los materiales 'marrones' (ricos en carbono) en la mezcla del compost orgánico?",
+                        options: ["Restos de frutas frescas", "Hojas secas y cartón", "Agua destilada", "Oro puro"],
+                        correctIndex: 1
+                    },
+                    {
+                        value: 300,
+                        clue: "Además de la fracción sólida (minerales y materia orgánica), ¿qué otros dos componentes invisibles pero vitales ocupan los espacios en la mezcla de la tierra de cultivo?",
+                        options: ["Agua y Aire", "Oro y Plata", "Plástico y Vidrio", "Cloro y Sodio"],
+                        correctIndex: 0
+                    }
+                ]
+            }
+        ];
+
+        // --- State Variables ---
+        let currentScore = 0;
+        const totalPointsPossible = gameData.reduce((sum, cat) => sum + cat.questions.reduce((qSum, q) => qSum + q.value, 0), 0);
+        let questionsAnswered = 0;
+        const totalQuestions = gameData.reduce((sum, cat) => sum + cat.questions.length, 0);
+        
+        let currentQuestionData = null;
+        let currentButtonContext = null; // Store reference to clicked button
+
+        // --- DOM Elements ---
+        const boardEl = document.getElementById('game-board');
+        const scoreEl = document.getElementById('score');
+        const modal = document.getElementById('question-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const modalCategory = document.getElementById('modal-category');
+        const modalClue = document.getElementById('modal-clue');
+        const modalOptions = document.getElementById('modal-options');
+        const gameResults = document.getElementById('game-results');
+        const starsContainer = document.getElementById('stars-container');
+        const finalMessage = document.getElementById('final-message');
+
+        // --- Initialize Game Board ---
+        function initBoard() {
+            gameData.forEach(category => {
+                // Create Column for category
+                const col = document.createElement('div');
+                col.className = 'category-col';
+
+                // Create Header
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = category.category;
+                col.appendChild(header);
+
+                // Create Question Buttons
+                category.questions.forEach(q => {
+                    const btn = document.createElement('button');
+                    btn.className = 'question-btn';
+                    btn.textContent = q.value;
+                    btn.setAttribute('aria-label', `Pregunta por ${q.value} puntos de la categoría ${category.category}`);
+                    
+                    // Event listener for opening modal
+                    btn.addEventListener('click', () => openModal(category.category, q, btn));
+                    
+                    col.appendChild(btn);
+                });
+
+                boardEl.appendChild(col);
+            });
+        }
+
+        // --- Modal Logic ---
+        function openModal(categoryName, questionObj, btnElement) {
+            currentQuestionData = questionObj;
+            currentButtonContext = btnElement;
+
+            modalCategory.textContent = categoryName;
+            modalClue.textContent = questionObj.clue;
+            
+            // Clear previous options
+            modalOptions.innerHTML = '';
+
+            // Generate options
+            questionObj.options.forEach((optText, index) => {
+                const optBtn = document.createElement('button');
+                optBtn.className = 'option-btn';
+                optBtn.textContent = optText;
+                
+                optBtn.addEventListener('click', () => handleAnswer(index, optBtn));
+                
+                modalOptions.appendChild(optBtn);
+            });
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            currentQuestionData = null;
+            currentButtonContext = null;
+        }
+
+        closeModalBtn.addEventListener('click', closeModal);
+
+        function handleAnswer(selectedIndex, optionBtnElement) {
+            const isCorrect = (selectedIndex === currentQuestionData.correctIndex);
+            
+            // Disable all options
+            const allOptions = modalOptions.querySelectorAll('.option-btn');
+            allOptions.forEach(btn => btn.disabled = true);
+
+            // Highlight chosen option
+            if (isCorrect) {
+                optionBtnElement.classList.add('selected-correct');
+                // Update Score
+                currentScore += currentQuestionData.value;
+                updateScoreDisplay();
+                // Update Button visually
+                currentButtonContext.classList.add('answered-correct');
+                currentButtonContext.textContent = "✓";
+            } else {
+                optionBtnElement.classList.add('selected-wrong');
+                // Highlight correct one as well for learning
+                allOptions[currentQuestionData.correctIndex].classList.add('selected-correct');
+                // Update Button visually (Error = 0 points)
+                currentButtonContext.classList.add('answered-wrong');
+                currentButtonContext.textContent = "✗";
+            }
+
+            // Disable the grid button
+            currentButtonContext.disabled = true;
+            questionsAnswered++;
+
+            // Wait a moment before closing to show result
+            setTimeout(() => {
+                closeModal();
+                checkGameEnd();
+            }, 1500);
+        }
+
+        function updateScoreDisplay() {
+            // Animate score change
+            scoreEl.style.transform = 'scale(1.2)';
+            scoreEl.style.color = 'var(--secondary)';
+            setTimeout(() => {
+                scoreEl.style.transform = 'scale(1)';
+                scoreEl.style.color = 'inherit';
+            }, 300);
+            
+            scoreEl.textContent = currentScore;
+        }
+
+        // --- End Game Evaluation ---
+        function checkGameEnd() {
+            if (questionsAnswered === totalQuestions) {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            gameResults.style.display = 'block';
+            
+            const percentage = (currentScore / totalPointsPossible) * 100;
+            
+            // Calculate stars (1 to 5)
+            let stars = 1;
+            if (percentage >= 90) stars = 5;
+            else if (percentage >= 70) stars = 4;
+            else if (percentage >= 50) stars = 3;
+            else if (percentage >= 30) stars = 2;
+
+            // Generate Star SVGs
+            starsContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const isFilled = i <= stars ? 'filled' : '';
+                starsContainer.innerHTML += `
+                    <svg class="star-svg ${isFilled}" viewBox="0 0 24 24">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                `;
+            }
+
+            // Set final message based on performance
+            if (stars === 5) {
+                finalMessage.textContent = "¡Excelente! Eres un experto identificando la materia.";
+                finalMessage.style.color = "var(--secondary-dark)";
+            } else if (stars >= 3) {
+                finalMessage.textContent = "¡Buen trabajo! Tienes bases sólidas, pero puedes repasar algunos conceptos.";
+                finalMessage.style.color = "var(--primary-dark)";
+            } else {
+                finalMessage.textContent = "¡Sigue intentando! Lee atentamente la teoría de abajo para mejorar.";
+                finalMessage.style.color = "var(--danger)";
+            }
+            
+            // Scroll to results
+            gameResults.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Start Game
+        initBoard();
+    });
+</script>
+</body>
+</html>

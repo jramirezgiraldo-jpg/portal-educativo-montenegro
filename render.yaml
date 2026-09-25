@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: portal-educativo-montenegro
+    env: static
+    buildCommand: ""
+    publish: .
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600

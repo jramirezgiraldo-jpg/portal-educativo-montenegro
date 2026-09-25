@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tipos de Mezclas: Homogéneas y Heterogéneas</title>
+    <style>
+        :root {
+            /* Paleta temática */
+            --primary: #0ea5e9; /* Azul cielo */
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            
+            --cat-homo: #8b5cf6; /* Morado */
+            --cat-homo-bg: #ede9fe;
+            --cat-hete: #10b981; /* Verde esmeralda */
+            --cat-hete-bg: #d1fae5;
+            --cat-meto: #f59e0b; /* Ambar */
+            --cat-meto-bg: #fef3c7;
+
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            
+            --error: #ef4444;
+            --error-bg: #fee2e2;
+            --success: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            overscroll-behavior-y: none; /* Previene rebote elástico en móviles */
+        }
+
+        main {
+            max-width: 950px;
+            margin: 0 auto;
+            width: 100%;
+            padding: clamp(0.5rem, 3vw, 2rem);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        #zona-juego {
+            background: var(--bg-surface);
+            border-radius: 16px;
+            padding: clamp(1rem, 4vw, 2rem);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            /* CRÍTICO PARA MÓVILES: Evita scroll al hacer tap rápido */
+            touch-action: none; 
+            user-select: none;
+            border-top: 6px solid var(--primary);
+        }
+
+        .instrucciones-juego {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: clamp(0.8rem, 2vw, 1.2rem);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+            font-weight: 600;
+            border-left: 4px solid var(--primary);
+        }
+
+        .marcador {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            font-weight: bold;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.8rem;
+        }
+
+        #score-display {
+            color: var(--primary-dark);
+            font-size: clamp(1.4rem, 4vw, 2rem);
+            transition: color 0.3s;
+        }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+            min-height: 160px; /* Evita que el layout salte cuando los chips desaparecen */
+        }
+
+        .chip {
+            background-color: var(--bg-surface);
+            border: 2px solid var(--border-color);
+            padding: clamp(0.6rem, 2vw, 0.9rem) clamp(1rem, 3vw, 1.5rem);
+            border-radius: 9999px; /* Forma de píldora */
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .chip.active {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            transform: scale(1.08) translateY(-3px);
+            box-shadow: 0 6px 12px rgba(14, 165, 233, 0.2);
+            color: var(--primary-dark);
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        .chip.correct {
+            opacity: 0;
+            transform: scale(0.3);
+            pointer-events: none;
+        }
+
+        .chip.incorrect {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--error);
+            background-color: var(--error-bg);
+            color: var(--error);
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .category-btn {
+            flex: 1 1 clamp(130px, 30%, 250px);
+            background-color: #f1f5f9;
+            border: 3px dashed #94a3b8;
+            border-radius: 12px;
+            padding: clamp(1rem, 3vw, 1.5rem) clamp(0.5rem, 2vw, 1rem);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Estilos específicos por categoría al interactuar */
+        .category-btn[data-target="Homogenea"]:active { background-color: var(--cat-homo-bg); border-color: var(--cat-homo); border-style: solid; }
+        .category-btn[data-target="Heterogenea"]:active { background-color: var(--cat-hete-bg); border-color: var(--cat-hete); border-style: solid; }
+        .category-btn[data-target="Metodo"]:active { background-color: var(--cat-meto-bg); border-color: var(--cat-meto); border-style: solid; }
+
+        .category-icon {
+            width: clamp(40px, 8vw, 56px);
+            height: clamp(40px, 8vw, 56px);
+            color: #475569;
+        }
+
+        .category-title {
+            font-weight: 700;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .game-over-msg {
+            display: none;
+            text-align: center;
+            color: var(--success);
+            font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+            font-weight: bold;
+            padding: 2rem 1rem;
+            animation: fadeIn 0.8s ease-in;
+            background-color: #f0fdf4;
+            border-radius: 12px;
+            border: 2px solid #bbf7d0;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #zona-lectura {
+            background: var(--bg-surface);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3rem);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .articulo-teorico h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 0.5rem;
+        }
+
+        .articulo-teorico h2:first-child { margin-top: 0; }
+
+        .articulo-teorico h3 {
+            color: var(--primary);
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .articulo-teorico p {
+            margin-bottom: 1.2rem;
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: var(--text-main);
+            text-align: justify;
+            line-height: 1.7;
+        }
+
+        .articulo-teorico ul {
+            margin-bottom: 1.5rem;
+            padding-left: clamp(1.5rem, 4vw, 2.5rem);
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: var(--text-main);
+        }
+
+        .articulo-teorico li { margin-bottom: 0.6rem; }
+
+        .taller-container {
+            margin-top: 4rem;
+            background-color: #f8fafc;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 3rem);
+        }
+
+        .instruccion-taller {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            margin-bottom: 2.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .instruccion-taller span {
+            display: block;
+            font-weight: 900;
+            font-size: 1.3em;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            color: #fde047; /* Amarillo para resaltar */
+        }
+
+        .actividad {
+            margin-bottom: 1.5rem;
+            background: white;
+            padding: clamp(1.2rem, 3vw, 1.8rem);
+            border-radius: 12px;
+            border-left: 6px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .tipo-actividad {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--primary-dark);
+            font-weight: 800;
+            display: block;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 0.3rem;
+        }
+
+        .actividad-texto {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: var(--text-main);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <header>
+            <h1>Tipos de Mezclas</h1>
+            <p class="subtitle">Descubre cómo interactúan los materiales en la cocina, la naturaleza y la industria</p>
+        </header>
+
+        <!-- ZONA 1: JUEGO INTERACTIVO -->
+        <section id="zona-juego">
+            <div class="instrucciones-juego">
+                👆 <strong>Paso 1:</strong> Toca un concepto de la lista (se pondrá azul).<br>
+                ✌️ <strong>Paso 2:</strong> Toca el contenedor correcto abajo para clasificarlo.
+            </div>
+
+            <div class="marcador">
+                <div>Clasificados: <span id="progress-display">0</span> / 15</div>
+                <div>Calificación: <span id="score-display">5.0</span></div>
+            </div>
+
+            <div class="chips-container" id="chips-area">
+                <!-- Los chips se generarán por JavaScript aquí -->
+            </div>
+
+            <div class="game-over-msg" id="game-over">
+                ¡Misión Cumplida! Has clasificado correctamente todas las sustancias y métodos.<br>
+                Desliza hacia abajo para leer la teoría y hacer tu taller.
+            </div>
+
+            <div class="categories-container">
+                <!-- Categoría 1: Mezcla Homogénea -->
+                <button class="category-btn" data-target="Homogenea">
+                    <svg class="category-icon" style="color: var(--cat-homo)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Dibujo de un vaso de precipitados con líquido uniforme -->
+                        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0-2 2Z"></path>
+                        <path d="M14 2v4"></path>
+                        <path d="M14 10v4"></path>
+                        <path d="M4 14h16"></path>
+                        <path d="M4 18h16"></path>
+                        <rect x="7" y="10" width="10" height="12" fill="currentColor" opacity="0.3"></rect>
+                    </svg>
+                    <span class="category-title">Mezcla Homogénea<br><small>(Una sola fase visible)</small></span>
+                </button>
+
+                <!-- Categoría 2: Mezcla Heterogénea -->
+                <button class="category-btn" data-target="Heterogenea">
+                    <svg class="category-icon" style="color: var(--cat-hete)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Dibujo de un tazón con partículas de distintos tamaños (ensalada) -->
+                        <path d="M2 12h20"></path>
+                        <path d="M20 12v4a8 8 0 0 1-16 0v-4"></path>
+                        <circle cx="8" cy="15" r="2" fill="currentColor"></circle>
+                        <polygon points="13,13 16,14 15,17" fill="currentColor"></polygon>
+                        <rect x="15" y="15" width="3" height="3" fill="currentColor"></rect>
+                        <circle cx="11" cy="17" r="1.5" fill="currentColor"></circle>
+                    </svg>
+                    <span class="category-title">Mezcla Heterogénea<br><small>(Varias fases/ingredientes visibles)</small></span>
+                </button>
+
+                <!-- Categoría 3: Métodos de Separación -->
+                <button class="category-btn" data-target="Metodo">
+                    <svg class="category-icon" style="color: var(--cat-meto)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Dibujo de un embudo (filtración) -->
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        <line x1="8" y1="7" x2="16" y2="7"></line>
+                    </svg>
+                    <span class="category-title">Método de Separación<br><small>(Técnicas para separar)</small></span>
+                </button>
+            </div>
+        </section>
+
+        <section id="zona-lectura" class="articulo-teorico">
+            <h2>El Fascinante Mundo de las Mezclas: Unidos pero no revueltos</h2>
+            
+            <p>Mira a tu alrededor. Prácticamente todo lo que tocas, respiras o comes no es una sustancia pura y aislada, sino una combinación de varios materiales. Desde la sopa de verduras que preparas en la cocina, hasta el fertilizante líquido que usa un agricultor en sus cultivos; vivimos rodeados de <strong>mezclas</strong>.</p>
+
+            <p>En química, una mezcla ocurre cuando combinamos dos o más sustancias físicamente, pero <em>sin que ocurra una reacción química destructiva</em>. Es decir, los ingredientes se juntan, pero cada uno conserva su identidad y sus propiedades originales. Dependiendo de cómo se agrupen estos ingredientes, las mezclas se dividen en dos grandes familias.</p>
+
+            <h3>1. Mezclas Homogéneas (Las maestras del disfraz)</h3>
+            <p>También conocidas como <strong>soluciones</strong>, son aquellas mezclas donde los ingredientes se combinan tan íntimamente que es imposible distinguirlos a simple vista, ni siquiera con un microscopio común. En estas mezclas solo observamos una única "fase" (un solo color o estado uniforme).</p>
+            <p>Están compuestas generalmente por un <strong>solvente</strong> (el que disuelve, usualmente en mayor cantidad, como el agua) y un <strong>soluto</strong> (la sustancia que se disuelve, como la sal o el azúcar).</p>
+            <ul>
+                <li><strong>Ejemplos en casa:</strong> El café tinto (agua filtrada con esencia de café), el aire puro que respiramos (una mezcla invisible de nitrógeno, oxígeno y otros gases), y el agua salada.</li>
+                <li><strong>Ejemplos en la industria/campo:</strong> Los fertilizantes líquidos (donde los nutrientes en polvo se disuelven completamente en agua de riego) y aleaciones metálicas como el bronce (mezcla de cobre y estaño derretidos).</li>
+            </ul>
+
+            <h3>2. Mezclas Heterogéneas (Cada uno por su lado)</h3>
+            <p>A diferencia de las anteriores, en las mezclas heterogéneas los componentes no se distribuyen de manera uniforme. Si observas con atención, puedes distinguir fácilmente las diferentes partes o "fases" que componen la mezcla, porque los ingredientes se resisten a integrarse por completo.</p>
+            <ul>
+                <li><strong>Ejemplos cotidianos:</strong> Una ensalada de frutas (puedes ver y separar el banano de la manzana), un plato de cereal con leche, o una sopa de verduras.</li>
+                <li><strong>Ejemplos naturales:</strong> La arena mezclada con piedras en un río, o el clásico experimento de agua y aceite (donde el aceite flota formando una capa claramente separada del agua porque tienen diferentes densidades).</li>
+            </ul>
+
+            <h3>3. Métodos de Separación (Revirtiendo el proceso)</h3>
+            <p>Como mencionamos al inicio, en una mezcla los ingredientes conservan sus propiedades originales. Gracias a esto, los científicos han diseñado <strong>métodos físicos de separación</strong> para "des-mezclar" las sustancias basándose en sus características (tamaño, peso, punto de ebullición, etc.). Los más comunes son:</p>
+            <ul>
+                <li><strong>Filtración:</strong> Sirve para separar un sólido que no se disuelve de un líquido. Se usa una barrera porosa (como un papel filtro o un colador). El líquido pasa y el sólido queda atrapado. <em>Ejemplo: Colar café de grano.</em></li>
+                <li><strong>Tamizado:</strong> Ideal para separar dos sólidos de distinto tamaño usando una malla o tamiz. Las partículas pequeñas pasan por los huecos y las grandes quedan arriba. <em>Ejemplo: Separar arena fina de piedras grandes en la construcción.</em></li>
+                <li><strong>Decantación:</strong> Se usa para separar líquidos que no se mezclan entre sí (como agua y aceite), dejándolos reposar. El líquido más pesado se va al fondo y el más ligero flota, permitiendo vaciar uno sin derramar el otro.</li>
+                <li><strong>Evaporación:</strong> Se utiliza para separar un sólido disuelto en un líquido (una mezcla homogénea). Se calienta la mezcla hasta que el líquido se evapora (se vuelve gas), dejando el sólido en el fondo del recipiente. <em>Ejemplo: Obtener sal evaporando agua de mar.</em></li>
+            </ul>
+
+            <div class="taller-container">
+                <div class="instruccion-taller">
+                    <span>📝 TALLER DE AFIANZAMIENTO (CICLO II)</span>
+                    Por favor, lee el texto anterior con atención y resuelve las siguientes 10 actividades <strong>en tu cuaderno de química</strong>.
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">1. Responder Directamente</span>
+                    <p class="actividad-texto">Basándote en la lectura, ¿cuál es la diferencia principal y visual entre una mezcla homogénea y una mezcla heterogénea?</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">2. Mapa Conceptual</span>
+                    <p class="actividad-texto">Elabora en tu cuaderno un mapa conceptual que organice el tema. Tu mapa debe tener "Tipos de Mezclas" en la parte superior, dividirse en las dos familias principales, incluir los conceptos de "soluto" y "solvente", y listar los métodos de separación.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">3. Ilustrar Conceptos</span>
+                    <p class="actividad-texto">Dibuja dos vasos de vidrio transparente. En el Vaso 1, dibuja una mezcla de agua y aceite (heterogénea). En el Vaso 2, dibuja agua con mucha sal disuelta (homogénea). Usa flechas para señalar y nombrar las "fases" visibles en cada dibujo.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">4. Analizar Críticamente</span>
+                    <p class="actividad-texto">Si un agricultor disuelve completamente un kilogramo de fertilizante en polvo dentro de un tanque con 100 litros de agua, y al final el agua se ve cristalina pero de color verde parejo (sin grumos en el fondo), ¿qué tipo de mezcla preparó? Justifica tu respuesta.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">5. Responder Directamente</span>
+                    <p class="actividad-texto">Explica con tus propias palabras qué significa el término 'Solvente' y qué significa el término 'Soluto' dentro de una solución o mezcla homogénea.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">6. Mapa Mental Ilustrado</span>
+                    <p class="actividad-texto">Elabora un mapa mental muy creativo centrado en el tema "Métodos de Separación". Crea 4 ramas (Filtración, Decantación, Evaporación, Tamizado) y acompaña el nombre de cada método con un pequeño dibujo que explique cómo funciona.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">7. Analizar Críticamente</span>
+                    <p class="actividad-texto">Al hacer una sopa de verduras en la cocina, los tomates, papas y zanahorias se calientan juntos. Según el texto, ¿por qué podemos asegurar que esto es una "mezcla física" y no una "reacción química" donde los materiales se destruyen para crear algo distinto?</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">8. Ilustrar Conceptos</span>
+                    <p class="actividad-texto">Imagina que eres un constructor que necesita arena muy fina para pañetar una pared, pero te entregaron arena llena de rocas medianas. Dibuja e ilustra paso a paso el proceso de 'Tamizado' que usarías para solucionar tu problema.</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">9. Responder Directamente</span>
+                    <p class="actividad-texto">¿Qué método físico exacto utilizarías para separar de forma segura una mezcla de agua con aceite de cocina, y en qué propiedad física se basa este método para funcionar?</p>
+                </div>
+
+                <div class="actividad">
+                    <span class="tipo-actividad">10. Analizar Críticamente (Reto Final)</span>
+                    <p class="actividad-texto">¡Situación problema! Imagina que estás en la playa y por accidente tu anillo metálico cae dentro de una cubeta que contiene una mezcla de: Agua de mar (salada) y mucha arena del suelo. <br><br>Diseña y escribe paso a paso un plan de rescate usando <strong>al menos TRES métodos de separación</strong> mencionados en el texto para lograr recuperar: 1) El anillo limpio, 2) La arena seca, y 3) La sal pura del agua.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Array con 15 conceptos (5 Homogéneas, 5 Heterogéneas, 5 Métodos)
+        const conceptosData = [
+            // Mezclas Homogéneas
+            { id: 1, texto: "Agua con sal (Salmuera)", categoria: "Homogenea" },
+            { id: 2, texto: "Café tinto filtrado", categoria: "Homogenea" },
+            { id: 3, texto: "Aire puro que respiramos", categoria: "Homogenea" },
+            { id: 4, texto: "Fertilizante líquido disuelto", categoria: "Homogenea" },
+            { id: 5, texto: "Bronce (Aleación metálica)", categoria: "Homogenea" },
+            
+            // Mezclas Heterogéneas
+            { id: 6, texto: "Ensalada de frutas", categoria: "Heterogenea" },
+            { id: 7, texto: "Agua y aceite líquido", categoria: "Heterogenea" },
+            { id: 8, texto: "Sopa de verduras", categoria: "Heterogenea" },
+            { id: 9, texto: "Arena mezclada con piedras", categoria: "Heterogenea" },
+            { id: 10, texto: "Plato de cereal con leche", categoria: "Heterogenea" },
+            
+            // Métodos de Separación
+            { id: 11, texto: "Filtración (Usar papel filtro)", categoria: "Metodo" },
+            { id: 12, texto: "Decantación (Separar líquidos)", categoria: "Metodo" },
+            { id: 13, texto: "Evaporación (Hervir agua y sal)", categoria: "Metodo" },
+            { id: 14, texto: "Tamizado (Usar malla/colador)", categoria: "Metodo" },
+            { id: 15, texto: "Uso de imán (Separar metales)", categoria: "Metodo" } // Un método extra clásico fácil de entender
+        ];
+
+        let currentActiveChip = null;
+        let score = 5.0;
+        let correctCount = 0;
+        const totalItems = conceptosData.length;
+
+        // Referencias al DOM
+        const chipsArea = document.getElementById('chips-area');
+        const scoreDisplay = document.getElementById('score-display');
+        const progressDisplay = document.getElementById('progress-display');
+        const gameOverMsg = document.getElementById('game-over');
+        const categoryButtons = document.querySelectorAll('.category-btn');
+
+        // Algoritmo Fisher-Yates para barajar el array de forma aleatoria
+        function mezclarArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Inicializar el juego
+        function initGame() {
+            const conceptosMezclados = mezclarArray([...conceptosData]);
+            
+            conceptosMezclados.forEach(item => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.textContent = item.texto;
+                chip.dataset.categoria = item.categoria;
+                
+                // Evento TAP/Click
+                chip.addEventListener('click', () => handleChipTap(chip));
+                chipsArea.appendChild(chip);
+            });
+
+            // Asignar eventos a los botones de destino
+            categoryButtons.forEach(btn => {
+                btn.addEventListener('click', () => handleCategoryTap(btn));
+            });
+        }
+
+        // Lógica al tocar un concepto (chip)
+        function handleChipTap(chip) {
+            // Ignorar si el chip ya fue resuelto correctamente
+            if (chip.classList.contains('correct')) return;
+
+            // Desmarcar el anterior si existía
+            if (currentActiveChip && currentActiveChip !== chip) {
+                currentActiveChip.classList.remove('active');
+            }
+
+            // Alternar selección
+            if (currentActiveChip === chip) {
+                currentActiveChip.classList.remove('active');
+                currentActiveChip = null;
+            } else {
+                chip.classList.add('active');
+                currentActiveChip = chip;
+            }
+        }
+
+        // Lógica al tocar un contenedor/categoría
+        function handleCategoryTap(btn) {
+            // Si no hay un chip previamente tocado, no hacer nada
+            if (!currentActiveChip) return; 
+
+            const targetCategoria = btn.dataset.target;
+            const chipCategoria = currentActiveChip.dataset.categoria;
+
+            if (targetCategoria === chipCategoria) {
+                // ACIERTO: Coinciden las categorías
+                currentActiveChip.classList.remove('active');
+                currentActiveChip.classList.add('correct');
+                currentActiveChip = null; // Liberar memoria
+                
+                correctCount++;
+                progressDisplay.textContent = correctCount;
+                
+                checkWinCondition();
+            } else {
+                // FALLO: Categorías incorrectas
+                aplicarPenalizacion();
+                const chipFailing = currentActiveChip;
+                
+                // Efecto de error y deselección
+                chipFailing.classList.remove('active');
+                chipFailing.classList.add('incorrect');
+                currentActiveChip = null;
+                
+                // Remover clase de shake después de la animación para permitir reintentos limpios
+                setTimeout(() => {
+                    chipFailing.classList.remove('incorrect');
+                }, 400);
+            }
+        }
+
+        function aplicarPenalizacion() {
+            // Reduce puntaje, límite inferior de 1.0
+            score = Math.max(1.0, score - 0.2);
+            scoreDisplay.textContent = score.toFixed(1);
+            
+            // Feedback visual en el texto del puntaje
+            scoreDisplay.style.color = 'var(--error)';
+            setTimeout(() => {
+                scoreDisplay.style.color = 'var(--primary-dark)';
+            }, 400);
+        }
+
+        function checkWinCondition() {
+            if (correctCount === totalItems) {
+                setTimeout(() => {
+                    // Ocultar zona de chips y mostrar victoria
+                    chipsArea.style.display = 'none';
+                    gameOverMsg.style.display = 'block';
+                    
+                    // Colorear calificación final según rendimiento
+                    if (score >= 4.0) {
+                        scoreDisplay.style.color = 'var(--success)';
+                    } else if (score >= 3.0) {
+                        scoreDisplay.style.color = 'var(--cat-meto)'; // Naranja/Ambar
+                    } else {
+                        scoreDisplay.style.color = 'var(--error)';
+                    }
+                }, 350);
+            }
+        }
+
+        // Arrancar juego asegurando que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Introducción a la Materia y sus Estados</title>
+    
+    <style>
+        :root {
+            /* Paleta de colores científica y limpia */
+            --bg-color: #f4f7f9;
+            --primary-color: #2c3e50; /* Azul oscuro */
+            --accent-color: #3498db; /* Azul claro (ciencia, agua, estado líquido) */
+            --accent-hover: #2980b9;
+            --correct-color: #27ae60; /* Verde éxito */
+            --error-color: #e74c3c; /* Rojo error */
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --grid-bg: #e8ecf1;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent; /* Elimina destello en móviles */
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(20px, 4vw, 40px);
+            padding: clamp(10px, 3vw, 20px);
+            align-items: center;
+        }
+
+        section {
+            width: 100%;
+            max-width: 900px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+            padding: clamp(15px, 4vw, 35px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: clamp(22px, 5vw, 34px);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .instruccion {
+            font-size: clamp(15px, 3.5vw, 18px);
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-around;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 18px);
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .stats-panel span { color: #f1c40f; }
+
+        #matching-game {
+            display: grid;
+            /* Grid de 2 columnas fluido y adaptativo */
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(10px, 2vw, 20px);
+            width: 100%;
+            /* CRÍTICO: Prevenir zoom y comportamientos táctiles raros al tocar cartas */
+            touch-action: pan-y; /* Permite scroll vertical pero previene zoom accidental */
+            user-select: none;
+            background: var(--grid-bg);
+            padding: clamp(10px, 2vw, 20px);
+            border-radius: 12px;
+        }
+
+        .column-header {
+            text-align: center;
+            font-weight: 800;
+            color: var(--primary-color);
+            font-size: clamp(14px, 3.5vw, 18px);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 5px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            padding: clamp(12px, 3vw, 18px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            /* Tipografía elástica crítica para evitar desbordes */
+            font-size: clamp(12px, 3.2vw, 16px);
+            font-weight: 500;
+            color: var(--text-main);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-height: 80px;
+            word-break: break-word;
+            hyphens: auto;
+        }
+
+        .col-concept .card {
+            font-weight: 700;
+            color: var(--primary-color);
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .col-definition .card {
+            border-left: 5px solid var(--accent-color);
+        }
+
+        /* Estados interactivos */
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card.selected {
+            background-color: #ebf5fb;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.4);
+            transform: scale(1.02);
+            z-index: 2;
+        }
+
+        .card.matched {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: #1e8449;
+            opacity: 0.85;
+            pointer-events: none;
+            box-shadow: none;
+            transform: scale(0.95);
+        }
+
+        .card.error {
+            background-color: var(--error-color);
+            color: white;
+            border-color: #c0392b;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        #rating-overlay {
+            display: none;
+            text-align: center;
+            padding: clamp(20px, 4vw, 40px);
+            background: #fff;
+            border-radius: 12px;
+            margin-top: 25px;
+            border: 3px solid var(--correct-color);
+            animation: popIn 0.5s ease-out;
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.15);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .stars { font-size: clamp(40px, 8vw, 60px); color: #f1c40f; margin: 15px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .rating-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: clamp(15px, 4vw, 17px);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .rating-btn:hover { background: var(--accent-hover); }
+        .rating-btn:active { transform: scale(0.95); }
+
+        #zona-lectura {
+            margin-top: 10px;
+            background: #ffffff;
+        }
+
+        article h2 {
+            color: var(--primary-color);
+            font-size: clamp(24px, 5vw, 32px);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-bottom: 25px;
+            line-height: 1.2;
+        }
+
+        article h3 {
+            color: #2980b9;
+            font-size: clamp(19px, 4vw, 24px);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* SVG iconos básicos embebidos para lectura */
+        article h3 svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--accent-color);
+        }
+
+        article p {
+            margin-bottom: 18px;
+            font-size: clamp(16px, 3.5vw, 18px);
+            text-align: justify;
+            color: #444;
+        }
+
+        article ul {
+            margin-left: 25px;
+            margin-bottom: 22px;
+            font-size: clamp(16px, 3.5vw, 18px);
+            color: #444;
+        }
+
+        article li { margin-bottom: 10px; }
+        
+        .resaltado {
+            background-color: rgba(52, 152, 219, 0.15);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #1f618d;
+        }
+
+        .taller-caja {
+            background-color: #f8fbcf;
+            border-left: 6px solid #f39c12;
+            padding: clamp(15px, 4vw, 35px);
+            margin-top: 50px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 4px 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .taller-caja h2 { 
+            border-bottom-color: #f39c12; 
+            margin-top: 0;
+            color: #d35400;
+        }
+        
+        .instruccion-taller {
+            font-weight: bold;
+            color: #c0392b;
+            font-size: clamp(16px, 4vw, 19px);
+            text-align: center;
+            margin-bottom: 35px;
+            padding: 15px;
+            border: 2px dashed #c0392b;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .actividad-lista {
+            list-style: none;
+            counter-reset: act-counter;
+        }
+
+        .actividad-lista li {
+            margin-bottom: 25px;
+            padding-left: clamp(45px, 10vw, 60px);
+            position: relative;
+            font-size: clamp(16px, 3.5vw, 18px);
+            background: #fff;
+            padding-top: 18px;
+            padding-bottom: 18px;
+            padding-right: 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+            border: 1px solid #f3e5d8;
+        }
+
+        .actividad-lista li::before {
+            counter-increment: act-counter;
+            content: counter(act-counter);
+            position: absolute;
+            left: 12px;
+            top: 18px;
+            background: #f39c12;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .badge-tipo {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: #eee;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-directa { background: #e8d0f3; color: #6a1b9a; border: 1px solid #dcb5ed; }
+        .badge-analisis { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1;}
+        .badge-dibujo { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6;}
+        .badge-mapa { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc;}
+
+    </style>
+</head>
+<body>
+
+<main>
+    <section id="zona-juego">
+        <header>
+            <h1>La Materia y sus Estados</h1>
+            <p class="instruccion">Toca un concepto en la columna izquierda y luego su definición correspondiente en la derecha para emparejarlos.</p>
+            <div class="stats-panel">
+                <div>⏱️ Tiempo: <span id="timer">00:00</span></div>
+                <div>❌ Errores: <span id="errors">0</span></div>
+                <div>✔️ Pares: <span id="matches">0</span>/10</div>
+            </div>
+        </header>
+
+        <div id="matching-game">
+            <!-- Columna A: Conceptos -->
+            <div>
+                <div class="column-header">Concepto</div>
+                <div class="column col-concept" id="col-concepts">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+            <!-- Columna B: Definiciones -->
+            <div>
+                <div class="column-header">Definición</div>
+                <div class="column col-definition" id="col-definitions">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+        </div>
+
+        <div id="rating-overlay">
+            <h2 id="rating-title" style="color: var(--primary-color);">¡Conexiones Completadas!</h2>
+            <div class="stars" id="rating-stars"></div>
+            <p id="rating-msg" style="font-size: 18px; margin-bottom: 15px; font-weight: bold;"></p>
+            <button class="rating-btn" onclick="initGame()">Volver a Jugar</button>
+        </div>
+    </section>
+
+    <section id="zona-lectura">
+        <article>
+            <h2>Descubriendo la Materia: De qué está hecho nuestro mundo</h2>
+            
+            <p>Mira a tu alrededor. La mesa donde te apoyas, la tierra que pisas, las herramientas que usas y hasta el aire invisible que respiras tienen algo en común: todo está hecho de <strong>materia</strong>. En el estudio de las ciencias naturales, definimos la materia como todo aquello que posee dos características fundamentales: tiene <span class="resaltado">masa</span> (una cantidad de material) y ocupa un <span class="resaltado">volumen</span> (un espacio tridimensional).</p>
+            
+            <h3>
+                <!-- SVG Icono Átomo embebido -->
+                <svg viewBox="0 0 24 24"><path d="M12 2c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zm0 18c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zm-9-9c0-.6-.4-1-1-1s-1 .4-1 1 .4 1 1 1 1-.4 1-1zm18 0c0-.6-.4-1-1-1s-1 .4-1 1 .4 1 1 1 1-.4 1-1zm-9-4c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 8c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>
+                Los Ladrillos del Universo: Elementos y Compuestos
+            </h3>
+            <p>Si tomaras un trozo de hierro y lo cortaras en pedazos cada vez más y más pequeños, eventualmente llegarías a una partícula invisible e indivisible que aún conserva las características del hierro: el <span class="resaltado">átomo</span>. Los átomos son los bloques de construcción del universo.</p>
+            <p>Cuando tenemos un material formado por un solo tipo de átomos, lo llamamos <strong>Elemento</strong>. Por ejemplo, un clavo de hierro puro, el oxígeno que respiramos o el oro son elementos. Sin embargo, en la naturaleza, los elementos rara vez están solos. Les encanta unirse. Cuando átomos de dos o más elementos diferentes se unen químicamente, forman un <strong>Compuesto</strong>. El agua pura es un excelente ejemplo de compuesto: está formada por la unión de hidrógeno y oxígeno (H2O).</p>
+
+            <h3>
+                <!-- SVG Icono Mezcla -->
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v2h2v5h2v-5h2v-2zm4 5h-2V7h2v10z"/></svg>
+                Cuando todo se junta: Las Mezclas
+            </h3>
+            <p>La mayor parte de lo que tocamos a diario no son sustancias puras, sino <span class="resaltado">mezclas</span>. Una mezcla es la unión física (no química) de dos o más sustancias. Se dividen en dos grandes grupos:</p>
+            <ul>
+                <li><strong>Mezclas Homogéneas:</strong> Son aquellas donde no puedes distinguir sus componentes a simple vista; parecen una sola cosa uniforme. El aire, el agua con azúcar disuelta o el acero de una herramienta son mezclas homogéneas.</li>
+                <li><strong>Mezclas Heterogéneas:</strong> Aquí los componentes sí se pueden observar claramente separados. Si observas un puñado de tierra del suelo, notarás arena, piedras, trozos de hojas y arcilla. Una ensalada o el agua mezclada con aceite también son mezclas heterogéneas.</li>
+            </ul>
+
+            <h3>
+                <!-- SVG Icono Estados -->
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                Los Estados de la Materia en nuestro entorno
+            </h3>
+            <p>La materia puede presentarse en distintas formas físicas, conocidas como <span class="resaltado">estados de agregación</span>, dependiendo de cómo estén organizadas y qué tanta energía tengan sus partículas:</p>
+            <p><strong>1. Estado Sólido:</strong> Las partículas están muy juntas y fuertemente unidas. Los sólidos tienen un <em>volumen y una forma definidos</em>. Un martillo, una piedra en el suelo o un bloque de madera son materia en estado sólido.</p>
+            <p><strong>2. Estado Líquido:</strong> Las partículas están un poco más sueltas, lo que les permite deslizarse unas sobre otras. Los líquidos tienen un <em>volumen definido pero no tienen forma propia</em>; toman la forma del recipiente que los contiene. El agua del río o la savia de las plantas son líquidos.</p>
+            <p><strong>3. Estado Gaseoso:</strong> Las partículas están separadas y se mueven libremente y muy rápido. Los gases <em>no tienen forma ni volumen definidos</em>; se expanden para llenar todo el espacio disponible. El aire y el vapor son ejemplos claros de materia gaseosa.</p>
+        </article>
+
+        <div class="taller-caja">
+            <h2>Taller de Repaso y Reflexión</h2>
+            <div class="instruccion-taller">
+                📝 INSTRUCCIÓN: Escribe, dibuja y resuelve de forma completa estas 10 actividades en tu cuaderno de Ciencias Naturales.
+            </div>
+            
+            <ul class="actividad-lista">
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    ¿Qué es la materia y cuáles son las dos propiedades fundamentales que un objeto debe tener para ser considerado materia?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Si tienes una herramienta de hierro (Fe) que se dejó bajo la lluvia y formó "óxido de hierro", ¿crees que el óxido es un Elemento o un Compuesto? Argumenta tu respuesta según la lectura.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja tres frascos de vidrio. En el primero ilustra cómo te imaginas las partículas de un Sólido, en el segundo las partículas de un Líquido, y en el tercero las de un Gas.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Conceptual</span><br>
+                    Crea un mapa conceptual jerárquico que clasifique la materia. Arriba escribe "Materia". De ahí saca dos ramas principales: "Sustancias Puras" y "Mezclas". Debajo de cada una, pon sus dos subcategorías según el texto.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Explica con tus propias palabras cuál es la diferencia principal y visual entre una mezcla homogénea y una mezcla heterogénea.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    El aire que respiramos es invisible y no podemos agarrarlo fácilmente con las manos. Sin embargo, la ciencia dice que es materia. ¿Por qué el aire cumple con los requisitos para ser considerado materia?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja un ejemplo cotidiano que encuentres en tu casa o colegio que sea una "Mezcla Heterogénea" (diferente a la tierra o la ensalada). Señala en tu dibujo al menos dos componentes distintos.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Mental</span><br>
+                    Elabora un mapa mental cuyo centro sea la frase "Estados de la materia". De las ramas principales, escribe los tres estados mencionados y anota un ejemplo de la vida real (diferente a los del texto) en cada rama.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Según la lectura, ¿qué estado de la materia se caracteriza por NO tener ni forma propia ni un volumen definido, expandiéndose por todo el espacio?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Reflexión: Si el agua pura (H2O) es un Compuesto Químico, ¿el agua de mar (que contiene agua unida físicamente con sales y arena) sigue siendo un compuesto o debe clasificarse como una mezcla? Justifica muy bien tu respuesta.
+                </li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<script>
+    // 10 Conceptos Clave y Definiciones
+    const data = [
+        { id: 1, concept: "Materia", definition: "Todo lo que tiene masa y ocupa un volumen o lugar en el espacio." },
+        { id: 2, concept: "Átomo", definition: "Partícula más pequeña e indivisible que forma toda la materia del universo." },
+        { id: 3, concept: "Elemento", definition: "Sustancia pura formada por un solo tipo de átomos (ej. hierro, oro)." },
+        { id: 4, concept: "Compuesto", definition: "Sustancia formada por la unión química de dos o más elementos diferentes." },
+        { id: 5, concept: "Mezcla Homogénea", definition: "Unión de sustancias donde no se pueden distinguir sus componentes a simple vista." },
+        { id: 6, concept: "Mezcla Heterogénea", definition: "Unión de sustancias donde sus componentes se distinguen fácilmente (ej. tierra)." },
+        { id: 7, concept: "Estado Sólido", definition: "Estado de la materia con partículas fuertemente unidas, forma y volumen definidos." },
+        { id: 8, concept: "Estado Líquido", definition: "Estado con volumen definido pero sin forma propia; fluye y toma forma del recipiente." },
+        { id: 9, concept: "Estado Gaseoso", definition: "Estado sin forma ni volumen definidos; las partículas se expanden libremente." },
+        { id: 10, concept: "Volumen", definition: "Cantidad de espacio tridimensional que ocupa un cuerpo u objeto físico." }
+    ];
+
+    let concepts = [];
+    let definitions = [];
+    let selectedConcept = null;
+    let selectedDefinition = null;
+    let matches = 0;
+    let errors = 0;
+    let seconds = 0;
+    let timerInterval = null;
+    let isProcessing = false;
+
+    // Referencias al DOM
+    const colConcepts = document.getElementById('col-concepts');
+    const colDefinitions = document.getElementById('col-definitions');
+    const matchesEl = document.getElementById('matches');
+    const errorsEl = document.getElementById('errors');
+    const timerEl = document.getElementById('timer');
+    const ratingOverlay = document.getElementById('rating-overlay');
+
+    // Inicializa o reinicia el juego interactivo
+    function initGame() {
+        selectedConcept = null;
+        selectedDefinition = null;
+        matches = 0;
+        errors = 0;
+        seconds = 0;
+        isProcessing = false;
+        
+        matchesEl.textContent = matches;
+        errorsEl.textContent = errors;
+        timerEl.textContent = "00:00";
+        ratingOverlay.style.display = "none";
+        
+        clearInterval(timerInterval);
+        startTimer();
+
+        // Preparar arrays separados para conceptos y definiciones
+        concepts = [...data].map(item => ({ id: item.id, text: item.concept }));
+        definitions = [...data].map(item => ({ id: item.id, text: item.definition }));
+
+        // Mezclar aleatoriamente las columnas
+        shuffleArray(concepts);
+        shuffleArray(definitions);
+
+        renderColumn(colConcepts, concepts, 'concept');
+        renderColumn(colDefinitions, definitions, 'definition');
+    }
+
+    // Algoritmo Fisher-Yates para mezclar arreglos
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // Dibuja las cartas en el HTML
+    function renderColumn(container, items, type) {
+        container.innerHTML = '';
+        items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.id = item.id;
+            card.dataset.type = type;
+            card.textContent = item.text;
+            
+            // CRÍTICO: Usamos pointerdown en lugar de click para respuesta rápida en pantallas táctiles y evitar lag de 300ms
+            card.addEventListener('pointerdown', handleCardClick);
+            container.appendChild(card);
+        });
+    }
+
+    // Cronómetro
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            seconds++;
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+        }, 1000);
+    }
+
+    function handleCardClick(e) {
+        if (isProcessing) return;
+        
+        const card = e.currentTarget;
+        
+        // Ignorar si ya está emparejada (en verde)
+        if (card.classList.contains('matched')) return;
+
+        const type = card.dataset.type;
+
+        // Deseleccionar si el usuario vuelve a tocar la misma tarjeta
+        if (card.classList.contains('selected')) {
+            card.classList.remove('selected');
+            if (type === 'concept') selectedConcept = null;
+            else selectedDefinition = null;
+            return;
+        }
+
+        // Marcar selección actual y desmarcar cualquier anterior de la misma columna
+        if (type === 'concept') {
+            if (selectedConcept) selectedConcept.classList.remove('selected');
+            selectedConcept = card;
+        } else {
+            if (selectedDefinition) selectedDefinition.classList.remove('selected');
+            selectedDefinition = card;
+        }
+
+        card.classList.add('selected');
+
+        // Validar solo si hay una de cada columna seleccionada
+        if (selectedConcept && selectedDefinition) {
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        isProcessing = true; // Bloquea clics mientras evalúa
+        const idConcept = selectedConcept.dataset.id;
+        const idDef = selectedDefinition.dataset.id;
+
+        if (idConcept === idDef) {
+            // MATCH CORRECTO
+            selectedConcept.classList.remove('selected');
+            selectedDefinition.classList.remove('selected');
+            
+            selectedConcept.classList.add('matched');
+            selectedDefinition.classList.add('matched');
+            
+            matches++;
+            matchesEl.textContent = matches;
+            
+            resetSelection();
+            
+            // Chequear victoria
+            if (matches === 10) {
+                setTimeout(endGame, 500);
+            }
+        } else {
+            // MATCH INCORRECTO
+            errors++;
+            errorsEl.textContent = errors;
+            
+            selectedConcept.classList.remove('selected');
+            selectedDefinition.classList.remove('selected');
+            
+            selectedConcept.classList.add('error');
+            selectedDefinition.classList.add('error');
+
+            // Retraso para que el usuario vea el error y la animación
+            setTimeout(() => {
+                selectedConcept.classList.remove('error');
+                selectedDefinition.classList.remove('error');
+                resetSelection();
+            }, 800); 
+        }
+    }
+
+    function resetSelection() {
+        selectedConcept = null;
+        selectedDefinition = null;
+        isProcessing = false;
+    }
+
+    // Finalizar juego y calificar
+    function endGame() {
+        clearInterval(timerInterval);
+        
+        const starsEl = document.getElementById('rating-stars');
+        const msgEl = document.getElementById('rating-msg');
+        
+        let stars = "";
+        let msg = "";
+        
+        // Calificación pedagógica dinámica según desempeño
+        if (errors === 0) {
+            stars = "⭐⭐⭐⭐⭐";
+            msg = "¡Físico Perfecto! Dominas la materia a nivel atómico.";
+        } else if (errors <= 3) {
+            stars = "⭐⭐⭐⭐";
+            msg = "¡Gran trabajo! Tienes una mezcla homogénea de conocimiento.";
+        } else if (errors <= 7) {
+            stars = "⭐⭐⭐";
+            msg = "¡Buen esfuerzo! Continúa solidificando tu aprendizaje.";
+        } else {
+            stars = "⭐⭐";
+            msg = "¡Completado! Tómate un tiempo para repasar los estados en la lectura de abajo.";
+        }
+        
+        starsEl.textContent = stars;
+        msgEl.textContent = msg;
+        ratingOverlay.style.display = "block";
+        
+        // Hacer scroll automático suave para ver el resultado
+        setTimeout(() => {
+            ratingOverlay.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }, 300);
+    }
+
+    // Iniciar automáticamente cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', initGame);
+
+</script>
+
+</body>
+</html>

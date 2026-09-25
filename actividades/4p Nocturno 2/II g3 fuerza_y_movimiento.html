@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Fuerza y Movimiento</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --primary-color: #2c3e50;
+            --accent-color: #e67e22; /* Tono café / naranja */
+            --correct-color: #27ae60;
+            --error-color: #c0392b;
+            --card-front: #34495e;
+            --text-main: #333;
+            --grid-bg: #fff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            padding: 20px 10px;
+        }
+
+        section {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--grid-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: clamp(15px, 4vw, 30px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: clamp(22px, 5vw, 32px);
+            margin-bottom: 10px;
+        }
+
+        .instruccion {
+            font-size: clamp(15px, 3.5vw, 18px);
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-around;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 18px);
+            margin-bottom: 20px;
+        }
+
+        #game-board {
+            display: grid;
+            /* CRÍTICO: Diseño fluido adaptativo según instrucciones */
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            width: 100%;
+            /* CRÍTICO: Previene zoom/scroll accidental en móviles al interactuar */
+            touch-action: none;
+            user-select: none;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .card-front {
+            background-color: var(--card-front);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #2c3e50;
+        }
+
+        .card-front svg {
+            width: 50%;
+            height: 50%;
+            fill: #ecf0f1;
+            opacity: 0.7;
+        }
+
+        .card-back {
+            background-color: #fff;
+            color: var(--primary-color);
+            transform: rotateY(180deg);
+            border: 2px solid var(--accent-color);
+            /* CRÍTICO: Tipografía elástica para ajustarse al grid pequeño */
+            font-size: clamp(10px, 2.8vw, 15px);
+            font-weight: bold;
+            word-break: break-word;
+            hyphens: auto;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .card.matched .card-back {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: #1e8449;
+        }
+
+        .card.mismatch .card-back {
+            background-color: var(--error-color);
+            color: white;
+            border-color: #922b21;
+        }
+
+        .card-type-badge {
+            font-size: clamp(8px, 2vw, 10px);
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 2px;
+            background: rgba(0,0,0,0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        #rating-overlay {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 3px solid var(--correct-color);
+            animation: popIn 0.5s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .stars { font-size: clamp(35px, 8vw, 50px); color: #f1c40f; margin: 10px 0;}
+        .rating-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        #zona-lectura {
+            margin-top: 10px;
+        }
+
+        article h2 {
+            color: var(--primary-color);
+            font-size: clamp(24px, 5vw, 30px);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        article h3 {
+            color: var(--accent-color);
+            font-size: clamp(18px, 4vw, 24px);
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+
+        article p {
+            margin-bottom: 16px;
+            font-size: clamp(16px, 3.5vw, 18px);
+            text-align: justify;
+            color: #444;
+        }
+
+        article ul {
+            margin-left: 25px;
+            margin-bottom: 20px;
+            font-size: clamp(16px, 3.5vw, 18px);
+        }
+
+        article li { margin-bottom: 10px; color: #444; }
+
+        .taller-caja {
+            background-color: #fcf8e3;
+            border-left: 6px solid #e67e22;
+            padding: clamp(15px, 4vw, 25px);
+            margin-top: 45px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .taller-caja h2 { 
+            border-bottom-color: #e67e22; 
+            margin-top: 0;
+        }
+        
+        .instruccion-taller {
+            font-weight: bold;
+            color: #d35400;
+            font-size: clamp(16px, 4vw, 19px);
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 12px;
+            border: 2px dashed #d35400;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.6);
+        }
+
+        .actividad-lista {
+            list-style: none;
+            counter-reset: act-counter;
+        }
+
+        .actividad-lista li {
+            margin-bottom: 25px;
+            padding-left: 45px;
+            position: relative;
+            font-size: clamp(16px, 3.5vw, 18px);
+            background: #fff;
+            padding: 15px 15px 15px 50px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #f0e5c1;
+        }
+
+        .actividad-lista li::before {
+            counter-increment: act-counter;
+            content: counter(act-counter);
+            position: absolute;
+            left: 10px;
+            top: 15px;
+            background: var(--accent-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .badge-tipo {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: #eee;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        .badge-directa { background: #e8d0f3; color: #6a1b9a; border: 1px solid #dcb5ed; }
+        .badge-analisis { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1;}
+        .badge-dibujo { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6;}
+        .badge-mapa { background: #f2dede; color: #a94442; border: 1px solid #ebccd1;}
+
+    </style>
+</head>
+<body>
+
+<main>
+    <section id="zona-juego">
+        <header>
+            <h1>Fuerza y Movimiento</h1>
+            <p class="instruccion">Toca las cartas para voltearlas y encuentra los pares (Concepto - Definición).</p>
+            <div class="stats-panel">
+                <div>Movimientos: <span id="moves">0</span></div>
+                <div>Errores: <span id="errors">0</span></div>
+                <div>Pares: <span id="matches">0</span>/10</div>
+            </div>
+        </header>
+
+        <div id="game-board">
+            <!-- Las cartas se inyectan dinámicamente aquí -->
+        </div>
+
+        <div id="rating-overlay">
+            <h2 id="rating-title">¡Misión Cumplida!</h2>
+            <div class="stars" id="rating-stars"></div>
+            <p id="rating-msg" style="font-size: 18px; margin-bottom: 15px;"></p>
+            <button class="rating-btn" onclick="initGame()">Jugar de Nuevo</button>
+        </div>
+    </section>
+
+    <section id="zona-lectura">
+        <article>
+            <h2>La Física en la Finca: Fuerza, Movimiento y Bultos de Café</h2>
+            
+            <p>Imagina una mañana cálida en el Eje Cafetero colombiano. Un Willys, cargado hasta el tope, se prepara para salir, mientras en la finca los trabajadores levantan pesados bultos de café verde para subirlos al vehículo. Esta escena tan cotidiana está regida por leyes universales y fascinantes: las leyes de la física. Cada vez que levantamos, empujamos, arrastramos o frenamos un objeto, estamos interactuando directamente con los principios de la <strong>fuerza</strong> y el <strong>movimiento</strong>.</p>
+            
+            <h3>1. ¿Qué es exactamente una Fuerza?</h3>
+            <p>En términos sencillos, una fuerza es la <strong>acción de empujar o jalar</strong> un objeto. Sin embargo, en física, la fuerza no es solo hacer esfuerzo; tiene características que determinan qué pasará con el objeto. Las dos más importantes son:</p>
+            <ul>
+                <li><strong>La Magnitud:</strong> Es el tamaño o la intensidad de la fuerza aplicada. No es lo mismo empujar suavemente un grano de café sobre la mesa (poca magnitud) que empujar un Jeep desvarado (gran magnitud).</li>
+                <li><strong>La Dirección:</strong> Es hacia dónde se aplica ese empuje o tirón. Si aplicas fuerza hacia arriba a un bulto, lo levantas. Si la aplicas hacia adelante, lo empujas por el suelo. Si dos personas empujan un bulto con la misma magnitud pero en direcciones opuestas, el bulto no se moverá a ningún lado.</li>
+            </ul>
+
+            <h3>2. Masa e Inercia: El desafío de mover el bulto</h3>
+            <p>¿Alguna vez has notado lo difícil que es hacer que un bulto de 50 kilogramos empiece a moverse, y lo difícil que es detenerlo una vez que ya está rodando? Esto se debe a la <strong>inercia</strong>.</p>
+            <p>La inercia es la "terquedad" de los objetos. Es la tendencia natural que tiene un cuerpo a seguir haciendo lo que está haciendo: si está quieto, quiere seguir quieto; si se está moviendo, quiere seguir moviéndose. La inercia está directamente relacionada con la <strong>masa</strong> (la cantidad de materia de un objeto). A mayor masa (un bulto más gordo y lleno), mayor inercia y, por tanto, se requiere una fuerza mucho mayor para alterar su estado de reposo o de movimiento.</p>
+
+            <h3>3. Enemigos y Aliados Invisibles: Gravedad y Fricción</h3>
+            <p>Cuando un trabajador intenta arrastrar un saco de café por el piso, hay fuerzas invisibles actuando en su contra. La primera es la <strong>fricción</strong>. Esta es una fuerza de resistencia que ocurre siempre que dos superficies se deslizan una sobre otra. Arrastrar un costal sobre el piso liso de cemento (poca fricción) es mucho más fácil que arrastrarlo sobre un camino empedrado o lleno de barro (mucha fricción).</p>
+            <p>Por otro lado, cuando el objetivo es subir el bulto al Jeep, el enemigo a vencer es la <strong>gravedad</strong>, la inmensa fuerza que atrae todos los objetos hacia el centro de la Tierra. Lo que nosotros llamamos <strong>peso</strong> no es más que la medida de cuánta fuerza ejerce esta gravedad sobre la masa de nuestro bulto de café.</p>
+
+            <h3>4. Trabajo y Aceleración: Logrando el objetivo</h3>
+            <p>Si empujas la pared de la casa de la finca con todas tus fuerzas durante una hora, terminarás exhausto. Sin embargo, para la física, ¡no has hecho ningún <strong>trabajo</strong>! En el lenguaje científico, para que exista un trabajo, la fuerza aplicada debe lograr mover un objeto a una cierta distancia. Si el objeto no se mueve, el trabajo es cero.</p>
+            <p>Cuando finalmente logras aplicar suficiente fuerza para vencer la fricción, la inercia y el peso del bulto de café, provocas un cambio en su velocidad: pasa de estar quieto a estar en movimiento. A ese cambio continuo en la velocidad lo llamamos <strong>aceleración</strong>. Comprender cómo interactúan todas estas variables es lo que ha permitido a la humanidad crear máquinas, poleas y motores que hacen que el transporte de pesadas cargas sea cada vez más fácil y eficiente.</p>
+        </article>
+
+        <div class="taller-caja">
+            <h2>Taller de Repaso</h2>
+            <div class="instruccion-taller">
+                📝 INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno de Física basándote en la lectura anterior.
+            </div>
+            
+            <ul class="actividad-lista">
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Según el texto, ¿qué es la fuerza y cuáles son las dos características principales que determinan su efecto sobre un objeto?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Si tienes dos bultos de café rodando por una colina a la misma velocidad, uno de 50 kg y otro de 10 kg, ¿por qué es mucho más difícil detener el bulto de 50 kg? Basa tu respuesta explicando el concepto de "inercia".
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja a una persona empujando un bulto pesado por el suelo. Utiliza flechas rojas para indicar la dirección de la "Fuerza Aplicada", una flecha azul para la "Fricción" y una flecha verde señalando hacia abajo para la "Gravedad".
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Conceptual</span><br>
+                    Elabora un mapa conceptual que conecte lógicamente los siguientes términos: Fuerza, Magnitud, Dirección, Inercia, Masa, y Movimiento.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Explica con tus palabras la diferencia técnica entre los conceptos de "Masa" y "Peso", según lo descrito en la sección de gravedad.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Imagina que un campesino debe mover un bulto por una plancha de cemento liso, y luego el mismo bulto por un camino de tierra lleno de barro seco. ¿En qué terreno debe aplicar mayor magnitud de fuerza y por qué? Usa el concepto de "fricción".
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Ilustra un bulto de café visto desde arriba. Dibuja dos flechas de igual tamaño que representen a dos personas empujándolo con la misma fuerza (magnitud) pero en <strong>direcciones exactamente opuestas</strong>. Escribe a un lado qué le sucederá al bulto.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Mental</span><br>
+                    Diseña un mapa mental cuyo tema central sea "Fuerzas que dificultan el movimiento". Ramifica hacia temas como la fricción, la inercia y la gravedad, y anota en cada rama un ejemplo de la finca cafetera.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    En el ámbito de la física, ¿qué condición obligatoria debe cumplirse para poder decir que se ha realizado un "Trabajo"?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Si intentas empujar un Jeep atascado aplicando tu máxima fuerza durante 10 minutos, sudas y te cansas, pero el vehículo no avanza ni un milímetro, ¿realizaste un "Trabajo" físico? Argumenta tu respuesta según la lectura.
+                </li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<script>
+    const pairsData = [
+        { c: "Fuerza", d: "Acción de empujar o jalar un objeto." },
+        { c: "Masa", d: "Cantidad de materia de un cuerpo." },
+        { c: "Fricción", d: "Fuerza de resistencia al deslizar." },
+        { c: "Gravedad", d: "Atrae los objetos hacia la Tierra." },
+        { c: "Inercia", d: "Tendencia a mantener el estado actual." },
+        { c: "Magnitud", d: "El tamaño o intensidad de la fuerza." },
+        { c: "Dirección", d: "Hacia dónde se aplica un empuje." },
+        { c: "Aceleración", d: "Cambio continuo en la velocidad." },
+        { c: "Peso", d: "Fuerza de la gravedad sobre la masa." },
+        { c: "Trabajo", d: "Mover un objeto aplicando fuerza." }
+    ];
+
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+    let errors = 0;
+    let isBoardLocked = false;
+
+    // SVG incrustado para el reverso de la carta sin dependencias externas
+    const cardPatternSVG = `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="8" stroke-dasharray="10 10" />
+            <text x="50" y="58" font-size="30" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="currentColor">?</text>
+        </svg>
+    `;
+
+    function initGame() {
+        const board = document.getElementById('game-board');
+        board.innerHTML = '';
+        cards = [];
+        flippedCards = [];
+        matchedPairs = 0;
+        moves = 0;
+        errors = 0;
+        isBoardLocked = false;
+        
+        updateStats();
+        document.getElementById('rating-overlay').style.display = 'none';
+
+        // Crear array doble con IDs vinculados
+        pairsData.forEach((pair, index) => {
+            cards.push({ id: index, text: pair.c, type: 'Concepto' });
+            cards.push({ id: index, text: pair.d, type: 'Definición' });
+        });
+
+        // Mezclar aleatoriamente (Fisher-Yates)
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+
+        // Renderizar en el DOM
+        cards.forEach((cardData, index) => {
+            const cardEl = document.createElement('div');
+            cardEl.classList.add('card');
+            cardEl.dataset.index = index;
+            cardEl.dataset.matchId = cardData.id;
+
+            cardEl.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        ${cardPatternSVG}
+                    </div>
+                    <div class="card-back">
+                        <span class="card-type-badge">${cardData.type}</span>
+                        <span>${cardData.text}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Usar pointerdown para soportar clics y toques sin delay
+            cardEl.addEventListener('pointerdown', handleCardClick);
+            board.appendChild(cardEl);
+        });
+    }
+
+    function handleCardClick(e) {
+        // Prevenir scroll en móviles al tocar
+        e.preventDefault(); 
+        
+        if (isBoardLocked) return;
+        
+        // Encontrar el contenedor principal de la carta (closest maneja eventos originados en elementos hijos)
+        const currentCard = e.target.closest('.card');
+        
+        if (!currentCard) return;
+        if (currentCard.classList.contains('flipped') || currentCard.classList.contains('matched')) return;
+
+        // Voltear la carta
+        currentCard.classList.add('flipped');
+        flippedCards.push(currentCard);
+
+        if (flippedCards.length === 2) {
+            moves++;
+            updateStats();
+            checkForMatch();
+        }
+    }
+
+    function checkForMatch() {
+        isBoardLocked = true;
+        const [card1, card2] = flippedCards;
+        const id1 = card1.dataset.matchId;
+        const id2 = card2.dataset.matchId;
+
+        if (id1 === id2) {
+            // MATCH CORRECTO
+            setTimeout(() => {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                updateStats();
+                resetBoard();
+                if (matchedPairs === 10) endGame();
+            }, 400); // Pequeño retraso visual
+        } else {
+            // ERROR
+            errors++;
+            updateStats();
+            // Marcar de rojo momentáneamente
+            setTimeout(() => {
+                card1.classList.add('mismatch');
+                card2.classList.add('mismatch');
+            }, 300);
+
+            // Voltear de nuevo después de 1.5s
+            setTimeout(() => {
+                card1.classList.remove('flipped', 'mismatch');
+                card2.classList.remove('flipped', 'mismatch');
+                resetBoard();
+            }, 1500);
+        }
+    }
+
+    function resetBoard() {
+        flippedCards = [];
+        isBoardLocked = false;
+    }
+
+    function updateStats() {
+        document.getElementById('moves').textContent = moves;
+        document.getElementById('errors').textContent = errors;
+        document.getElementById('matches').textContent = matchedPairs;
+    }
+
+    function endGame() {
+        const overlay = document.getElementById('rating-overlay');
+        const starsEl = document.getElementById('rating-stars');
+        const msgEl = document.getElementById('rating-msg');
+        
+        let stars = "";
+        let msg = "";
+        
+        // Sistema de calificación basado en errores (Minimizando castigo por ser conceptos nuevos)
+        if (errors <= 3) {
+            stars = "⭐⭐⭐⭐⭐";
+            msg = "¡Perfección absoluta! Dominas la física del movimiento.";
+        } else if (errors <= 8) {
+            stars = "⭐⭐⭐⭐";
+            msg = "¡Excelente trabajo! Tienes una gran memoria e intuición.";
+        } else if (errors <= 14) {
+            stars = "⭐⭐⭐";
+            msg = "¡Bien hecho! Completaste el desafío con éxito.";
+        } else {
+            stars = "⭐⭐";
+            msg = "¡Prueba superada! La perseverancia es la fuerza más grande.";
+        }
+        
+        starsEl.textContent = stars;
+        msgEl.textContent = msg;
+        overlay.style.display = "block";
+        
+        // Auto-scroll suave para mostrar la victoria
+        setTimeout(() => {
+            overlay.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+        }, 100);
+    }
+
+    // Inicializar al cargar el DOM
+    document.addEventListener('DOMContentLoaded', initGame);
+
+</script>
+
+</body>
+</html>

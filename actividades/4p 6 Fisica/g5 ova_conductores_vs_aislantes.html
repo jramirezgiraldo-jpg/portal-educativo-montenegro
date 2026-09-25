@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Meta viewport para responsividad -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Estación de Aprendizaje: Conductores vs. Aislantes</title>
+    
+    <style>
+        /* Variables globales y reset */
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #64748b;
+            --success: #10b981;
+            --error: #ef4444;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* CRÍTICO: Tipografías seguras del sistema */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* =========================================
+           ZONA DE JUEGO INTERACTIVO
+           ========================================= */
+        #zona-juego {
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--border);
+            padding: clamp(1rem, 3vw, 2rem);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 700px; /* CRÍTICO: max-width para centrar en PC y adaptar a móvil */
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: clamp(14px, 2.5vw, 18px);
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .instructions {
+            background-color: #eff6ff;
+            color: #1e40af;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: clamp(14px, 3vw, 16px);
+            border: 1px solid #bfdbfe;
+        }
+
+        .clue-box {
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--text-color);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Contenedores Flexbox para casillas y letras */
+        .slots-container, .letters-container {
+            display: flex;
+            flex-wrap: wrap; /* CRÍTICO: Evita desbordamiento */
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        /* CRÍTICO: touch-action y user-select para interactivos */
+        .slot, .letter {
+            width: clamp(35px, 8vw, 50px);
+            height: clamp(40px, 9vw, 55px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(18px, 5vw, 24px);
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            touch-action: none; 
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .slot {
+            border: 2px dashed var(--secondary);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .slot.filled {
+            border-style: solid;
+            border-color: var(--primary);
+            background-color: #eff6ff;
+            color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .letter {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .letter:active {
+            transform: scale(0.95);
+        }
+
+        .letter.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.5);
+        }
+
+        /* Animaciones y estados */
+        .correct {
+            border-color: var(--success) !important;
+            background-color: #d1fae5 !important;
+            color: var(--success) !important;
+        }
+
+        .incorrect {
+            border-color: var(--error) !important;
+            background-color: #fee2e2 !important;
+            color: var(--error) !important;
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        /* Pantalla de resultados */
+        #game-over {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-display {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+
+        .btn-restart {
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-restart:hover { background-color: var(--primary-hover); }
+
+        /* =========================================
+           ZONA DE LECTURA TEÓRICA Y TALLER
+           ========================================= */
+        #zona-lectura {
+            background-color: var(--bg-color);
+            padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 3vw, 2rem);
+            display: flex;
+            justify-content: center;
+        }
+
+        .article-container {
+            width: 100%;
+            max-width: 800px; /* CRÍTICO: Ancho responsivo para lectura óptima */
+            background-color: var(--card-bg);
+            padding: clamp(1.5rem, 4vw, 3rem);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-container h1 {
+            font-size: clamp(24px, 5vw, 36px);
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .article-container h2 {
+            font-size: clamp(20px, 4vw, 28px);
+            color: var(--text-color);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-container h3 {
+            font-size: clamp(18px, 3vw, 22px);
+            color: var(--secondary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 2.5vw, 18px);
+            margin-bottom: 1rem;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+            font-size: clamp(16px, 2.5vw, 18px);
+            color: #334155;
+        }
+
+        .article-container li { margin-bottom: 0.5rem; }
+
+        /* Estilos específicos para el Taller */
+        .workshop-section {
+            margin-top: 3rem;
+            border-top: 2px dashed var(--border);
+            padding-top: 2rem;
+        }
+
+        .workshop-notice {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 0 8px 8px 0;
+            font-weight: 600;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .workshop-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .workshop-list li {
+            background-color: var(--bg-color);
+            padding: 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .task-number {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .task-type {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-direct { background-color: #dbeafe; color: #1e40af; }
+        .type-critical { background-color: #fce7f3; color: #9d174d; }
+        .type-draw { background-color: #dcfce3; color: #166534; }
+        .type-map { background-color: #f3e8ff; color: #6b21a8; }
+
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- FASE 2: DESARROLLO DEL INTERACTIVO -->
+        <section id="zona-juego">
+            <div class="game-container" id="game-active-area">
+                <div class="game-header">
+                    <span id="progress-text">Palabra: 1 / 10</span>
+                    <span id="score-text">Errores: 0</span>
+                </div>
+
+                <div class="instructions">
+                    <strong>Guía de actividad:</strong> Lee atentamente la pista y toca las letras en la parte inferior en el orden correcto para formar la palabra de respuesta. Si te equivocas de letra al armar, toca la letra en la casilla de arriba para devolverla.
+                </div>
+
+                <div class="clue-box" id="clue-display">
+                    <!-- La pista se inyecta aquí -->
+                </div>
+
+                <div class="slots-container" id="slots-area">
+                    <!-- Casillas vacías se inyectan aquí -->
+                </div>
+
+                <div class="letters-container" id="letters-area">
+                    <!-- Letras desordenadas se inyectan aquí -->
+                </div>
+            </div>
+
+            <!-- Pantalla de Resultados -->
+            <div id="game-over">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h2 style="margin-top: 1rem; color: var(--text-color);">¡Investigación Completada!</h2>
+                <p style="color: var(--secondary); margin-top: 0.5rem;">Tu calificación final es:</p>
+                <div class="score-display" id="final-score">5.0</div>
+                <button class="btn-restart" onclick="initGame()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    Jugar de nuevo
+                </button>
+            </div>
+        </section>
+
+        <!-- FASE 3: LECTURA TEÓRICA Y TALLER DE REPASO -->
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h1>Conductores vs. Aislantes: El Baile de los Electrones</h1>
+                
+                <article>
+                    <h2>1. La naturaleza de la electricidad</h2>
+                    <p>Vivimos rodeados de tecnología. Desde los teléfonos móviles hasta las luces de nuestras casas, la civilización moderna depende de un fenómeno fundamental: la corriente eléctrica. Pero, ¿qué es exactamente la electricidad? Para entenderlo, debemos hacer un viaje a una escala invisible para el ojo humano y observar el interior de los átomos.</p>
+                    <p>La corriente eléctrica no es más que el flujo ordenado de partículas subatómicas llamadas <strong>electrones</strong> a través de un material. Sin embargo, no todos los materiales permiten que estos electrones viajen con la misma libertad. Esta diferencia fundamental en el comportamiento de la materia es lo que divide a los elementos de nuestro universo en dos grandes categorías: los conductores y los aislantes.</p>
+
+                    <h2>2. La estructura atómica y los electrones de valencia</h2>
+                    <p>Todo en el universo está compuesto por átomos. Imagina el átomo como un pequeño sistema solar: en el centro se encuentra un núcleo denso formado por protones (con carga positiva) y neutrones (sin carga). Alrededor de este núcleo orbitan los electrones (con carga negativa), organizados en diferentes capas o niveles de energía.</p>
+                    <p>Los electrones que se encuentran en la capa más externa y alejada del núcleo se conocen como <strong>electrones de valencia</strong>. Al estar tan lejos del centro, la fuerza de atracción que ejerce el núcleo sobre ellos es más débil. Es precisamente el comportamiento de estos electrones periféricos el que define si un material dejará pasar la electricidad o no.</p>
+
+                    <h2>3. Los Conductores: Autopistas libres para la energía</h2>
+                    <p>Un <strong>conductor</strong> es un material que ofrece muy poca resistencia al paso de la corriente eléctrica. Los mejores ejemplos de la naturaleza son los metales, como el cobre, el oro, la plata y el aluminio.</p>
+                    <p>¿Por qué son tan buenos conduciendo la electricidad? La respuesta reside en su estructura atómica y cristalina. En un trozo de metal, los átomos se organizan en una red tridimensional muy ordenada (estructura cristalina). En esta red, los átomos están tan juntos que sus últimas capas de energía se superponen. Sus electrones de valencia se desprenden fácilmente de su átomo original y comienzan a vagar libremente por todo el material.</p>
+                    <p>A este fenómeno se le conoce como el <strong>"mar de electrones"</strong>. Al tener millones de electrones libres moviéndose al azar, basta con aplicar una pequeña fuerza externa (como conectarlos a una batería) para que todos estos electrones libres se alineen y viajen en la misma dirección, creando así una corriente eléctrica continua.</p>
+
+                    <h2>4. Los Aislantes: Los guardianes de las cargas</h2>
+                    <p>En el extremo opuesto tenemos a los <strong>aislantes</strong>. Son materiales que presentan una resistencia enorme al paso de los electrones. Ejemplos comunes incluyen el plástico, la goma, el vidrio, la cerámica y la madera seca.</p>
+                    <p>A nivel atómico, la historia es completamente diferente a la de los metales. En los aislantes, los electrones de valencia están fuertemente unidos a sus respectivos núcleos. Los átomos se aferran a sus electrones con tanta fuerza que estos no tienen libertad para abandonar su órbita. Sin <strong>electrones libres</strong>, no hay partículas disponibles para transportar la carga de un extremo a otro del material, por lo que la corriente eléctrica se bloquea casi por completo.</p>
+                    <p>Los aislantes son fundamentales para nuestra seguridad. Gracias al recubrimiento de plástico (aislante) en los cables de cobre (conductor), podemos manipular enchufes y electrodomésticos sin recibir descargas eléctricas letales.</p>
+
+                    <h2>5. El punto medio: Semiconductores</h2>
+                    <p>Aunque nuestra investigación se centra en los conductores y aislantes, es vital mencionar que existe una tercera categoría: los semiconductores (como el silicio). Estos materiales se comportan como aislantes en estado puro, pero bajo ciertas condiciones de temperatura o al añadirles impurezas, pueden actuar como conductores. Son la base de toda la electrónica moderna, desde tu computadora hasta los microchips de los satélites.</p>
+                </article>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso Institucional</h2>
+                    
+                    <div class="workshop-notice">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                        Instrucción: Lee detenidamente el artículo superior, luego escribe y resuelve estas 10 actividades en tu cuaderno de ciencias.
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <div class="task-number">1</div>
+                            <div>
+                                <span class="task-type type-direct">Respuesta Directa</span>
+                                <p><strong>Definición Atómica:</strong> ¿Qué es un electrón de valencia y por qué es fundamental para determinar si un material es conductor o aislante?</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">2</div>
+                            <div>
+                                <span class="task-type type-draw">Dibujo / Ilustración</span>
+                                <p><strong>Anatomía del Átomo:</strong> Dibuja un átomo identificando claramente su núcleo (protones y neutrones) y las órbitas con los electrones, resaltando los electrones de valencia en la capa más externa.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">3</div>
+                            <div>
+                                <span class="task-type type-critical">Análisis Crítico</span>
+                                <p><strong>Situación de la Vida Real:</strong> Basado en la lectura, explica detalladamente qué pasaría si decidiéramos fabricar los cables de los cargadores de celular usando plástico en su interior y cobre en su recubrimiento externo.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">4</div>
+                            <div>
+                                <span class="task-type type-map">Mapa Conceptual</span>
+                                <p><strong>Estructuración:</strong> Elabora un mapa conceptual que conecte los siguientes términos: Materia, Átomos, Electrones de Valencia, Conductores, Mar de Electrones, Aislantes y Resistencia al flujo.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">5</div>
+                            <div>
+                                <span class="task-type type-direct">Respuesta Directa</span>
+                                <p><strong>Inventario de Materiales:</strong> Menciona tres materiales conductores y tres materiales aislantes mencionados en la lectura que puedas encontrar en tu entorno escolar o en tu hogar.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">6</div>
+                            <div>
+                                <span class="task-type type-draw">Dibujo / Ilustración</span>
+                                <p><strong>El Mar Microscópico:</strong> Ilustra mediante un dibujo cómo se imaginan los científicos el "mar de electrones" en el interior de un trozo de metal conductor.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">7</div>
+                            <div>
+                                <span class="task-type type-critical">Análisis Crítico</span>
+                                <p><strong>Seguridad Eléctrica:</strong> ¿Por qué crees que las herramientas que utilizan los electricistas, como los destornilladores y alicates, tienen gruesos mangos de goma o plástico? Justifica usando la estructura atómica.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">8</div>
+                            <div>
+                                <span class="task-type type-map">Cuadro Comparativo</span>
+                                <p><strong>Diferencias Clave:</strong> Crea un cuadro comparativo donde enfrentes a los Conductores y a los Aislantes basándote en: 1) Libertad de sus electrones, 2) Resistencia al flujo, 3) Ejemplos.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">9</div>
+                            <div>
+                                <span class="task-type type-direct">Respuesta Directa</span>
+                                <p><strong>Los Intermedios:</strong> ¿Qué son los semiconductores según la lectura y en qué tipo de dispositivos tecnológicos modernos son indispensables?</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">10</div>
+                            <div>
+                                <span class="task-type type-draw">Dibujo / Ilustración</span>
+                                <p><strong>El Circuito Completo:</strong> Dibuja un circuito simple conectando una batería a un bombillo. Etiqueta con flechas el recorrido que hacen los electrones a través del material conductor.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        /* =========================================
+           FASE 1: BASE DE DATOS DE PALABRAS Y PISTAS
+           ========================================= */
+        const gameData = [
+            { word: "ELECTRONES", clue: "Partículas subatómicas con carga negativa que se mueven en un circuito." },
+            { word: "CONDUCTOR", clue: "Material que permite el libre flujo de la corriente eléctrica." },
+            { word: "AISLANTE", clue: "Material que impide o bloquea el paso de los electrones." },
+            { word: "COBRE", clue: "Metal de color rojizo muy utilizado en la fabricación de cables eléctricos." },
+            { word: "PLASTICO", clue: "Material sintético que envuelve los cables, actuando como un excelente aislante." },
+            { word: "CRISTALINA", clue: "Estructura interna muy ordenada de los metales que facilita el movimiento atómico." },
+            { word: "MADERA", clue: "Material natural de los árboles que, al estar seco, bloquea el paso de la electricidad." },
+            { word: "LIBRES", clue: "Se le llama así a los electrones que pueden saltar de un átomo a otro en un metal." },
+            { word: "ORO", clue: "Metal precioso, excelente conductor que no se oxida, usado en microchips." },
+            { word: "RESISTENCIA", clue: "Oposición o dificultad que presenta un material al paso de la corriente eléctrica." }
+        ];
+
+        /* =========================================
+           MOTOR DE AUDIO OFFLINE (WEB AUDIO API)
+           ========================================= */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playTone(freq, type, duration, vol=0.1) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        const sounds = {
+            tap: () => playTone(600, 'sine', 0.1, 0.05),
+            untap: () => playTone(400, 'sine', 0.1, 0.05),
+            correct: () => {
+                playTone(523.25, 'sine', 0.1, 0.1); // C5
+                setTimeout(() => playTone(659.25, 'sine', 0.2, 0.1), 100); // E5
+                setTimeout(() => playTone(783.99, 'sine', 0.3, 0.1), 200); // G5
+            },
+            wrong: () => {
+                playTone(200, 'sawtooth', 0.3, 0.1);
+                setTimeout(() => playTone(150, 'sawtooth', 0.4, 0.1), 150);
+            }
+        };
+
+        /* =========================================
+           LÓGICA DEL JUEGO INTERACTIVO
+           ========================================= */
+        let currentWordIndex = 0;
+        let mistakes = 0;
+        let currentTargetWord = "";
+        let slotsArray = []; 
+        let availableLettersData = []; // { id, letter, used }
+        let isAnimating = false;
+
+        // Elementos del DOM
+        const uiProgress = document.getElementById('progress-text');
+        const uiScore = document.getElementById('score-text');
+        const uiClue = document.getElementById('clue-display');
+        const uiSlots = document.getElementById('slots-area');
+        const uiLetters = document.getElementById('letters-area');
+        
+        const uiGameActive = document.getElementById('game-active-area');
+        const uiGameOver = document.getElementById('game-over');
+        const uiFinalScore = document.getElementById('final-score');
+
+        // Función para desordenar arreglos (Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Inicializar o reiniciar el juego
+        function initGame() {
+            currentWordIndex = 0;
+            mistakes = 0;
+            uiGameActive.style.display = 'block';
+            uiGameOver.style.display = 'none';
+            loadWord(currentWordIndex);
+        }
+
+        // Cargar una palabra específica
+        function loadWord(index) {
+            isAnimating = false;
+            const data = gameData[index];
+            currentTargetWord = data.word;
+            
+            // Actualizar Cabecera
+            uiProgress.textContent = `Palabra: ${index + 1} / ${gameData.length}`;
+            uiScore.textContent = `Errores: ${mistakes}`;
+            uiClue.textContent = `"${data.clue}"`;
+
+            // Configurar casillas vacías
+            slotsArray = new Array(currentTargetWord.length).fill(null);
+            
+            // Configurar letras disponibles
+            availableLettersData = [];
+            for (let i = 0; i < currentTargetWord.length; i++) {
+                availableLettersData.push({
+                    id: `letter-${i}`,
+                    letter: currentTargetWord[i],
+                    used: false
+                });
+            }
+            shuffleArray(availableLettersData);
+
+            renderBoard();
+        }
+
+        // Renderizar el tablero (Casillas y Botones de Letras)
+        function renderBoard() {
+            // Renderizar casillas
+            uiSlots.innerHTML = '';
+            slotsArray.forEach((slotData, idx) => {
+                const slotEl = document.createElement('div');
+                slotEl.className = `slot ${slotData ? 'filled' : ''}`;
+                slotEl.textContent = slotData ? slotData.letter : '';
+                
+                // Evento para devolver la letra si la casilla está llena
+                if (slotData) {
+                    slotEl.addEventListener('click', () => {
+                        if(isAnimating) return;
+                        sounds.untap();
+                        returnLetter(idx, slotData.id);
+                    });
+                }
+                uiSlots.appendChild(slotEl);
+            });
+
+            // Renderizar letras disponibles abajo
+            uiLetters.innerHTML = '';
+            availableLettersData.forEach((letterData) => {
+                const btnEl = document.createElement('button');
+                btnEl.className = `letter ${letterData.used ? 'hidden' : ''}`;
+                btnEl.textContent = letterData.letter;
+                
+                // Evento para colocar letra en casilla
+                if (!letterData.used) {
+                    btnEl.addEventListener('click', () => {
+                        if(isAnimating) return;
+                        sounds.tap();
+                        placeLetter(letterData.id);
+                    });
+                }
+                uiLetters.appendChild(btnEl);
+            });
+        }
+
+        // Mover letra de abajo hacia casilla vacía
+        function placeLetter(letterId) {
+            // Buscar primera casilla vacía
+            const emptySlotIndex = slotsArray.findIndex(slot => slot === null);
+            if (emptySlotIndex === -1) return; // No hay espacio
+
+            // Encontrar el objeto letra
+            const letterObj = availableLettersData.find(l => l.id === letterId);
+            letterObj.used = true;
+
+            // Llenar casilla
+            slotsArray[emptySlotIndex] = letterObj;
+            renderBoard();
+
+            // Comprobar si todas las casillas están llenas
+            if (!slotsArray.includes(null)) {
+                checkWord();
+            }
+        }
+
+        // Devolver letra de la casilla hacia abajo
+        function returnLetter(slotIndex, letterId) {
+            // Vaciar casilla
+            slotsArray[slotIndex] = null;
+            
+            // Marcar letra como no usada
+            const letterObj = availableLettersData.find(l => l.id === letterId);
+            letterObj.used = false;
+            
+            renderBoard();
+        }
+
+        // Validar la palabra formada
+        function checkWord() {
+            isAnimating = true; // Bloquear interacciones
+            
+            const formedWord = slotsArray.map(slot => slot.letter).join('');
+            const domSlots = document.querySelectorAll('.slot');
+
+            if (formedWord === currentTargetWord) {
+                // CORRECTO
+                sounds.correct();
+                domSlots.forEach(el => el.classList.add('correct'));
+                
+                setTimeout(() => {
+                    currentWordIndex++;
+                    if (currentWordIndex < gameData.length) {
+                        loadWord(currentWordIndex);
+                    } else {
+                        endGame();
+                    }
+                }, 1000);
+
+            } else {
+                // INCORRECTO
+                sounds.wrong();
+                mistakes++;
+                uiScore.textContent = `Errores: ${mistakes}`;
+                
+                domSlots.forEach(el => el.classList.add('incorrect'));
+                
+                setTimeout(() => {
+                    // Devolver todas las letras
+                    slotsArray = new Array(currentTargetWord.length).fill(null);
+                    availableLettersData.forEach(l => l.used = false);
+                    isAnimating = false;
+                    renderBoard();
+                }, 800); // Esperar que termine la animación
+            }
+        }
+
+        // Finalizar juego y calcular nota
+        function endGame() {
+            uiGameActive.style.display = 'none';
+            uiGameOver.style.display = 'flex';
+            
+            // Calcular puntuación: Escala 1.0 a 5.0
+            // Base 5.0. Restar 0.15 por cada error. Mínimo 1.0.
+            let calcScore = 5.0 - (mistakes * 0.15);
+            if (calcScore < 1.0) calcScore = 1.0;
+            
+            const finalScoreColor = calcScore >= 3.0 ? 'var(--success)' : 'var(--error)';
+            uiFinalScore.style.color = finalScoreColor;
+            uiFinalScore.textContent = calcScore.toFixed(1);
+        }
+
+        // Iniciar al cargar la ventana
+        window.onload = initGame;
+    </script>
+</body>
+</html>

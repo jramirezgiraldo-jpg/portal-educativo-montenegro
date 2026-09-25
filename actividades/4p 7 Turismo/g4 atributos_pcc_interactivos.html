@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>La Cadena del Café: Atributos del PCC</title>
+    <style>
+        :root {
+            --coffee-dark: #3E2723;
+            --coffee-medium: #5D4037;
+            --coffee-light: #D7CCC8;
+            --leaf-green: #2E7D32;
+            --leaf-light: #A5D6A7;
+            --bg-color: #F9F6F0;
+            --card-bg: #FFFFFF;
+            --text-dark: #212121;
+            --danger: #D32F2F;
+            --success: #388E3C;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            overflow-x: hidden;
+            /* Permite scroll vertical para la zona de lectura, pero previene problemas laterales */
+        }
+
+        /* ====== ZONA DE JUEGO ====== */
+        #zona-juego {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, var(--coffee-light), var(--leaf-light));
+            overflow: hidden;
+            touch-action: none; /* Crucial para evitar scroll en móviles al arrastrar */
+            user-select: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .game-header {
+            text-align: center;
+            padding: 1rem 1rem 0.5rem;
+            color: var(--coffee-dark);
+        }
+
+        .game-header h1 {
+            font-size: clamp(20px, 5vw, 28px);
+            margin-bottom: 0.5rem;
+        }
+
+        .instruction {
+            font-size: clamp(14px, 3vw, 16px);
+            background: rgba(255,255,255,0.7);
+            padding: 0.5rem;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        #card-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            padding: 1rem;
+            min-height: 450px; /* Garantiza suficiente espacio vertical para que la carta no pise los botones */
+            width: 100%;
+        }
+
+        .card {
+            position: absolute;
+            width: calc(100% - 3rem);
+            max-width: 340px;
+            height: 55vh;
+            min-height: 280px;
+            max-height: 380px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: grab;
+            border: 3px solid #EFEBE1;
+            transform-origin: 50% 100%;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            will-change: transform;
+            overflow: hidden; /* CRÍTICO: Evita que el texto de las cartas de fondo se desborde */
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .card-progress {
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+            color: #888;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-text {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(17px, 4.5vw, 22px);
+            font-weight: bold;
+            color: var(--coffee-dark);
+            pointer-events: none; /* Previene bugs en el arrastre */
+            line-height: 1.4;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1.5rem;
+            padding-bottom: 3rem; /* Espacio extra para iOS home indicator */
+            position: relative;
+            z-index: 10;
+            margin-top: 1rem;
+        }
+
+        .btn-control {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .btn-control:active {
+            transform: scale(0.9);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .btn-false {
+            background-color: white;
+            border: 3px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-true {
+            background-color: white;
+            border: 3px solid var(--success);
+            color: var(--success);
+        }
+
+        .btn-control svg {
+            width: 35px;
+            height: 35px;
+            stroke-width: 3;
+        }
+
+        /* Toast de Justificación */
+        #toast {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-top: 5px solid gray;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #toast-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #toast-body {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        /* Pantalla de Resultados */
+        #result-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #result-screen.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .grade-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--leaf-green);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 1rem 0;
+            box-shadow: 0 10px 20px rgba(46, 125, 50, 0.3);
+        }
+
+        /* ====== ZONA DE LECTURA ====== */
+        #zona-lectura {
+            width: 100%;
+            background: white;
+            border-top: 5px solid var(--coffee-dark);
+            padding-bottom: 4rem;
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .article-container h2 {
+            color: var(--coffee-dark);
+            font-size: clamp(24px, 6vw, 32px);
+            margin-bottom: 1rem;
+            text-align: center;
+            border-bottom: 2px solid var(--coffee-light);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-container h3 {
+            color: var(--leaf-green);
+            font-size: clamp(20px, 5vw, 24px);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-container p, .article-container ul {
+            font-size: clamp(16px, 4vw, 18px);
+            line-height: 1.7;
+            color: #444;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-container ul {
+            padding-left: 2rem;
+        }
+
+        .article-container li {
+            margin-bottom: 0.5rem;
+        }
+
+        .workshop-box {
+            background-color: #F1F8E9;
+            border: 2px dashed var(--leaf-green);
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .workshop-box h3 {
+            margin-top: 0;
+            color: var(--coffee-dark);
+            text-align: center;
+        }
+
+        .workshop-instruction {
+            background-color: var(--leaf-green);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .workshop-list li {
+            background: white;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 5px solid var(--leaf-green);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .task-type {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            color: var(--coffee-medium);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- ZONA DE JUEGO (SIEMPRE ARRIBA) -->
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Atributos del PCC</h1>
+                <div class="instruction">
+                    👈 Desliza a la izquierda si es <b>FALSO</b><br>
+                    👉 Desliza a la derecha si es <b>VERDAD</b>
+                </div>
+            </div>
+
+            <div id="card-container">
+                <!-- Las cartas se generarán dinámicamente aquí -->
+            </div>
+
+            <div class="controls">
+                <button class="btn-control btn-false" id="btn-swipe-left" aria-label="Falso">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <button class="btn-control btn-true" id="btn-swipe-right" aria-label="Verdad">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Toast Notification -->
+            <div id="toast">
+                <div id="toast-title">¡Correcto!</div>
+                <div id="toast-body">Justificación aquí.</div>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen">
+                <h2>¡Juego Terminado!</h2>
+                <p>Has evaluado todas las afirmaciones sobre la cultura cafetera.</p>
+                <div class="grade-circle" id="final-grade">5.0</div>
+                <p style="margin-bottom: 20px;" id="grade-message">¡Excelente trabajo!</p>
+                <p><strong>👇 Desliza hacia abajo para leer el artículo y realizar el taller. 👇</strong></p>
+            </div>
+        </section>
+
+        <!-- ZONA DE LECTURA (SIEMPRE VISIBLE DEBAJO DEL JUEGO) -->
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>La Cadena del Café: De la Tierra a la Taza</h2>
+                <p>El Paisaje Cultural Cafetero (PCC) de Colombia, reconocido como Patrimonio de la Humanidad, no es solo un conjunto de hermosas montañas verdes. Es un tejido vivo de tradiciones, arquitectura adaptada al entorno y, sobre todo, un trabajo agrícola que forjó la identidad de toda una región. Para comprender el café que llega a nuestras mesas, debemos emprender un viaje que inicia en la tierra y culmina en la taza, identificando los oficios tradicionales que hacen esto posible.</p>
+
+                <h3>1. La Siembra y el Cultivo: El nacimiento</h3>
+                <p>Todo comienza en los "almácigos", donde las semillas germinan hasta convertirse en pequeñas plantas llamadas "chapolas". Estas son trasplantadas cuidadosamente a las empinadas laderas de las cordilleras. El cultivo en ladera es uno de los atributos principales del PCC, requiriendo un trabajo manual intensivo, ya que el relieve montañoso impide el uso de maquinaria pesada. Aquí, la conexión del agricultor con la tierra es profunda, marcando el inicio de un proceso artesanal.</p>
+
+                <h3>2. La Recolección: El arte de las manos</h3>
+                <p>La etapa de recolección es una de las más emblemáticas. A diferencia de otros países con topografías planas donde se usan máquinas, en Colombia es un proceso 100% manual. Aquí entra en escena el oficio del <strong>chapolero o chapolera</strong>. No cualquier persona puede hacerlo bien; requiere una vista aguda y agilidad manual para seleccionar y arrancar de la rama únicamente los granos rojos (maduros), dejando los verdes intactos para futuras pasadas. Las mujeres han desempeñado un papel protagónico histórico en esta labor, convirtiendo a la "chapolera" en un ícono de laboriosidad y fortaleza.</p>
+
+                <h3>3. El Beneficio y Secado: Transformando el fruto</h3>
+                <p>El mismo día que se recolecta, el café debe ser "beneficiado". Este proceso incluye:
+                    <ul>
+                        <li><strong>Despulpado:</strong> Separar el grano de la cáscara rojiza (pulpa) mediante una máquina manual o de motor.</li>
+                        <li><strong>Fermentación:</strong> El grano reposa en tanques para descomponer el mucílago (una capa babosa que lo recubre).</li>
+                        <li><strong>Lavado:</strong> Se usa agua limpia para dejar el grano completamente liso y listo para secar.</li>
+                    </ul>
+                </p>
+                <p>Luego viene el secado. Para aprovechar el sol en una región de clima variable, la arquitectura cafetera desarrolló las <strong>elbas</strong> (o carros secadores): plataformas de madera con techos de zinc corredizos, ubicadas sobre las casas. Cuando llueve, el techo cubre el café; cuando hace sol, se desliza para dejar los granos expuestos. Es una muestra perfecta de adaptación humana al medio ambiente.</p>
+
+                <h3>4. Trilla, Tostión y Catación: En busca de la excelencia</h3>
+                <p>Una vez seco (café pergamino), el grano es llevado a la trilladora para quitarle la cáscara seca, obteniendo el "café almendra" o café verde, que es el que se exporta. Sin embargo, el sabor real nace con el oficio del <strong>tostador</strong>. Mediante la aplicación precisa de calor, el tostador transforma el grano verde en el grano marrón aromático, desarrollando todos sus sabores complejos. Finalmente, el <strong>catador</strong>, un experto con sentidos altamente entrenados, evalúa la calidad de la bebida, garantizando que cumpla con los estándares mundiales.</p>
+
+                <h3>5. El Transporte: La fuerza de la montaña</h3>
+                <p>Históricamente, mover el café desde las fincas aisladas hasta los centros de comercio fue una proeza. Este fue el reino de los <strong>arrieros</strong> y sus mulas, personajes legendarios que abrían caminos a machete. Hoy en día, su legado es continuado por los tradicionales jeeps "Willys", capaces de sortear las trochas más difíciles, cargados hasta el tope de bultos, plátano y pasajeros.</p>
+
+                <p><strong>Conclusión:</strong> El trabajo agrícola en el suelo cafetero no es solo una actividad económica; es la base de la identidad de la región. Cada taza de café contiene el esfuerzo, la sabiduría y la tradición de múltiples oficios que han sobrevivido y se han perfeccionado a lo largo de las generaciones.</p>
+
+                <!-- TALLER DE REPASO -->
+                <div class="workshop-box">
+                    <h3>Taller de Repaso</h3>
+                    <div class="workshop-instruction">
+                        ¡ATENCIÓN! Escribe el título "Taller del Café" en tu cuaderno y resuelve allí cada una de las siguientes actividades.
+                    </div>
+                    
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="task-type">✏️ Responde Directamente</span>
+                            <strong>1.</strong> ¿Cuáles son las tres etapas exactas que conforman el proceso de "beneficio" del café, según el texto?
+                        </li>
+                        <li>
+                            <span class="task-type">🎨 Ilustra</span>
+                            <strong>2.</strong> Dibuja una finca cafetera tradicional que incluya en el techo de su casa una "elba" o carro secador, e indica mediante flechas cómo funciona su techo corredizo.
+                        </li>
+                        <li>
+                            <span class="task-type">🧠 Mapa Conceptual</span>
+                            <strong>3.</strong> Crea un esquema conectando los siguientes oficios tradicionales: Chapolero, Tostador, Catador y Arriero. Indica debajo de cada uno cuál es su función principal en la cadena.
+                        </li>
+                        <li>
+                            <span class="task-type">🔍 Analiza</span>
+                            <strong>4.</strong> A partir de la lectura, ¿por qué en el Paisaje Cultural Cafetero la recolección se realiza obligatoriamente de forma manual y no con grandes tractores automatizados?
+                        </li>
+                        <li>
+                            <span class="task-type">✏️ Responde Directamente</span>
+                            <strong>5.</strong> Define con tus palabras qué es el "café almendra" y explica en qué momento específico del proceso se obtiene este tipo de grano.
+                        </li>
+                        <li>
+                            <span class="task-type">🎨 Ilustra</span>
+                            <strong>6.</strong> Dibuja al histórico "arriero" colombiano con su mula de carga. Escribe una pequeña burbuja de diálogo junto a él explicando por qué su trabajo fue fundamental en el pasado.
+                        </li>
+                        <li>
+                            <span class="task-type">🧠 Mapa Mental</span>
+                            <strong>7.</strong> Elabora un mapa mental grande sobre TODO el proceso del café. El centro del mapa debe ser "El Grano de Café" y las ramas deben ser las 5 etapas principales (Siembra, Recolección, Beneficio/Secado, Trilla/Tostión, Transporte).
+                        </li>
+                        <li>
+                            <span class="task-type">🔍 Analiza</span>
+                            <strong>8.</strong> Reflexión crítica: ¿Qué ocurriría con el trabajo del tostador y del catador si durante la recolección, el chapolero decide arrancar granos verdes y maduros al mismo tiempo sin seleccionarlos?
+                        </li>
+                        <li>
+                            <span class="task-type">✏️ Responde Directamente</span>
+                            <strong>9.</strong> El texto menciona dos oficios que suceden después de la trilla: el tostador y el catador. ¿Cuál es la diferencia exacta entre el trabajo de ambos?
+                        </li>
+                        <li>
+                            <span class="task-type">🔍 Analiza y Reflexiona</span>
+                            <strong>10.</strong> El texto concluye afirmando que "el trabajo agrícola del suelo cafetero es la base fundamental de la identidad regional". Escribe un párrafo de 5 a 6 líneas explicando qué significa esta frase para ti y cómo crees que impacta a la gente de la región.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Base de datos de afirmaciones (8 a 12 items)
+        const allStatements = [
+            {
+                id: 1,
+                text: "El beneficio del café incluye despulpar, fermentar y lavar los granos recién cosechados.",
+                isTrue: true,
+                justification: "¡Correcto! Estas son las tres etapas esenciales para limpiar el grano recién cogido sin afectar su calidad."
+            },
+            {
+                id: 2,
+                text: "Cualquier persona, sin experiencia, puede ser un recolector (chapolero) y hacerlo a gran velocidad.",
+                isTrue: false,
+                justification: "Falso. Es un oficio tradicional que requiere gran habilidad visual y manual para escoger solo los granos rojos y no dañar el árbol."
+            },
+            {
+                id: 3,
+                text: "Las 'elbas' o carros secadores en los techos son adaptaciones arquitectónicas de las fincas para aprovechar el sol.",
+                isTrue: true,
+                justification: "¡Exacto! Son techos corredizos diseñados ingeniosamente para secar el café y protegerlo rápidamente si llueve."
+            },
+            {
+                id: 4,
+                text: "El trabajo en los cafetales del PCC se realiza principalmente con grandes máquinas automatizadas.",
+                isTrue: false,
+                justification: "Falso. Debido a las empinadas montañas, casi todo el trabajo (como la recolección) es estrictamente manual y artesanal."
+            },
+            {
+                id: 5,
+                text: "La 'chapolera' es un símbolo histórico de la participación fundamental de la mujer en la recolección del café.",
+                isTrue: true,
+                justification: "¡Verdad! Las mujeres han sido clave en la recolección y selección, convirtiendo a la chapolera en un orgullo cultural."
+            },
+            {
+                id: 6,
+                text: "La tostión solo sirve para cambiarle el color al grano, no afecta su sabor final en la taza.",
+                isTrue: false,
+                justification: "Totalmente falso. El oficio del tostador es mágico: mediante el calor, despierta los aromas y sabores complejos ocultos en el grano verde."
+            },
+            {
+                id: 7,
+                text: "Los 'arrieros' y sus mulas fueron vitales para transportar el café por las montañas antes de las carreteras.",
+                isTrue: true,
+                justification: "¡Así es! Fueron los pioneros en mover la economía cafetera por caminos escarpados, cimentando la historia de la región."
+            },
+            {
+                id: 8,
+                text: "Apenas se recolecta el grano rojo del árbol, ya se puede moler y preparar inmediatamente en agua.",
+                isTrue: false,
+                justification: "Falso. El grano debe pasar por un largo proceso: despulparse, lavarse, secarse, trillarse y tostarse antes de ser molido."
+            },
+            {
+                id: 9,
+                text: "La 'trilla' es el proceso en el que se le quita la cáscara seca al grano para dejarlo en forma de 'almendra'.",
+                isTrue: true,
+                justification: "¡Verdad! Este paso remueve el pergamino, dejando el café verde o almendra, que es el que usualmente se exporta."
+            },
+            {
+                id: 10,
+                text: "El oficio del catador es moderno y fue inventado recientemente por los supermercados de las ciudades.",
+                isTrue: false,
+                justification: "Falso. La catación es un oficio tradicional, técnico e indispensable desde hace décadas para evaluar profesionalmente la calidad del café."
+            }
+        ];
+
+        // 2. Variables de estado
+        let gameQueue = []; // Cola de cartas activas
+        let totalUniqueCards = allStatements.length;
+        let score = 0;
+        const container = document.getElementById('card-container');
+        const toast = document.getElementById('toast');
+        const resultScreen = document.getElementById('result-screen');
+
+        function initGame() {
+            // Clonar y barajar
+            gameQueue = [...allStatements].map(item => ({ ...item, firstTry: true }));
+            gameQueue.sort(() => Math.random() - 0.5);
+            score = 0;
+            renderDeck();
+        }
+
+        // 3. Renderizado del mazo (DOM)
+        function renderDeck() {
+            container.innerHTML = '';
+            
+            if (gameQueue.length === 0) {
+                showResults();
+                return;
+            }
+
+            // Renderizar desde atrás hacia adelante, así el index 0 de la cola queda arriba (z-index mayor)
+            for (let i = gameQueue.length - 1; i >= 0; i--) {
+                const cardData = gameQueue[i];
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.style.zIndex = gameQueue.length - i;
+                
+                // Efecto de profundidad visual para cartas de atrás
+                if (i > 0) {
+                    const scale = 1 - (i * 0.05);
+                    const translateY = i * 6; // Desplazamiento sutil para mantenerlas compactas
+                    cardEl.style.transform = `scale(${scale}) translateY(${translateY}px)`;
+                    cardEl.style.opacity = 1 - (i * 0.15); // Más transparencia hacia atrás
+                    if(i > 2) cardEl.style.opacity = 0; // Solo mostrar visualmente 2 cartas detrás
+                }
+
+                cardEl.innerHTML = `
+                    <div class="card-progress">Quedan: ${gameQueue.length}</div>
+                    <div class="card-text">${cardData.text}</div>
+                `;
+
+                // Solo la carta superior (i === 0) tiene interactividad
+                if (i === 0) {
+                    attachSwipeEvents(cardEl, cardData);
+                }
+
+                container.appendChild(cardEl);
+            }
+        }
+
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        const SWIPE_THRESHOLD = 100; // Pixeles necesarios para validar el swipe
+
+        function attachSwipeEvents(cardEl, cardData) {
+            cardEl.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0 && e.pointerType === 'mouse') return; // Solo clic izquierdo
+                isDragging = true;
+                startX = e.clientX;
+                cardEl.style.transition = 'none'; // Quitar transición para arrastre suave
+                cardEl.setPointerCapture(e.pointerId);
+            });
+
+            cardEl.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                currentX = e.clientX;
+                const deltaX = currentX - startX;
+                const rotate = deltaX * 0.05; // Rotación leve basada en arrastre
+                cardEl.style.transform = `translate(${deltaX}px, 0) rotate(${rotate}deg)`;
+                
+                // Opacidad indicativa (Opcional visual)
+                if(deltaX > SWIPE_THRESHOLD) cardEl.style.borderColor = 'var(--success)';
+                else if (deltaX < -SWIPE_THRESHOLD) cardEl.style.borderColor = 'var(--danger)';
+                else cardEl.style.borderColor = '#EFEBE1';
+            });
+
+            cardEl.addEventListener('pointerup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                cardEl.releasePointerCapture(e.pointerId);
+                cardEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                
+                const deltaX = currentX - startX;
+                
+                if (deltaX > SWIPE_THRESHOLD) {
+                    // Swipe Derecha (VERDAD)
+                    handleAnswer(cardData, true, cardEl, deltaX);
+                } else if (deltaX < -SWIPE_THRESHOLD) {
+                    // Swipe Izquierda (FALSO)
+                    handleAnswer(cardData, false, cardEl, deltaX);
+                } else {
+                    // Volver al centro
+                    cardEl.style.transform = `translate(0px, 0) rotate(0deg)`;
+                    cardEl.style.borderColor = '#EFEBE1';
+                }
+                
+                // Reiniciar variables
+                startX = 0;
+                currentX = 0;
+            });
+            
+            cardEl.addEventListener('pointercancel', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                cardEl.style.transition = 'transform 0.3s ease';
+                cardEl.style.transform = `translate(0px, 0) rotate(0deg)`;
+                cardEl.style.borderColor = '#EFEBE1';
+            });
+        }
+
+        function handleAnswer(cardData, userGuess, cardEl, deltaX = 0) {
+            // Animar carta fuera de la pantalla
+            const direction = deltaX > 0 ? 1 : (deltaX < 0 ? -1 : (userGuess ? 1 : -1));
+            const screenWidth = window.innerWidth;
+            cardEl.style.transform = `translate(${direction * screenWidth}px, 0) rotate(${direction * 30}deg)`;
+            cardEl.style.opacity = 0;
+            
+            // Evaluar respuesta
+            const isCorrect = (userGuess === cardData.isTrue);
+            
+            // Deshabilitar botones temporalmente
+            document.getElementById('btn-swipe-left').disabled = true;
+            document.getElementById('btn-swipe-right').disabled = true;
+
+            setTimeout(() => {
+                showToast(isCorrect, cardData.justification);
+                
+                if (isCorrect) {
+                    // Puntaje solo si acertó en el primer intento
+                    if (cardData.firstTry) score++;
+                    // Sacar de la cola
+                    gameQueue.shift();
+                } else {
+                    // Si falla, se marca como ya intentada (no dará punto la próxima vez)
+                    // y se va al final de la cola (fondo del mazo)
+                    const failedCard = gameQueue.shift();
+                    failedCard.firstTry = false;
+                    gameQueue.push(failedCard);
+                }
+                
+                // Esperar a que el toast casi desaparezca para renderizar la siguiente
+                setTimeout(() => {
+                    renderDeck();
+                    document.getElementById('btn-swipe-left').disabled = false;
+                    document.getElementById('btn-swipe-right').disabled = false;
+                }, 2000); // 2 segundos de lectura del toast
+
+            }, 300); // Esperar que termine la animación de volar
+        }
+
+        function showToast(isCorrect, text) {
+            const toastTitle = document.getElementById('toast-title');
+            const toastBody = document.getElementById('toast-body');
+            
+            toastTitle.innerText = isCorrect ? "¡Correcto! ✅" : "¡Incorrecto! ❌";
+            toastTitle.style.color = isCorrect ? "var(--success)" : "var(--danger)";
+            toast.style.borderTopColor = isCorrect ? "var(--success)" : "var(--danger)";
+            toastBody.innerText = text;
+            
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function showResults() {
+            // Calculo de nota escala 1.0 a 5.0
+            // Formula: Nota = (Puntaje / Total) * 4.0 + 1.0
+            const rawGrade = (score / totalUniqueCards) * 4.0 + 1.0;
+            const finalGrade = rawGrade.toFixed(1);
+            
+            document.getElementById('final-grade').innerText = finalGrade;
+            
+            let message = "";
+            if (rawGrade >= 4.5) message = "¡Excelente! Eres un experto en cultura cafetera.";
+            else if (rawGrade >= 3.5) message = "¡Muy bien! Tienes bases sólidas sobre el café.";
+            else if (rawGrade >= 3.0) message = "Aprobaste, pero asegúrate de leer bien el taller de abajo.";
+            else message = "Debes repasar. Lee el artículo de abajo con mucha atención.";
+            
+            document.getElementById('grade-message').innerText = message;
+            resultScreen.classList.add('show');
+        }
+
+        document.getElementById('btn-swipe-left').addEventListener('click', () => {
+            if (gameQueue.length === 0) return;
+            const cardEl = container.querySelector('.card:last-child'); // El último anexado es el de arriba
+            if(cardEl) handleAnswer(gameQueue[0], false, cardEl, -300);
+        });
+
+        document.getElementById('btn-swipe-right').addEventListener('click', () => {
+            if (gameQueue.length === 0) return;
+            const cardEl = container.querySelector('.card:last-child');
+            if(cardEl) handleAnswer(gameQueue[0], true, cardEl, 300);
+        });
+
+        // Iniciar el juego al cargar la página
+        window.addEventListener('DOMContentLoaded', initGame);
+
+    </script>
+</body>
+</html>

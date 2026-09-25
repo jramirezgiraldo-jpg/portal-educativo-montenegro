@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="Portal Educativo Interactivo del Instituto Montenegro. Catálogo de 68 actividades pedagógicas, juegos, OVAs y laboratorios virtuales para ciencias naturales y saberes transversales.">
+    <meta name="theme-color" content="#0f172a">
+    <title>Instituto Montenegro | Portal de Actividades Interactivas</title>
+    
+    <style>
+        /* ==========================================================================
+           VARIABLES DE DISEÑO Y TEMAS (MODO OSCURO / CLARO)
+           ========================================================================== */
+        :root {
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            
+            /* Paleta Modo Oscuro (Por defecto) */
+            --bg-base: #090d16;
+            --bg-surface: #111827;
+            --bg-card: #182234;
+            --bg-card-hover: #1f2d45;
+            --bg-glass: rgba(17, 24, 39, 0.85);
+            --border-subtle: #243248;
+            --border-focus: #6366f1;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: rgba(99, 102, 241, 0.15);
+            
+            --accent-blue: #38bdf8;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-purple: #a855f7;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.25);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 24px;
+            --radius-pill: 9999px;
+            
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-base: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --bg-glass: rgba(255, 255, 255, 0.9);
+            --border-subtle: #e2e8f0;
+            --border-focus: #4f46e5;
+            
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: rgba(79, 70, 229, 0.1);
+            
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 12px 20px -4px rgba(0, 0, 0, 0.1);
+            --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
+        }
+
+        /* ==========================================================================
+           RESETEO BASE Y TIPOGRAFÍA
+           ========================================================================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            transition: background-color var(--transition-normal), color var(--transition-normal);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.25rem;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            background: none;
+        }
+
+        /* ==========================================================================
+           BARRA DE NAVEGACIÓN SUPERIOR (GLASSMORPHISM)
+           ========================================================================== */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0.85rem 0;
+            transition: border-color var(--transition-normal);
+        }
+
+        .navbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+            flex-shrink: 0;
+        }
+
+        .brand-logo svg {
+            width: 26px;
+            height: 26px;
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .brand-text h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            color: var(--text-primary);
+        }
+
+        .brand-text span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: block;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            min-width: 44px;
+            min-height: 44px;
+            padding: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+        }
+
+        .btn-icon:hover, .btn-icon:focus-visible {
+            color: var(--text-primary);
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* ==========================================================================
+           HERO SECTION & BENTO HIGHLIGHTS
+           ========================================================================== */
+        .hero {
+            padding: 2rem 0 1.5rem;
+        }
+
+        .bento-header {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 900px) {
+            .bento-header {
+                grid-template-columns: 1.6fr 1fr;
+            }
+        }
+
+        .bento-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+        }
+
+        .bento-box:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: var(--shadow-md);
+        }
+
+        .bento-welcome {
+            background: linear-gradient(145deg, var(--bg-card) 0%, rgba(99, 102, 241, 0.08) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.35rem 0.85rem;
+            border-radius: var(--radius-pill);
+            background-color: var(--primary-light);
+            color: var(--primary);
+            width: fit-content;
+            margin-bottom: 0.85rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .badge-pill .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .hero-title {
+            font-size: clamp(1.5rem, 3.5vw, 2.3rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 0.65rem;
+            letter-spacing: -0.025em;
+        }
+
+        .hero-title span {
+            background: linear-gradient(120deg, #6366f1 0%, #38bdf8 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+            max-width: 65ch;
+        }
+
+        .hero-stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-num {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .bento-offline {
+            background: linear-gradient(145deg, var(--bg-card) 0%, rgba(16, 185, 129, 0.08) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .offline-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .offline-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-emerald);
+            flex-shrink: 0;
+        }
+
+        .offline-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        .offline-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .offline-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+        }
+
+        .btn-download-all {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 0.85rem 1.25rem;
+            min-height: 52px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+            transition: all var(--transition-fast);
+            text-align: center;
+        }
+
+        .btn-download-all:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+            transform: translateY(-2px);
+        }
+
+        .btn-download-all svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        /* ==========================================================================
+           SECCIÓN DE BÚSQUEDA Y FILTROS EN TIEMPO REAL
+           ========================================================================== */
+        .controls-section {
+            position: sticky;
+            top: 70px;
+            z-index: 90;
+            background-color: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            margin-bottom: 1.75rem;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-normal);
+        }
+
+        .search-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-bottom: 0.85rem;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-box svg.search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 2;
+            pointer-events: none;
+            transition: stroke var(--transition-fast);
+        }
+
+        .search-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 2.75rem 0 2.85rem;
+            background-color: var(--bg-surface);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .search-input:focus + svg.search-icon {
+            stroke: var(--primary);
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--text-muted);
+            background-color: transparent;
+            transition: all var(--transition-fast);
+        }
+
+        .search-clear.active {
+            display: flex;
+        }
+
+        .search-clear:hover {
+            background-color: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .search-clear svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2.2;
+        }
+
+        .type-select-wrapper {
+            position: relative;
+            min-width: 180px;
+        }
+
+        .type-select {
+            width: 100%;
+            height: 48px;
+            padding: 0 2.25rem 0 1rem;
+            background-color: var(--bg-surface);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            appearance: none;
+            outline: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .type-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .select-chevron {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 2;
+            pointer-events: none;
+        }
+
+        .filter-chips-container {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.35rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-subtle) transparent;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-chips-container::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .filter-chips-container::-webkit-scrollbar-thumb {
+            background-color: var(--border-subtle);
+            border-radius: 4px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            white-space: nowrap;
+            padding: 0.45rem 0.95rem;
+            min-height: 40px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-pill);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            flex-shrink: 0;
+        }
+
+        .chip:hover {
+            color: var(--text-primary);
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+        .chip.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+        }
+
+        .chip-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            font-size: 0.7rem;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: 700;
+        }
+
+        .chip:not(.active) .chip-count {
+            background-color: var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        .results-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .results-count strong {
+            color: var(--text-primary);
+        }
+
+        /* ==========================================================================
+           BENTO GRID DE ACTIVIDADES
+           ========================================================================== */
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.35rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .activity-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+        }
+
+        .activity-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(99, 102, 241, 0.45);
+        }
+
+        .activity-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: var(--card-color, var(--primary));
+            opacity: 0.85;
+        }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .card-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .badge-category {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-sm);
+            color: #ffffff;
+            background-color: var(--card-color, var(--primary));
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+
+        .badge-type {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-sm);
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .badge-type svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        .card-size {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .card-body {
+            flex: 1;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 1.08rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.35;
+            margin-bottom: 0.45rem;
+            letter-spacing: -0.01em;
+        }
+
+        .card-h1 {
+            font-size: 0.82rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 0.45rem;
+            line-height: 1.3;
+        }
+
+        .card-desc {
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .btn-action-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            height: 48px;
+            padding: 0 0.85rem;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--card-color, #6366f1) 0%, #4338ca 100%);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all var(--transition-fast);
+            text-align: center;
+        }
+
+        .btn-action-primary:hover {
+            filter: brightness(1.12);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-action-primary svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        .btn-action-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            height: 48px;
+            padding: 0 0.85rem;
+            border-radius: var(--radius-md);
+            background-color: var(--bg-surface);
+            border: 1.5px solid var(--border-subtle);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all var(--transition-fast);
+            text-align: center;
+        }
+
+        .btn-action-download:hover {
+            background-color: var(--bg-card-hover);
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-action-download svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            padding: 4rem 1.5rem;
+            text-align: center;
+            background-color: var(--bg-card);
+            border: 2px dashed var(--border-subtle);
+            border-radius: var(--radius-xl);
+            display: none;
+        }
+
+        .empty-state.active {
+            display: block;
+        }
+
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.25rem;
+            color: var(--text-muted);
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            max-width: 45ch;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-reset {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            height: 44px;
+            padding: 0 1.25rem;
+            background-color: var(--primary);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .btn-reset:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* ==========================================================================
+           MODAL DE INSTRUCCIONES OFFLINE & ACCESIBILIDAD
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-dialog {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            max-width: 580px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.95);
+            transition: transform var(--transition-bounce);
+        }
+
+        .modal-overlay.active .modal-dialog {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+            border-color: var(--primary);
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-step {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .step-content p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        /* ==========================================================================
+           PIE DE PÁGINA (FOOTER)
+           ========================================================================== */
+        footer {
+            margin-top: auto;
+            background-color: var(--bg-surface);
+            border-top: 1px solid var(--border-subtle);
+            padding: 2.5rem 0 2rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-grid {
+                grid-template-columns: 2fr 1fr 1fr;
+            }
+        }
+
+        .footer-brand h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-brand p {
+            line-height: 1.5;
+            max-width: 45ch;
+            color: var(--text-muted);
+        }
+
+        .footer-col h4 {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+            margin-bottom: 0.85rem;
+        }
+
+        .footer-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-col a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        @media (min-width: 640px) {
+            .footer-bottom {
+                flex-direction: row;
+                text-align: left;
+            }
+        }
+
+        .btn-back-to-top {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 80;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .btn-back-to-top:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-3px);
+        }
+
+        .btn-back-to-top svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================================================
+         BARRA SUPERIOR DE NAVEGACIÓN
+         ========================================================================== -->
+    <header class="navbar">
+        <div class="container navbar-inner">
+            <div class="brand-container">
+                <div class="brand-logo" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(30 12 12)"></ellipse>
+                        <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(150 12 12)"></ellipse>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Instituto Montenegro</h1>
+                    <span>Portal de Aprendizaje Interactivo</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button class="btn-icon" id="btn-offline-help" title="¿Cómo usar sin internet?" aria-label="Ayuda para uso sin conexión">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </button>
+                <button class="btn-icon" id="btn-theme-toggle" title="Cambiar tema de color" aria-label="Cambiar tema claro u oscuro">
+                    <svg class="sun-icon" viewBox="0 0 24 24" style="display:none;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==========================================================================
+         HERO SECTION: BENTO HIGHLIGHTS & PAQUETE COMPLETO
+         ========================================================================== -->
+    <main class="container">
+        <section class="hero">
+            <div class="bento-header">
+                <div class="bento-box bento-welcome">
+                    <div>
+                        <div class="badge-pill">
+                            <span class="pulse-dot"></span>
+                            Periodo 4 &bull; Saberes Integrados
+                        </div>
+                        <h2 class="hero-title">Espacio Didáctico <span>Interactivo</span></h2>
+                        <p class="hero-desc">
+                            Explora simuladores, objetos virtuales de aprendizaje (OVAs), escape rooms, dinámicas de asociación y talleres interactivos diseñados para afianzar tus competencias científicas, humanísticas y artísticas.
+                        </p>
+                    </div>
+
+                    <div class="hero-stats-row">
+                        <div class="stat-item">
+                            <span class="stat-num" id="total-count-badge">68</span>
+                            <span class="stat-label">Actividades</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">8</span>
+                            <span class="stat-label">Áreas Temáticas</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">100%</span>
+                            <span class="stat-label">Autónomo Offline</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-box bento-offline">
+                    <div>
+                        <div class="offline-header">
+                            <div class="offline-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="offline-title">Paquete Completo (.zip)</h3>
+                                <p style="font-size: 0.78rem; color: var(--accent-emerald); font-weight: 700;">PESO TOTAL: ~0.94 MB</p>
+                            </div>
+                        </div>
+                        <p class="offline-desc">
+                            Descarga todas las 68 actividades interactivas en un solo archivo comprimido. Ideal para zonas rurales, colegios sin internet o para llevar en tu memoria USB.
+                        </p>
+                    </div>
+                    <a href="actividades_completas.zip" download="actividades_instituto_montenegro.zip" class="btn-download-all" id="btn-zip-download">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                            <path d="M12 12v9"></path>
+                            <path d="m8 17 4 4 4-4"></path>
+                        </svg>
+                        <span>Descargar Todo en ZIP</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             SECCIÓN DE CONTROLES: BÚSQUEDA Y FILTRADO EN TIEMPO REAL
+             ========================================================================== -->
+        <section class="controls-section" aria-label="Búsqueda y filtros">
+            <div class="search-row">
+                <div class="search-box">
+                    <input type="text" id="search-input" class="search-input" placeholder="Buscar por tema, palabra clave, concepto o grado..." autocomplete="off">
+                    <svg class="search-icon" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <button class="search-clear" id="btn-search-clear" title="Limpiar búsqueda" aria-label="Borrar texto de búsqueda">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="type-select-wrapper">
+                    <select id="type-filter" class="type-select" aria-label="Filtrar por tipo de dinámica">
+                        <option value="all">Todas las dinámicas</option>
+                        <option value="ova">Objetos Virtuales (OVA)</option>
+                        <option value="juego">Juegos y Retos Pedagógicos</option>
+                        <option value="sopa">Sopas de Letras</option>
+                        <option value="laboratorio">Laboratorios y Talleres</option>
+                        <option value="guia">Guías Interactivas</option>
+                    </select>
+                    <svg class="select-chevron" viewBox="0 0 24 24">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Chips de Áreas Temáticas -->
+            <div class="filter-chips-container" id="category-chips">
+                <button class="chip active" data-cat="all">
+                    <span>Todos</span>
+                    <span class="chip-count" id="count-all">68</span>
+                </button>
+                <button class="chip" data-cat="fisica-6">
+                    <span>⚡ Física 6°</span>
+                    <span class="chip-count" id="count-fisica-6">8</span>
+                </button>
+                <button class="chip" data-cat="fisica-7">
+                    <span>🚀 Física 7°</span>
+                    <span class="chip-count" id="count-fisica-7">8</span>
+                </button>
+                <button class="chip" data-cat="turismo">
+                    <span>☕ Turismo & PCC</span>
+                    <span class="chip-count" id="count-turismo">9</span>
+                </button>
+                <button class="chip" data-cat="etica">
+                    <span>🤝 Ética y Valores</span>
+                    <span class="chip-count" id="count-etica">8</span>
+                </button>
+                <button class="chip" data-cat="musica">
+                    <span>🎵 Música y Piano</span>
+                    <span class="chip-count" id="count-musica">8</span>
+                </button>
+                <button class="chip" data-cat="nocturno-1">
+                    <span>🌙 Nocturno I</span>
+                    <span class="chip-count" id="count-nocturno-1">10</span>
+                </button>
+                <button class="chip" data-cat="nocturno-2">
+                    <span>🔬 Nocturno II</span>
+                    <span class="chip-count" id="count-nocturno-2">13</span>
+                </button>
+                <button class="chip" data-cat="quimica">
+                    <span>⚗️ Pensar la Química</span>
+                    <span class="chip-count" id="count-quimica">4</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Meta de resultados -->
+        <div class="results-meta">
+            <span class="results-count">Mostrando <strong id="visible-count">68</strong> de <strong id="total-count">68</strong> actividades interactivas</span>
+            <span id="active-filter-label" style="font-weight: 500;">Filtro: Todas las áreas</span>
+        </div>
+
+        <!-- ==========================================================================
+             GRID BENTO DE ACTIVIDADES
+             ========================================================================== -->
+        <section class="activities-grid" id="activities-grid" aria-label="Catálogo de actividades">
+            <!-- Renderizado dinámico vía JavaScript -->
+        </section>
+
+        <!-- Estado Vacío -->
+        <div class="empty-state" id="empty-state">
+            <svg class="empty-icon" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            <h3 class="empty-title">No se encontraron actividades</h3>
+            <p class="empty-desc">No hay coincidencias para tu búsqueda o los filtros seleccionados. Intenta con otros términos o restablece la búsqueda.</p>
+            <button class="btn-reset" id="btn-reset-filters">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2.2">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                Restablecer todos los filtros
+            </button>
+        </div>
+    </main>
+
+    <!-- ==========================================================================
+         MODAL INFORMATIVO Y DE USO OFFLINE
+         ========================================================================== -->
+    <div class="modal-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="modal-help-title">
+        <div class="modal-dialog">
+            <button class="modal-close" id="btn-close-modal" aria-label="Cerrar ventana">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-help-title">¿Cómo usar estas actividades sin internet?</h3>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">
+                    Todas las actividades de este portal son 100% autónomas: no requieren conexión para funcionar ni descargar librerías externas.
+                </p>
+            </div>
+            
+            <div class="modal-step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <h4>Descarga la actividad individual o el paquete</h4>
+                    <p>Haz clic en el botón <strong>"Descargar (.html)"</strong> de cualquier actividad o pulsa <strong>"Descargar Todo en ZIP"</strong> en la cabecera.</p>
+                </div>
+            </div>
+
+            <div class="modal-step">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h4>Guárdala en tu celular, tablet o computador</h4>
+                    <p>El archivo se almacenará en tu carpeta de "Descargas" (Downloads) sin ocupar casi espacio (menos de 100 KB por actividad).</p>
+                </div>
+            </div>
+
+            <div class="modal-step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h4>Ábrela con tu navegador habitual</h4>
+                    <p>Haz doble toque o doble clic en el archivo descargado. Se abrirá al instante en Google Chrome, Microsoft Edge, Safari o Firefox, ¡incluso con el teléfono en modo avión!</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end;">
+                <button class="btn-action-primary" id="btn-modal-ok" style="width: auto; padding: 0 1.5rem;">
+                    ¡Entendido, gracias!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Volver Arriba -->
+    <button class="btn-back-to-top" id="btn-back-to-top" title="Volver arriba" aria-label="Volver arriba de la página">
+        <svg viewBox="0 0 24 24">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
+
+    <!-- ==========================================================================
+         PIE DE PÁGINA INSTITUCIONAL
+         ========================================================================== -->
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <h3>Instituto Montenegro</h3>
+                <p>Plataforma educativa digital de libre acceso orientada a potenciar el pensamiento científico, tecnológico, artístico y reflexivo en nuestra comunidad estudiantil.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Áreas Incluidas</h4>
+                <ul>
+                    <li>Física 6° y 7°</li>
+                    <li>Turismo y Paisaje Cafetero</li>
+                    <li>Ética y Convivencia</li>
+                    <li>Educación Musical</li>
+                    <li>Ciencias Nocturno CLEI</li>
+                    <li>Pensar la Química</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Despliegue & Código</h4>
+                <ul>
+                    <li><a href="https://github.com" target="_blank" rel="noopener noreferrer">Repositorio GitHub</a></li>
+                    <li><a href="https://render.com" target="_blank" rel="noopener noreferrer">Alojado en Render Static</a></li>
+                    <li><a href="actividades_completas.zip" download>Descargar Paquete Offline (.zip)</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <span>&copy; 2026 Instituto Montenegro &bull; Recursos Pedagógicos Abiertos.</span>
+            <span>Diseñado con HTML5 Semántico, CSS3 Moderno y Vanilla JavaScript</span>
+        </div>
+    </footer>
+
+    <!-- Cargar catálogo de datos oficial -->
+    <script src="actividades_data.js"></script>
+
+    <!-- ==========================================================================
+         LÓGICA JAVASCRIPT DEL PORTAL (VANILLA JS, SIN DEPENDENCIAS)
+         ========================================================================== -->
+    <script>
+        (function() {
+            'use strict';
+
+            const activities = window.ACTIVIDADES_DATA || [];
+
+            const gridEl = document.getElementById('activities-grid');
+            const searchInput = document.getElementById('search-input');
+            const searchClearBtn = document.getElementById('btn-search-clear');
+            const typeFilterSelect = document.getElementById('type-filter');
+            const categoryChipsContainer = document.getElementById('category-chips');
+            const visibleCountEl = document.getElementById('visible-count');
+            const totalCountEl = document.getElementById('total-count');
+            const activeFilterLabel = document.getElementById('active-filter-label');
+            const emptyStateEl = document.getElementById('empty-state');
+            const resetFiltersBtn = document.getElementById('btn-reset-filters');
+            
+            const themeToggleBtn = document.getElementById('btn-theme-toggle');
+            const sunIcon = themeToggleBtn.querySelector('.sun-icon');
+            const moonIcon = themeToggleBtn.querySelector('.moon-icon');
+            const helpModal = document.getElementById('help-modal');
+            const btnOfflineHelp = document.getElementById('btn-offline-help');
+            const btnCloseModal = document.getElementById('btn-close-modal');
+            const btnModalOk = document.getElementById('btn-modal-ok');
+            const btnBackToTop = document.getElementById('btn-back-to-top');
+
+            let currentSearch = '';
+            let currentCategory = 'all';
+            let currentType = 'all';
+
+            function initTheme() {
+                const savedTheme = localStorage.getItem('im_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+                setTheme(savedTheme);
+            }
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('im_theme', theme);
+                if (theme === 'light') {
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                } else {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                }
+            }
+
+            themeToggleBtn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                setTheme(current === 'light' ? 'dark' : 'light');
+            });
+
+            function openHelpModal() {
+                helpModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeHelpModal() {
+                helpModal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            btnOfflineHelp.addEventListener('click', openHelpModal);
+            btnCloseModal.addEventListener('click', closeHelpModal);
+            btnModalOk.addEventListener('click', closeHelpModal);
+            helpModal.addEventListener('click', (e) => {
+                if (e.target === helpModal) closeHelpModal();
+            });
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 400) {
+                    btnBackToTop.classList.add('visible');
+                } else {
+                    btnBackToTop.classList.remove('visible');
+                }
+            });
+
+            btnBackToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            function getTypeIconSvg(typeKey) {
+                switch(typeKey) {
+                    case 'juego':
+                        return `<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line></svg>`;
+                    case 'sopa':
+                        return `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>`;
+                    case 'ova':
+                        return `<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`;
+                    case 'laboratorio':
+                        return `<svg viewBox="0 0 24 24"><path d="M10 2v7.31L4.1 19.34A2 2 0 0 0 5.8 22h12.4a2 2 0 0 0 1.7-2.66L14 9.31V2"></path><line x1="8.5" y1="2" x2="15.5" y2="2"></line><line x1="14" y1="9" x2="10" y2="9"></line></svg>`;
+                    default:
+                        return `<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
+                }
+            }
+
+            function normalizeStr(str) {
+                return (str || '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+            }
+
+            function renderActivities(items) {
+                gridEl.innerHTML = '';
+
+                if (items.length === 0) {
+                    emptyStateEl.classList.add('active');
+                    visibleCountEl.textContent = '0';
+                    return;
+                }
+
+                emptyStateEl.classList.remove('active');
+                visibleCountEl.textContent = items.length;
+
+                const fragment = document.createDocumentFragment();
+
+                items.forEach(item => {
+                    const card = document.createElement('article');
+                    card.className = 'activity-card';
+                    card.style.setProperty('--card-color', item.themeColor || '#6366f1');
+
+                    const safeTitle = escapeHtml(item.title);
+                    const safeH1 = item.h1 && item.h1 !== item.title ? `<div class="card-h1">${escapeHtml(item.h1)}</div>` : '';
+                    const safeDesc = escapeHtml(item.desc);
+                    const safeArea = escapeHtml(item.area);
+                    const safeType = escapeHtml(item.type);
+                    const typeIcon = getTypeIconSvg(item.typeKey);
+
+                    card.innerHTML = `
+                        <div>
+                            <div class="card-top">
+                                <div class="card-badges">
+                                    <span class="badge-category">${safeArea}</span>
+                                    <span class="badge-type">
+                                        ${typeIcon}
+                                        ${safeType}
+                                    </span>
+                                </div>
+                                <span class="card-size">${item.sizeKB} KB</span>
+                            </div>
+
+                            <div class="card-body">
+                                <h3 class="card-title">${safeTitle}</h3>
+                                ${safeH1}
+                                <p class="card-desc">${safeDesc}</p>
+                            </div>
+                        </div>
+
+                        <div class="card-actions">
+                            <a href="${item.path}" target="_blank" rel="noopener noreferrer" class="btn-action-primary" title="Abrir y desarrollar actividad en nueva pestaña">
+                                <svg viewBox="0 0 24 24">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                <span>Iniciar</span>
+                            </a>
+                            <a href="${item.path}" download="${item.fileName}" class="btn-action-download" title="Descargar archivo HTML autónomo para uso offline">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>Descargar</span>
+                            </a>
+                        </div>
+                    `;
+
+                    fragment.appendChild(card);
+                });
+
+                gridEl.appendChild(fragment);
+            }
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, m => map[m]);
+            }
+
+            function filterData() {
+                const normSearch = normalizeStr(currentSearch);
+
+                const filtered = activities.filter(item => {
+                    if (currentCategory !== 'all' && item.categoryKey !== currentCategory) {
+                        return false;
+                    }
+
+                    if (currentType !== 'all') {
+                        if (currentType === 'juego' && item.typeKey !== 'juego') return false;
+                        if (currentType === 'ova' && item.typeKey !== 'ova') return false;
+                        if (currentType === 'sopa' && item.typeKey !== 'sopa') return false;
+                        if (currentType === 'laboratorio' && item.typeKey !== 'laboratorio') return false;
+                        if (currentType === 'guia' && item.typeKey !== 'guia') return false;
+                    }
+
+                    if (normSearch) {
+                        const hayMatch = 
+                            normalizeStr(item.title).includes(normSearch) ||
+                            normalizeStr(item.h1).includes(normSearch) ||
+                            normalizeStr(item.desc).includes(normSearch) ||
+                            normalizeStr(item.area).includes(normSearch) ||
+                            normalizeStr(item.type).includes(normSearch) ||
+                            normalizeStr(item.fileName).includes(normSearch);
+                        if (!hayMatch) return false;
+                    }
+
+                    return true;
+                });
+
+                renderActivities(filtered);
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value.trim();
+                if (currentSearch.length > 0) {
+                    searchClearBtn.classList.add('active');
+                } else {
+                    searchClearBtn.classList.remove('active');
+                }
+                filterData();
+            });
+
+            searchClearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                currentSearch = '';
+                searchClearBtn.classList.remove('active');
+                searchInput.focus();
+                filterData();
+            });
+
+            typeFilterSelect.addEventListener('change', (e) => {
+                currentType = e.target.value;
+                filterData();
+            });
+
+            categoryChipsContainer.addEventListener('click', (e) => {
+                const chip = e.target.closest('.chip');
+                if (!chip) return;
+
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+
+                currentCategory = chip.getAttribute('data-cat');
+                const catSpan = chip.querySelector('span:first-child');
+                activeFilterLabel.textContent = `Filtro: ${catSpan ? catSpan.textContent : 'Todas'}`;
+
+                filterData();
+            });
+
+            resetFiltersBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                currentSearch = '';
+                searchClearBtn.classList.remove('active');
+
+                typeFilterSelect.value = 'all';
+                currentType = 'all';
+
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                const defaultChip = document.querySelector('.chip[data-cat="all"]');
+                if (defaultChip) defaultChip.classList.add('active');
+                currentCategory = 'all';
+                activeFilterLabel.textContent = 'Filtro: Todas las áreas';
+
+                filterData();
+            });
+
+            function initMetrics() {
+                totalCountEl.textContent = activities.length;
+                const totalBadge = document.getElementById('total-count-badge');
+                if (totalBadge) totalBadge.textContent = activities.length;
+
+                const counts = {
+                    'all': activities.length,
+                    'fisica-6': 0,
+                    'fisica-7': 0,
+                    'turismo': 0,
+                    'etica': 0,
+                    'musica': 0,
+                    'nocturno-1': 0,
+                    'nocturno-2': 0,
+                    'quimica': 0
+                };
+
+                activities.forEach(item => {
+                    if (counts[item.categoryKey] !== undefined) {
+                        counts[item.categoryKey]++;
+                    }
+                });
+
+                for (const [key, val] of Object.entries(counts)) {
+                    const el = document.getElementById(`count-${key}`);
+                    if (el) el.textContent = val;
+                }
+            }
+
+            initTheme();
+            initMetrics();
+            renderActivities(activities);
+
+        })();
+    </script>
+</body>
+</html>

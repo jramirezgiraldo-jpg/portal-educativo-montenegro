@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Meta viewport para responsividad y control táctil -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Estación de Aprendizaje: La constante gravitatoria (g)</title>
+    
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --text-color: #0f172a;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #64748b;
+            --success: #10b981;
+            --card-bg: #ffffff;
+            --border: #cbd5e1;
+            --highlight: #e0e7ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            touch-action: none; /* CRÍTICO para evitar scroll y zoom accidental al arrastrar */
+            user-select: none;
+        }
+
+        /* Permitir selección de texto solo en la zona de lectura */
+        #zona-lectura, #zona-lectura * {
+            user-select: text;
+            touch-action: auto;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* =========================================
+           ZONA DE JUEGO INTERACTIVO (SOPA DE LETRAS)
+           ========================================= */
+        #zona-juego {
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--border);
+            padding: clamp(1rem, 3vw, 2rem);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 750px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: clamp(13px, 2.5vw, 16px);
+            font-weight: 600;
+            color: var(--secondary);
+            background: #f8fafc;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .instructions {
+            background-color: #eef2ff;
+            color: #3730a3;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: clamp(13px, 2.8vw, 15px);
+            border: 1px solid #c7d2fe;
+            font-weight: 500;
+        }
+
+        .board-and-words {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .board-and-words {
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: center;
+            }
+        }
+
+        /* Cuadrícula 15x15 */
+        .wordsearch-grid {
+            display: grid;
+            grid-template-columns: repeat(15, minmax(0, 1fr));
+            gap: 2px;
+            background-color: #94a3b8;
+            padding: 4px;
+            border-radius: 8px;
+            max-width: 480px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1; /* CRÍTICO: Celdas cuadradas perfectas */
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(10px, 2.2vw, 15px);
+            font-weight: bold;
+            color: #1e293b;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: background-color 0.1s, color 0.1s;
+        }
+
+        .grid-cell.selected {
+            background-color: var(--highlight);
+            color: var(--primary);
+        }
+
+        .grid-cell.found {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Lista de palabras a buscar */
+        .words-list-container {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 240px;
+            text-align: left;
+        }
+
+        .words-list-container h3 {
+            font-size: 14px;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .words-ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        @media (min-width: 640px) {
+            .words-ul {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .word-item {
+            font-size: clamp(12px, 2vw, 14px);
+            font-weight: 600;
+            color: #475569;
+            padding: 4px 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .word-item.found {
+            text-decoration: line-through;
+            color: #10b981;
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        #game-over-modal {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 2rem auto;
+            border: 1px solid var(--border);
+        }
+
+        .score-display {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .btn-restart {
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+        .btn-restart:hover { background-color: var(--primary-hover); }
+
+        /* =========================================
+           ZONA DE LECTURA TEÓRICA Y TALLER
+           ========================================= */
+        #zona-lectura {
+            background-color: var(--bg-color);
+            padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 3vw, 2rem);
+            display: flex;
+            justify-content: center;
+        }
+
+        .article-container {
+            width: 100%;
+            max-width: 850px;
+            background-color: var(--card-bg);
+            padding: clamp(1.5rem, 4vw, 3rem);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .article-container h1 {
+            font-size: clamp(22px, 4.5vw, 34px);
+            color: var(--primary);
+            margin-bottom: 1.2rem;
+            line-height: 1.2;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 0.4rem;
+            display: inline-block;
+        }
+
+        .article-container h2 {
+            font-size: clamp(18px, 3.5vw, 26px);
+            color: var(--text-color);
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .article-container h3 {
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: var(--secondary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .article-container p {
+            font-size: clamp(15px, 2.2vw, 17px);
+            margin-bottom: 1rem;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.2rem;
+            font-size: clamp(15px, 2.2vw, 17px);
+            color: #334155;
+        }
+
+        .article-container li { margin-bottom: 0.4rem; }
+
+        /* Estilos específicos para el Taller */
+        .workshop-section {
+            margin-top: 3rem;
+            border-top: 2px dashed var(--border);
+            padding-top: 2rem;
+        }
+
+        .workshop-notice {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 0 8px 8px 0;
+            font-weight: 600;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: clamp(14px, 2.5vw, 16px);
+        }
+
+        .workshop-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .workshop-list li {
+            background-color: var(--bg-color);
+            padding: 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .task-number {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .task-type {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 0.4rem;
+        }
+
+        .type-direct { background-color: #dbeafe; color: #1e40af; }
+        .type-critical { background-color: #fce7f3; color: #9d174d; }
+        .type-draw { background-color: #dcfce3; color: #166534; }
+        .type-map { background-color: #f3e8ff; color: #6b21a8; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- FASE 1 & 2: SOPA DE LETRAS INTERACTIVA -->
+        <section id="zona-juego">
+            <div class="game-container" id="game-active-area">
+                <div class="game-header">
+                    <span id="progress-text">Encontradas: 0 / 10</span>
+                    <span id="timer-text">⏱️ 00:00</span>
+                </div>
+
+                <div class="instructions">
+                    <strong>Guía de actividad:</strong> Encuentra las 10 palabras sobre la constante gravitatoria. Desliza el dedo o el cursor sobre las letras en horizontal, vertical o diagonal.
+                </div>
+
+                <div class="board-and-words">
+                    <!-- Cuadrícula 15x15 -->
+                    <div class="wordsearch-grid" id="grid">
+                        <!-- Las celdas se inyectan dinámicamente -->
+                    </div>
+
+                    <!-- Lista de Palabras -->
+                    <div class="words-list-container">
+                        <h3>Palabras Clave</h3>
+                        <ul class="words-ul" id="words-list">
+                            <!-- Lista generada por JS -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pantalla de Resultados / Fin del Juego -->
+            <div id="game-over-modal">
+                <!-- SVG Icono de Éxito -->
+                <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h2 style="margin-top: 1rem; color: var(--text-color);">¡Investigación Completada!</h2>
+                <p style="color: var(--secondary); margin-top: 0.3rem;" id="completion-stats">Tiempo empleado: 00:00</p>
+                <p style="color: var(--secondary);">Calificación final:</p>
+                <div class="score-display" id="final-score">5.0</div>
+                <button class="btn-restart" onclick="initGame()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    Jugar de nuevo
+                </button>
+            </div>
+        </section>
+
+        <!-- FASE 3: LECTURA TEÓRICA PROFUNDA Y TALLER DE REPASO -->
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h1>La Constante Gravitatoria y el Factor Multiplicador de la Energía</h1>
+                
+                <article>
+                    <h2>1. Introducción a la gravedad y la aceleración gravitacional (g)</h2>
+                    <p>Cuando observamos el universo que nos rodea, nos percatamos de que los objetos caen al suelo cuando se sueltan y que los planetas orbitan perpetuamente alrededor de sus estrellas. Este fenómeno universal es gobernado por la gravedad. En física, la aceleración gravitacional, denotada universalmente por la letra <strong>g</strong>, representa la aceleración con la que un cuerpo cae libremente hacia la superficie de un cuerpo celeste debido a la fuerza de atracción gravitatoria.</p>
+                    <p>En la Tierra, esta constante tiene un valor promedio aproximado de <strong>9.8 m/s²</strong>. Esto significa que, por cada segundo que un objeto cae libremente en nuestro planeta, su velocidad aumenta en 9.8 metros por segundo. Sin embargo, este valor no es universal ni estático; depende directamente de la masa y del radio del astro en el que nos encontremos. Comprender el papel de <strong>g</strong> es fundamental para analizar cómo se almacena y transforma la energía mecánica en diferentes mundos de nuestro sistema solar.</p>
+
+                    <h2>2. Masa versus Peso: El rol multiplicador de g</h2>
+                    <p>Uno de los errores más comunes al estudiar física elemental es confundir la <em>masa</em> con el <em>peso</em>. La masa es una magnitud escalar que mide la cantidad de materia que contiene un cuerpo; es intrínseca y no cambia sin importar dónde nos encontremos. Por el contrario, el peso es una fuerza vectorial resultante de la interacción gravitatoria entre la masa de un objeto y la aceleración gravitacional del entorno, expresada mediante la célebre fórmula:</p>
+                    <p style="text-align: center; font-weight: bold; font-size: 1.15em; color: var(--primary); margin: 1rem 0;">P = m · g</p>
+                    <p>Aquí es donde la constante <strong>g</strong> actúa como un auténtico <strong>factor multiplicador</strong>. Imaginemos a un astronauta cuya masa corporal es de 60 kilogramos. Si lo trasladamos a la Luna, su masa sigue siendo exactamente la misma (60 kg). No obstante, la aceleración gravitacional de la Luna (g<sub>luna</sub>) es aproximadamente <strong>1.62 m/s²</strong>, lo que equivale a casi una sexta parte de la gravedad terrestre (g<sub>tierra</sub> ≈ 9.8 m/s²).</p>
+                    <p>Al aplicar la fórmula del peso en la Tierra: P = 60 kg · 9.8 m/s² = 588 Newtons. En cambio, en la Luna: P = 60 kg · 1.62 m/s² = 97.2 Newtons. Esta enorme disparidad demuestra cómo el entorno modifica de forma drástica la fuerza con la que los objetos experimentan la atracción planetaria.</p>
+
+                    <h2>3. Almacenamiento de energía potencial gravitatoria</h2>
+                    <p>La influencia de la constante gravitatoria se extiende de manera profunda hacia el almacenamiento de energía mecánica, específicamente en la <strong>Energía Potencial Gravitatoria (Ep)</strong>. Esta forma de energía es la que almacena un cuerpo en virtud de su posición dentro de un campo gravitacional, calculada mediante la ecuación:</p>
+                    <p style="text-align: center; font-weight: bold; font-size: 1.15em; color: var(--primary); margin: 1rem 0;">Ep = m · g · h</p>
+                    <p>Donde <em>m</em> es la masa, <em>g</em> es la aceleración gravitacional y <em>h</em> es la altura respecto a un nivel de referencia. Analicemos las implicaciones físicas de esta ecuación comparando escenarios:</p>
+                    <ul>
+                        <li><strong>Diferencia de entornos:</strong> Si levantamos una roca pesada a una altura de 5 metros sobre la superficie terrestre, el almacenamiento de energía potencial es significativamente mayor que si levantamos la misma roca a la misma altura de 5 metros en la superficie lunar.</li>
+                        <li><strong>El multiplicador energético:</strong> Como la gravedad terrestre es unas 6 veces mayor que la lunar, la energía almacenada en la roca en la Tierra es aproximadamente 6 veces superior. Si la roca se soltara, impactaría el suelo con mayor energía cinética en la Tierra que en la Luna.</li>
+                        <li><strong>Implicaciones para la exploración espacial:</strong> Debido a que el factor <em>g</em> es menor en la Luna o en Marte, mover grandes bloques de construcción o levantar cargas pesadas requiere menor esfuerzo energético, lo cual facilita enormemente la logística de futuras colonias humanas fuera de la Tierra.</li>
+                    </ul>
+
+                    <h2>4. Conclusión física</h2>
+                    <p>La constante <strong>g</strong> no es meramente un número estático en las fórmulas escolares; es el parámetro fundamental que modula la intensidad de la fuerza peso y determina la capacidad energética potencial de los sistemas materiales. Estudiar este factor nos permite diseñar misiones espaciales precisas y comprender la dinámica de los cuerpos celestes en todo el cosmos.</p>
+                </article>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso Institucional</h2>
+                    
+                    <div class="workshop-notice">
+                        <!-- SVG de Cuaderno / Nota -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                        <span>Escribe y resuelve estas actividades en tu cuaderno.</span>
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <div class="task-number">1</div>
+                            <div>
+                                <span class="task-type type-direct">Respuesta Directa</span>
+                                <p><strong>Definición Conceptual:</strong> ¿Qué representa exactamente la letra <strong>g</strong> en la física y cuál es su valor aproximado en la superficie de la Tierra?</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">2</div>
+                            <div>
+                                <span class="task-type type-draw">Dibujo / Ilustración</span>
+                                <p><strong>Masa vs. Peso:</strong> Dibuja a un astronauta de pie sobre la Tierra y el mismo astronauta de pie sobre la Luna. Indica numéricamente cómo cambia su masa y cómo cambia su peso en ambos escenarios.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">3</div>
+                            <div>
+                                <span class="task-type type-critical">Análisis Crítico</span>
+                                <p><strong>Factor Multiplicador:</strong> Explica detalladamente por qué se afirma en el texto que la constante gravitatoria <em>g</em> actúa como un factor multiplicador en el almacenamiento de energía.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">4</div>
+                            <div>
+                                <span class="task-type type-map">Mapa Conceptual</span>
+                                <p><strong>Estructuración:</strong> Elabora un mapa conceptual que conecte los siguientes términos clave: Gravedad, Aceleración, Masa, Peso, Constante y Energía Potencial.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">5</div>
+                            <div>
+                                <span class="task-type type-direct">Respuesta Directa</span>
+                                <p><strong>Fórmula Fundamental:</strong> Escribe la ecuación matemática utilizada para calcular la Energía Potencial Gravitatoria (Ep) y describe el significado físico de cada una de sus variables.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">6</div>
+                            <div>
+                                <span class="task-type type-draw">Dibujo / Ilustración</span>
+                                <p><strong>El Experimento de Altura:</strong> Ilustra dos cajas idénticas elevadas a 10 metros de altura, una situada en un entorno con alta gravedad y otra en baja gravedad, señalando dónde se almacena más energía potencial.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">7</div>
+                            <div>
+                                <span class="task-type type-critical">Análisis Crítico</span>
+                                <p><strong>Ingeniería Espacial:</strong> Basado en el texto, justifica por qué la menor gravedad en la Luna o en Marte representa una ventaja logística para la construcción y transporte de cargas pesadas por parte de los astronautas.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">8</div>
+                            <div>
+                                <span class="task-type type-map">Cuadro Comparativo</span>
+                                <p><strong>Tierra vs. Luna:</strong> Crea un cuadro comparativo entre la Tierra y la Luna contrastando tres aspectos: 1) Aceleración gravitacional (g), 2) Peso de un objeto de 50 kg, 3) Energía potencial de una carga a 4 metros de altura.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">9</div>
+                            <div>
+                                <span class="task-type type-direct">Respuesta Directa</span>
+                                <p><strong>Naturaleza de la Masa:</strong> ¿Por qué la masa de un cuerpo no cambia sin importar el planeta o cuerpo celeste del sistema solar en el que se encuentre ubicado?</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="task-number">10</div>
+                            <div>
+                                <span class="task-type type-draw">Dibujo / Ilustración</span>
+                                <p><strong>Dinámica Orbital:</strong> Dibuja un planeta central y un objeto en caída libre o órbita alrededor de él, representando con flechas vectoriales la dirección de la aceleración gravitacional (g).</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        /* ========================================================
+           FASE 1 & 2: MOTOR DE SOPA DE LETRAS DINÁMICA (10 PALABRAS)
+           ======================================================== */
+        const keywords = [
+            "GRAVEDAD",
+            "ACELERACION",
+            "TIERRA",
+            "LUNA",
+            "MASA",
+            "PESO",
+            "ENERGIA",
+            "CONSTANTE",
+            "FUERZA",
+            "MULTIPLICADOR"
+        ];
+
+        const GRID_SIZE = 15;
+        let grid = [];
+        let foundWords = new Set();
+        let startTime = null;
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let isGameFinished = false;
+
+        // Variables para control de arrastre táctil (Pointer Events)
+        let isDragging = false;
+        let startCell = null;
+        let currentCellsPath = [];
+
+        // Direcciones posibles: Horizontal, Vertical, Diagonal
+        const directions = [
+            { r: 0, c: 1 },   // Derecha
+            { r: 1, c: 0 },   // Abajo
+            { r: 1, c: 1 },   // Diagonal Abajo-Derecha
+            { r: 1, c: -1 },  // Diagonal Abajo-Izquierda
+            { r: 0, c: -1 },  // Izquierda
+            { r: -1, c: 0 },  // Arriba
+            { r: -1, c: -1 }, // Diagonal Arriba-Izquierda
+            { r: -1, c: 1 }   // Diagonal Arriba-Derecha
+        ];
+
+        function normalizeText(str) {
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+        }
+
+        // Algoritmo robusto para generar sopa de letras con reintentos
+        function generateWordSearch() {
+            let success = false;
+            let attempts = 0;
+
+            while (!success && attempts < 100) {
+                attempts++;
+                grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+                success = true;
+
+                // Ordenar palabras de mayor a menor longitud para facilitar colocación
+                const sortedWords = [...keywords].map(w => normalizeText(w)).sort((a, b) => b.length - a.length);
+
+                for (let word of sortedWords) {
+                    let placed = false;
+                    let wordAttempts = 0;
+
+                    while (!placed && wordAttempts < 200) {
+                        wordAttempts++;
+                        const dir = directions[Math.floor(Math.random() * directions.length)];
+                        const startRow = Math.floor(Math.random() * GRID_SIZE);
+                        const startCol = Math.floor(Math.random() * GRID_SIZE);
+
+                        // Verificar si cabe
+                        const endRow = startRow + (word.length - 1) * dir.r;
+                        const endCol = startCol + (word.length - 1) * dir.c;
+
+                        if (endRow >= 0 && endRow < GRID_SIZE && endCol >= 0 && endCol < GRID_SIZE) {
+                            let canPlace = true;
+                            let tempCells = [];
+
+                            for (let i = 0; i < word.length; i++) {
+                                const r = startRow + i * dir.r;
+                                const c = startCol + i * dir.c;
+                                const currentLetter = grid[r][c];
+
+                                if (currentLetter !== '' && currentLetter !== word[i]) {
+                                    canPlace = false;
+                                    break;
+                                }
+                                tempCells.push({ r, c, letter: word[i] });
+                            }
+
+                            if (canPlace) {
+                                tempCells.forEach(cell => {
+                                    grid[cell.r][cell.c] = cell.letter;
+                                });
+                                placed = true;
+                            }
+                        }
+                    }
+
+                    if (!placed) {
+                        success = false;
+                        break;
+                    }
+                }
+            }
+
+            // Rellenar espacios vacíos con letras aleatorias
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)];
+                    }
+                }
+            }
+        }
+
+        // Renderizar el DOM del juego
+        function renderGameUI() {
+            // Renderizar lista de palabras clave
+            const ul = document.getElementById('words-list');
+            ul.innerHTML = '';
+            keywords.forEach(word => {
+                const li = document.createElement('li');
+                li.className = `word-item ${foundWords.has(normalizeText(word)) ? 'found' : ''}`;
+                li.id = `word-item-${normalizeText(word)}`;
+                li.textContent = word;
+                ul.appendChild(li);
+            });
+
+            // Renderizar cuadrícula
+            const gridEl = document.getElementById('grid');
+            gridEl.innerHTML = '';
+
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.textContent = grid[r][c];
+                    gridEl.appendChild(cell);
+                }
+            }
+
+            updateProgressText();
+        }
+
+        function updateProgressText() {
+            document.getElementById('progress-text').textContent = `Encontradas: ${foundWords.size} / ${keywords.length}`;
+        }
+
+        // Cronómetro
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            secondsElapsed = 0;
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer-text').textContent = `⏱️ ${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        // Inicializar Juego
+        function initGame() {
+            isGameFinished = false;
+            foundWords.clear();
+            document.getElementById('game-over-modal').style.display = 'none';
+            document.getElementById('game-active-area').style.display = 'block';
+
+            generateWordSearch();
+            renderGameUI();
+            startTimer();
+            setupPointerEvents();
+        }
+
+        // Manejo fluido de arrastre táctil y con mouse (Pointer Events + elementFromPoint)
+        function setupPointerEvents() {
+            const gridEl = document.getElementById('grid');
+
+            gridEl.onpointerdown = (e) => {
+                if (isGameFinished) return;
+                const cell = e.target.closest('.grid-cell');
+                if (!cell) return;
+
+                isDragging = true;
+                startCell = { r: parseInt(cell.dataset.row), c: parseInt(cell.dataset.col) };
+                currentCellsPath = [cell];
+                
+                clearSelectionUI();
+                cell.classList.add('selected');
+                cell.setPointerCapture(e.pointerId);
+            };
+
+            gridEl.onpointermove = (e) => {
+                if (!isDragging || isGameFinished) return;
+                const target = document.elementFromPoint(e.clientX, e.clientY);
+                if (!target || !target.classList.contains('grid-cell')) return;
+
+                const endRow = parseInt(target.dataset.row);
+                const endCol = parseInt(target.dataset.col);
+
+                // Calcular línea recta desde startCell hasta (endRow, endCol)
+                const path = getStraightLinePath(startCell.r, startCell.c, endRow, endCol);
+                if (path.length > 0) {
+                    clearSelectionUI();
+                    currentCellsPath = [];
+                    path.forEach(coord => {
+                        const cellEl = document.querySelector(`[data-row='${coord.r}'][data-col='${coord.c}']`);
+                        if (cellEl) {
+                            cellEl.classList.add('selected');
+                            currentCellsPath.push(cellEl);
+                        }
+                    });
+                }
+            };
+
+            gridEl.onpointerup = (e) => {
+                if (!isDragging || isGameFinished) return;
+                isDragging = false;
+                evaluateSelection();
+            };
+        }
+
+        // Obtener coordenadas en línea recta (Horizontal, Vertical o Diagonal perfecta)
+        function getStraightLinePath(r1, c1, r2, c2) {
+            const dr = r2 - r1;
+            const dc = c2 - c1;
+            const steps = Math.max(Math.abs(dr), Math.abs(dc));
+            
+            if (steps === 0) return [{ r: r1, c: c1 }];
+
+            // Validar si es línea recta o diagonal de 45 grados exacta
+            const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+            const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+            if (Math.abs(dr) !== 0 && Math.abs(dc) !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+                return []; // No es línea recta válida en sopa de letras
+            }
+
+            const path = [];
+            for (let i = 0; i <= steps; i++) {
+                path.push({ r: r1 + i * stepR, c: c1 + i * stepC });
+            }
+            return path;
+        }
+
+        function clearSelectionUI() {
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                if (!cell.classList.contains('found')) {
+                    cell.classList.remove('selected');
+                }
+            });
+        }
+
+        // Evaluar si la selección forma una palabra clave válida
+        function evaluateSelection() {
+            const selectedWord = currentCellsPath.map(cell => cell.textContent).join('');
+            const reversedWord = selectedWord.split('').reverse().join('');
+
+            let matchedKeyword = null;
+            for (let kw of keywords) {
+                const normKw = normalizeText(kw);
+                if (normKw === selectedWord || normKw === reversedWord) {
+                    matchedKeyword = normKw;
+                    break;
+                }
+            }
+
+            if (matchedKeyword && !foundWords.has(matchedKeyword)) {
+                foundWords.add(matchedKeyword);
+                currentCellsPath.forEach(cell => {
+                    cell.classList.remove('selected');
+                    cell.classList.add('found');
+                });
+
+                const itemEl = document.getElementById(`word-item-${matchedKeyword}`);
+                if (itemEl) itemEl.classList.add('found');
+
+                updateProgressText();
+
+                // Verificar si se completaron todas
+                if (foundWords.size === keywords.length) {
+                    finishGame();
+                }
+            } else {
+                clearSelectionUI();
+            }
+            currentCellsPath = [];
+        }
+
+        function finishGame() {
+            isGameFinished = true;
+            stopTimer();
+
+            document.getElementById('game-active-area').style.display = 'none';
+            const modal = document.getElementById('game-over-modal');
+            modal.style.display = 'flex';
+
+            const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById('completion-stats').textContent = `Tiempo empleado: ${mins}:${secs}`;
+
+            // Cálculo de calificación (Escala 1.0 a 5.0 basada en tiempo)
+            // Menos de 60 segundos = 5.0. Cada 15s adicionales resta 0.1 hasta mínimo 3.0.
+            let calcScore = 5.0 - Math.max(0, (secondsElapsed - 60) / 15 * 0.1);
+            if (calcScore < 3.0) calcScore = 3.0;
+            
+            document.getElementById('final-score').textContent = calcScore.toFixed(1);
+        }
+
+        // Iniciar al cargar la ventana
+        window.onload = initGame;
+    </script>
+</body>
+</html>

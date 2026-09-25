@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Biología: Factores Bióticos y Abióticos - Objeto Virtual de Aprendizaje</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #eff6ff;
+      --secondary: #059669;
+      --accent: #d97706;
+      --danger: #dc2626;
+      --gray-900: #0f172a;
+      --gray-800: #1e293b;
+      --gray-700: #334155;
+      --gray-600: #475569;
+      --gray-300: #cbd5e1;
+      --gray-200: #e2e8f0;
+      --gray-100: #f1f5f9;
+      --gray-50: #f8fafc;
+      --white: #ffffff;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: clamp(13px, 2.4vw, 16px);
+      line-height: 1.6;
+      color: var(--gray-800);
+      background-color: #f8fafc;
+      padding-bottom: 50px;
+    }
+
+    .ova-container {
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .school-header {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .school-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .school-top h1 {
+      font-size: 1.35rem;
+      color: var(--primary);
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .school-top .inst-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--gray-700);
+    }
+
+    .school-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      font-size: 0.88rem;
+    }
+
+    .meta-tag { color: var(--gray-600); }
+    .meta-tag strong { color: var(--gray-800); }
+
+    .game-toolbar {
+      background: var(--primary-light);
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--primary);
+    }
+
+    .timer-badge {
+      background: var(--white);
+      border: 1px solid #93c5fd;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-family: monospace;
+      font-size: 1.05rem;
+    }
+
+    #interactivo-wrapper {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      position: relative;
+    }
+
+    .game-instructions {
+      font-size: 0.92rem;
+      color: var(--gray-700);
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      background: #f1f5f9;
+      border-left: 4px solid var(--primary);
+      border-radius: 4px;
+      user-select: text;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn-primary { background: var(--primary); color: var(--white); }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: var(--secondary); color: var(--white); }
+    .btn-outline { background: var(--white); border-color: var(--gray-300); color: var(--gray-700); }
+
+    /* FASE 3 PERMANENTE */
+    #zona-lectura {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 25px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      user-select: text;
+    }
+
+    #zona-lectura h2 {
+      font-size: 1.3rem;
+      color: var(--primary);
+      margin-top: 14px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #eff6ff;
+      padding-bottom: 6px;
+    }
+
+    #zona-lectura h3 {
+      font-size: 1.1rem;
+      color: var(--gray-900);
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
+    #zona-lectura p {
+      margin-bottom: 12px;
+      text-align: justify;
+      color: var(--gray-700);
+    }
+
+    #zona-taller {
+      background: var(--white);
+      border: 2px solid #cbd5e1;
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      user-select: text;
+    }
+
+    .taller-header-box {
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 18px;
+    }
+
+    .taller-header-box h3 {
+      font-size: 1.15rem;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .taller-header-box p {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+
+    .taller-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .taller-item {
+      padding: 12px 14px;
+      background: #f8fafc;
+      border-left: 4px solid var(--secondary);
+      border-radius: 4px;
+      font-size: 0.92rem;
+      color: var(--gray-800);
+    }
+
+    .taller-item.type-analisis { border-left-color: var(--accent); }
+    .taller-item.type-visual { border-left-color: #6366f1; }
+    .taller-item.type-sintesis { border-left-color: #ec4899; }
+
+    .taller-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      margin-bottom: 4px;
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    /* MODAL RESULTADOS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    .modal-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+
+    .grade-circle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      margin: 16px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--white);
+      background: var(--secondary);
+    }
+
+    /* KEYPAD VIRTUAL PARA JUEGOS SIN INPUT NATIVO */
+    .virtual-keypad {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      justify-content: center;
+    }
+
+    .vk-btn {
+      min-width: 40px;
+      height: 44px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: var(--gray-800);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      user-select: none;
+    }
+
+    .vk-btn:hover { background: #eff6ff; border-color: var(--primary); }
+    .vk-btn:active { background: var(--primary-light); }
+
+    /* MODO IMPRESIÓN FÍSICA */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+        line-height: 1.4 !important;
+        padding: 0 !important;
+      }
+
+      .ova-container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      .game-toolbar, #interactivo-wrapper, .modal-backdrop, .no-print, button { display: none !important; }
+
+      .school-header {
+        border: 2px solid #000000 !important;
+        box-shadow: none !important;
+        padding: 10px !important;
+        margin-bottom: 15px !important;
+      }
+
+      .school-top h1 { color: #000000 !important; font-size: 14pt !important; }
+
+      .school-print-fields {
+        display: grid !important;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
+        border-top: 1px dashed #000;
+        padding-top: 8px;
+      }
+
+      #zona-lectura, #zona-taller {
+        border: 1px solid #000000 !important;
+        box-shadow: none !important;
+        padding: 12px !important;
+        margin-bottom: 15px !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      #zona-lectura h2, #zona-lectura h3, .taller-header-box h3 { color: #000000 !important; }
+
+      .taller-item {
+        border-left: 2px solid #000000 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 6px 8px !important;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ova-container">
+
+    <!-- ENCABEZADO ESCOLAR -->
+    <header class="school-header">
+      <div class="school-top">
+        <div>
+          <span class="inst-name">Colegio Mayor Integrado</span>
+          <h1>Biología: Factores Bióticos y Abióticos</h1>
+        </div>
+        <button class="btn btn-outline no-print" onclick="window.print()" title="Imprimir Guía">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir Guía
+        </button>
+      </div>
+
+      <div class="school-meta-grid">
+        <div class="meta-tag"><strong>Área:</strong> Biologia</div>
+        <div class="meta-tag"><strong>Nivel / Grado:</strong> Ciclo II</div>
+        <div class="meta-tag"><strong>Docente:</strong> Comité Docente de Innovación</div>
+        <div class="meta-tag"><strong>Escala:</strong> 1.0 a 5.0 Escolar</div>
+      </div>
+
+      <div class="school-print-fields" style="display: none;">
+        <div><strong>Estudiante:</strong> ___________________________________</div>
+        <div><strong>Fecha:</strong> _______________</div>
+        <div><strong>Nota:</strong> _____ / 5.0</div>
+      </div>
+    </header>
+
+    <!-- BARRA DEL JUEGO -->
+    <div class="game-toolbar no-print">
+      <div class="stat-pill">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Tiempo: <span class="timer-badge" id="ova-timer">00:00</span>
+      </div>
+
+      <div class="stat-pill">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Aciertos: <span id="ova-score-counter">0</span> / <span id="ova-total-counter">0</span>
+      </div>
+
+      <button class="btn btn-outline" onclick="restartCurrentGame()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        Reiniciar
+      </button>
+    </div>
+
+    <!-- JUEGO INTERACTIVO -->
+    <div id="interactivo-wrapper">
+      <div class="game-instructions">
+        <strong>Instrucción Pedagógica:</strong> Lee atentamente el texto y completa los espacios en blanco con las palabras adecuadas. Luego, resuelve las actividades pedagógicas en tu cuaderno escolar.
+      </div>
+      <div id="game-canvas-area"></div>
+    </div>
+
+    <!-- FASE 3: LECTURA TEÓRICA CONCEPTUAL -->
+    <section id="zona-lectura">
+      <h2>1. Introducción a la Biología</h2><p>La biología es la ciencia que estudia los seres vivos y sus interacciones con el entorno. En este tema, nos enfocaremos en los factores bióticos y abióticos que influyen en la vida en la Tierra.</p><h3>1.1 Factores Bióticos</h3><p>Los factores bióticos son los seres vivos que interactúan en un ecosistema. Estos incluyen plantas, animales, hongos y microorganismos. Cada uno de estos seres vivos juega un papel importante en el ecosistema, ya sea como productor, consumidor o descomponedor.</p><h3>1.2 Factores Abióticos</h3><p>Los factores abióticos son los elementos no vivos que influyen en la vida en la Tierra. Estos incluyen el agua, la luz, el suelo, la temperatura y la humedad. Estos factores pueden afectar la distribución y el crecimiento de los seres vivos en un ecosistema.</p><h2>2. La Interacción entre Factores Bióticos y Abióticos</h2><p>La interacción entre factores bióticos y abióticos es fundamental para la supervivencia de los seres vivos. Por ejemplo, las plantas necesitan agua y luz para realizar la fotosíntesis, mientras que los animales necesitan alimentos y refugio para sobrevivir.</p><h3>2.1 La Fotosíntesis</h3><p>La fotosíntesis es un proceso que realizan las plantas para producir energía utilizando la clorofila. Este proceso es esencial para la vida en la Tierra, ya que produce oxígeno y glucosa, que son necesarios para la supervivencia de los seres vivos.</p><h3>2.2 La Importancia del Agua</h3><p>El agua es un factor abiótico fundamental para la vida en la Tierra. Es necesaria para la fotosíntesis, la respiración y la regulación de la temperatura en los seres vivos.</p><h2>3. Conclusión</h2><p>En resumen, los factores bióticos y abióticos son fundamentales para la supervivencia de los seres vivos en la Tierra. La interacción entre estos factores es compleja y necesaria para mantener el equilibrio en los ecosistemas.</p><h3>3.1 La Importancia de la Conservación</h3><p>Es importante conservar y proteger los ecosistemas para mantener el equilibrio entre los factores bióticos y abióticos. Esto puede lograrse a través de la reducción de la contaminación, la protección de las especies en peligro de extinción y la conservación de los hábitats naturales.</p>
+    </section>
+
+    <!-- TALLER DE 10 ACTIVIDADES -->
+    <section id="zona-taller">
+      <div class="taller-header-box">
+        <h3>Taller de Consolidación y Reflexión Pedagógica</h3>
+        <p>Escribe y resuelve estas actividades en tu cuaderno</p>
+      </div>
+      <div class="taller-grid">
+        
+          <div class="taller-item type-conceptual">
+            <span class="taller-badge">CONCEPTUAL</span>
+            <div>1. ¿Qué son los factores bióticos y abióticos?</div>
+          </div>
+        
+          <div class="taller-item type-conceptual">
+            <span class="taller-badge">CONCEPTUAL</span>
+            <div>2. ¿Cuál es el papel de la fotosíntesis en la vida en la Tierra?</div>
+          </div>
+        
+          <div class="taller-item type-conceptual">
+            <span class="taller-badge">CONCEPTUAL</span>
+            <div>3. ¿Por qué es importante la conservación de los ecosistemas?</div>
+          </div>
+        
+          <div class="taller-item type-analisis">
+            <span class="taller-badge">ANALISIS</span>
+            <div>4. Analiza la interacción entre los factores bióticos y abióticos en un ecosistema específico.</div>
+          </div>
+        
+          <div class="taller-item type-analisis">
+            <span class="taller-badge">ANALISIS</span>
+            <div>5. ¿Cómo afectan los factores abióticos la distribución y el crecimiento de los seres vivos en un ecosistema?</div>
+          </div>
+        
+          <div class="taller-item type-analisis">
+            <span class="taller-badge">ANALISIS</span>
+            <div>6. ¿Cuál es el impacto de la contaminación en los ecosistemas?</div>
+          </div>
+        
+          <div class="taller-item type-visual">
+            <span class="taller-badge">VISUAL</span>
+            <div>7. Dibuja un diagrama que muestra la interacción entre los factores bióticos y abióticos en un ecosistema.</div>
+          </div>
+        
+          <div class="taller-item type-visual">
+            <span class="taller-badge">VISUAL</span>
+            <div>8. Crea un mapa que muestra la distribución de los ecosistemas en la Tierra.</div>
+          </div>
+        
+          <div class="taller-item type-sintesis">
+            <span class="taller-badge">SINTESIS</span>
+            <div>9. Crea un cuadro comparativo que muestra las diferencias y similitudes entre los factores bióticos y abióticos.</div>
+          </div>
+        
+          <div class="taller-item type-sintesis">
+            <span class="taller-badge">SINTESIS</span>
+            <div>10. Desarrolla un mapa conceptual que muestra la relación entre los factores bióticos y abióticos y la conservación de los ecosistemas.</div>
+          </div>
+        
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL NOTA FINAL -->
+  <div class="modal-backdrop" id="ova-result-modal">
+    <div class="modal-card">
+      <h2 style="color: var(--primary); font-size: 1.35rem;">¡Actividad Finalizada!</h2>
+      <p style="font-size: 0.9rem; color: var(--gray-600); margin-top: 4px;">Evaluación de Desempeño Escolar</p>
+      <div class="grade-circle" id="modal-grade-val">5.0</div>
+      <p style="font-weight: 700; font-size: 1.1rem; color: var(--gray-800);" id="modal-feedback-title">¡Excelente Desempeño!</p>
+      <p style="font-size: 0.88rem; color: var(--gray-600); margin: 10px 0 20px 0;" id="modal-feedback-desc">
+        Has completado el juego. Pasa a la lectura de la Fase 3 y escribe las 10 actividades en tu cuaderno.
+      </p>
+      <div style="display: flex; gap: 8px; justify-content: center;">
+        <button class="btn btn-primary" onclick="closeModalAndGoToReading()">Ver Lectura y Taller</button>
+        <button class="btn btn-outline" onclick="restartCurrentGame(); closeModal();">Repetir Juego</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT DEL OVA -->
+  <script>
+    const CONFIG = {"gameType":"completar_cloze","meta":{"title":"Biología: Factores Bióticos y Abióticos","subject":"Biologia","grade":"Ciclo II","institution":"Colegio Mayor Integrado","teacher":"Comité Docente de Innovación","instructions":"Lee atentamente el texto y completa los espacios en blanco con las palabras adecuadas. Luego, resuelve las actividades pedagógicas en tu cuaderno escolar.","timeLimit":12},"gameData":{"text":"Los factores [bioticos] son los seres vivos que interactúan en un ecosistema, mientras que los factores [abioticos] son los elementos no vivos como el [agua], la [luz] y el [suelo]. La [fotosintesis] es un proceso que realizan las plantas para producir energia utilizando la [clorofila].","words":["bioticos","abioticos","agua","luz","suelo","fotosintesis","clorofila"]},"article":"<h2>1. Introducción a la Biología</h2><p>La biología es la ciencia que estudia los seres vivos y sus interacciones con el entorno. En este tema, nos enfocaremos en los factores bióticos y abióticos que influyen en la vida en la Tierra.</p><h3>1.1 Factores Bióticos</h3><p>Los factores bióticos son los seres vivos que interactúan en un ecosistema. Estos incluyen plantas, animales, hongos y microorganismos. Cada uno de estos seres vivos juega un papel importante en el ecosistema, ya sea como productor, consumidor o descomponedor.</p><h3>1.2 Factores Abióticos</h3><p>Los factores abióticos son los elementos no vivos que influyen en la vida en la Tierra. Estos incluyen el agua, la luz, el suelo, la temperatura y la humedad. Estos factores pueden afectar la distribución y el crecimiento de los seres vivos en un ecosistema.</p><h2>2. La Interacción entre Factores Bióticos y Abióticos</h2><p>La interacción entre factores bióticos y abióticos es fundamental para la supervivencia de los seres vivos. Por ejemplo, las plantas necesitan agua y luz para realizar la fotosíntesis, mientras que los animales necesitan alimentos y refugio para sobrevivir.</p><h3>2.1 La Fotosíntesis</h3><p>La fotosíntesis es un proceso que realizan las plantas para producir energía utilizando la clorofila. Este proceso es esencial para la vida en la Tierra, ya que produce oxígeno y glucosa, que son necesarios para la supervivencia de los seres vivos.</p><h3>2.2 La Importancia del Agua</h3><p>El agua es un factor abiótico fundamental para la vida en la Tierra. Es necesaria para la fotosíntesis, la respiración y la regulación de la temperatura en los seres vivos.</p><h2>3. Conclusión</h2><p>En resumen, los factores bióticos y abióticos son fundamentales para la supervivencia de los seres vivos en la Tierra. La interacción entre estos factores es compleja y necesaria para mantener el equilibrio en los ecosistemas.</p><h3>3.1 La Importancia de la Conservación</h3><p>Es importante conservar y proteger los ecosistemas para mantener el equilibrio entre los factores bióticos y abióticos. Esto puede lograrse a través de la reducción de la contaminación, la protección de las especies en peligro de extinción y la conservación de los hábitats naturales.</p>","questions":[{"type":"conceptual","text":"1. ¿Qué son los factores bióticos y abióticos?"},{"type":"conceptual","text":"2. ¿Cuál es el papel de la fotosíntesis en la vida en la Tierra?"},{"type":"conceptual","text":"3. ¿Por qué es importante la conservación de los ecosistemas?"},{"type":"analisis","text":"4. Analiza la interacción entre los factores bióticos y abióticos en un ecosistema específico."},{"type":"analisis","text":"5. ¿Cómo afectan los factores abióticos la distribución y el crecimiento de los seres vivos en un ecosistema?"},{"type":"analisis","text":"6. ¿Cuál es el impacto de la contaminación en los ecosistemas?"},{"type":"visual","text":"7. Dibuja un diagrama que muestra la interacción entre los factores bióticos y abióticos en un ecosistema."},{"type":"visual","text":"8. Crea un mapa que muestra la distribución de los ecosistemas en la Tierra."},{"type":"sintesis","text":"9. Crea un cuadro comparativo que muestra las diferencias y similitudes entre los factores bióticos y abióticos."},{"type":"sintesis","text":"10. Desarrolla un mapa conceptual que muestra la relación entre los factores bióticos y abióticos y la conservación de los ecosistemas."}]};
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let gameFinished = false;
+    let totalItems = 0;
+    let hitItems = 0;
+    let mistakes = 0;
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initTimer();
+      loadGameEngine(CONFIG.gameType);
+    });
+
+    function initTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      secondsElapsed = 0;
+      const el = document.getElementById("ova-timer");
+      el.textContent = "00:00";
+      timerInterval = setInterval(() => {
+        if (!gameFinished) {
+          secondsElapsed++;
+          const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+          const s = String(secondsElapsed % 60).padStart(2, '0');
+          el.textContent = `${m}:${s}`;
+        }
+      }, 1000);
+    }
+
+    function updateScoreUI(hits, total) {
+      hitItems = hits;
+      totalItems = total;
+      document.getElementById("ova-score-counter").textContent = hits;
+      document.getElementById("ova-total-counter").textContent = total;
+      if (hits >= total && total > 0 && !gameFinished) {
+        finishGame();
+      }
+    }
+
+    function finishGame() {
+      gameFinished = true;
+      if (timerInterval) clearInterval(timerInterval);
+
+      const ratio = totalItems > 0 ? (hitItems / totalItems) : 1;
+      let rawGrade = 1.0 + (4.0 * ratio);
+      const penalty = Math.min(1.0, mistakes * 0.15);
+      rawGrade = Math.max(1.0, Math.min(5.0, rawGrade - penalty));
+      const finalGrade = rawGrade.toFixed(1);
+
+      document.getElementById("modal-grade-val").textContent = finalGrade;
+      const circle = document.getElementById("modal-grade-val");
+
+      let title = "¡Excelente Desempeño!";
+      let desc = "Dominaste todos los conceptos con alta efectividad. Procede a la Fase 3 para realizar las 10 actividades en tu cuaderno.";
+      if (rawGrade >= 4.5) {
+        circle.style.background = "#059669";
+      } else if (rawGrade >= 3.5) {
+        circle.style.background = "#2563eb";
+        title = "¡Buen Trabajo!";
+        desc = "Alcanzaste los objetivos. Afianza los conceptos con la lectura y el taller consignado.";
+      } else if (rawGrade >= 3.0) {
+        circle.style.background = "#d97706";
+        title = "Desempeño Básico";
+        desc = "Has completado la actividad. Se recomienda repasar con detalle los contenidos teóricos.";
+      } else {
+        circle.style.background = "#dc2626";
+        title = "Bajo Desempeño";
+        desc = "Se registraron varios errores. Te invitamos a leer con calma la Fase 3 y volver a intentar.";
+      }
+
+      document.getElementById("modal-feedback-title").textContent = title;
+      document.getElementById("modal-feedback-desc").textContent = desc;
+      document.getElementById("ova-result-modal").classList.add("show");
+    }
+
+    function closeModal() {
+      document.getElementById("ova-result-modal").classList.remove("show");
+    }
+
+    function closeModalAndGoToReading() {
+      closeModal();
+      document.getElementById("zona-lectura").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function restartCurrentGame() {
+      closeModal();
+      gameFinished = false;
+      mistakes = 0;
+      initTimer();
+      loadGameEngine(CONFIG.gameType);
+    }
+
+    function loadGameEngine(type) {
+      const container = document.getElementById("game-canvas-area");
+      container.innerHTML = "";
+      switch (type) {
+        case "sopa_letras": initSopaLetras(container, CONFIG.gameData); break;
+        case "crucigrama": initCrucigrama(container, CONFIG.gameData); break;
+        case "emparejar": initEmparejar(container, CONFIG.gameData); break;
+        case "memoria": initMemoria(container, CONFIG.gameData); break;
+        case "laberinto": initLaberinto(container, CONFIG.gameData); break;
+        case "tap_sort": initTapSort(container, CONFIG.gameData); break;
+        case "escape_room": initEscapeRoom(container, CONFIG.gameData); break;
+        case "completar_cloze": initCloze(container, CONFIG.gameData); break;
+        case "anagrama": initAnagrama(container, CONFIG.gameData); break;
+        case "secuencias": initSecuencias(container, CONFIG.gameData); break;
+        case "hotspots": initHotspots(container, CONFIG.gameData); break;
+        case "tarjetas_vf": initTarjetasVF(container, CONFIG.gameData); break;
+        case "ahorcado": initAhorcado(container, CONFIG.gameData); break;
+        case "lluvia_conceptos": initLluvia(container, CONFIG.gameData); break;
+        case "rompecabezas_frases": initRompecabezas(container, CONFIG.gameData); break;
+        case "trivia_racha": initTriviaRacha(container, CONFIG.gameData); break;
+        case "ruleta": initRuleta(container, CONFIG.gameData); break;
+        case "criptograma": initCriptograma(container, CONFIG.gameData); break;
+        case "jeopardy": initJeopardy(container, CONFIG.gameData); break;
+        case "estaciones": initEstaciones(container, CONFIG.gameData); break;
+        case "lectoescritura": initLectoescritura(container, CONFIG.gameData); break;
+        default: initSopaLetras(container, CONFIG.gameData); break;
+      }
+    }
+
+    /* 1. SOPA DE LETRAS */
+    function initSopaLetras(container, data) {
+      const rawWords = (data.words || []).map(w => ({
+        word: (typeof w === 'string' ? w : w.word).toUpperCase().replace(/[^A-ZÑ]/g, ""),
+        clue: typeof w === 'object' ? (w.clue || "") : ""
+      })).filter(w => w.word.length >= 2);
+
+      const gridSize = Math.max(15, ...rawWords.map(w => w.word.length + 2));
+      let grid = [];
+      let placedWords = [];
+
+      for (let attempt = 0; attempt < 100; attempt++) {
+        grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
+        placedWords = [];
+        let allPlaced = true;
+        const sorted = [...rawWords].sort((a, b) => b.word.length - a.word.length);
+
+        for (const item of sorted) {
+          const placed = tryPlaceWord(grid, item.word, gridSize);
+          if (!placed) { allPlaced = false; break; }
+          placedWords.push({ ...item, cells: placed, found: false });
+        }
+        if (allPlaced) break;
+      }
+
+      const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          if (!grid[r][c]) grid[r][c] = alphabet[Math.floor(Math.random() * alphabet.length)];
+        }
+      }
+
+      updateScoreUI(0, placedWords.length);
+
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+          <div id="wordsearch-board" style="
+            display: grid;
+            grid-template-columns: repeat(${gridSize}, 1fr);
+            gap: 2px;
+            width: 100%;
+            max-width: 580px;
+            background: #cbd5e1;
+            padding: 4px;
+            border-radius: 8px;
+            touch-action: none;
+            user-select: none;
+          "></div>
+          <div style="width: 100%; max-width: 700px;">
+            <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--primary);">Palabras a Descubrir (${placedWords.length}):</h4>
+            <div id="wordsearch-clues" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px;"></div>
+          </div>
+        </div>
+      `;
+
+      const boardEl = document.getElementById("wordsearch-board");
+      const cluesEl = document.getElementById("wordsearch-clues");
+
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          const cell = document.createElement("div");
+          cell.className = "ws-cell";
+          cell.setAttribute("data-r", r);
+          cell.setAttribute("data-c", c);
+          cell.textContent = grid[r][c];
+          cell.style.cssText = "aspect-ratio: 1; background: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: clamp(10px, 2.2vw, 15px); border-radius: 3px; cursor: pointer;";
+          boardEl.appendChild(cell);
+        }
+      }
+
+      placedWords.forEach((pw, idx) => {
+        const clueItem = document.createElement("div");
+        clueItem.id = `ws-clue-${idx}`;
+        clueItem.style.cssText = "font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; background: #f1f5f9;";
+        clueItem.innerHTML = `<strong>${pw.word}</strong>: ${pw.clue || 'Palabra clave'}`;
+        cluesEl.appendChild(clueItem);
+      });
+
+      let isSelecting = false;
+      let startCell = null;
+      let currentSelection = [];
+      let foundWordsCount = 0;
+
+      function getCellFromPoint(x, y) {
+        const el = document.elementFromPoint(x, y);
+        if (el && el.classList.contains("ws-cell")) {
+          return { el, r: parseInt(el.getAttribute("data-r")), c: parseInt(el.getAttribute("data-c")) };
+        }
+        return null;
+      }
+
+      boardEl.addEventListener("pointerdown", (e) => {
+        const cell = getCellFromPoint(e.clientX, e.clientY);
+        if (!cell) return;
+        isSelecting = true;
+        startCell = cell;
+        currentSelection = [cell];
+        clearTempHighlight();
+        highlightCell(cell.el, true);
+        boardEl.setPointerCapture(e.pointerId);
+      });
+
+      boardEl.addEventListener("pointermove", (e) => {
+        if (!isSelecting || !startCell) return;
+        const target = getCellFromPoint(e.clientX, e.clientY);
+        if (!target) return;
+
+        const dr = target.r - startCell.r;
+        const dc = target.c - startCell.c;
+        const stepR = dr === 0 ? 0 : (dr > 0 ? 1 : -1);
+        const stepC = dc === 0 ? 0 : (dc > 0 ? 1 : -1);
+
+        if (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc)) {
+          const steps = Math.max(Math.abs(dr), Math.abs(dc));
+          clearTempHighlight();
+          currentSelection = [];
+          for (let i = 0; i <= steps; i++) {
+            const r = startCell.r + i * stepR;
+            const c = startCell.c + i * stepC;
+            const domCell = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+            if (domCell) {
+              currentSelection.push({ r, c, el: domCell, letter: domCell.textContent });
+              highlightCell(domCell, true);
+            }
+          }
+        }
+      });
+
+      function handlePointerUp() {
+        if (!isSelecting) return;
+        isSelecting = false;
+
+        const forward = currentSelection.map(s => s.letter).join('');
+        const backward = forward.split('').reverse().join('');
+        const match = placedWords.find(pw => !pw.found && (pw.word === forward || pw.word === backward));
+
+        if (match) {
+          match.found = true;
+          foundWordsCount++;
+          currentSelection.forEach(c => {
+            c.el.style.background = "#86efac";
+            c.el.style.color = "#064e3b";
+            c.el.classList.add("cell-found");
+          });
+          const clueEl = document.getElementById(`ws-clue-${placedWords.indexOf(match)}`);
+          if (clueEl) {
+            clueEl.style.textDecoration = "line-through";
+            clueEl.style.opacity = "0.5";
+            clueEl.style.background = "#dcfce7";
+          }
+          updateScoreUI(foundWordsCount, placedWords.length);
+        } else {
+          mistakes++;
+          clearTempHighlight();
+        }
+        currentSelection = [];
+        startCell = null;
+      }
+
+      boardEl.addEventListener("pointerup", handlePointerUp);
+      boardEl.addEventListener("pointercancel", handlePointerUp);
+
+      function highlightCell(el, temp) {
+        if (!el.classList.contains("cell-found")) el.style.background = temp ? "#93c5fd" : "#ffffff";
+      }
+
+      function clearTempHighlight() {
+        boardEl.querySelectorAll(".ws-cell:not(.cell-found)").forEach(c => { c.style.background = "#ffffff"; });
+      }
+    }
+
+    function tryPlaceWord(grid, word, size) {
+      const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]].sort(() => Math.random() - 0.5);
+      const positions = [];
+      for (let r = 0; r < size; r++) { for (let c = 0; c < size; c++) positions.push([r, c]); }
+      positions.sort(() => Math.random() - 0.5);
+
+      for (const [r, c] of positions) {
+        for (const [dr, dc] of dirs) {
+          const endR = r + (word.length - 1) * dr;
+          const endC = c + (word.length - 1) * dc;
+          if (endR >= 0 && endR < size && endC >= 0 && endC < size) {
+            let fits = true;
+            const cells = [];
+            for (let i = 0; i < word.length; i++) {
+              const currR = r + i * dr;
+              const currC = c + i * dc;
+              if (grid[currR][currC] !== '' && grid[currR][currC] !== word[i]) { fits = false; break; }
+              cells.push({ r: currR, c: currC, letter: word[i] });
+            }
+            if (fits) {
+              cells.forEach(it => { grid[it.r][it.c] = it.letter; });
+              return cells;
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    /* 2. CRUCIGRAMA CLÁSICO */
+    function initCrucigrama(container, data) {
+      const rawWords = (data.words || []).map(w => ({
+        word: (typeof w === 'string' ? w : w.word).toUpperCase().replace(/[^A-ZÑ]/g, ""),
+        clue: typeof w === 'object' ? (w.clue || "") : ""
+      })).filter(w => w.word.length >= 2);
+
+      const maxDim = 30;
+      let board = Array(maxDim).fill(null).map(() => Array(maxDim).fill(null));
+      let placed = [];
+
+      if (rawWords.length > 0) {
+        const first = rawWords[0];
+        const startR = Math.floor(maxDim / 2);
+        const startC = Math.floor((maxDim - first.word.length) / 2);
+        for (let i = 0; i < first.word.length; i++) board[startR][startC + i] = { letter: first.word[i] };
+        placed.push({ ...first, r: startR, c: startC, dir: "H", num: 1 });
+
+        for (let wIdx = 1; wIdx < rawWords.length; wIdx++) {
+          const current = rawWords[wIdx];
+          let best = null;
+          for (let pIdx = 0; pIdx < placed.length && !best; pIdx++) {
+            const pWord = placed[pIdx];
+            const newDir = pWord.dir === "H" ? "V" : "H";
+            for (let i = 0; i < current.word.length && !best; i++) {
+              for (let j = 0; j < pWord.word.length && !best; j++) {
+                if (pWord.word[j] === current.word[i]) {
+                  const crossR = pWord.dir === "H" ? pWord.r : (pWord.r + j);
+                  const crossC = pWord.dir === "H" ? (pWord.c + j) : pWord.c;
+                  const candR = newDir === "V" ? (crossR - i) : crossR;
+                  const candC = newDir === "H" ? (crossC - i) : crossC;
+                  if (canPlaceCrossword(board, current.word, candR, candC, newDir, maxDim)) {
+                    best = { ...current, r: candR, c: candC, dir: newDir, num: placed.length + 1 };
+                  }
+                }
+              }
+            }
+          }
+          if (best) {
+            for (let k = 0; k < best.word.length; k++) {
+              const r = best.dir === "V" ? best.r + k : best.r;
+              const c = best.dir === "H" ? best.c + k : best.c;
+              board[r][c] = { letter: best.word[k] };
+            }
+            placed.push(best);
+          }
+        }
+      }
+
+      let minR = maxDim, maxR = 0, minC = maxDim, maxC = 0, hasCells = false;
+      for (let r = 0; r < maxDim; r++) {
+        for (let c = 0; c < maxDim; c++) {
+          if (board[r][c] !== null) {
+            hasCells = true;
+            if (r < minR) minR = r; if (r > maxR) maxR = r;
+            if (c < minC) minC = c; if (c > maxC) maxC = c;
+          }
+        }
+      }
+      if (!hasCells) { minR = 0; maxR = 4; minC = 0; maxC = 4; }
+
+      const cols = maxC - minC + 1;
+      updateScoreUI(0, placed.length);
+
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 18px;">
+          <div id="cw-grid-container" style="
+            display: grid;
+            grid-template-columns: repeat(${cols}, 1fr);
+            gap: 2px;
+            width: 100%;
+            max-width: ${Math.min(650, cols * 38)}px;
+            background: #cbd5e1;
+            padding: 4px;
+            border-radius: 8px;
+            margin: 0 auto;
+          "></div>
+          <div style="width: 100%; max-width: 700px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div>
+              <h4 style="color: var(--primary); font-size: 0.95rem; border-bottom: 2px solid #bfdbfe; padding-bottom: 4px;">Horizontales</h4>
+              <div id="cw-clues-h" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; margin-top: 6px;"></div>
+            </div>
+            <div>
+              <h4 style="color: var(--primary); font-size: 0.95rem; border-bottom: 2px solid #bfdbfe; padding-bottom: 4px;">Verticales</h4>
+              <div id="cw-clues-v" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; margin-top: 6px;"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-check-cw">Verificar Crucigrama</button>
+        </div>
+      `;
+
+      const gridEl = document.getElementById("cw-grid-container");
+      for (let r = minR; r <= maxR; r++) {
+        for (let c = minC; c <= maxC; c++) {
+          const item = board[r][c];
+          const cellEl = document.createElement("div");
+          cellEl.style.cssText = "aspect-ratio: 1; position: relative;";
+          if (item === null) {
+            cellEl.style.background = "transparent";
+            cellEl.style.border = "none";
+            cellEl.style.pointerEvents = "none";
+          } else {
+            const starter = placed.find(p => p.r === r && p.c === c);
+            cellEl.style.background = "#ffffff";
+            cellEl.style.borderRadius = "3px";
+            cellEl.innerHTML = `
+              ${starter ? `<span style="position: absolute; top: 1px; left: 2px; font-size: 8px; font-weight: 700; color: #64748b;">${starter.num}</span>` : ''}
+              <input type="text" maxlength="1" data-r="${r}" data-c="${c}" style="
+                width: 100%; height: 100%; border: none; background: transparent; text-align: center;
+                font-weight: 700; font-size: 16px; text-transform: uppercase; outline: none; padding: 0;
+              ">
+            `;
+          }
+          gridEl.appendChild(cellEl);
+        }
+      }
+
+      placed.forEach(p => {
+        const itemEl = document.createElement("div");
+        itemEl.innerHTML = `<strong>${p.num}.</strong> ${p.clue || p.word} (${p.word.length} letras)`;
+        if (p.dir === "H") document.getElementById("cw-clues-h").appendChild(itemEl);
+        else document.getElementById("cw-clues-v").appendChild(itemEl);
+      });
+
+      gridEl.querySelectorAll("input").forEach(inp => {
+        inp.addEventListener("input", (e) => {
+          if (e.target.value.length === 1) {
+            const inputs = Array.from(gridEl.querySelectorAll("input"));
+            const cur = inputs.indexOf(e.target);
+            if (cur < inputs.length - 1) inputs[cur + 1].focus();
+          }
+        });
+      });
+
+      document.getElementById("btn-check-cw").addEventListener("click", () => {
+        let correctWords = 0;
+        placed.forEach(p => {
+          let ok = true;
+          for (let k = 0; k < p.word.length; k++) {
+            const r = p.dir === "V" ? p.r + k : p.r;
+            const c = p.dir === "H" ? p.c + k : p.c;
+            const inp = gridEl.querySelector(`input[data-r="${r}"][data-c="${c}"]`);
+            if (!inp || inp.value.trim().toUpperCase() !== p.word[k]) {
+              ok = false;
+              if (inp && inp.value.trim()) inp.style.color = "#dc2626";
+            } else if (inp) {
+              inp.style.color = "#059669";
+            }
+          }
+          if (ok) correctWords++;
+        });
+        if (correctWords < placed.length) mistakes++;
+        updateScoreUI(correctWords, placed.length);
+      });
+    }
+
+    function canPlaceCrossword(board, word, startR, startC, dir, maxDim) {
+      const len = word.length;
+      if (startR < 1 || startC < 1) return false;
+      if (dir === "V" && startR + len >= maxDim - 1) return false;
+      if (dir === "H" && startC + len >= maxDim - 1) return false;
+
+      const prevR = dir === "V" ? startR - 1 : startR;
+      const prevC = dir === "H" ? startC - 1 : startC;
+      if (board[prevR][prevC] !== null) return false;
+
+      const nextR = dir === "V" ? startR + len : startR;
+      const nextC = dir === "H" ? startC + len : startC;
+      if (board[nextR][nextC] !== null) return false;
+
+      let intersections = 0;
+      for (let i = 0; i < len; i++) {
+        const r = dir === "V" ? startR + i : startR;
+        const c = dir === "H" ? startC + i : startC;
+        if (board[r][c] !== null) {
+          if (board[r][c].letter !== word[i]) return false;
+          intersections++;
+        } else {
+          if (dir === "V" && (board[r][c - 1] !== null || board[r][c + 1] !== null)) return false;
+          if (dir === "H" && (board[r - 1][c] !== null || board[r + 1][c] !== null)) return false;
+        }
+      }
+      return intersections > 0;
+    }
+
+    /* 3. EMPAREJAR (TAP & SELECT) */
+    function initEmparejar(container, data) {
+      const pairs = (data.pairs || []).filter(p => p.item && p.match);
+      updateScoreUI(0, pairs.length);
+
+      const itemsCol = pairs.map((p, idx) => ({ id: idx, text: p.item }));
+      const matchesCol = pairs.map((p, idx) => ({ id: idx, text: p.match })).sort(() => Math.random() - 0.5);
+
+      container.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 700px; margin: 0 auto;">
+          <div id="col-origins" style="display: flex; flex-direction: column; gap: 10px;"></div>
+          <div id="col-targets" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+      `;
+
+      const origEl = document.getElementById("col-origins");
+      const targEl = document.getElementById("col-targets");
+      let selectedOrigin = null;
+      let matchedCount = 0;
+
+      itemsCol.forEach(item => {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-outline origin-btn";
+        btn.textContent = item.text;
+        btn.style.cssText = "padding: 10px 14px; text-align: left; justify-content: flex-start;";
+        btn.addEventListener("pointerdown", () => {
+          if (btn.classList.contains("matched")) return;
+          origEl.querySelectorAll(".origin-btn").forEach(b => b.style.borderColor = "#cbd5e1");
+          btn.style.borderColor = "var(--primary)";
+          btn.style.background = "var(--primary-light)";
+          selectedOrigin = item.id;
+        });
+        origEl.appendChild(btn);
+      });
+
+      matchesCol.forEach(item => {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-outline target-btn";
+        btn.textContent = item.text;
+        btn.style.cssText = "padding: 10px 14px; text-align: left; justify-content: flex-start; font-size: 0.88rem;";
+        btn.addEventListener("pointerdown", () => {
+          if (btn.classList.contains("matched") || selectedOrigin === null) return;
+          if (selectedOrigin === item.id) {
+            matchedCount++;
+            const oBtn = origEl.querySelector(`.origin-btn:nth-child(${selectedOrigin + 1})`);
+            if (oBtn) { oBtn.classList.add("matched"); oBtn.style.background = "#dcfce7"; oBtn.style.color = "#166534"; }
+            btn.classList.add("matched"); btn.style.background = "#dcfce7"; btn.style.color = "#166534";
+            selectedOrigin = null;
+            updateScoreUI(matchedCount, pairs.length);
+          } else {
+            mistakes++;
+            btn.style.borderColor = "#ef4444";
+            setTimeout(() => { if (!btn.classList.contains("matched")) btn.style.borderColor = "#cbd5e1"; }, 500);
+          }
+        });
+        targEl.appendChild(btn);
+      });
+    }
+
+    /* 4. CONCÉNTRESE (MEMORIA DE CONCEPTOS IDÉNTICOS) */
+    function initMemoria(container, data) {
+      let rawConcepts = [];
+      if (Array.isArray(data.concepts) && data.concepts.length > 0) {
+        rawConcepts = data.concepts;
+      } else if (Array.isArray(data.cards) && data.cards.length > 0) {
+        rawConcepts = data.cards.map(c => typeof c === 'string' ? c : (c.concept || c.front || c.text || ""));
+      } else if (Array.isArray(data.items) && data.items.length > 0) {
+        rawConcepts = data.items.map(it => typeof it === 'string' ? it : (it.concept || it.name || it.text || ""));
+      }
+      rawConcepts = rawConcepts.map(s => String(s || "").trim()).filter(Boolean).slice(0, 10);
+      if (rawConcepts.length === 0) {
+        rawConcepts = ["Concepto A", "Concepto B", "Concepto C", "Concepto D", "Concepto E", "Concepto F"];
+      }
+
+      // Cada concepto genera un par de cartas IDÉNTICAS con el mismo concepto
+      let deck = [];
+      rawConcepts.forEach((concept, idx) => {
+        deck.push({ id: idx, text: concept });
+        deck.push({ id: idx, text: concept });
+      });
+      deck.sort(() => Math.random() - 0.5);
+      updateScoreUI(0, rawConcepts.length);
+
+      container.innerHTML =
+        '<div style="text-align: center; margin-bottom: 12px;">' +
+          '<span style="display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 0.85rem; font-weight: 700; padding: 4px 14px; border-radius: 20px;">' +
+            'ðŸŽ´ Encuentra las parejas de conceptos idÃ©nticos (cartas iguales)' +
+          '</span>' +
+        '</div>' +
+        '<div id="memory-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; max-width: 650px; margin: 0 auto;"></div>';
+      const gridEl = document.getElementById("memory-grid");
+      let flipped = [];
+      let matched = 0;
+
+      deck.forEach(card => {
+        const el = document.createElement("div");
+        el.style.cssText = "aspect-ratio: 1.05; background: var(--primary); color: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; font-size: clamp(11px, 2.2vw, 13px); font-weight: 800; cursor: pointer; user-select: none; transition: transform 0.2s, background 0.2s, border 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.06); text-transform: uppercase;";
+        el.textContent = "🧠 ?";
+
+        el.addEventListener("pointerdown", () => {
+          if (el.classList.contains("flipped") || el.classList.contains("matched") || flipped.length >= 2) return;
+          el.classList.add("flipped");
+          el.textContent = card.text;
+          el.style.background = "#ffffff";
+          el.style.color = "var(--primary)";
+          el.style.border = "2px solid var(--primary)";
+          flipped.push({ el, card });
+
+          if (flipped.length === 2) {
+            if (flipped[0].card.id === flipped[1].card.id) {
+              matched++;
+              flipped.forEach(c => {
+                c.el.classList.add("matched");
+                c.el.style.background = "#dcfce7";
+                c.el.style.color = "#15803d";
+                c.el.style.border = "2px solid #22c55e";
+              });
+              flipped = [];
+              updateScoreUI(matched, rawConcepts.length);
+            } else {
+              mistakes++;
+              flipped.forEach(c => {
+                c.el.style.border = "2px solid #ef4444";
+                c.el.style.color = "#b91c1c";
+              });
+              setTimeout(() => {
+                flipped.forEach(c => {
+                  c.el.classList.remove("flipped");
+                  c.el.style.background = "var(--primary)";
+                  c.el.style.color = "#fff";
+                  c.el.style.border = "none";
+                  c.el.textContent = "🧠 ?";
+                });
+                flipped = [];
+              }, 850);
+            }
+          }
+        });
+        gridEl.appendChild(el);
+      });
+    }
+
+    /* 5. LABERINTO DE DECISIONES */
+    function initLaberinto(container, data) {
+      const questions = data.questions || [];
+      let step = 0;
+      updateScoreUI(0, questions.length);
+
+      function renderStep() {
+        if (step >= questions.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 20px;"><h3 style="color: #059669;">¡Has salido del Laberinto con Éxito!</h3></div>`;
+          updateScoreUI(questions.length, questions.length);
+          return;
+        }
+        const q = questions[step];
+        container.innerHTML = `
+          <div style="max-width: 580px; margin: 0 auto; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px;">
+            <span style="font-weight: 700; color: var(--primary);">Puerta del Laberinto #${step + 1} de ${questions.length}</span>
+            <p style="font-size: 1.05rem; font-weight: 600; margin: 12px 0 16px 0;">${escapeHtml(q.q)}</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${q.options.map((opt, i) => `
+                <button class="btn btn-outline opt-btn" data-idx="${i}" style="text-align: left; justify-content: flex-start; padding: 10px 14px;">
+                  ${String.fromCharCode(65 + i)}) ${escapeHtml(opt)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        container.querySelectorAll(".opt-btn").forEach(b => {
+          b.addEventListener("pointerdown", () => {
+            const idx = parseInt(b.getAttribute("data-idx"));
+            if (idx === q.correct) {
+              b.style.background = "#dcfce7";
+              step++;
+              updateScoreUI(step, questions.length);
+              setTimeout(renderStep, 450);
+            } else {
+              mistakes++;
+              b.style.background = "#fee2e2";
+            }
+          });
+        });
+      }
+      renderStep();
+    }
+
+    /* 6. CLASIFICADOR TAP & SORT */
+    function initTapSort(container, data) {
+      const cats = data.categories || ["Cat 1", "Cat 2"];
+      const items = (data.items || []).sort(() => Math.random() - 0.5);
+      updateScoreUI(0, items.length);
+
+      container.innerHTML = `
+        <div style="max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-weight: 700; font-size: 0.9rem;">1. Toca un elemento de la lista:</span>
+          <div id="ts-pool" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: #f1f5f9; border-radius: 8px;"></div>
+          <span style="font-weight: 700; font-size: 0.9rem;">2. Toca la columna donde corresponde:</span>
+          <div id="ts-columns" style="display: grid; grid-template-columns: repeat(${cats.length}, 1fr); gap: 12px;"></div>
+        </div>
+      `;
+
+      const poolEl = document.getElementById("ts-pool");
+      const colsEl = document.getElementById("ts-columns");
+      let selectedItem = null;
+      let sortedHits = 0;
+
+      items.forEach(it => {
+        const b = document.createElement("button");
+        b.className = "btn btn-outline ts-item";
+        b.textContent = it.text;
+        b.addEventListener("pointerdown", () => {
+          if (b.classList.contains("sorted")) return;
+          poolEl.querySelectorAll(".ts-item").forEach(x => x.style.borderColor = "#cbd5e1");
+          b.style.borderColor = "var(--primary)";
+          b.style.background = "var(--primary-light)";
+          selectedItem = { ...it, btn: b };
+        });
+        poolEl.appendChild(b);
+      });
+
+      cats.forEach(cat => {
+        const box = document.createElement("div");
+        box.style.cssText = "background: #ffffff; border: 2px dashed #94a3b8; border-radius: 8px; padding: 12px; min-height: 140px; cursor: pointer;";
+        box.innerHTML = `<h4 style="color: var(--primary); text-align: center; margin-bottom: 8px;">${escapeHtml(cat)}</h4><div class="col-items" style="display: flex; flex-direction: column; gap: 6px;"></div>`;
+        box.addEventListener("pointerdown", () => {
+          if (!selectedItem) return;
+          if (selectedItem.category === cat) {
+            sortedHits++;
+            selectedItem.btn.classList.add("sorted");
+            selectedItem.btn.style.display = "none";
+            const placed = document.createElement("div");
+            placed.style.cssText = "font-size: 0.82rem; padding: 4px 8px; background: #dcfce7; color: #166534; border-radius: 4px; font-weight: 700;";
+            placed.textContent = selectedItem.text;
+            box.querySelector(".col-items").appendChild(placed);
+            selectedItem = null;
+            updateScoreUI(sortedHits, items.length);
+          } else {
+            mistakes++;
+            box.style.borderColor = "#ef4444";
+            setTimeout(() => { box.style.borderColor = "#94a3b8"; }, 500);
+          }
+        });
+        colsEl.appendChild(box);
+      });
+    }
+
+    /* 7. ESCAPE ROOM CON KEYPAD VIRTUAL (SIN INPUT NATIVO) */
+    function initEscapeRoom(container, data) {
+      const enigmas = data.enigmas || [];
+      let stage = 0;
+      updateScoreUI(0, enigmas.length);
+
+      function renderStage() {
+        if (stage >= enigmas.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 25px;"><h2 style="color: #059669;">¡Escape Room Completado con Éxito!</h2></div>`;
+          updateScoreUI(enigmas.length, enigmas.length);
+          return;
+        }
+        const e = enigmas[stage];
+        container.innerHTML = `
+          <div style="max-width: 520px; margin: 0 auto; background: #1e293b; color: #f8fafc; border-radius: 8px; padding: 20px; text-align: center;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 10px;">
+              <span style="font-weight: 700; color: #38bdf8;">${escapeHtml(e.title)}</span>
+              <span style="font-size: 0.8rem; background: #0f172a; padding: 2px 8px; border-radius: 9999px;">Sala ${stage + 1}/${enigmas.length}</span>
+            </div>
+            <p style="font-size: 0.94rem; margin-bottom: 14px;">${escapeHtml(e.clue)}</p>
+            <div id="er-display" style="font-family: monospace; font-size: 1.8rem; letter-spacing: 6px; background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #38bdf8; min-height: 48px; color: #38bdf8;">____</div>
+            <div class="virtual-keypad" style="grid-template-columns: repeat(3, 1fr); max-width: 240px; margin: 12px auto 0 auto;">
+              ${[1,2,3,4,5,6,7,8,9,'C',0,'OK'].map(k => `<button class="vk-btn" data-key="${k}">${k}</button>`).join('')}
+            </div>
+            <p id="er-msg" style="font-size: 0.85rem; margin-top: 8px; min-height: 18px;"></p>
+          </div>
+        `;
+
+        let buffer = "";
+        const disp = document.getElementById("er-display");
+        const msg = document.getElementById("er-msg");
+
+        container.querySelectorAll(".vk-btn").forEach(b => {
+          b.addEventListener("pointerdown", () => {
+            const k = b.getAttribute("data-key");
+            if (k === 'C') { buffer = ""; disp.textContent = "____"; }
+            else if (k === 'OK') {
+              if (buffer === e.code) {
+                msg.style.color = "#4ade80";
+                msg.textContent = "¡Código Correcto! " + (e.reward || "");
+                stage++;
+                updateScoreUI(stage, enigmas.length);
+                setTimeout(renderStage, 900);
+              } else {
+                mistakes++;
+                msg.style.color = "#f87171";
+                msg.textContent = "Código incorrecto. Revisa el acertijo.";
+                buffer = "";
+                disp.textContent = "____";
+              }
+            } else {
+              if (buffer.length < 4) { buffer += k; disp.textContent = buffer.padEnd(4, '_'); }
+            }
+          });
+        });
+      }
+      renderStage();
+    }
+
+    /* 8. COMPLETAR PÁRRAFOS (CLOZE) */
+    function initCloze(container, data) {
+      const words = data.words || [];
+      const template = data.text || "";
+      updateScoreUI(0, words.length);
+
+      let slotIdx = 0;
+      const htmlText = template.replace(/\[([^\]]+)\]/g, (m, p1) => {
+        return `<span class="cloze-slot" data-expected="${escapeHtml(p1)}" style="display: inline-block; min-width: 80px; border-bottom: 2px solid var(--primary); padding: 2px 8px; margin: 0 4px; font-weight: 700; color: var(--primary); cursor: pointer;">_______</span>`;
+      });
+
+      container.innerHTML = `
+        <div style="max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; line-height: 2.2;">${htmlText}</div>
+          <div>
+            <span style="font-weight: 700; font-size: 0.88rem;">Banco de Palabras (Toca palabra y luego el espacio):</span>
+            <div id="cloze-bank" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div>
+          </div>
+        </div>
+      `;
+
+      const bankEl = document.getElementById("cloze-bank");
+      let selectedWord = null;
+      let filled = 0;
+
+      [...words].sort(() => Math.random() - 0.5).forEach(w => {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-outline cloze-btn";
+        btn.textContent = w;
+        btn.addEventListener("pointerdown", () => {
+          if (btn.classList.contains("used")) return;
+          bankEl.querySelectorAll(".cloze-btn").forEach(x => x.style.borderColor = "#cbd5e1");
+          btn.style.borderColor = "var(--primary)";
+          btn.style.background = "var(--primary-light)";
+          selectedWord = { word: w, btn };
+        });
+        bankEl.appendChild(btn);
+      });
+
+      container.querySelectorAll(".cloze-slot").forEach(slot => {
+        slot.addEventListener("pointerdown", () => {
+          if (!selectedWord || slot.classList.contains("filled")) return;
+          if (selectedWord.word.toLowerCase().trim() === slot.getAttribute("data-expected").toLowerCase().trim()) {
+            slot.textContent = selectedWord.word;
+            slot.classList.add("filled");
+            slot.style.borderBottomColor = "#22c55e";
+            slot.style.color = "#15803d";
+            selectedWord.btn.classList.add("used");
+            selectedWord.btn.style.display = "none";
+            selectedWord = null;
+            filled++;
+            updateScoreUI(filled, words.length);
+          } else {
+            mistakes++;
+            slot.style.borderBottomColor = "#ef4444";
+            setTimeout(() => { slot.style.borderBottomColor = "var(--primary)"; }, 500);
+          }
+        });
+      });
+    }
+
+    /* 9. ANAGRAMA */
+    function initAnagrama(container, data) {
+      const words = (data.words || []).filter(w => w.word);
+      let cur = 0;
+      updateScoreUI(0, words.length);
+
+      function renderAnagram() {
+        if (cur >= words.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 25px;"><h3 style="color: #059669;">¡Descifraste todos los anagramas!</h3></div>`;
+          updateScoreUI(words.length, words.length);
+          return;
+        }
+        const item = words[cur];
+        const letters = item.word.toUpperCase().split('');
+        const scrambled = [...letters].sort(() => Math.random() - 0.5);
+
+        container.innerHTML = `
+          <div style="max-width: 550px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 0.9rem; color: var(--gray-600);">Palabra #${cur + 1} de ${words.length}</span>
+            <p style="font-style: italic; color: var(--primary);">Pista: ${escapeHtml(item.hint || '')}</p>
+            <div id="ana-slots" style="display: flex; justify-content: center; gap: 6px; min-height: 48px;"></div>
+            <div id="ana-pool" style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;"></div>
+            <div><button class="btn btn-outline btn-sm" id="btn-ana-reset">Borrar</button></div>
+          </div>
+        `;
+
+        const slotsEl = document.getElementById("ana-slots");
+        const poolEl = document.getElementById("ana-pool");
+        let build = [];
+
+        letters.forEach(() => {
+          const s = document.createElement("div");
+          s.style.cssText = "width: 38px; height: 42px; border: 2px solid #94a3b8; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem;";
+          slotsEl.appendChild(s);
+        });
+
+        scrambled.forEach(l => {
+          const b = document.createElement("button");
+          b.className = "btn btn-primary";
+          b.style.cssText = "width: 40px; height: 44px; font-size: 1.1rem;";
+          b.textContent = l;
+          b.addEventListener("pointerdown", () => {
+            if (build.length < letters.length) {
+              build.push({ l, b });
+              b.style.visibility = "hidden";
+              updateSlots();
+            }
+          });
+          poolEl.appendChild(b);
+        });
+
+        document.getElementById("btn-ana-reset").addEventListener("click", () => {
+          build.forEach(x => x.b.style.visibility = "visible");
+          build = [];
+          updateSlots();
+        });
+
+        function updateSlots() {
+          const slots = slotsEl.children;
+          for (let i = 0; i < slots.length; i++) slots[i].textContent = build[i] ? build[i].l : "";
+          if (build.length === letters.length) {
+            if (build.map(x => x.l).join('') === item.word.toUpperCase()) {
+              for (let i = 0; i < slots.length; i++) slots[i].style.borderColor = "#22c55e";
+              cur++;
+              updateScoreUI(cur, words.length);
+              setTimeout(renderAnagram, 700);
+            } else {
+              mistakes++;
+              for (let i = 0; i < slots.length; i++) slots[i].style.borderColor = "#ef4444";
+            }
+          }
+        }
+      }
+      renderAnagram();
+    }
+
+    /* 10. SECUENCIAS */
+    function initSecuencias(container, data) {
+      const steps = (data.steps || []).map((s, idx) => ({ id: idx, text: s }));
+      const current = [...steps].sort(() => Math.random() - 0.5);
+      updateScoreUI(0, steps.length);
+
+      container.innerHTML = `
+        <div style="max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px;">
+          <p style="font-size: 0.88rem; color: var(--gray-600);">Organiza los pasos cronológicamente con las flechas:</p>
+          <div id="seq-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          <button class="btn btn-primary" id="btn-seq-check">Verificar Secuencia</button>
+        </div>
+      `;
+
+      const listEl = document.getElementById("seq-list");
+      function renderSeq() {
+        listEl.innerHTML = "";
+        current.forEach((st, i) => {
+          const row = document.createElement("div");
+          row.style.cssText = "display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px;";
+          row.innerHTML = `
+            <span style="font-weight: 600; font-size: 0.9rem;">${i + 1}. ${escapeHtml(st.text)}</span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-outline btn-sm b-up" data-idx="${i}" ${i === 0 ? 'disabled' : ''}>▲</button>
+              <button class="btn btn-outline btn-sm b-dn" data-idx="${i}" ${i === current.length - 1 ? 'disabled' : ''}>▼</button>
+            </div>
+          `;
+          listEl.appendChild(row);
+        });
+
+        listEl.querySelectorAll(".b-up").forEach(b => {
+          b.addEventListener("click", () => {
+            const idx = parseInt(b.getAttribute("data-idx"));
+            if (idx > 0) { const temp = current[idx]; current[idx] = current[idx - 1]; current[idx - 1] = temp; renderSeq(); }
+          });
+        });
+        listEl.querySelectorAll(".b-dn").forEach(b => {
+          b.addEventListener("click", () => {
+            const idx = parseInt(b.getAttribute("data-idx"));
+            if (idx < current.length - 1) { const temp = current[idx]; current[idx] = current[idx + 1]; current[idx + 1] = temp; renderSeq(); }
+          });
+        });
+      }
+      renderSeq();
+
+      document.getElementById("btn-seq-check").addEventListener("click", () => {
+        let correct = 0;
+        current.forEach((it, i) => { if (it.id === i) correct++; });
+        if (correct === steps.length) updateScoreUI(steps.length, steps.length);
+        else { mistakes++; alert(`Tienes ${correct} de ${steps.length} pasos ordenados correctamente.`); }
+      });
+    }
+
+    /* 11. HOTSPOTS */
+    function initHotspots(container, data) {
+      const points = data.points || [];
+      let identified = 0;
+      updateScoreUI(0, points.length);
+
+      container.innerHTML = `
+        <div style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+          <div style="position: relative; width: 100%; aspect-ratio: 4/3; background: #e0f2fe; border: 2px solid #38bdf8; border-radius: 8px; overflow: hidden;">
+            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0;">
+              <polygon points="10,95 50,30 90,95" fill="#f97316"/>
+              <polygon points="40,30 50,15 60,30" fill="#ef4444"/>
+              <circle cx="50" cy="85" r="8" fill="#b91c1c"/>
+              <rect x="47" y="30" width="6" height="50" fill="#dc2626"/>
+            </svg>
+            ${points.map((p, i) => `
+              <button class="hotspot-btn" data-idx="${i}" style="
+                position: absolute; top: ${p.y}%; left: ${p.x}%; transform: translate(-50%, -50%);
+                width: 26px; height: 26px; border-radius: 50%; background: #ffffff; border: 2px solid var(--primary);
+                font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+              ">?</button>
+            `).join('')}
+          </div>
+          <div id="hotspot-label" style="font-size: 0.9rem; min-height: 38px; text-align: center;">Toca cada punto para identificar la estructura.</div>
+        </div>
+      `;
+
+      container.querySelectorAll(".hotspot-btn").forEach(b => {
+        b.addEventListener("pointerdown", () => {
+          const idx = parseInt(b.getAttribute("data-idx"));
+          const p = points[idx];
+          if (!b.classList.contains("found")) {
+            b.classList.add("found");
+            b.textContent = "✓";
+            b.style.background = "#22c55e";
+            b.style.color = "#ffffff";
+            b.style.borderColor = "#16a34a";
+            identified++;
+            updateScoreUI(identified, points.length);
+          }
+          document.getElementById("hotspot-label").innerHTML = `<strong>${escapeHtml(p.label)}:</strong> ${escapeHtml(p.desc || '')}`;
+        });
+      });
+    }
+
+    /* 12. TARJETAS V/F */
+    function initTarjetasVF(container, data) {
+      const cards = data.cards || [];
+      let cur = 0;
+      let score = 0;
+      updateScoreUI(0, cards.length);
+
+      function renderCard() {
+        if (cur >= cards.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 25px;"><h3 style="color: #059669;">¡Evaluación V/F Concluida!</h3></div>`;
+          updateScoreUI(cards.length, cards.length);
+          return;
+        }
+        const c = cards[cur];
+        container.innerHTML = `
+          <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 0.85rem; color: var(--gray-500);">Afirmación #${cur + 1} de ${cards.length}</span>
+            <p style="font-size: 1.05rem; font-weight: 600;">${escapeHtml(c.statement)}</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+              <button class="btn btn-secondary btn-vf" data-val="true" style="padding: 10px 24px;">Verdadero</button>
+              <button class="btn btn-primary btn-vf" data-val="false" style="padding: 10px 24px; background: #dc2626;">Falso</button>
+            </div>
+            <div id="vf-fb" style="display: none; padding: 10px; border-radius: 6px; font-size: 0.88rem;"></div>
+            <div style="text-align: right;"><button class="btn btn-outline btn-sm" id="btn-vf-next" style="display: none;">Siguiente &rarr;</button></div>
+          </div>
+        `;
+
+        const fb = document.getElementById("vf-fb");
+        const next = document.getElementById("btn-vf-next");
+
+        container.querySelectorAll(".btn-vf").forEach(b => {
+          b.addEventListener("pointerdown", () => {
+            const val = b.getAttribute("data-val") === "true";
+            fb.style.display = "block";
+            next.style.display = "inline-flex";
+            container.querySelectorAll(".btn-vf").forEach(x => x.disabled = true);
+            if (val === c.isTrue) {
+              score++;
+              fb.style.background = "#dcfce7";
+              fb.style.color = "#166534";
+              fb.innerHTML = `<strong>¡Correcto!</strong> ${escapeHtml(c.justification)}`;
+            } else {
+              mistakes++;
+              fb.style.background = "#fee2e2";
+              fb.style.color = "#991b1b";
+              fb.innerHTML = `<strong>Incorrecto.</strong> ${escapeHtml(c.justification)}`;
+            }
+          });
+        });
+
+        next.addEventListener("click", () => {
+          cur++;
+          updateScoreUI(score, cards.length);
+          renderCard();
+        });
+      }
+      renderCard();
+    }
+
+    /* 13. AHORCADO CON TECLADO VIRTUAL */
+    function initAhorcado(container, data) {
+      const words = (data.words || []).filter(w => w.word);
+      let cur = 0;
+      updateScoreUI(0, words.length);
+
+      function renderHang() {
+        if (cur >= words.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 25px;"><h3 style="color: #059669;">¡Completaste todas las palabras!</h3></div>`;
+          updateScoreUI(words.length, words.length);
+          return;
+        }
+        const current = words[cur];
+        const target = current.word.toUpperCase();
+        let guessed = new Set();
+        let wrong = 0;
+        const maxWrong = 6;
+
+        container.innerHTML = `
+          <div style="max-width: 580px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+            <span style="font-size: 0.85rem; color: var(--gray-600);">Palabra #${cur + 1} de ${words.length}</span>
+            <p style="font-style: italic; color: var(--primary);">Pista: ${escapeHtml(current.clue || '')}</p>
+            <svg width="120" height="110" viewBox="0 0 100 100" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;">
+              <line x1="10" y1="95" x2="90" y2="95" stroke="#334155" stroke-width="4"/>
+              <line x1="30" y1="95" x2="30" y2="10" stroke="#334155" stroke-width="4"/>
+              <line x1="30" y1="10" x2="70" y2="10" stroke="#334155" stroke-width="4"/>
+              <line x1="70" y1="10" x2="70" y2="25" stroke="#334155" stroke-width="3"/>
+              <circle id="h-0" cx="70" cy="35" r="10" stroke="#ef4444" stroke-width="3" fill="none" style="display: none;"/>
+              <line id="h-1" x1="70" y1="45" x2="70" y2="70" stroke="#ef4444" stroke-width="3" style="display: none;"/>
+              <line id="h-2" x1="70" y1="52" x2="55" y2="62" stroke="#ef4444" stroke-width="3" style="display: none;"/>
+              <line id="h-3" x1="70" y1="52" x2="85" y2="62" stroke="#ef4444" stroke-width="3" style="display: none;"/>
+              <line id="h-4" x1="70" y1="70" x2="55" y2="88" stroke="#ef4444" stroke-width="3" style="display: none;"/>
+              <line id="h-5" x1="70" y1="70" x2="85" y2="88" stroke="#ef4444" stroke-width="3" style="display: none;"/>
+            </svg>
+            <div id="hang-disp" style="display: flex; gap: 8px; font-family: monospace; font-size: 1.5rem; font-weight: 700;"></div>
+            <div id="hang-kb" style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; max-width: 450px;"></div>
+          </div>
+        `;
+
+        const disp = document.getElementById("hang-disp");
+        const kb = document.getElementById("hang-kb");
+
+        function updateDisp() {
+          disp.innerHTML = "";
+          let done = true;
+          for (const ch of target) {
+            const s = document.createElement("span");
+            s.style.cssText = "border-bottom: 2px solid #334155; min-width: 20px; text-align: center;";
+            if (guessed.has(ch)) s.textContent = ch;
+            else { s.textContent = " "; done = false; }
+            disp.appendChild(s);
+          }
+          if (done) { cur++; updateScoreUI(cur, words.length); setTimeout(renderHang, 800); }
+        }
+
+        "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split('').forEach(l => {
+          const b = document.createElement("button");
+          b.className = "btn btn-outline btn-sm";
+          b.style.cssText = "padding: 6px 9px; font-weight: 700;";
+          b.textContent = l;
+          b.addEventListener("pointerdown", () => {
+            b.disabled = true;
+            guessed.add(l);
+            if (target.includes(l)) b.style.background = "#dcfce7";
+            else {
+              b.style.background = "#fee2e2";
+              if (wrong < maxWrong) { document.getElementById(`h-${wrong}`).style.display = "inline"; wrong++; }
+              if (wrong >= maxWrong) { mistakes++; alert("Agotaste los intentos."); cur++; setTimeout(renderHang, 500); }
+            }
+            updateDisp();
+          });
+          kb.appendChild(b);
+        });
+        updateDisp();
+      }
+      renderHang();
+    }
+
+    /* 14. LLUVIA DE CONCEPTOS */
+    function initLluvia(container, data) {
+      const baskets = data.baskets || ["Cat A", "Cat B"];
+      const items = (data.items || []).sort(() => Math.random() - 0.5);
+      let cur = 0, score = 0;
+      updateScoreUI(0, items.length);
+
+      function renderLluvia() {
+        if (cur >= items.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 25px;"><h3 style="color: #059669;">¡Conceptos clasificados!</h3></div>`;
+          updateScoreUI(items.length, items.length);
+          return;
+        }
+        const item = items[cur];
+        container.innerHTML = `
+          <div style="max-width: 550px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; gap: 20px;">
+            <span style="font-size: 0.85rem; color: var(--gray-600);">Elemento ${cur + 1} de ${items.length}</span>
+            <div style="padding: 16px; background: var(--primary-light); border: 2px solid var(--primary); border-radius: 8px; font-size: 1.25rem; font-weight: 700; color: var(--primary);">
+              ${escapeHtml(item.name)}
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+              ${baskets.map(b => `<button class="btn btn-outline btn-bsk" data-cat="${escapeHtml(b)}" style="padding: 12px 18px; font-weight: 700;">${escapeHtml(b)}</button>`).join('')}
+            </div>
+          </div>
+        `;
+        container.querySelectorAll(".btn-bsk").forEach(b => {
+          b.addEventListener("pointerdown", () => {
+            if (b.getAttribute("data-cat") === item.basket) score++;
+            else mistakes++;
+            cur++;
+            updateScoreUI(score, items.length);
+            renderLluvia();
+          });
+        });
+      }
+      renderLluvia();
+    }
+
+    /* 15. ROMPECABEZAS DE FRASES */
+    function initRompecabezas(container, data) {
+      const phrases = data.phrases || [];
+      let cur = 0;
+      updateScoreUI(0, phrases.length);
+
+      function renderPhrase() {
+        if (cur >= phrases.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 25px;"><h3 style="color: #059669;">¡Frases ordenadas con éxito!</h3></div>`;
+          updateScoreUI(phrases.length, phrases.length);
+          return;
+        }
+        const current = phrases[cur];
+        const chunks = [...current.chunks].sort(() => Math.random() - 0.5);
+
+        container.innerHTML = `
+          <div style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 0.85rem; color: var(--gray-600);">Frase #${cur + 1} de ${phrases.length}</span>
+            <div id="rp-target" style="min-height: 55px; border: 2px dashed #94a3b8; border-radius: 8px; padding: 10px; display: flex; flex-wrap: wrap; gap: 6px; background: #ffffff;"></div>
+            <div id="rp-pool" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+            <div><button class="btn btn-outline btn-sm" id="btn-rp-reset">Reiniciar</button></div>
+          </div>
+        `;
+
+        const targetEl = document.getElementById("rp-target");
+        const poolEl = document.getElementById("rp-pool");
+        let selected = [];
+
+        chunks.forEach(ch => {
+          const b = document.createElement("button");
+          b.className = "btn btn-outline";
+          b.textContent = ch;
+          b.addEventListener("pointerdown", () => {
+            b.style.display = "none";
+            selected.push({ ch, b });
+            renderTarget();
+          });
+          poolEl.appendChild(b);
+        });
+
+        function renderTarget() {
+          targetEl.innerHTML = "";
+          selected.forEach(x => {
+            const sp = document.createElement("span");
+            sp.className = "btn btn-primary btn-sm";
+            sp.textContent = x.ch;
+            targetEl.appendChild(sp);
+          });
+          if (selected.length === current.chunks.length) {
+            if (selected.map(x => x.ch).join(' ').trim() === current.original.trim()) {
+              targetEl.style.borderColor = "#22c55e";
+              cur++;
+              updateScoreUI(cur, phrases.length);
+              setTimeout(renderPhrase, 900);
+            } else {
+              mistakes++;
+              targetEl.style.borderColor = "#ef4444";
+            }
+          }
+        }
+
+        document.getElementById("btn-rp-reset").addEventListener("click", () => {
+          selected.forEach(x => x.b.style.display = "inline-flex");
+          selected = [];
+          targetEl.innerHTML = "";
+          targetEl.style.borderColor = "#94a3b8";
+        });
+      }
+      renderPhrase();
+    }
+
+    /* 16. TRIVIA RACHA */
+    function initTriviaRacha(container, data) {
+      const questions = data.questions || [];
+      let cur = 0, score = 0, streak = 0;
+      updateScoreUI(0, questions.length);
+
+      function renderQ() {
+        if (cur >= questions.length) {
+          container.innerHTML = `<div style="text-align: center; padding: 25px;"><h3 style="color: #059669;">¡Trivia completada! Racha: ${streak}</h3></div>`;
+          updateScoreUI(questions.length, questions.length);
+          return;
+        }
+        const q = questions[cur];
+        container.innerHTML = `
+          <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+              <span>Pregunta ${cur + 1} de ${questions.length}</span>
+              <span style="font-weight: 700; color: #f59e0b;">🔥 Racha: ${streak}</span>
+            </div>
+            <p style="font-size: 1.05rem; font-weight: 600;">${escapeHtml(q.q)}</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${q.options.map((opt, i) => `<button class="btn btn-outline tr-btn" data-idx="${i}" style="text-align: left; justify-content: flex-start; padding: 10px 14px;">${String.fromCharCode(65 + i)}) ${escapeHtml(opt)}</button>`).join('')}
+            </div>
+          </div>
+        `;
+        container.querySelectorAll(".tr-btn").forEach(b => {
+          b.addEventListener("pointerdown", () => {
+            const idx = parseInt(b.getAttribute("data-idx"));
+            container.querySelectorAll(".tr-btn").forEach(x => x.disabled = true);
+            if (idx === q.correct) { b.style.background = "#dcfce7"; score++; streak++; }
+            else { mistakes++; streak = 0; b.style.background = "#fee2e2"; }
+            cur++;
+            updateScoreUI(score, questions.length);
+            setTimeout(renderQ, 800);
+          });
+        });
+      }
+      renderQ();
+    }
+
+    /* 17. RULETA */
+    function initRuleta(container, data) {
+      const categories = data.categories || [];
+      let count = 0;
+      updateScoreUI(0, categories.length);
+
+      container.innerHTML = `
+        <div style="max-width: 550px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+          <div style="position: relative; width: 180px; height: 180px;">
+            <svg width="180" height="180" viewBox="0 0 100 100" id="wheel-svg" style="transition: transform 3s cubic-bezier(0.1, 0.7, 0.1, 1);">
+              <circle cx="50" cy="50" r="48" fill="#e0f2fe" stroke="#0284c7" stroke-width="3"/>
+              <line x1="50" y1="50" x2="50" y2="2" stroke="#0284c7" stroke-width="2"/>
+              <line x1="50" y1="50" x2="98" y2="50" stroke="#0284c7" stroke-width="2"/>
+              <line x1="50" y1="50" x2="50" y2="98" stroke="#0284c7" stroke-width="2"/>
+              <line x1="50" y1="50" x2="2" y2="50" stroke="#0284c7" stroke-width="2"/>
+            </svg>
+            <div style="position: absolute; top: -10px; left: 80px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 18px solid #ef4444;"></div>
+          </div>
+          <button class="btn btn-primary" id="btn-spin">Girar Ruleta</button>
+          <div id="wheel-card" style="display: none; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; width: 100%; text-align: left;">
+            <h4 id="wheel-cat" style="color: var(--primary);"></h4>
+            <p id="wheel-q" style="font-weight: 600; margin: 8px 0;"></p>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="wheel-ans" class="form-control" placeholder="Tu respuesta...">
+              <button class="btn btn-secondary" id="btn-wheel-sub">Responder</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      let rot = 0, active = null;
+      document.getElementById("btn-spin").addEventListener("click", () => {
+        rot += 720 + Math.floor(Math.random() * 360);
+        document.getElementById("wheel-svg").style.transform = `rotate(${rot}deg)`;
+        document.getElementById("btn-spin").disabled = true;
+        setTimeout(() => {
+          active = categories[Math.floor(Math.random() * categories.length)];
+          document.getElementById("wheel-cat").textContent = active.name;
+          document.getElementById("wheel-q").textContent = active.q;
+          document.getElementById("wheel-card").style.display = "block";
+          document.getElementById("btn-spin").disabled = false;
+        }, 3000);
+      });
+
+      document.getElementById("btn-wheel-sub").addEventListener("click", () => {
+        const val = document.getElementById("wheel-ans").value.trim().toLowerCase();
+        if (val && active.a.toLowerCase().includes(val)) {
+          alert("¡Correcto!");
+          count++;
+          updateScoreUI(count, categories.length);
+          document.getElementById("wheel-card").style.display = "none";
+          document.getElementById("wheel-ans").value = "";
+        } else {
+          mistakes++;
+          alert("Respuesta esperada: " + active.a);
+        }
+      });
+    }
+
+    /* 18. CRIPTOGRAMA CIENTÍFICO CON KEYPAD VIRTUAL */
+    function initCriptograma(container, data) {
+      const phrase = (data.phrase || "EL SABER ES PODER").toUpperCase();
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const cipher = {};
+      let n = 1;
+      for (const ch of alphabet) cipher[ch] = n++;
+      updateScoreUI(0, 1);
+
+      container.innerHTML = `
+        <div style="max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;">
+          <p style="font-style: italic; color: var(--primary);">Pista: ${escapeHtml(data.hint || '')}</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; line-height: 2.2;">
+            ${phrase.split(' ').map(palabra => `
+              <div style="display: flex; gap: 4px; margin-right: 12px;">
+                ${palabra.split('').map(l => `
+                  <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="cripto-cell" data-char="${l}" style="width: 28px; height: 32px; border: 1px solid #94a3b8; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 700; background: #fff; cursor: pointer;"></div>
+                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">${cipher[l] || '?'}</span>
+                  </div>
+                `).join('')}
+              </div>
+            `).join('')}
+          </div>
+          <div>
+            <span style="font-size: 0.8rem; font-weight: 700;">Selecciona una casilla y toca la letra correspondiente:</span>
+            <div id="cripto-kb" style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 6px;"></div>
+          </div>
+          <button class="btn btn-primary" id="btn-cripto-check">Verificar Criptograma</button>
+        </div>
+      `;
+
+      let selectedCell = null;
+      container.querySelectorAll(".cripto-cell").forEach(c => {
+        c.addEventListener("pointerdown", () => {
+          container.querySelectorAll(".cripto-cell").forEach(x => x.style.borderColor = "#94a3b8");
+          c.style.borderColor = "var(--primary)";
+          selectedCell = c;
+        });
+      });
+
+      const kb = document.getElementById("cripto-kb");
+      "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split('').forEach(letra => {
+        const b = document.createElement("button");
+        b.className = "btn btn-outline btn-sm";
+        b.style.cssText = "padding: 4px 8px; font-weight: 700;";
+        b.textContent = letra;
+        b.addEventListener("pointerdown", () => {
+          if (selectedCell) {
+            selectedCell.textContent = letra;
+            selectedCell.style.borderColor = "#94a3b8";
+            selectedCell = null;
+          }
+        });
+        kb.appendChild(b);
+      });
+
+      document.getElementById("btn-cripto-check").addEventListener("click", () => {
+        let ok = true;
+        container.querySelectorAll(".cripto-cell").forEach(c => {
+          if (c.textContent.trim().toUpperCase() !== c.getAttribute("data-char")) {
+            ok = false;
+            c.style.borderColor = "#ef4444";
+          } else {
+            c.style.borderColor = "#22c55e";
+          }
+        });
+        if (ok) updateScoreUI(1, 1);
+        else mistakes++;
+      });
+    }
+
+    /* 19. JEOPARDY ESCOLAR */
+    function initJeopardy(container, data) {
+      const cols = data.columns || [];
+      let total = 0, solved = 0;
+      cols.forEach(c => total += (c.cards || []).length);
+      updateScoreUI(0, total);
+
+      container.innerHTML = `
+        <div style="max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: grid; grid-template-columns: repeat(${cols.length}, 1fr); gap: 8px;">
+            ${cols.map(c => `<div style="background: var(--primary); color: #fff; text-align: center; padding: 8px 4px; font-weight: 700; font-size: 0.85rem; border-radius: 4px;">${escapeHtml(c.category)}</div>`).join('')}
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(${cols.length}, 1fr); gap: 8px;" id="jp-board"></div>
+          <div id="jp-card" style="display: none; background: #ffffff; border: 2px solid var(--primary); border-radius: 8px; padding: 16px;"></div>
+        </div>
+      `;
+
+      const boardEl = document.getElementById("jp-board");
+      const activeEl = document.getElementById("jp-card");
+      const maxRows = Math.max(...cols.map(c => (c.cards || []).length));
+
+      for (let r = 0; r < maxRows; r++) {
+        for (let c = 0; c < cols.length; c++) {
+          const card = cols[c].cards[r];
+          const btn = document.createElement("button");
+          btn.className = "btn btn-outline";
+          btn.style.cssText = "font-weight: 700; color: var(--primary); padding: 12px 0;";
+          if (card) {
+            btn.textContent = "$" + card.points;
+            btn.addEventListener("click", () => {
+              if (btn.classList.contains("done")) return;
+              activeEl.style.display = "block";
+              activeEl.innerHTML = `
+                <h4 style="color: var(--primary);">Pregunta por $${card.points}:</h4>
+                <p style="font-size: 1.05rem; font-weight: 600; margin: 8px 0;">${escapeHtml(card.q)}</p>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="jp-ans" class="form-control" placeholder="Tu respuesta...">
+                  <button class="btn btn-secondary" id="btn-jp-ans">Responder</button>
+                </div>
+              `;
+              document.getElementById("btn-jp-ans").addEventListener("click", () => {
+                const a = document.getElementById("jp-ans").value.trim().toLowerCase();
+                if (a && card.a.toLowerCase().includes(a)) {
+                  alert("¡Correcto!");
+                  solved++;
+                  btn.classList.add("done");
+                  btn.style.opacity = "0.4";
+                  activeEl.style.display = "none";
+                  updateScoreUI(solved, total);
+                } else {
+                  mistakes++;
+                  alert("Respuesta correcta: " + card.a);
+                  btn.classList.add("done");
+                  btn.style.opacity = "0.4";
+                  activeEl.style.display = "none";
+                }
+              });
+            });
+          } else {
+            btn.style.visibility = "hidden";
+          }
+          boardEl.appendChild(btn);
+        }
+      }
+    }
+
+    /* 20. SIMULADOR DE PIANO ACÚSTICO - ESTACIÓN MUSICAL EpC */
+    function initEstaciones(container, data) {
+      let audioCtx = null;
+      function getAudio() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      // 2 Octavas completas: C4 (MIDI 60) a C6 (MIDI 84)
+      const whiteNotes = [
+        { note: "C4", name: "Do 4", key: "A", midi: 60 },
+        { note: "D4", name: "Re 4", key: "S", midi: 62 },
+        { note: "E4", name: "Mi 4", key: "D", midi: 64 },
+        { note: "F4", name: "Fa 4", key: "F", midi: 65 },
+        { note: "G4", name: "Sol 4", key: "G", midi: 67 },
+        { note: "A4", name: "La 4", key: "H", midi: 69 },
+        { note: "B4", name: "Si 4", key: "J", midi: 71 },
+        { note: "C5", name: "Do 5", key: "K", midi: 72 },
+        { note: "D5", name: "Re 5", key: "L", midi: 74 },
+        { note: "E5", name: "Mi 5", key: "Ñ", midi: 76 },
+        { note: "F5", name: "Fa 5", key: "Z", midi: 77 },
+        { note: "G5", name: "Sol 5", key: "X", midi: 79 },
+        { note: "A5", name: "La 5", key: "C", midi: 81 },
+        { note: "B5", name: "Si 5", key: "V", midi: 83 },
+        { note: "C6", name: "Do 6", key: "B", midi: 84 }
+      ];
+
+      const blackNotes = [
+        { note: "C#4", name: "Do#4 / Reb4", key: "W", midi: 61, whiteIdx: 0 },
+        { note: "D#4", name: "Re#4 / Mib4", key: "E", midi: 63, whiteIdx: 1 },
+        { note: "F#4", name: "Fa#4 / Solb4", key: "T", midi: 66, whiteIdx: 3 },
+        { note: "G#4", name: "Sol#4 / Lab4", key: "Y", midi: 68, whiteIdx: 4 },
+        { note: "A#4", name: "La#4 / Sib4", key: "U", midi: 70, whiteIdx: 5 },
+        { note: "C#5", name: "Do#5 / Reb5", key: "O", midi: 73, whiteIdx: 7 },
+        { note: "D#5", name: "Re#5 / Mib5", key: "P", midi: 75, whiteIdx: 8 },
+        { note: "F#5", name: "Fa#5 / Solb5", key: "7", midi: 78, whiteIdx: 10 },
+        { note: "G#5", name: "Sol#5 / Lab5", key: "8", midi: 80, whiteIdx: 11 },
+        { note: "A#5", name: "La#5 / Sib5", key: "9", midi: 82, whiteIdx: 12 }
+      ];
+
+      const allNotes = whiteNotes.concat(blackNotes);
+
+      function midiToFreq(m) {
+        return 440 * Math.pow(2, (m - 69) / 12);
+      }
+
+      let rawList = (data && data.challenges && data.challenges.length > 0) ? data.challenges : ((data && data.stations) || []);
+      if (!rawList || !rawList.length) {
+        rawList = [
+          { q: "Identifica y toca la nota central 'Do4' (C4) en el teclado.", target: "C4", hint: "Primera tecla blanca (tecla A en PC, ~261.63 Hz)." },
+          { q: "Toca el tono de afinación universal estándar 'La4' (A4) a 440 Hz.", target: "A4", hint: "Sexta tecla blanca (tecla H en PC)." },
+          { q: "Toca el semitono diatónico ascendente inmediato después de 'Mi4' (E4).", target: "F4", hint: "Es Fa4 (F4); entre Mi y Fa no hay tecla negra intermedia." },
+          { q: "Toca la tecla negra 'Fa sostenido' (F#4 / Sol bemol) en la primera octava.", target: "F#4", hint: "Tecla negra entre Fa4 y Sol4 (tecla T en PC)." },
+          { q: "Toca la octava superior de Do4: la nota 'Do5' (C5).", target: "C5", hint: "Su frecuencia es el doble exacto: ~523.25 Hz (tecla K en PC)." }
+        ];
+      }
+
+      const challenges = rawList.map(function(ch) {
+        let t = ch.target || ch.targetNote || ch.note || "C4";
+        if (Array.isArray(t)) t = t.join(" ");
+        return {
+          q: ch.q || ch.challenge || ch.question || ch.title || ch.prompt || "Toca la nota indicada en el piano.",
+          target: String(t),
+          hint: ch.hint || ch.pista || ""
+        };
+      });
+      let curChallenge = 0;
+      updateScoreUI(0, challenges.length);
+
+      const activeVoices = {};
+
+      function playNoteSound(nObj) {
+        try {
+          const ctx = getAudio();
+          if (activeVoices[nObj.note]) return;
+
+          const freq = midiToFreq(nObj.midi);
+          const now = ctx.currentTime;
+
+          const osc1 = ctx.createOscillator();
+          osc1.type = "triangle";
+          osc1.frequency.setValueAtTime(freq, now);
+
+          const osc2 = ctx.createOscillator();
+          osc2.type = "sawtooth";
+          osc2.frequency.setValueAtTime(freq + 0.5, now);
+
+          const osc2Gain = ctx.createGain();
+          osc2Gain.gain.setValueAtTime(0.22, now);
+          osc2.connect(osc2Gain);
+
+          const filter = ctx.createBiquadFilter();
+          filter.type = "lowpass";
+          filter.frequency.setValueAtTime(2200, now);
+          filter.frequency.exponentialRampToValueAtTime(750, now + 1.2);
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(0.78, now + 0.006);
+          gain.gain.exponentialRampToValueAtTime(0.42, now + 0.2);
+
+          osc1.connect(filter);
+          osc2Gain.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc1.start(now);
+          osc2.start(now);
+
+          activeVoices[nObj.note] = { osc1: osc1, osc2: osc2, gain: gain, filter: filter };
+
+          const el = container.querySelector('[data-note="' + nObj.note + '"]');
+          if (el) el.style.background = (nObj.note.indexOf("#") !== -1) ? "#0284c7" : "#bae6fd";
+
+          const dispNote = container.querySelector("#piano-disp-note");
+          const dispFreq = container.querySelector("#piano-disp-freq");
+          if (dispNote) dispNote.textContent = nObj.name + " (" + nObj.note + ")";
+          if (dispFreq) dispFreq.textContent = freq.toFixed(2) + " Hz";
+
+          drawNoteOnStaff(nObj);
+
+          if (curChallenge < challenges.length) {
+            const ch = challenges[curChallenge];
+            const targetNotes = (ch.target.toUpperCase().match(/[A-G][#B]?[3-6]/g)) || [ch.target.toUpperCase().trim()];
+            const isMatch = targetNotes.some(function(t) { return t === nObj.note.toUpperCase(); });
+            if (isMatch) {
+              const fb = container.querySelector("#piano-ch-feedback");
+              if (fb) {
+                fb.style.display = "block";
+                fb.style.background = "#dcfce7";
+                fb.style.color = "#15803d";
+                fb.textContent = "¡Excelente! Has tocado " + nObj.name + " (" + freq.toFixed(1) + " Hz).";
+              }
+              curChallenge++;
+              updateScoreUI(curChallenge, challenges.length);
+              setTimeout(function() {
+                renderChallenge();
+              }, 1100);
+            }
+          }
+        } catch (err) {
+          console.error("Audio synth error:", err);
+        }
+      }
+
+      function stopNoteSound(nObj) {
+        if (!activeVoices[nObj.note]) return;
+        try {
+          const ctx = getAudio();
+          const now = ctx.currentTime;
+          const v = activeVoices[nObj.note];
+          v.gain.gain.cancelScheduledValues(now);
+          v.gain.gain.setValueAtTime(v.gain.gain.value, now);
+          v.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+          setTimeout(function() {
+            try {
+              v.osc1.stop();
+              v.osc2.stop();
+              v.osc1.disconnect();
+              v.osc2.disconnect();
+            } catch (e) {}
+            delete activeVoices[nObj.note];
+          }, 300);
+        } catch (e) {}
+
+        const el = container.querySelector('[data-note="' + nObj.note + '"]');
+        if (el) {
+          el.style.background = (nObj.note.indexOf("#") !== -1) ? "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)" : "#ffffff";
+        }
+        const activeGroup = container.querySelector("#staff-active-note");
+        if (activeGroup) activeGroup.style.opacity = "0.75";
+      }
+
+      // -------------------------------------------------------------
+      // SISTEMA DE PARTITURA: PENTAGRAMA EN TIEMPO REAL (CLAVE DE SOL)
+      // -------------------------------------------------------------
+      const staffSteps = {
+        "C4": -2, "C#4": -2, "D4": -1, "D#4": -1,
+        "E4": 0, "F4": 1, "F#4": 1, "G4": 2, "G#4": 2,
+        "A4": 3, "A#4": 3, "B4": 4, "C5": 5, "C#5": 5,
+        "D5": 6, "D#5": 6, "E5": 7, "F5": 8, "F#5": 8,
+        "G5": 9, "G#5": 9, "A5": 10, "A#5": 10, "B5": 11, "C6": 12
+      };
+
+      function drawNoteOnStaff(nObj) {
+        const staffSvg = container.querySelector("#piano-staff-svg");
+        if (!staffSvg) return;
+        const noteGroup = staffSvg.querySelector("#staff-active-note");
+        if (!noteGroup) return;
+
+        const step = staffSteps[nObj.note] !== undefined ? staffSteps[nObj.note] : 0;
+        const line1Y = 68; // Y de la 1ª Línea (Mi4 / E4)
+        const noteY = line1Y - (step * 5); // 10px entre líneas = 5px por grado diatónico
+        const noteX = 148;
+
+        let ledgerHtml = "";
+        // Línea adicional inferior (Do4 / C4 en Y = 78)
+        if (step <= -2) {
+          ledgerHtml += '<line x1="' + (noteX - 13) + '" y1="78" x2="' + (noteX + 13) + '" y2="78" stroke="#475569" stroke-width="1.6" stroke-linecap="round"/>';
+        }
+        // Línea adicional superior (La5 / Si5 en Y = 18)
+        if (step >= 10) {
+          ledgerHtml += '<line x1="' + (noteX - 13) + '" y1="18" x2="' + (noteX + 13) + '" y2="18" stroke="#475569" stroke-width="1.6" stroke-linecap="round"/>';
+        }
+        // 2ª Línea adicional superior (Do6 en Y = 8)
+        if (step >= 12) {
+          ledgerHtml += '<line x1="' + (noteX - 13) + '" y1="8" x2="' + (noteX + 13) + '" y2="8" stroke="#475569" stroke-width="1.6" stroke-linecap="round"/>';
+        }
+
+        // Plica: hacia arriba si está bajo la 3ª línea (Si4, step < 4); hacia abajo si está en o sobre ella
+        let stemHtml = "";
+        if (step < 4) {
+          stemHtml = '<line x1="' + (noteX + 5.5) + '" y1="' + noteY + '" x2="' + (noteX + 5.5) + '" y2="' + (noteY - 26) + '" stroke="#0284c7" stroke-width="2" stroke-linecap="round"/>';
+        } else {
+          stemHtml = '<line x1="' + (noteX - 5.5) + '" y1="' + noteY + '" x2="' + (noteX - 5.5) + '" y2="' + (noteY + 26) + '" stroke="#0284c7" stroke-width="2" stroke-linecap="round"/>';
+        }
+
+        // Signo de alteración accidental (♯)
+        let accidentalHtml = "";
+        if (nObj.note.indexOf("#") !== -1) {
+          accidentalHtml = '<text x="' + (noteX - 14) + '" y="' + (noteY + 5) + '" font-size="16" font-weight="800" fill="#0284c7" text-anchor="middle">♯</text>';
+        }
+
+        noteGroup.style.opacity = "1";
+        noteGroup.innerHTML = ledgerHtml +
+          '<ellipse cx="' + noteX + '" cy="' + noteY + '" rx="6.5" ry="4.8" transform="rotate(-15 ' + noteX + ' ' + noteY + ')" fill="#0284c7" stroke="#0369a1" stroke-width="1"/>' +
+          stemHtml +
+          accidentalHtml;
+
+        const staffLabel = container.querySelector("#staff-note-label");
+        if (staffLabel) {
+          staffLabel.textContent = nObj.name + " (" + nObj.note + ")";
+          staffLabel.setAttribute("fill", "#0284c7");
+        }
+      }
+
+      function renderChallenge() {
+        const box = container.querySelector("#piano-challenge-box");
+        if (!box) return;
+        if (curChallenge >= challenges.length) {
+          box.innerHTML = '<div style="background: #ecfdf5; border: 2px solid #a7f3d0; border-radius: 8px; padding: 14px; text-align: center;"><h4 style="color: #065f46; margin-bottom: 4px; font-size: 1.05rem;">¡Retos Auditivos Completados con Éxito!</h4><p style="font-size: 0.88rem; color: #047857;">Has dominado las 2 octavas del piano. Ahora puedes tocar libremente y continuar con el taller en tu cuaderno.</p></div>';
+          return;
+        }
+        const ch = challenges[curChallenge];
+        const esc = (typeof escapeHtml === 'function') ? escapeHtml : function(s) {
+          return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        };
+        box.innerHTML = '<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid var(--primary); border-radius: 8px; padding: 12px 16px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">Reto ' + (curChallenge + 1) + ' de ' + challenges.length + '</span><span style="font-size: 0.75rem; background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 9999px;">Toca la tecla en el piano</span></div><p style="font-size: 0.95rem; font-weight: 600; color: #0f172a; margin-bottom: 4px;">' + esc(ch.q || ch.challenge || "") + '</p>' + (ch.hint ? '<span style="font-size: 0.78rem; color: #64748b; font-style: italic;">Pista: ' + esc(ch.hint) + '</span>' : '') + '<div id="piano-ch-feedback" style="display: none; margin-top: 8px; padding: 6px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;"></div></div>';
+      }
+
+      let whiteKeysHtml = "";
+      for (let i = 0; i < whiteNotes.length; i++) {
+        const w = whiteNotes[i];
+        whiteKeysHtml += '<div class="piano-white-key" data-note="' + w.note + '" style="flex: 1; height: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-top: none; border-radius: 0 0 6px 6px; box-shadow: inset 0 -4px 0 #94a3b8, 0 3px 5px rgba(0,0,0,0.15); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 8px; cursor: pointer; position: relative; z-index: 1; transition: background 0.05s, transform 0.05s;"><span style="font-size: clamp(10px, 1.4vw, 13px); font-weight: 700; color: #1e293b;">' + w.note + '</span><span style="font-size: clamp(8px, 1vw, 10px); color: #64748b; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; margin-top: 2px;">' + w.key + '</span></div>';
+      }
+
+      let blackKeysHtml = "";
+      for (let j = 0; j < blackNotes.length; j++) {
+        const b = blackNotes[j];
+        const leftP = ((b.whiteIdx + 1) * (100 / 15)) - ((100 / 15) * 0.32);
+        const widthP = (100 / 15) * 0.64;
+        blackKeysHtml += '<div class="piano-black-key" data-note="' + b.note + '" style="position: absolute; left: ' + leftP + '%; width: ' + widthP + '%; height: 62%; background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); border: 1px solid #020617; border-top: none; border-radius: 0 0 4px 4px; box-shadow: inset 0 -3px 0 #334155, 0 4px 6px rgba(0,0,0,0.35); z-index: 2; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 6px; transition: background 0.05s, transform 0.05s;"><span style="font-size: clamp(8px, 1vw, 10px); font-weight: 700; color: #38bdf8;">' + b.note + '</span><span style="font-size: clamp(7px, 0.9vw, 9px); color: #cbd5e1; opacity: 0.85;">' + b.key + '</span></div>';
+      }
+
+      container.innerHTML = '<div style="max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; user-select: none;">' +
+        '<div style="background: #0f172a; color: #f8fafc; border-radius: 10px; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">' +
+          '<div style="display: flex; align-items: center; gap: 12px;">' +
+            '<div style="width: 32px; height: 32px; border-radius: 8px; background: #3b82f6; display: flex; align-items: center; justify-content: center; color: white;">' +
+              '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' +
+            '</div>' +
+            '<div>' +
+              '<span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Nota Activa</span>' +
+              '<div id="piano-disp-note" style="font-size: 1.15rem; font-weight: 800; color: #38bdf8;">Toca una tecla</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="text-align: right;">' +
+            '<span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Frecuencia Acústica</span>' +
+            '<div id="piano-disp-freq" style="font-size: 1.1rem; font-weight: 700; color: #34d399; font-family: monospace;">--- Hz</div>' +
+          '</div>' +
+        '</div>' +
+        '<div id="piano-challenge-box"></div>' +
+        '<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">' +
+          '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">' +
+            '<span style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em;">Partitura Interactiva (Clave de Sol)</span>' +
+            '<span style="font-size: 0.72rem; color: #64748b; font-style: italic;">Visualización de nota en tiempo real</span>' +
+          '</div>' +
+          '<svg id="piano-staff-svg" viewBox="0 0 320 88" style="width: 100%; height: 95px; display: block; overflow: visible;">' +
+            '<line x1="20" y1="28" x2="300" y2="28" stroke="#94a3b8" stroke-width="1.2"/>' +
+            '<line x1="20" y1="38" x2="300" y2="38" stroke="#94a3b8" stroke-width="1.2"/>' +
+            '<line x1="20" y1="48" x2="300" y2="48" stroke="#94a3b8" stroke-width="1.2"/>' +
+            '<line x1="20" y1="58" x2="300" y2="58" stroke="#94a3b8" stroke-width="1.2"/>' +
+            '<line x1="20" y1="68" x2="300" y2="68" stroke="#94a3b8" stroke-width="1.2"/>' +
+            '<text x="36" y="65" font-size="44" font-family="serif" fill="#1e293b" text-anchor="middle" style="user-select: none;">𝄞</text>' +
+            '<text x="60" y="47" font-size="16" font-weight="800" font-family="monospace" fill="#64748b" text-anchor="middle">4</text>' +
+            '<text x="60" y="65" font-size="16" font-weight="800" font-family="monospace" fill="#64748b" text-anchor="middle">4</text>' +
+            '<g id="staff-active-note">' +
+              '<line x1="135" y1="78" x2="161" y2="78" stroke="#cbd5e1" stroke-width="1.4" stroke-linecap="round"/>' +
+              '<ellipse cx="148" cy="78" rx="6.5" ry="4.8" transform="rotate(-15 148 78)" fill="#cbd5e1"/>' +
+              '<line x1="153.5" y1="78" x2="153.5" y2="52" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round"/>' +
+            '</g>' +
+            '<text id="staff-note-label" x="205" y="52" font-size="13" font-weight="800" fill="#94a3b8" text-anchor="start">Do 4 (C4)</text>' +
+          '</svg>' +
+        '</div>' +
+        '<div style="background: #1e293b; padding: 14px 10px 18px; border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.15);">' +
+          '<div style="position: relative; width: 100%; height: 180px; display: flex; touch-action: none; user-select: none;">' +
+            whiteKeysHtml +
+            blackKeysHtml +
+          '</div>' +
+          '<div style="text-align: center; margin-top: 8px; font-size: 0.75rem; color: #94a3b8;">' +
+            '🎹 Toca con el ratón, desliza en pantalla táctil o usa el teclado (A a B para blancas, W a 9 para negras).' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+      renderChallenge();
+
+      allNotes.forEach(function(n) {
+        const el = container.querySelector('[data-note="' + n.note + '"]');
+        if (!el) return;
+
+        el.addEventListener("pointerdown", function(e) {
+          e.preventDefault();
+          playNoteSound(n);
+        });
+
+        el.addEventListener("pointerup", function(e) {
+          e.preventDefault();
+          stopNoteSound(n);
+        });
+
+        el.addEventListener("pointerleave", function(e) {
+          e.preventDefault();
+          stopNoteSound(n);
+        });
+
+        el.addEventListener("pointercancel", function(e) {
+          e.preventDefault();
+          stopNoteSound(n);
+        });
+      });
+
+      window.addEventListener("keydown", function(e) {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+        if (e.repeat) return;
+        const key = e.key.toUpperCase();
+        const found = allNotes.find(function(n) { return n.key.toUpperCase() === key; });
+        if (found) {
+          playNoteSound(found);
+        }
+      });
+
+      window.addEventListener("keyup", function(e) {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+        const key = e.key.toUpperCase();
+        const found = allNotes.find(function(n) { return n.key.toUpperCase() === key; });
+        if (found) {
+          stopNoteSound(found);
+        }
+      });
+    }
+
+    /* 21. LECTOESCRITURA SILÁBICA INTERACTIVA */
+    function initLectoescritura(container, data) {
+      if (!data) data = {};
+      const topic = data.topic || "Lectoescritura Inicial";
+      const magicWords = data.magicWords || [
+        { word: "PLANTA", syllables: "Plan - ta", meaning: "Ser vivo vegetal que produce su alimento con agua y luz solar." },
+        { word: "RAÍZ", syllables: "Ra - íz", meaning: "Parte que sujeta la planta al suelo y toma agua de la tierra." },
+        { word: "HOJA", syllables: "Ho - ja", meaning: "Parte verde que respira y atrapa la luz del sol." }
+      ];
+      const cards = data.cards || [
+        {
+          title: "1. ¿Qué son las plantas?",
+          normalText: "Las plantas son seres vivos que nacen, crecen, respiran y se alimentan. Ellas viven en la tierra o en el agua.",
+          syllabicText: "Las plan-tas son se-res vi-vos que na-cen, cre-cen, res-pi-ran y se a-li-men-tan. E-llas vi-ven en la tier-ra o en el a-gua.",
+          mainIdea: "Las plantas son seres vivos que necesitan agua y sol para vivir."
+        },
+        {
+          title: "2. Las partes de la planta",
+          normalText: "La raíz toma agua del suelo. El tallo sostiene las hojas. Las hojas atrapan la luz para que la planta crezca sana.",
+          syllabicText: "La ra-íz to-ma a-gua del sue-lo. El ta-llo sos-tie-ne las ho-jas. Las ho-jas a-tra-pan la luz pa-ra que la plan-ta crez-ca sa-na.",
+          mainIdea: "La raíz, el tallo y las hojas trabajan juntos en equipo."
+        }
+      ];
+      const practice = data.practice || {
+        questions: [
+          { q: "¿Qué parte de la planta toma el agua del suelo?", options: ["La raíz", "La flor", "La hoja"], correct: 0 },
+          { q: "¿Qué necesitan las plantas para crecer?", options: ["Agua y luz del sol", "Caramelos y jugo", "Mucho frío y sombra"], correct: 0 }
+        ],
+        buildWord: {
+          target: "PLANTA",
+          syllables: ["ta", "plan"]
+        }
+      };
+      const notebook = data.notebook || [
+        { title: "Reto 1 (Responder)", desc: "Completa en tu cuaderno: Las plantas toman agua del suelo con la _______." },
+        { title: "Reto 2 (Dibujar y Rotular)", desc: "Dibuja una planta y señala 3 partes escribiendo sus nombres en sílabas: ra-íz, ta-llo, ho-ja." },
+        { title: "Reto 3 (Comparar)", desc: "Haz un cuadro de dos columnas: 'Planta con sol' vs. 'Planta en la sombra'." },
+        { title: "Reto 4 (Caza de Sílabas)", desc: "Busca en el texto 2 palabras con 2 sílabas (ej.: ho-ja) y 2 palabras con 3 sílabas (ej.: se-mi-lla)." },
+        { title: "Reto 5 (Mi Primera Oración)", desc: "Escribe en tu cuaderno: Las plantas necesitan agua y sol para crecer sanas." }
+      ];
+
+      let modoSilabas = false;
+      let highlightedCards = {};
+      let builtSyllables = [];
+      let questionAnswers = {};
+
+      function speak(text) {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = 'es-ES';
+          u.rate = 0.85;
+          window.speechSynthesis.speak(u);
+        }
+      }
+
+      function render() {
+        let wordsHtml = magicWords.map(function(mw, idx) {
+          return '<div style="background: #ffffff; border: 2px solid #bbf7d0; border-radius: 14px; padding: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center;">' +
+            '<div style="font-size: 1.3rem; font-weight: 800; color: #047857; letter-spacing: 0.05em;">' + mw.word + '</div>' +
+            '<div style="display: inline-block; background: #ecfdf5; color: #065f46; font-size: 1.1rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin: 8px 0; border: 1px dashed #10b981;">' + mw.syllables + '</div>' +
+            '<p style="font-size: 0.9rem; color: #374151; margin: 0 0 8px; line-height: 1.4;">' + mw.meaning + '</p>' +
+            '<button class="speak-btn" data-word="' + mw.word + '" style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 4px 10px; font-size: 0.8rem; font-weight: 600; color: #065f46; cursor: pointer;">🔊 Escuchar</button>' +
+          '</div>';
+        }).join('');
+
+        let cardsHtml = cards.map(function(c, idx) {
+          const isHighlighted = !!highlightedCards[idx];
+          const textToShow = modoSilabas ? c.syllabicText : c.normalText;
+          return '<div style="background: #ffffff; border-radius: 16px; border: 2px solid ' + (isHighlighted ? '#f59e0b' : '#e2e8f0') + '; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: all 0.25s ease;">' +
+            '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">' +
+              '<h4 style="margin: 0; font-size: 1.15rem; color: #1e293b; font-weight: 800;">' + c.title + '</h4>' +
+              '<button class="highlight-btn" data-card="' + idx + '" style="background: ' + (isHighlighted ? '#fef3c7' : '#f8fafc') + '; border: 1px solid ' + (isHighlighted ? '#f59e0b' : '#cbd5e1') + '; border-radius: 8px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; color: ' + (isHighlighted ? '#b45309' : '#475569') + '; cursor: pointer;">' +
+                (isHighlighted ? '⭐ Idea Destacada' : '💡 Resaltar Idea') +
+              '</button>' +
+            '</div>' +
+            '<div style="font-size: 1.15rem; line-height: 1.7; color: #1f2937; letter-spacing: ' + (modoSilabas ? '0.04em' : 'normal') + '; font-family: system-ui, -apple-system, sans-serif;">' +
+              textToShow +
+            '</div>' +
+            (isHighlighted ? '<div style="margin-top: 12px; background: #fffbeb; border-left: 4px solid #f59e0b; padding: 8px 12px; border-radius: 6px; font-size: 0.95rem; font-weight: 700; color: #92400e;">💡 Idea clave: ' + c.mainIdea + '</div>' : '') +
+          '</div>';
+        }).join('');
+
+        let questionsHtml = (practice.questions || []).map(function(q, qIdx) {
+          const answered = questionAnswers[qIdx] !== undefined;
+          const userAns = questionAnswers[qIdx];
+          const isCorrect = userAns === q.correct;
+          let optsHtml = q.options.map(function(opt, oIdx) {
+            let bg = "#f8fafc";
+            let borderColor = "#cbd5e1";
+            let color = "#1e293b";
+            if (answered) {
+              if (oIdx === q.correct) {
+                bg = "#dcfce7";
+                borderColor = "#22c55e";
+                color = "#15803d";
+              } else if (oIdx === userAns) {
+                bg = "#fee2e2";
+                borderColor = "#ef4444";
+                color = "#b91c1c";
+              }
+            }
+            return '<button class="opt-btn" data-qid="' + qIdx + '" data-oid="' + oIdx + '" style="display: block; width: 100%; text-align: left; padding: 10px 14px; margin: 6px 0; border: 2px solid ' + borderColor + '; background: ' + bg + '; color: ' + color + '; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">' +
+              (answered && oIdx === q.correct ? '✅ ' : (answered && oIdx === userAns ? '❌ ' : '⚪ ')) + opt +
+            '</button>';
+          }).join('');
+
+          return '<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px;">' +
+            '<div style="font-weight: 700; font-size: 1rem; color: #1e293b; margin-bottom: 8px;">' + (qIdx + 1) + '. ' + q.q + '</div>' +
+            optsHtml +
+            (answered ? '<div style="margin-top: 8px; font-size: 0.85rem; font-weight: 700; color: ' + (isCorrect ? '#15803d' : '#b91c1c') + ';">' + (isCorrect ? '¡Excelente trabajo! Respuesta correcta.' : '¡Inténtalo de nuevo o repasa el texto!') + '</div>' : '') +
+          '</div>';
+        }).join('');
+
+        const targetWord = (practice.buildWord && practice.buildWord.target) ? practice.buildWord.target.toUpperCase() : "PLANTA";
+        const availableSyllables = (practice.buildWord && practice.buildWord.syllables) ? practice.buildWord.syllables : ["ta", "plan"];
+        const currentJoined = builtSyllables.join('').toUpperCase();
+        const isBuiltCorrect = currentJoined === targetWord;
+
+        let syllableBankHtml = availableSyllables.map(function(syl, sIdx) {
+          return '<button class="syl-btn" data-syl="' + syl + '" style="background: #059669; color: #ffffff; border: none; border-radius: 12px; padding: 10px 18px; font-size: 1.2rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-transform: uppercase;">' + syl + '</button>';
+        }).join('');
+
+        let notebookHtml = notebook.map(function(nb, idx) {
+          return '<div style="display: flex; gap: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 8px; align-items: flex-start;">' +
+            '<span style="background: #047857; color: #ffffff; font-weight: 800; font-size: 0.8rem; border-radius: 6px; padding: 4px 8px; white-space: nowrap;">' + nb.title + '</span>' +
+            '<div style="font-size: 0.95rem; color: #334155; line-height: 1.4;">' + nb.desc + '</div>' +
+          '</div>';
+        }).join('');
+
+        container.innerHTML = '' +
+          '<div style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; font-family: system-ui, -apple-system, sans-serif;">' +
+
+            /* BARRA SUPERIOR CON MODO SILÁBICO */
+            '<div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border-radius: 16px; padding: 18px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; box-shadow: 0 10px 15px -3px rgba(5,150,105,0.25);">' +
+              '<div>' +
+                '<span style="background: rgba(255,255,255,0.2); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Lectoescritura Inicial &middot; Método Silábico</span>' +
+                '<h2 style="margin: 6px 0 0; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em;">' + topic + '</h2>' +
+              '</div>' +
+              '<button id="toggle-modo-silabas" style="background: ' + (modoSilabas ? '#fbbf24' : '#ffffff') + '; color: ' + (modoSilabas ? '#78350f' : '#047857') + '; border: none; border-radius: 12px; padding: 10px 18px; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.15); transition: all 0.2s ease;">' +
+                (modoSilabas ? '🔤 MODO SÍLABAS (ACTIVO)' : '📖 CAMBIAR A MODO SÍLABAS') +
+              '</button>' +
+            '</div>' +
+
+            /* SECCIÓN 1: PALABRAS MÁGICAS */
+            '<div>' +
+              '<h3 style="margin: 0 0 10px; font-size: 1.2rem; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 8px;">' +
+                '<span>✨ Palabras Mágicas del Tema</span>' +
+                '<span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">(Descomposición silábica y significado)</span>' +
+              '</h3>' +
+              '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">' +
+                wordsHtml +
+              '</div>' +
+            '</div>' +
+
+            /* SECCIÓN 2: MICROTARJETAS DE LECTURA */
+            '<div>' +
+              '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">' +
+                '<h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #065f46;">📖 Microtarjetas de Lectura Guiada</h3>' +
+                '<span style="font-size: 0.8rem; color: #64748b;">Haz clic en "Resaltar Idea" para sintetizar</span>' +
+              '</div>' +
+              '<div style="display: flex; flex-direction: column; gap: 14px;">' +
+                cardsHtml +
+              '</div>' +
+            '</div>' +
+
+            /* SECCIÓN 3: PRÁCTICA DIGITAL */
+            '<div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 16px; padding: 20px;">' +
+              '<h3 style="margin: 0 0 14px; font-size: 1.25rem; font-weight: 800; color: #065f46;">🧩 Práctica Interactiva: Demuestra lo que Leíste</h3>' +
+
+              /* PREGUNTAS */
+              '<div style="margin-bottom: 20px;">' +
+                '<div style="font-size: 0.9rem; font-weight: 700; color: #047857; margin-bottom: 8px; text-transform: uppercase;">Actividad A: Comprensión Lectora</div>' +
+                questionsHtml +
+              '</div>' +
+
+              /* ARMA LA PALABRA */
+              '<div style="background: #ffffff; border-radius: 14px; padding: 16px; border: 2px dashed #34d399;">' +
+                '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">' +
+                  '<div>' +
+                    '<div style="font-size: 0.9rem; font-weight: 800; color: #047857; text-transform: uppercase;">Actividad B: Arma la Palabra por Sílabas</div>' +
+                    '<div style="font-size: 0.85rem; color: #64748b;">Toca las sílabas en el orden correcto para formar la palabra mágica.</div>' +
+                  '</div>' +
+                  '<button id="reset-syllables-btn" style="background: #fee2e2; color: #991b1b; border: 1px solid #f87171; border-radius: 8px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">↺ Reiniciar</button>' +
+                '</div>' +
+
+                /* CASILLERO DE LA PALABRA EN CONSTRUCCIÓN */
+                '<div style="background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; padding: 6px 12px;">' +
+                  (builtSyllables.length === 0 ? '<span style="color: #94a3b8; font-style: italic; font-size: 0.95rem;">Toca los bloques verdes de abajo...</span>' : '') +
+                  builtSyllables.map(function(s) {
+                    return '<span style="background: #3b82f6; color: #ffffff; font-weight: 800; font-size: 1.2rem; padding: 4px 14px; border-radius: 8px; text-transform: uppercase;">' + s + '</span>';
+                  }).join('') +
+                '</div>' +
+
+                /* BANCO DE SÍLABAS */
+                '<div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">' +
+                  syllableBankHtml +
+                '</div>' +
+
+                (isBuiltCorrect ? '<div style="margin-top: 14px; background: #dcfce7; border: 2px solid #22c55e; border-radius: 10px; padding: 12px; text-align: center; font-size: 1.1rem; font-weight: 800; color: #15803d;">🎉 ¡Felicidades! Has formado correctamente la palabra: ' + targetWord + '</div>' : '') +
+              '</div>' +
+            '</div>' +
+
+            /* SECCIÓN 4: ZONA DEL CUADERNO */
+            '<div style="background: #ffffff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">' +
+              '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">' +
+                '<div>' +
+                  '<h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #1e293b;">✏️ Zona del Cuaderno Escolar</h3>' +
+                  '<div style="font-size: 0.85rem; color: #64748b;">5 retos para afianzar la escritura y la síntesis en papel.</div>' +
+                '</div>' +
+                '<button onclick="window.print()" style="background: #0f172a; color: #ffffff; border: none; border-radius: 10px; padding: 8px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">' +
+                  '🖨️ Imprimir Guía para Cuaderno' +
+                '</button>' +
+              '</div>' +
+              '<div style="display: flex; flex-direction: column; gap: 6px;">' +
+                notebookHtml +
+              '</div>' +
+            '</div>' +
+
+          '</div>';
+
+        /* EVENT LISTENERS */
+        const toggleBtn = container.querySelector("#toggle-modo-silabas");
+        if (toggleBtn) {
+          toggleBtn.addEventListener("click", function() {
+            modoSilabas = !modoSilabas;
+            render();
+          });
+        }
+
+        container.querySelectorAll(".speak-btn").forEach(function(b) {
+          b.addEventListener("click", function(e) {
+            const w = e.currentTarget.getAttribute("data-word");
+            speak(w);
+          });
+        });
+
+        container.querySelectorAll(".highlight-btn").forEach(function(b) {
+          b.addEventListener("click", function(e) {
+            const cardIdx = e.currentTarget.getAttribute("data-card");
+            highlightedCards[cardIdx] = !highlightedCards[cardIdx];
+            render();
+          });
+        });
+
+        container.querySelectorAll(".opt-btn").forEach(function(b) {
+          b.addEventListener("click", function(e) {
+            const qid = parseInt(e.currentTarget.getAttribute("data-qid"));
+            const oid = parseInt(e.currentTarget.getAttribute("data-oid"));
+            questionAnswers[qid] = oid;
+            render();
+          });
+        });
+
+        container.querySelectorAll(".syl-btn").forEach(function(b) {
+          b.addEventListener("click", function(e) {
+            const syl = e.currentTarget.getAttribute("data-syl");
+            builtSyllables.push(syl);
+            render();
+          });
+        });
+
+        const resetBtn = container.querySelector("#reset-syllables-btn");
+        if (resetBtn) {
+          resetBtn.addEventListener("click", function() {
+            builtSyllables = [];
+            render();
+          });
+        }
+      }
+
+      render();
+    }
+  </script>
+</body>
+</html>

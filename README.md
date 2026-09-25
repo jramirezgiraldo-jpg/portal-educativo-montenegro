@@ -1,0 +1,129 @@
+# 🌌 Instituto Montenegro | Portal de Actividades Pedagógicas e Interactivas
+
+Bienvenido al repositorio oficial del **Portal Web de Recursos Educativos e Interactivos del Instituto Montenegro**. Este proyecto centraliza, cataloga y despliega un conjunto de **68 actividades didácticas autónomas** (OVAs, laboratorios virtuales, desafíos, escape rooms y talleres guiados) diseñadas para fortalecer los procesos de aprendizaje en ciencias naturales, física, química, artes, ética y turismo regional.
+
+Desarrollado bajo una arquitectura estática de alto rendimiento, **100% autónoma y sin dependencias externas**, garantizando tiempos de carga casi instantáneos y funcionamiento pleno fuera de línea (Offline-Ready) en cualquier dispositivo móvil o de escritorio.
+
+---
+
+## 🚀 Características Principales
+
+* **Diseño UI/UX de Vanguardia (Bento Grid)**: Tarjetas modulares modernas con microinteracciones sutiles, código de color cromático según el área del conocimiento y tipografía nativa ultra-legible.
+* **Experiencia Mobile-First Ergonómica**: Todos los botones y controles táctiles cuentan con un área accesible mínima de 48px, ideal para interacción en smartphones y tablets.
+* **Buscador Instantáneo & Filtros Multifacéticos**:
+  * Búsqueda en tiempo real por título, contenido pedagógico, conceptos clave y nombre de archivo.
+  * Selector por áreas temáticas con contadores dinámicos.
+  * Selector por tipo de dinámica (OVAs, Juegos/Retos, Sopas de Letras, Laboratorios y Guías).
+* **Modo Oscuro / Modo Claro Nativo**: Detección automática de preferencia del sistema y selector manual con persistencia en `localStorage`.
+* **Doble Modalidad de Interacción**:
+  * **Iniciar en línea**: Abre la actividad seleccionada en una pestaña nueva con ejecución instantánea.
+  * **Descargar (.html)**: Enlace con atributo `download` para guardar el archivo autónomo en el dispositivo y ejecutarlo en cualquier momento sin internet ni consumo de datos móviles.
+* **Descarga Masiva en ZIP**: Paquete comprimido preconstruido (`actividades_completas.zip`, ~0.94 MB) con todas las actividades listo para ser distribuido a docentes o escuelas rurales en memorias USB.
+* **100% Autónomo**: Sin llamadas a CDNs externas pesadas ni fuentes remotas; todos los iconos son vectores SVG nativos.
+
+---
+
+## 📂 Estructura del Repositorio
+
+```text
+Actividades ciencias naturales/
+│
+├── index.html                   # Portal principal interactivo (SPA estática)
+├── actividades_data.js          # Catálogo estructurado de las 68 actividades (UTF-8)
+├── actividades_data.json        # Respaldo JSON de metadatos pedagógicos
+├── actividades_completas.zip    # Paquete comprimido offline (~0.94 MB)
+├── render.yaml                  # Manifiesto de despliegue automatizado para Render Static
+├── README.md                    # Documentación técnica y pedagógica
+├── .gitignore                   # Exclusiones de control de versiones
+│
+└── actividades/                 # Repositorio de recursos didácticos (.html)
+    ├── 4p 6 Fisica/             # Física Grado 6° (8 actividades)
+    ├── 4p 7 Fisica/             # Física Grado 7° (8 actividades)
+    ├── 4p 7 Turismo/            # Turismo y Paisaje Cultural Cafetero (9 actividades)
+    ├── 4p Etica/                # Ética y Convivencia Humana (8 actividades)
+    ├── 4p Musica/               # Educación Artística y Musical (8 actividades)
+    ├── 4p Nocturno 1/           # Ciclo Nocturno I - Física, Química, Biología (10 actividades)
+    ├── 4p Nocturno 2/           # Ciclo Nocturno II - Ciencias Integradas (13 actividades)
+    └── 4p Pensar Quimica/       # Pensar la Química (4 actividades)
+```
+
+---
+
+## 📊 Inventario de Actividades por Área
+
+| Área / Dimensión | Grado / Nivel | Cantidad | Enfoque Pedagógico |
+| :--- | :--- | :---: | :--- |
+| **Física 6°** | Grado 6° | 8 | Fenómenos cotidianos de la estática, átomo, electrización por frotamiento, cargas eléctricas, conductores vs aislantes, electroscopio y síntesis. |
+| **Física 7°** | Grado 7° | 8 | Campo gravitacional, energía mecánica, energía potencial y altura, relación masa-energía, constante gravitatoria y revolución industrial. |
+| **Turismo & PCC** | Grado 7° | 9 | Turismo local en Montenegro, atributos del Paisaje Cultural Cafetero (PCC), tipologías del turismo, impactos ambientales y mapeo de tesoros ocultos. |
+| **Ética y Convivencia** | Formación Humana | 8 | Empatía hacia estudiantes nuevos, prejuicios y etiquetas, respeto en el disenso, comunicación asertiva, laberinto de responsabilidad y valor de la disculpa. |
+| **Educación Musical** | Artes y Música | 8 | Geografía del piano y patrones de teclas, técnica pianística, solfeo rítmico, lectura en pentagrama, coordinación bimanual y recital. |
+| **Nocturno Ciclo I** | CLEI Nocturno | 10 | Homeostasis biológica, máquinas térmicas, reacciones químicas, ondas y luz, calentamiento global y leyes de Newton. |
+| **Nocturno Ciclo II** | CLEI Nocturno | 13 | Adaptaciones de los seres vivos, tipos de mezclas, ecosistemas, soluciones químicas, factores bióticos/abióticos, cargas eléctricas y célula. |
+| **Pensar la Química** | Secundaria / Media | 4 | Estados de agregación de la materia, clasificación de la materia, sustancias puras y mezclas homogéneas/heterogéneas. |
+
+**Total de Actividades:** **68 recursos interactivos autónomos**.
+
+---
+
+## 🛠️ Flujo de Control de Versiones (Git y GitHub)
+
+Sigue estos comandos desde la terminal dentro de esta carpeta para inicializar el repositorio y publicarlo en tu cuenta de GitHub:
+
+```bash
+# 1. Inicializar el repositorio Git local
+git init
+
+# 2. Agregar todos los archivos al control de versiones
+git add .
+
+# 3. Crear el primer commit con el mensaje de lanzamiento
+git commit -m "feat: Portal web interactivo y catalogo de 68 actividades educativas - Instituto Montenegro"
+
+# 4. Establecer la rama principal como 'main'
+git branch -M main
+
+# 5. Vincular el repositorio remoto en GitHub (reemplaza con tu URL de GitHub)
+git remote add origin https://github.com/TU-USUARIO/portal-educativo-montenegro.git
+
+# 6. Subir los archivos a GitHub
+git push -u origin main
+```
+
+---
+
+## 🌐 Despliegue en Render (Render Static Site)
+
+El proyecto incluye el archivo `render.yaml` preconfigurado para despliegue automatizado continuo:
+
+1. Ve a tu panel de control en [Render.com](https://dashboard.render.com).
+2. Haz clic en **"New +"** y selecciona **"Static Site"** (o **"Blueprint"**).
+3. Conecta tu repositorio de GitHub `portal-educativo-montenegro`.
+4. Render detectará automáticamente el archivo `render.yaml` con los siguientes parámetros:
+   * **Environment**: `Static`
+   * **Build Command**: *(Vacío, no requiere transpilación)*
+   * **Publish Directory**: `.` *(Raíz del repositorio)*
+5. Haz clic en **"Create Static Site"**. En segundos, tu portal estará disponible en internet con certificado SSL gratuito (HTTPS) y URL personalizada (ejemplo: `https://portal-educativo-montenegro.onrender.com`).
+6. Cada vez que realices un `git push` a la rama `main`, Render compilará y actualizará el portal automáticamente.
+
+---
+
+## 📱 Guía para Estudiantes: Uso 100% Fuera de Línea (Offline)
+
+### En Teléfonos Android / iPhone / Tablets:
+1. Conéctate a internet una sola vez para acceder al portal.
+2. Encuentra la actividad que deseas desarrollar y presiona **"Descargar"**.
+3. El archivo `.html` se guardará en tu carpeta de "Descargas".
+4. Abre la aplicación de archivos de tu teléfono y toca el archivo `.html`.
+5. Se abrirá automáticamente en tu navegador (Chrome, Safari, Samsung Internet, Edge) y funcionará perfectamente sin gastar datos ni tener Wi-Fi.
+
+### Para Docentes y Aulas de Informática:
+1. Haz clic en el botón superior **"Descargar Todo en ZIP"**.
+2. Descomprime el archivo `actividades_completas.zip` en una memoria USB o en la carpeta pública de los computadores del colegio.
+3. Abre el archivo `index.html` para navegar por todo el catálogo sin necesidad de conexión a internet.
+
+---
+
+## 📄 Licencia y Reconocimientos
+
+Recurso educativo abierto desarrollado para el **Instituto Montenegro**. Se autoriza su uso, adaptación y distribución con fines pedagógicos y no comerciales.

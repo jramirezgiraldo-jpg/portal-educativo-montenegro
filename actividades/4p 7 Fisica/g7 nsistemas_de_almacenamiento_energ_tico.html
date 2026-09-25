@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistemas de Almacenamiento Energético</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #e0f2fe;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --white: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--light);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding: 1rem;
+        }
+
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        header {
+            text-align: center;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .instruction-box {
+            background-color: var(--primary-light);
+            border-left: 5px solid var(--primary);
+            padding: 0.75rem 1rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        /* FASE 1 & 2: Game Section */
+        #zona-juego {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            touch-action: none;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .game-stats {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--dark);
+            color: var(--white);
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            font-weight: bold;
+        }
+
+        /* Thematic Battery / Energy Shield Display */
+        .energy-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .battery-container {
+            width: 180px;
+            height: 60px;
+            border: 4px solid var(--dark);
+            border-radius: 12px;
+            padding: 4px;
+            position: relative;
+            background: var(--light);
+        }
+
+        .battery-container::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 20px;
+            width: 6px;
+            height: 20px;
+            background: var(--dark);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .battery-fill {
+            height: 100%;
+            width: 100%;
+            background: var(--secondary);
+            border-radius: 6px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .clue-panel {
+            text-align: center;
+            max-width: 600px;
+            background: var(--light);
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .clue-panel h3 {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .clue-panel p {
+            font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+            color: var(--text-muted);
+        }
+
+        /* Word Slots Container */
+        .word-slots {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 0.5rem 0;
+        }
+
+        .slot {
+            width: 36px;
+            height: 44px;
+            border-bottom: 4px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--dark);
+            text-transform: uppercase;
+        }
+
+        @media (min-width: 600px) {
+            .slot {
+                width: 44px;
+                height: 52px;
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Virtual Keypad QWERTY */
+        .keypad {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .keypad-row {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .key-btn {
+            flex: 1;
+            max-width: 48px;
+            height: 48px;
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: var(--dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+
+        .key-btn:active:not(:disabled), .key-btn:hover:not(:disabled) {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+
+        .key-btn:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            border-color: var(--border);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .key-btn.correct {
+            background: var(--secondary);
+            color: var(--white);
+            border-color: var(--secondary-dark);
+        }
+
+        .key-btn.incorrect {
+            background: var(--danger);
+            color: var(--white);
+            border-color: #b91c1c;
+        }
+
+        /* Results Card Overlay */
+        #game-results {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            width: 100%;
+            background: var(--light);
+            border-radius: var(--radius-md);
+            border: 2px dashed var(--primary);
+        }
+
+        .stars-container {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .star-svg {
+            width: 36px;
+            height: 36px;
+            fill: var(--border);
+        }
+
+        .star-svg.filled {
+            fill: var(--warning);
+        }
+
+        /* FASE 3: Reading Zone & Workshop */
+        #zona-lectura {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .article-content {
+            max-width: 75ch;
+            margin: 0 auto;
+        }
+
+        .article-content h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 0.25rem;
+        }
+
+        .article-content h3 {
+            color: var(--dark);
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        .article-content ul, .article-content ol {
+            margin-bottom: 1.2rem;
+            padding-left: 1.5rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.4rem;
+        }
+
+        .highlight-box {
+            background-color: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        /* Workshop Section */
+        .workshop-section {
+            margin-top: 3rem;
+            border-top: 2px dashed var(--border);
+            padding-top: 2rem;
+        }
+
+        .workshop-instruction {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            font-weight: bold;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: activity-counter;
+        }
+
+        .activity-item {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--light);
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            padding-right: 1rem;
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .activity-item::before {
+            counter-increment: activity-counter;
+            content: counter(activity-counter);
+            position: absolute;
+            left: 0.75rem;
+            top: 1rem;
+            background-color: var(--secondary);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .activity-type {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--border);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0.5rem;
+            }
+            #zona-juego, #zona-lectura {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Sistemas de Almacenamiento Energético</h1>
+        <div class="instruction-box">
+            Lee la pista y usa el teclado virtual para adivinar el concepto clave.
+        </div>
+    </header>
+
+    <main>
+        <!-- FASE 1 & 2: Interactive Shield/Battery Word Guessing Game -->
+        <section id="zona-juego">
+            <div class="game-stats">
+                <div id="word-counter">Concepto: 1 / 7</div>
+                <div id="mistakes-counter">Errores: 0 / 5</div>
+            </div>
+
+            <div class="energy-display">
+                <div class="battery-container">
+                    <div class="battery-fill" id="battery-fill"></div>
+                </div>
+                <span id="shield-label" style="font-size: 0.85rem; font-weight: bold; color: var(--text-muted);">Nivel de Energía: 100%</span>
+            </div>
+
+            <div class="clue-panel" id="clue-panel">
+                <h3 id="concept-title">Pista Pedagógica</h3>
+                <p id="concept-clue">Cargando pista...</p>
+            </div>
+
+            <div class="word-slots" id="word-slots">
+                <!-- Slots populated dynamically -->
+            </div>
+
+            <div class="keypad" id="keypad">
+                <!-- Rows populated via JS -->
+            </div>
+
+            <!-- Results Overlay -->
+            <div id="game-results">
+                <h2>¡Reto Completado!</h2>
+                <div class="stars-container" id="stars-container"></div>
+                <p id="final-message" style="font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem;"></p>
+                <p>Desplázate hacia abajo para estudiar el artículo teórico y resolver el taller en tu cuaderno.</p>
+            </div>
+        </section>
+
+        <!-- FASE 3: Theoretical Reading and Review Workshop -->
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>La Ciencia detrás del Almacenamiento Energético y la Energía Potencial</h2>
+                
+                <p>En el mundo moderno, la generación de electricidad a partir de fuentes renovables como la solar y la eólica es intermitente: el sol no brilla todo el tiempo y el viento no sopla constantemente. Por esta razón, uno de los mayores desafíos tecnológicos de la actualidad es el <strong>almacenamiento energético</strong>. Entre las soluciones más eficientes a gran escala se encuentran las represas hidroeléctricas de bombeo, cuyo principio físico fundamental se basa en la acumulación y aprovechamiento de la <strong>energía potencial gravitatoria</strong>.</p>
+
+                <h3>1. ¿Qué es la Energía Potencial Gravitatoria?</h3>
+                <p>La energía potencial es la energía almacenada en un objeto debido a su posición en relación con un punto de referencia. En física, cuando elevamos un cuerpo de masa ($m$) a una altura ($h$) frente a la aceleración de la gravedad ($g$), realizamos un trabajo que queda retenido en el sistema en forma de energía potencial ($E_p = m \cdot g \cdot h$).</p>
+                <p>Mientras mayor sea la masa del objeto elevado y mayor sea la altura a la que se encuentre, mayor será la cantidad de energía almacenada, lista para ser liberada y transformada en movimiento o electricidad cuando sea necesario.</p>
+
+                <h3>2. Funcionamiento de las Centrales Hidroeléctricas como Baterías Gigantes</h3>
+                <p>Una represa hidroeléctrica convencional o una central de almacenamiento por bombeo actúa esencialmente como una gigantesca batería natural:</p>
+                <ul>
+                    <li><strong>Fase de Almacenamiento (Carga):</strong> Cuando hay un excedente de energía en la red eléctrica (por ejemplo, durante la noche o en un día muy soleado y ventoso), el agua es bombeada desde un embalse inferior hacia un embalse superior, almacenándola en altura y convirtiendo la energía eléctrica en energía potencial gravitatoria.</li>
+                    <li><strong>Fase de Generación (Descarga):</strong> Cuando la demanda de electricidad aumenta en las ciudades, las compuertas se abren. El agua cae con fuerza por enormes tuberías llamadas <em>tuberías forzadas</em>, transformando su energía potencial en energía cinética y haciendo girar turbinas conectadas a generadores eléctricos que alimentan la red.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>Ventaja Clave de los Sistemas de Almacenamiento:</strong>
+                    <p>Las represas reversibles y los sistemas de acumulación permiten estabilizar las redes eléctricas nacionales, evitando apagones y garantizando que la energía esté disponible exactamente en el momento en que los hogares y las industrias la demandan.</p>
+                </div>
+
+                <h3>3. Tipos de Almacenamiento y Transición Energética</h3>
+                <p>Además de las reservas hidráulicas en altura, existen otros métodos cruciales para almacenar energía:</p>
+                <ol>
+                    <li><strong>Baterías Electroquímicas (Litio-ion y Flujo):</strong> Almacenan energía en forma química mediante reacciones internas, ideales para dispositivos portátiles y almacenamiento en hogares o parques solares urbanos.</li>
+                    <li><strong>Almacenamiento Térmico:</strong> Utiliza sales fundidas o materiales refractarios para retener calor proveniente de plantas termosolares y generar electricidad durante la noche.</li>
+                    <li><strong>Volantes de Inercia:</strong> Acumulan energía cinética girando a velocidades sumamente altas en sistemas de vacío con fricción casi nula.</li>
+                </ol>
+                
+                <p>En conclusión, el desarrollo y optimización de los sistemas de almacenamiento energético son los pilares sobre los cuales descansa la transición hacia un futuro sostenible, permitiendo que la energía limpia de la naturaleza sea aprovechada sin desperdicios.</p>
+            </article>
+
+            <!-- Taller de Repaso -->
+            <div class="workshop-section">
+                <div class="workshop-instruction">
+                    <!-- SVG Pencil Icon -->
+                    <svg style="vertical-align: middle; margin-right: 8px;" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Escribe y resuelve estas actividades en tu cuaderno.
+                </div>
+
+                <ol class="activity-list">
+                    <li class="activity-item">
+                        <span class="activity-type">Responder Directamente</span><br>
+                        Define con tus propias palabras qué es la energía potencial gravitatoria y cuáles son los dos factores principales de los que depende según la física.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Mapa Conceptual</span><br>
+                        Elabora un mapa conceptual que clasifique los diferentes sistemas de almacenamiento energético mencionados en el artículo (Hidráulicos, Electroquímicos, Térmicos y Mecánicos).
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Analizar Críticamente</span><br>
+                        ¿Por qué se afirma en el texto que las centrales hidroeléctricas de bombeo actúan como "baterías gigantes" para la red eléctrica? Argumenta tu respuesta.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Dibujar / Ilustrar</span><br>
+                        Dibuja un esquema de una represa hidroeléctrica indicando claramente el embalse superior, el embalse inferior, la tubería forzada y el generador con turbina.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Responder Directamente</span><br>
+                        Explica por qué la generación de energía solar y eólica hace que los sistemas de almacenamiento energético sean indispensables en la actualidad.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Analizar Críticamente</span><br>
+                        Imagina que una ciudad experimenta un pico masivo de consumo eléctrico a las 8:00 p.m. ¿Cómo interviene el sistema de almacenamiento por bombeo en ese momento exacto? Explica el flujo del agua.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Dibujar / Ilustrar</span><br>
+                        Ilustra mediante un diagrama sencillo la diferencia entre la fase de "Carga" (bombeo al embalse superior) y la fase de "Generación" (caída de agua) en una central reversible.
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Responder Directamente</span><br>
+                        ¿Qué es el almacenamiento térmico y qué materiales principales se suelen utilizar para retener el calor a gran escala?
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Mapa Mental</span><br>
+                        Construye un mini mapa mental sobre las ventajas y desafíos de la intermitencia en las energías renovables (solar y eólica).
+                    </li>
+                    <li class="activity-item">
+                        <span class="activity-type">Analizar Críticamente</span><br>
+                        Propone dos ideas o mecanismos que podrías implementar a pequeña escala en tu colegio o hogar para conservar y aprovechar mejor la energía antes de que se desperdicie.
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const concepts = [
+            {
+                word: "POTENCIAL",
+                clue: "Energía que almacena un cuerpo debido a su posición o altura respecto al suelo."
+            },
+            {
+                word: "EMBALSE",
+                clue: "Gran depósito artificial de agua retenida por una presa, usado en hidroeléctricas."
+            },
+            {
+                word: "TURBINA",
+                clue: "Máquina con paletas que gira al recibir la fuerza del agua en caída para generar energía."
+            },
+            {
+                word: "BOMBEO",
+                clue: "Sistema reversible que devuelve el agua al embalse superior en horas de baja demanda."
+            },
+            {
+                word: "GRAVEDAD",
+                clue: "Fuerza de atracción de la Tierra que acelera la caída del agua hacia las turbinas."
+            },
+            {
+                word: "KINETICA",
+                clue: "Energía de movimiento que adquiere el agua cuando desciende por la tubería forzada."
+            },
+            {
+                word: "BATERIA",
+                clue: "Dispositivo o sistema capaz de almacenar y liberar energía eléctrica según se requiera."
+            }
+        ];
+
+        let currentIndex = 0;
+        let mistakes = 0;
+        const maxMistakes = 5;
+        let guessedLetters = new Set();
+        let totalMistakesAccumulated = 0;
+
+        const wordCounterEl = document.getElementById('word-counter');
+        const mistakesCounterEl = document.getElementById('mistakes-counter');
+        const batteryFill = document.getElementById('battery-fill');
+        const shieldLabel = document.getElementById('shield-label');
+        const conceptTitle = document.getElementById('concept-title');
+        const conceptClue = document.getElementById('concept-clue');
+        const wordSlotsEl = document.getElementById('word-slots');
+        const keypadEl = document.getElementById('keypad');
+        const zonaJuego = document.getElementById('zona-juego');
+        const gameResults = document.getElementById('game-results');
+        const starsContainer = document.getElementById('stars-container');
+        const finalMessage = document.getElementById('final-message');
+
+        function initGame() {
+            if (currentIndex >= concepts.length) {
+                endGame();
+                return;
+            }
+
+            mistakes = 0;
+            guessedLetters = new Set();
+            updateStats();
+
+            const current = concepts[currentIndex];
+            wordCounterEl.textContent = `Concepto: ${currentIndex + 1} / ${concepts.length}`;
+            conceptTitle.textContent = `Pista #${currentIndex + 1}`;
+            conceptClue.textContent = current.clue;
+
+            renderSlots();
+            renderKeypad();
+        }
+
+        function updateStats() {
+            mistakesCounterEl.textContent = `Errores: ${mistakes} / ${maxMistakes}`;
+            const percentage = Math.max(0, ((maxMistakes - mistakes) / maxMistakes) * 100);
+            batteryFill.style.width = `${percentage}%`;
+            shieldLabel.textContent = `Nivel de Energía: ${percentage}%`;
+
+            if (percentage > 50) {
+                batteryFill.style.backgroundColor = 'var(--secondary)';
+            } else if (percentage > 20) {
+                batteryFill.style.backgroundColor = 'var(--warning)';
+            } else {
+                batteryFill.style.backgroundColor = 'var(--danger)';
+            }
+        }
+
+        function renderSlots() {
+            wordSlotsEl.innerHTML = '';
+            const word = concepts[currentIndex].word;
+            for (let char of word) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                if (guessedLetters.has(char)) {
+                    slot.textContent = char;
+                } else {
+                    slot.textContent = '';
+                }
+                wordSlotsEl.appendChild(slot);
+            }
+        }
+
+        const keypadRows = [
+            ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+            ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'],
+            ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
+        ];
+
+        function renderKeypad() {
+            keypadEl.innerHTML = '';
+            keypadRows.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'keypad-row';
+                row.forEach(letter => {
+                    const btn = document.createElement('button');
+                    btn.className = 'key-btn';
+                    btn.textContent = letter;
+                    btn.dataset.letter = letter;
+
+                    if (guessedLetters.has(letter)) {
+                        btn.disabled = true;
+                        const word = concepts[currentIndex].word;
+                        if (word.includes(letter)) {
+                            btn.classList.add('correct');
+                        } else {
+                            btn.classList.add('incorrect');
+                        }
+                    }
+
+                    btn.addEventListener('click', () => handleGuess(letter, btn));
+                    rowDiv.appendChild(btn);
+                });
+                keypadEl.appendChild(rowDiv);
+            });
+        }
+
+        function handleGuess(letter, btn) {
+            if (guessedLetters.has(letter)) return;
+            guessedLetters.add(letter);
+
+            const word = concepts[currentIndex].word;
+            if (word.includes(letter)) {
+                btn.classList.add('correct');
+                renderSlots();
+
+                // Check if word is fully solved
+                const isWon = [...word].every(char => guessedLetters.has(char));
+                if (isWon) {
+                    setTimeout(() => {
+                        currentIndex++;
+                        initGame();
+                    }, 800);
+                }
+            } else {
+                btn.classList.add('incorrect');
+                mistakes++;
+                totalMistakesAccumulated++;
+                updateStats();
+
+                zonaJuego.classList.add('shake');
+                setTimeout(() => zonaJuego.classList.remove('shake'), 400);
+
+                if (mistakes >= maxMistakes) {
+                    // Reveal word and move to next
+                    setTimeout(() => {
+                        currentIndex++;
+                        initGame();
+                    }, 1200);
+                }
+            }
+            btn.disabled = true;
+        }
+
+        function endGame() {
+            document.getElementById('word-counter').parentElement.style.display = 'none';
+            document.querySelector('.energy-display').style.display = 'none';
+            document.getElementById('clue-panel').style.display = 'none';
+            wordSlotsEl.style.display = 'none';
+            keypadEl.style.display = 'none';
+
+            gameResults.style.display = 'block';
+
+            // Calculate stars based on total accumulated mistakes
+            let stars = 5;
+            if (totalMistakesAccumulated > 12) stars = 2;
+            else if (totalMistakesAccumulated > 8) stars = 3;
+            else if (totalMistakesAccumulated > 4) stars = 4;
+
+            starsContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const filled = i <= stars ? 'filled' : '';
+                starsContainer.innerHTML += `
+                    <svg class="star-svg ${filled}" viewBox="0 0 24 24">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                `;
+            }
+
+            finalMessage.textContent = `¡Has completado todos los conceptos! Total de errores acumulados: ${totalMistakesAccumulated}. Calificación obtenida: ${stars} de 5 estrellas.`;
+            gameResults.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize first concept
+        initGame();
+    });
+</script>
+</body>
+</html>

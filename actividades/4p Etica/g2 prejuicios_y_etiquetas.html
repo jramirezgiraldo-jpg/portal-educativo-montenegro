@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Exploración: Prejuicios y Etiquetas</title>
+    <style>
+        :root {
+            /* Theme Palette - Empathy & Awareness */
+            --bg-main: #f8fafc; /* Very light cool grey */
+            --text-main: #1e293b; /* Slate 800 */
+            --text-light: #475569; /* Slate 600 */
+            --primary: #4f46e5; /* Indigo 600 */
+            --primary-hover: #3730a3; /* Indigo 800 */
+            --secondary: #0ea5e9; /* Light Blue 500 */
+            --tertiary: #8b5cf6; /* Violet 500 */
+            --success: #16a34a; /* Green 600 */
+            --error: #dc2626; /* Red 600 */
+            --warning: #ca8a04; /* Yellow 600 */
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 12px;
+            --radius-full: 9999px;
+            
+            /* Category Colors */
+            --cat1-color: #ec4899; /* Pink for Stereotypes */
+            --cat2-color: #3b82f6; /* Blue for Consequences */
+            --cat3-color: #10b981; /* Emerald for Empathy/Solutions */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* 100% Offline System Fonts */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Critical for mobile: prevent scroll/zoom during interactions */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .game-header h1 {
+            font-size: clamp(22px, 5vw, 36px);
+            color: var(--primary);
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .game-header p {
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--text-light);
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        .stats-board {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            background: var(--card-bg);
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-md);
+            font-weight: bold;
+            font-size: clamp(14px, 3.5vw, 16px);
+            border: 2px solid #e2e8f0;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .game-arena {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .pool-container {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            border: 2px dashed #94a3b8;
+            min-height: 180px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            align-content: center;
+            gap: 10px;
+        }
+
+        .chip {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: var(--radius-full);
+            font-size: clamp(13px, 3vw, 16px);
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid #cbd5e1;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            user-select: none;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        /* Selected State */
+        .chip.selected {
+            background-color: #e0e7ff;
+            border-color: var(--primary);
+            color: var(--primary-hover);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+            transform: scale(1.05) translateY(-2px);
+        }
+
+        /* Correct match animation */
+        .chip.correct-anim {
+            opacity: 0;
+            transform: scale(0.5) translateY(-20px);
+            pointer-events: none;
+        }
+
+        /* Incorrect match animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--error) !important;
+            background-color: #fef2f2 !important;
+            color: var(--error) !important;
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .category-btn {
+            flex: 1 1 200px;
+            background-color: var(--card-bg);
+            border: 3px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 120px;
+        }
+
+        .category-btn h3 {
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--text-main);
+            pointer-events: none;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .category-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Highlight when tapped correctly */
+        .category-btn.highlight {
+            border-color: var(--success) !important;
+            background-color: #f0fdf4;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Category specific border colors */
+        .cat-1 { border-top: 5px solid var(--cat1-color); }
+        .cat-2 { border-top: 5px solid var(--cat2-color); }
+        .cat-3 { border-top: 5px solid var(--cat3-color); }
+
+        .btn-restart {
+            margin-top: 20px;
+            padding: 12px 32px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-restart:hover { background-color: var(--primary-hover); }
+        .btn-restart:active { transform: scale(0.95); }
+
+        #win-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 30px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            border: 3px solid var(--success);
+            margin-top: 20px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Lectura - Reactivate standard behavior */
+        #zona-lectura {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 60px 20px;
+            border-top: 6px solid var(--primary);
+            box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.05);
+            /* Reactivate scroll and select for reading */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .article-container h2 {
+            font-size: clamp(26px, 6vw, 40px);
+            color: var(--primary);
+            margin-bottom: 25px;
+            border-bottom: 3px solid #e0e7ff;
+            padding-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .article-container h3 {
+            font-size: clamp(20px, 5vw, 26px);
+            color: var(--primary-hover);
+            margin-top: 40px;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 4vw, 19px);
+            margin-bottom: 20px;
+            line-height: 1.8;
+            color: #334155;
+            text-align: justify;
+        }
+
+        .article-container ul, .article-container ol {
+            margin-bottom: 25px;
+            padding-left: 25px;
+        }
+
+        .article-container li {
+            font-size: clamp(16px, 4vw, 19px);
+            margin-bottom: 10px;
+            color: #334155;
+            line-height: 1.7;
+        }
+
+        .highlight-box {
+            background-color: #eff6ff;
+            border-left: 6px solid var(--secondary);
+            padding: 20px 25px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 30px 0;
+            font-style: italic;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workshop-section {
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--radius-md);
+            padding: clamp(20px, 5vw, 40px);
+            margin-top: 60px;
+        }
+
+        .workshop-section h2 {
+            border-bottom-color: #cbd5e1;
+            color: var(--primary-hover);
+        }
+
+        .workshop-notice {
+            background-color: #fffbeb;
+            color: #b45309;
+            padding: 15px 20px;
+            border-left: 6px solid var(--warning);
+            font-weight: bold;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            font-size: clamp(15px, 4vw, 17px);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: custom-counter;
+        }
+
+        .workshop-list li {
+            position: relative;
+            margin-bottom: 35px;
+            padding-left: clamp(45px, 8vw, 60px);
+            font-size: clamp(16px, 4vw, 18px);
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .workshop-list li::before {
+            counter-increment: custom-counter;
+            content: counter(custom-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: var(--primary);
+            color: white;
+            width: clamp(32px, 6vw, 40px);
+            height: clamp(32px, 6vw, 40px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: clamp(15px, 4vw, 18px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .activity-type {
+            display: inline-block;
+            background: #e2e8f0;
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: clamp(11px, 2.5vw, 12px);
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* SVG Icons */
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .icon-large {
+            width: 42px;
+            height: 42px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>No Juzgues por la Portada</h1>
+                <p>1️⃣ <strong>Toca</strong> una etiqueta de la lista. 2️⃣ <strong>Toca</strong> el contenedor correcto al que pertenece.</p>
+                <div class="stats-board">
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--tertiary);" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                        Faltan: <span id="remaining-count">15</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--error);" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2S22 6.477 22 12S17.523 22 12 22ZM11 15V17H13V15H11ZM11 7V13H13V7H11Z"/></svg>
+                        Errores: <span id="mistakes-count">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--success);" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/></svg>
+                        Nota: <span id="score-display">5.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="game-arena">
+                <!-- Concept Pool -->
+                <div class="pool-container" id="concepts-pool">
+                    <!-- Chips injected via JS -->
+                </div>
+
+                <!-- Categories -->
+                <div class="categories-container" id="categories-board">
+                    <div class="category-btn cat-1" data-category="1">
+                        <svg class="icon icon-large" style="color: var(--cat1-color);" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/></svg>
+                        <h3>Prejuicios y Estereotipos</h3>
+                    </div>
+                    <div class="category-btn cat-2" data-category="2">
+                        <svg class="icon icon-large" style="color: var(--cat2-color);" viewBox="0 0 24 24"><path d="M19 4H5C3.89 4 3 4.9 3 6V18C3 19.1 3.89 20 5 20H19C20.11 20 21 19.1 21 18V6C21 4.9 20.11 4 19 4ZM19 18H5V8H19V18ZM11 10.5C11 11.33 10.33 12 9.5 12C8.67 12 8 11.33 8 10.5C8 9.67 8.67 9 9.5 9C10.33 9 11 9.67 11 10.5ZM14.5 12C15.33 12 16 11.33 16 10.5C16 9.67 15.33 9 14.5 9C13.67 9 13 9.67 13 10.5C13 11.33 13.67 12 14.5 12ZM16 16V17H8V16C8 14.67 10.67 14 12 14C13.33 14 16 14.67 16 16Z"/></svg>
+                        <h3>Consecuencias (Aislamiento/Daño)</h3>
+                    </div>
+                    <div class="category-btn cat-3" data-category="3">
+                        <svg class="icon icon-large" style="color: var(--cat3-color);" viewBox="0 0 24 24"><path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z"/></svg>
+                        <h3>Empatía y Valor Real</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div id="win-message">
+                <h2 style="color: var(--success); font-size: clamp(22px, 5vw, 30px); margin-bottom: 10px;">¡Gran Trabajo!</h2>
+                <p style="font-size: clamp(16px, 4vw, 18px); margin-bottom: 15px;">Has clasificado correctamente los conceptos sobre prejuicios y empatía.</p>
+                <p style="font-size: clamp(20px, 5vw, 26px); font-weight: bold; color: var(--primary);">Tu nota final: <span id="final-score">5.0</span> / 5.0</p>
+                <button class="btn-restart" onclick="initGame()">Volver a Jugar</button>
+                <p style="margin-top: 25px; font-size: clamp(14px, 3.5vw, 16px); color: var(--text-light); font-weight: bold; padding: 10px; background: #fffbeb; border-radius: 8px;">
+                    👇 Desliza hacia abajo para leer el artículo y realizar tu taller.
+                </p>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>El Valor Detrás de la Portada: Desarmando los Prejuicios</h2>
+                
+                <p>Imagina que entras a una biblioteca inmensa. En un estante ves un libro con la cubierta desgastada, las páginas amarillentas y sin colores llamativos; justo al lado, hay un libro brillante, recién impreso y con una portada espectacular. Si solo te guiaras por la apariencia, probablemente escogerías el segundo. Sin embargo, al abrir el libro brillante podrías encontrar hojas en blanco, mientras que el libro desgastado podría contener la historia más fascinante y transformadora que jamás hayas leído. <strong>Con las personas, ocurre exactamente lo mismo.</strong></p>
+                
+                <p>En nuestra vida diaria, especialmente en el entorno escolar, a menudo actuamos como lectores apresurados que juzgan a los demás por su "portada": la ropa que llevan, el estado de sus zapatos, el modelo de su celular o el lugar donde viven. Cuando un compañero asiste a clases con ropa desgastada, zapatos rotos o un uniforme heredado que le queda grande, es común (y muy doloroso) que surjan burlas, susurros o miradas de desaprobación. Estas reacciones automáticas se basan en los <strong>estereotipos y prejuicios</strong>.</p>
+
+                <h3>1. ¿Qué son los prejuicios y las etiquetas?</h3>
+                <p>Un <strong>prejuicio</strong> es exactamente lo que su nombre indica: un "juicio previo". Es una opinión, generalmente negativa y sin fundamentos reales, que nos formamos sobre una persona antes de conocerla de verdad. Por otro lado, un <strong>estereotipo</strong> es una imagen mental simplificada que aplicamos a todo un grupo de personas.</p>
+                <ul>
+                    <li><strong>El peligro de etiquetar:</strong> Cuando llamamos a alguien "pobre", "raro", "sucio" o "fracasado" solo por no llevar ropa de marca, le estamos poniendo una etiqueta que ignora por completo su personalidad, sus talentos y sus luchas internas.</li>
+                    <li><strong>La ilusión de la apariencia:</strong> Creer que quien viste mejor es mejor persona o más inteligente es una mentira creada por una sociedad de consumo que valora más <em>el tener</em> que <em>el ser</em>.</li>
+                </ul>
+
+                <h3>2. Consecuencias: El daño invisible del "Bullying" por apariencia</h3>
+                <p>Burlarse de alguien por su situación económica o su ropa no es "solo una broma". Es una forma de agresión que deja cicatrices invisibles pero profundas:</p>
+                <ul>
+                    <li><strong>Aislamiento y soledad:</strong> La persona burlada comienza a alejarse, a evitar participar en clase o salir al descanso por miedo a ser humillada nuevamente.</li>
+                    <li><strong>Destrucción de la autoestima:</strong> Empiezan a creer que no valen nada. Sentirse inferior por factores que, en su mayoría, están fuera de su control (como la situación financiera de sus padres) es devastador para un joven.</li>
+                    <li><strong>Pérdida de talento:</strong> Ese compañero aislado podría ser el mejor para las matemáticas, un artista increíble o el amigo más leal que podrías tener, pero el prejuicio nubla nuestra visión y nos hace perder la oportunidad de conocerlo.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>Reflexión fundamental:</strong> Nadie elige la situación económica en la que nace. Juzgar a alguien por no tener recursos económicos es tan absurdo y cruel como juzgar a alguien por el color de sus ojos. La pobreza no es un defecto de carácter, es una circunstancia.
+                </div>
+
+                <h3>3. La Empatía: Aprender a leer el interior</h3>
+                <p>¿Cómo rompemos el ciclo del prejuicio? La respuesta está en la <strong>empatía</strong>. La empatía es la capacidad de "ponerse en los zapatos del otro" e intentar comprender lo que está sintiendo o viviendo.</p>
+                
+                <p>Cuando veas a un compañero con ropa desgastada, en lugar de burlarte, detente y piensa: <em>"¿Qué historia habrá detrás? Tal vez sus padres están haciendo un esfuerzo inmenso para pagarle el colegio. Tal vez él mismo trabaja después de clases. Tal vez su valor radica en su resistencia y no en su armario"</em>.</p>
+                
+                <p>El verdadero valor de un ser humano jamás se medirá por la etiqueta de su camiseta. Se mide por sus acciones: su amabilidad, su honestidad, su esfuerzo, cómo trata a los demás cuando nadie lo está mirando y su capacidad para superar las adversidades. Quien se burla de otro por su ropa solo demuestra su propia pobreza mental y falta de valores; quien respeta y valora a las personas por su esencia, demuestra verdadera grandeza.</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso y Afianzamiento</h2>
+                    
+                    <div class="workshop-notice">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                        <span><strong>INSTRUCCIÓN OBLIGATORIA:</strong> Escribe, dibuja y resuelve estas 10 actividades ordenadamente en tu cuaderno de Ética y Valores.</span>
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Según el artículo, ¿cuál es la diferencia principal entre evaluar a alguien por lo que "tiene" versus evaluarlo por lo que "es"? Menciona un ejemplo de cada uno.
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración / Metáfora</span><br>
+                            El texto utiliza la metáfora de los dos libros (uno brillante y vacío, otro desgastado pero fascinante). Dibuja esta metáfora en tu cuaderno y escribe una frase que explique su significado relacionado con las personas.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            ¿Por qué el artículo afirma que juzgar a alguien por su situación económica es "absurdo y cruel"? Argumenta tu respuesta con base en la lectura.
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Mental</span><br>
+                            Elabora un mapa mental cuyo centro sea "Consecuencias de burlarse por la apariencia". Desarrolla al menos 4 ramas explicando los daños invisibles que sufre la víctima.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Define con tus propias palabras qué es un "Prejuicio" y por qué se dice que actúa como una etiqueta limitante.
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración y Empatía</span><br>
+                            Dibuja una balanza. En un lado escribe "Pobreza Mental" y enumera actitudes negativas (como burlarse de la ropa); en el otro lado escribe "Grandeza Humana" y enumera actitudes de valor real (como la honestidad o la empatía).
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico (Caso)</span><br>
+                            Imagina que ves a un grupo de amigos riéndose de un compañero nuevo porque sus tenis están rotos. Aplicando lo aprendido sobre la "empatía", ¿qué harías y qué le dirías al grupo que se burla?
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Conceptual</span><br>
+                            Crea un mapa conceptual sobre cómo se mide el "Verdadero Valor Humano", incluyendo conceptos como acciones, amabilidad, esfuerzo y superación (basado en el último párrafo del texto).
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            ¿Qué significa la frase: "Quien se burla de otro por su ropa solo demuestra su propia pobreza mental"? Explica.
+                        </li>
+                        <li>
+                            <span class="activity-type">Reflexión Personal</span><br>
+                            Escribe un compromiso de 4 a 5 líneas donde prometas cómo cambiarás tu forma de mirar y tratar a tus compañeros a partir de hoy, asegurándote de no juzgarlos por su "portada".
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Phase 1: Data - 15 concepts exactly distributed into 3 categories
+        const rawData = [
+            // Categoría 1: Prejuicios y Estereotipos
+            { id: 1, text: "Juzgar por la ropa desgastada", category: 1 },
+            { id: 2, text: "Creer que la ropa de marca te hace mejor", category: 1 },
+            { id: 3, text: "Poner etiquetas negativas sin conocer", category: 1 },
+            { id: 4, text: "Asumir cosas por la apariencia física", category: 1 },
+            { id: 5, text: "Ideas preconcebidas y sin fundamentos", category: 1 },
+            
+            // Categoría 2: Consecuencias
+            { id: 6, text: "Aislamiento y miedo al rechazo", category: 2 },
+            { id: 7, text: "Destrucción de la autoestima", category: 2 },
+            { id: 8, text: "Pérdida de oportunidades y talentos", category: 2 },
+            { id: 9, text: "Sentimientos de inferioridad y soledad", category: 2 },
+            { id: 10, text: "Cicatrices emocionales invisibles", category: 2 },
+            
+            // Categoría 3: Empatía y Valor Real
+            { id: 11, text: "Ponerse en los zapatos del otro", category: 3 },
+            { id: 12, text: "Valorar por la honestidad y el esfuerzo", category: 3 },
+            { id: 13, text: "Comprender la historia detrás de cada persona", category: 3 },
+            { id: 14, text: "Respetar independientemente de la economía", category: 3 },
+            { id: 15, text: "Medir a alguien por sus buenas acciones", category: 3 }
+        ];
+
+        let gameData = [];
+        let selectedChip = null;
+        let mistakes = 0;
+        let correctCount = 0;
+        let totalItems = rawData.length;
+        let isAnimating = false;
+
+        // DOM Nodes
+        const poolContainer = document.getElementById('concepts-pool');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const countEl = document.getElementById('remaining-count');
+        const mistakesEl = document.getElementById('mistakes-count');
+        const scoreEl = document.getElementById('score-display');
+        const winMessage = document.getElementById('win-message');
+        const finalScoreEl = document.getElementById('final-score');
+        const gameArena = document.querySelector('.game-arena');
+
+        // Fisher-Yates Shuffle Array
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            // Reset Game State
+            selectedChip = null;
+            mistakes = 0;
+            correctCount = 0;
+            isAnimating = false;
+            
+            // Reset UI Visibility
+            winMessage.style.display = 'none';
+            gameArena.style.display = 'flex';
+            poolContainer.innerHTML = '';
+            
+            categoryBtns.forEach(btn => btn.classList.remove('highlight'));
+            updateStats();
+
+            // Setup new shuffled chips
+            gameData = shuffle([...rawData]);
+            
+            gameData.forEach(item => {
+                const chip = document.createElement('div');
+                chip.classList.add('chip');
+                chip.textContent = item.text;
+                chip.dataset.id = item.id;
+                chip.dataset.category = item.category;
+                
+                // Interaction Event (Tap/Click)
+                chip.addEventListener('click', () => handleChipTap(chip));
+                
+                poolContainer.appendChild(chip);
+            });
+        }
+
+        function handleChipTap(chip) {
+            if (isAnimating) return; // Prevent bugs during animations
+            
+            // Toggle off if already selected
+            if (selectedChip === chip) {
+                chip.classList.remove('selected');
+                selectedChip = null;
+                return;
+            }
+
+            // Deselect previous
+            if (selectedChip) {
+                selectedChip.classList.remove('selected');
+            }
+
+            // Select new
+            chip.classList.add('selected');
+            selectedChip = chip;
+        }
+
+        // Setup Category tap events
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Ignore if no chip selected or currently animating
+                if (!selectedChip || isAnimating) return;
+
+                const targetCategory = parseInt(btn.dataset.category);
+                const correctCategory = parseInt(selectedChip.dataset.category);
+
+                if (targetCategory === correctCategory) {
+                    handleCorrectMatch(selectedChip, btn);
+                } else {
+                    handleIncorrectMatch(selectedChip);
+                }
+            });
+        });
+
+        function handleCorrectMatch(chip, btn) {
+            isAnimating = true; 
+            
+            // Visual success feedback on category button
+            btn.classList.add('highlight');
+            
+            // Make chip disappear smoothly
+            chip.classList.add('correct-anim');
+            
+            setTimeout(() => {
+                chip.remove();
+                selectedChip = null;
+                correctCount++;
+                updateStats();
+                
+                btn.classList.remove('highlight');
+                isAnimating = false; 
+                checkWin();
+            }, 300); // Matches CSS transition duration
+        }
+
+        function handleIncorrectMatch(chip) {
+            isAnimating = true;
+            mistakes++;
+            updateStats();
+            
+            // Error visual feedback
+            chip.classList.add('shake-error');
+            chip.classList.remove('selected');
+            selectedChip = null;
+            
+            setTimeout(() => {
+                chip.classList.remove('shake-error');
+                isAnimating = false;
+            }, 400); // Matches CSS animation duration
+        }
+
+        function updateStats() {
+            countEl.textContent = totalItems - correctCount;
+            mistakesEl.textContent = mistakes;
+            
+            // Scoring System (starts at 5.0, -0.2 per error, min 1.0)
+            let calcScore = 5.0 - (mistakes * 0.2);
+            calcScore = Math.max(1.0, calcScore); 
+            calcScore = Math.min(5.0, calcScore); 
+            
+            const displayScore = calcScore.toFixed(1);
+            scoreEl.textContent = displayScore;
+            finalScoreEl.textContent = displayScore;
+            
+            // Dynamic Color Coding for grades
+            if (calcScore >= 4.0) scoreEl.style.color = "var(--success)";
+            else if (calcScore >= 3.0) scoreEl.style.color = "var(--warning)";
+            else scoreEl.style.color = "var(--error)";
+        }
+
+        function checkWin() {
+            if (correctCount === totalItems) {
+                setTimeout(() => {
+                    gameArena.style.display = 'none';
+                    winMessage.style.display = 'flex';
+                }, 300);
+            }
+        }
+
+        // Initialize safely on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Exploración: La Declaratoria del PCC</title>
+    <style>
+        :root {
+            /* Coffee & Nature Theme Palette */
+            --bg-main: #fdfaf6; /* Light cream */
+            --text-main: #291c14; /* Dark coffee */
+            --text-light: #57463a;
+            --primary: #78350f; /* Deep coffee brown */
+            --primary-hover: #451a03;
+            --secondary: #166534; /* Rich green */
+            --tertiary: #d97706; /* Warm amber/orange */
+            --success: #15803d; 
+            --error: #b91c1c; 
+            --warning: #c2410c; 
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 12px;
+            --radius-full: 9999px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* 100% Offline System Fonts */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Critical for mobile: prevent scroll/zoom during interactions */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .game-header h1 {
+            font-size: clamp(22px, 5vw, 36px);
+            color: var(--primary);
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .game-header p {
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--text-light);
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        .stats-board {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            background: var(--card-bg);
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-md);
+            font-weight: bold;
+            font-size: clamp(14px, 3.5vw, 16px);
+            border: 2px solid #e7e5e4;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .game-arena {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .pool-container {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            border: 2px dashed #a8a29e;
+            min-height: 180px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            align-content: center;
+            gap: 10px;
+        }
+
+        .chip {
+            background-color: #f5f5f4;
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: var(--radius-full);
+            font-size: clamp(13px, 3vw, 16px);
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid #d6d3d1;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            user-select: none;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        /* Selected State */
+        .chip.selected {
+            background-color: #fef3c7;
+            border-color: var(--tertiary);
+            color: var(--primary-hover);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.3);
+            transform: scale(1.05) translateY(-2px);
+        }
+
+        /* Correct match animation */
+        .chip.correct-anim {
+            opacity: 0;
+            transform: scale(0.5) translateY(-20px);
+            pointer-events: none;
+        }
+
+        /* Incorrect match animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .shake-error {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--error) !important;
+            background-color: #fef2f2 !important;
+            color: var(--error) !important;
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .category-btn {
+            flex: 1 1 200px;
+            background-color: var(--card-bg);
+            border: 3px solid #e7e5e4;
+            border-radius: var(--radius-md);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 120px;
+        }
+
+        .category-btn h3 {
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--text-main);
+            pointer-events: none;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .category-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Highlight when tapped correctly */
+        .category-btn.highlight {
+            border-color: var(--success);
+            background-color: #f0fdf4;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-restart {
+            margin-top: 20px;
+            padding: 12px 32px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-restart:hover { background-color: var(--primary-hover); }
+        .btn-restart:active { transform: scale(0.95); }
+
+        #win-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 30px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            border: 3px solid var(--success);
+            margin-top: 20px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Lectura - Reactivate standard behavior */
+        #zona-lectura {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 60px 20px;
+            border-top: 6px solid var(--primary);
+            box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.05);
+            /* Reactivate scroll and select for reading */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .article-container h2 {
+            font-size: clamp(26px, 6vw, 40px);
+            color: var(--primary);
+            margin-bottom: 25px;
+            border-bottom: 3px solid #fef3c7;
+            padding-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .article-container h3 {
+            font-size: clamp(20px, 5vw, 26px);
+            color: var(--secondary);
+            margin-top: 40px;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 4vw, 19px);
+            margin-bottom: 20px;
+            line-height: 1.8;
+            color: #44403c;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-bottom: 25px;
+            padding-left: 25px;
+        }
+
+        .article-container li {
+            font-size: clamp(16px, 4vw, 19px);
+            margin-bottom: 10px;
+            color: #44403c;
+            line-height: 1.7;
+        }
+
+        .highlight-box {
+            background-color: #fefce8;
+            border-left: 6px solid var(--tertiary);
+            padding: 20px 25px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 30px 0;
+            font-style: italic;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workshop-section {
+            background-color: #f5f5f4;
+            border: 2px dashed #d6d3d1;
+            border-radius: var(--radius-md);
+            padding: clamp(20px, 5vw, 40px);
+            margin-top: 60px;
+        }
+
+        .workshop-section h2 {
+            border-bottom-color: #d6d3d1;
+            color: var(--primary-hover);
+        }
+
+        .workshop-notice {
+            background-color: #fefce8;
+            color: #92400e;
+            padding: 15px 20px;
+            border-left: 6px solid var(--tertiary);
+            font-weight: bold;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            font-size: clamp(15px, 4vw, 17px);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: custom-counter;
+        }
+
+        .workshop-list li {
+            position: relative;
+            margin-bottom: 35px;
+            padding-left: clamp(45px, 8vw, 60px);
+            font-size: clamp(16px, 4vw, 18px);
+            line-height: 1.6;
+            color: #291c14;
+        }
+
+        .workshop-list li::before {
+            counter-increment: custom-counter;
+            content: counter(custom-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: var(--secondary);
+            color: white;
+            width: clamp(32px, 6vw, 40px);
+            height: clamp(32px, 6vw, 40px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: clamp(15px, 4vw, 18px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .activity-type {
+            display: inline-block;
+            background: #e7e5e4;
+            color: #291c14;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: clamp(11px, 2.5vw, 12px);
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #d6d3d1;
+        }
+
+        /* SVG Icons */
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .icon-large {
+            width: 42px;
+            height: 42px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>El Tesoro del PCC</h1>
+                <p>1️⃣ <strong>Toca</strong> un elemento de la lista. 2️⃣ <strong>Toca</strong> la categoría correcta a la que pertenece.</p>
+                <div class="stats-board">
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--tertiary);" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                        Faltan: <span id="remaining-count">15</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--error);" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2S22 6.477 22 12S17.523 22 12 22ZM11 15V17H13V15H11ZM11 7V13H13V7H11Z"/></svg>
+                        Errores: <span id="mistakes-count">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <svg class="icon" style="color: var(--success);" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/></svg>
+                        Nota: <span id="score-display">5.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="game-arena">
+                <!-- Concept Pool -->
+                <div class="pool-container" id="concepts-pool">
+                    <!-- Chips injected via JS -->
+                </div>
+
+                <!-- Categories -->
+                <div class="categories-container" id="categories-board">
+                    <!-- Categoría 1: Atributos -->
+                    <div class="category-btn" data-category="1" style="border-top: 5px solid var(--primary);">
+                        <svg class="icon icon-large" style="color: var(--primary);" viewBox="0 0 24 24"><path d="M14 6L10 12H13L9 18C13 18 17 12 14 6Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12ZM20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12Z"/></svg>
+                        <h3>Atributos Excepcionales</h3>
+                    </div>
+                    <!-- Categoría 2: Cultura -->
+                    <div class="category-btn" data-category="2" style="border-top: 5px solid var(--tertiary);">
+                        <svg class="icon icon-large" style="color: var(--tertiary);" viewBox="0 0 24 24"><path d="M12 2C13.5684 2 14.9392 2.84587 15.6568 4.13783C15.7681 4.33777 15.9324 4.50207 16.1323 4.61342C17.4243 5.331 18.2701 6.70176 18.2701 8.27014V9.82701C18.2701 10.4208 18.506 10.9902 18.9259 11.4102L20.4571 12.9413C21.181 13.6652 21.181 14.8389 20.4571 15.5627L18.9259 17.0939C18.506 17.5139 18.2701 18.0833 18.2701 18.677V20.2339C18.2701 21.765 17.0286 23.0066 15.4975 23.0066H13.9406C13.3468 23.0066 12.7774 23.2425 12.3575 23.6624L10.8263 25.1936C10.1025 25.9174 8.92878 25.9174 8.2049 25.1936L6.67375 23.6624C6.25379 23.2425 5.68444 23.0066 5.09069 23.0066H3.53381C2.00267 23.0066 0.761108 21.765 0.761108 20.2339V18.677C0.761108 18.0833 0.525182 17.5139 0.105225 17.0939L-1.42593 15.5627C-2.14981 14.8389 -2.14981 13.6652 -1.42593 12.9413L0.105225 11.4102C0.525182 10.9902 0.761108 10.4208 0.761108 9.82701V8.27014C0.761108 6.70176 1.60699 5.331 2.89895 4.61342C3.09889 4.50207 3.26319 4.33777 3.37453 4.13783C4.09211 2.84587 5.4629 2 7.03128 2H12Z" transform="scale(0.85) translate(3, -1)"/></svg>
+                        <h3>Identidad y Cultura</h3>
+                    </div>
+                    <!-- Categoría 3: Retos -->
+                    <div class="category-btn" data-category="3" style="border-top: 5px solid var(--secondary);">
+                        <svg class="icon icon-large" style="color: var(--secondary);" viewBox="0 0 24 24"><path d="M12 2L3 6V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V6L12 2ZM12 10.99H19C18.47 15.11 15.72 18.78 12 19.93V10.99H5V7.3L12 4.19V10.99Z"/></svg>
+                        <h3>Retos de Conservación</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div id="win-message">
+                <h2 style="color: var(--success); font-size: clamp(22px, 5vw, 30px); margin-bottom: 10px;">¡Gran Trabajo!</h2>
+                <p style="font-size: clamp(16px, 4vw, 18px); margin-bottom: 15px;">Has clasificado correctamente los componentes del PCC.</p>
+                <p style="font-size: clamp(20px, 5vw, 26px); font-weight: bold; color: var(--primary);">Tu nota final: <span id="final-score">5.0</span> / 5.0</p>
+                <button class="btn-restart" onclick="initGame()">Volver a Jugar</button>
+                <p style="margin-top: 25px; font-size: clamp(14px, 3.5vw, 16px); color: var(--text-light); font-weight: bold; padding: 10px; background: #fefce8; border-radius: 8px;">
+                    👇 Desliza hacia abajo para leer el artículo y realizar tu taller.
+                </p>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>El Paisaje Cultural Cafetero: Un Tesoro Mundial en Nuestro Patio</h2>
+                
+                <p>Si miras por la ventana de tu casa o recorres las vías de tu departamento, probablemente veas montañas verdes tapizadas de cultivos, casas coloridas con grandes balcones y sientas la calidez de su gente. Todo esto, que para nosotros es cotidiano, en realidad es tan valioso y único que en 2011 la UNESCO (Organización de las Naciones Unidas para la Educación, la Ciencia y la Cultura) lo declaró como <strong>Patrimonio de la Humanidad</strong>, bautizándolo como el <strong>Paisaje Cultural Cafetero (PCC)</strong>.</p>
+                
+                <p>El PCC no es un solo lugar, abarca zonas específicas de los departamentos de Caldas, Quindío, Risaralda y Valle del Cauca. Pero, ¿qué significa exactamente esta declaratoria? Significa que el mundo entero reconoce que la forma en que los habitantes de esta región han convivido con la naturaleza para cultivar café es <em>excepcional</em> y debe ser protegida para las futuras generaciones.</p>
+
+                <h3>1. ¿Por qué somos excepcionales? (Atributos del PCC)</h3>
+                <p>Para que la UNESCO nos otorgara este título, se evaluaron unas características o "atributos" inigualables en el planeta:</p>
+                <ul>
+                    <li><strong>El esfuerzo humano en la ladera:</strong> A diferencia de otros países donde el café crece en llanuras planas con máquinas, aquí lo sembramos en laderas (montañas empinadas). Esto exige un esfuerzo físico, dedicación y conocimiento tradicional impresionante, haciendo la recolección "grano a grano" con las manos.</li>
+                    <li><strong>Arquitectura de la Colonización Antioqueña:</strong> Nuestras fincas y pueblos tradicionales están construidos con técnicas de bahareque (barro y cagajón) y guadua, coronados con tejas de barro cocido. Esta técnica no solo es hermosa y colorida, sino que es altamente resistente a los sismos.</li>
+                    <li><strong>Institucionalidad y Capital Social:</strong> Los cafeteros crearon cooperativas e instituciones (como el Comité de Cafeteros) para ayudarse mutuamente, construir escuelas, vías y acueductos comunitarios.</li>
+                </ul>
+
+                <h3>2. Más que café: La Identidad y la Cultura</h3>
+                <p>El paisaje no es solo la tierra y la planta, es la gente y su forma de vivir. La identidad cafetera está llena de símbolos que nos representan en todo el mundo:</p>
+                <ul>
+                    <li><strong>El Yipao (Jeep Willys):</strong> Estos vehículos rústicos de la Segunda Guerra Mundial se convirtieron en las "mulas mecánicas" de la región. Solo ellos pueden subir las empinadas trochas cargados de bultos de café, racimos de plátano y familias enteras.</li>
+                    <li><strong>Vestimenta y Música:</strong> El poncho, la ruana, el sombrero aguadeño y el carriel (ese bolso de cuero con múltiples bolsillos secretos) son símbolos de los arrieros. Todo esto acompañado de la trova antioqueña y la música de carrilera.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>¿Sabías qué?</strong> El PCC es un paisaje "vivo" y productivo. A diferencia de las Pirámides de Egipto, que son ruinas del pasado, el Paisaje Cultural Cafetero sigue habitado, cambiando y produciendo la base de la economía de miles de familias.
+                </div>
+
+                <h3>3. El desafío del mañana: Retos de Conservación</h3>
+                <p>Tener este título internacional no es solo un diploma para colgar en la pared, es una inmensa responsabilidad. Hoy, el Paisaje Cultural Cafetero enfrenta amenazas serias que debemos resolver juntos:</p>
+                <ul>
+                    <li><strong>El Relevo Generacional:</strong> Muchos jóvenes están migrando a las grandes ciudades dejando el campo vacío. Si las nuevas generaciones no se enamoran del agro, no habrá quién cultive el café en el futuro.</li>
+                    <li><strong>El Cambio Climático y el Agua:</strong> Las variaciones extremas de clima afectan las cosechas. Proteger nuestras cuencas hídricas, bosques y la biodiversidad es vital para que las tierras sigan siendo fértiles.</li>
+                    <li><strong>El Turismo Irresponsable:</strong> Si bien el turismo trae ingresos, un turismo masivo que destruya la tranquilidad, genere basura excesiva o desplace a los locales de sus tierras, puede acabar con la magia del paisaje. Necesitamos un turismo responsable y respetuoso.</li>
+                </ul>
+                
+                <p>Vivir en el Paisaje Cultural Cafetero es habitar en un pedacito de historia mundial. Valorar a nuestros campesinos, comprar productos locales y cuidar nuestro entorno es el primer paso para asegurar que este paraíso verde siga vivo por siglos.</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso y Afianzamiento</h2>
+                    
+                    <div class="workshop-notice">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                        <span><strong>INSTRUCCIÓN OBLIGATORIA:</strong> Escribe, dibuja y resuelve estas 10 actividades ordenadamente en tu cuaderno de Ciencias Sociales / Cátedra de la Paz.</span>
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            ¿Qué significa la sigla UNESCO y en qué año declaró a nuestra región como Patrimonio de la Humanidad?
+                        </li>
+                        <li>
+                            <span class="activity-type">Dibujo / Ilustración</span><br>
+                            Imagina y dibuja una finca cafetera tradicional. Asegúrate de incluir y señalar: el "cultivo en ladera" (montaña empinada) y la arquitectura típica con balcones coloridos.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Explica con tus propias palabras por qué el "relevo generacional" es un problema tan grave para el PCC. ¿Qué propondrías tú para que los jóvenes quieran quedarse trabajando en el campo?
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Conceptual</span><br>
+                            Crea un mapa conceptual cuyo título central sea "Atributos del PCC". Desglosa y explica brevemente al menos tres características que nos hacen únicos en el mundo (ej. esfuerzo en ladera, bahareque, etc.).
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Según el artículo, ¿qué materiales tradicionales se utilizan en la Arquitectura de la Colonización Antioqueña y por qué son tan útiles frente a los sismos?
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración y Análisis</span><br>
+                            Dibuja un "Jeep Willys" (Yipao) cargado de productos agrícolas. Escribe al lado un pequeño párrafo explicando por qué este vehículo se considera la "mula mecánica" y un símbolo de la región.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            El turismo es importante para la economía, pero el texto advierte sobre el "Turismo Irresponsable". Escribe 3 acciones negativas que los turistas podrían hacer y cómo dañarían el Paisaje Cultural Cafetero.
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Mental</span><br>
+                            Diseña un mapa mental vibrante centrado en la frase "Identidad y Cultura Cafetera". Saca al menos 4 ramas dibujando o nombrando elementos como el vestuario, la música, el transporte y la comida.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            A diferencia de ruinas históricas antiguas (como las Pirámides), se dice que el PCC es un paisaje "vivo". Explica brevemente qué quiere decir esa afirmación.
+                        </li>
+                        <li>
+                            <span class="activity-type">Reflexión Personal</span><br>
+                            Como estudiante y habitante de este territorio de valor mundial, redacta un compromiso personal (3 o 4 líneas) sobre cómo ayudarás, desde tus acciones diarias, a conservar el Paisaje Cultural Cafetero.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Phase 1: Data - 15 concepts exactly distributed into 3 categories
+        const rawData = [
+            // Categoría 1: Atributos Excepcionales
+            { id: 1, text: "Cultivo manual en montaña (ladera)", category: 1 },
+            { id: 2, text: "Arquitectura en bahareque y guadua", category: 1 },
+            { id: 3, text: "Institucionalidad y Comités", category: 1 },
+            { id: 4, text: "Esfuerzo humano de recolección", category: 1 },
+            { id: 5, text: "Biodiversidad y riqueza natural", category: 1 },
+            
+            // Categoría 2: Identidad y Cultura
+            { id: 6, text: "El transporte en Jeep Willys (Yipao)", category: 2 },
+            { id: 7, text: "Uso del carriel, poncho y ruana", category: 2 },
+            { id: 8, text: "Música de carrilera y trovas", category: 2 },
+            { id: 9, text: "Fiestas de la Cosecha y la Cordialidad", category: 2 },
+            { id: 10, text: "La arriería y sus tradiciones", category: 2 },
+            
+            // Categoría 3: Retos de Conservación
+            { id: 11, text: "El relevo generacional de jóvenes", category: 3 },
+            { id: 12, text: "Protección de cuencas hídricas", category: 3 },
+            { id: 13, text: "Promover un turismo responsable", category: 3 },
+            { id: 14, text: "Impactos del Cambio Climático", category: 3 },
+            { id: 15, text: "Evitar la pérdida de técnicas tradicionales", category: 3 }
+        ];
+
+        let gameData = [];
+        let selectedChip = null;
+        let mistakes = 0;
+        let correctCount = 0;
+        let totalItems = rawData.length;
+        let isAnimating = false;
+
+        // DOM Nodes
+        const poolContainer = document.getElementById('concepts-pool');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const countEl = document.getElementById('remaining-count');
+        const mistakesEl = document.getElementById('mistakes-count');
+        const scoreEl = document.getElementById('score-display');
+        const winMessage = document.getElementById('win-message');
+        const finalScoreEl = document.getElementById('final-score');
+        const gameArena = document.querySelector('.game-arena');
+
+        // Fisher-Yates Shuffle Array
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            // Reset Game State
+            selectedChip = null;
+            mistakes = 0;
+            correctCount = 0;
+            isAnimating = false;
+            
+            // Reset UI Visibility
+            winMessage.style.display = 'none';
+            gameArena.style.display = 'flex';
+            poolContainer.innerHTML = '';
+            
+            categoryBtns.forEach(btn => btn.classList.remove('highlight'));
+            updateStats();
+
+            // Setup new shuffled chips
+            gameData = shuffle([...rawData]);
+            
+            gameData.forEach(item => {
+                const chip = document.createElement('div');
+                chip.classList.add('chip');
+                chip.textContent = item.text;
+                chip.dataset.id = item.id;
+                chip.dataset.category = item.category;
+                
+                // Interaction Event (Tap/Click)
+                chip.addEventListener('click', () => handleChipTap(chip));
+                
+                poolContainer.appendChild(chip);
+            });
+        }
+
+        function handleChipTap(chip) {
+            if (isAnimating) return; // Prevent bugs during animations
+            
+            // Toggle off if already selected
+            if (selectedChip === chip) {
+                chip.classList.remove('selected');
+                selectedChip = null;
+                return;
+            }
+
+            // Deselect previous
+            if (selectedChip) {
+                selectedChip.classList.remove('selected');
+            }
+
+            // Select new
+            chip.classList.add('selected');
+            selectedChip = chip;
+        }
+
+        // Setup Category tap events
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Ignore if no chip selected or currently animating
+                if (!selectedChip || isAnimating) return;
+
+                const targetCategory = parseInt(btn.dataset.category);
+                const correctCategory = parseInt(selectedChip.dataset.category);
+
+                if (targetCategory === correctCategory) {
+                    handleCorrectMatch(selectedChip, btn);
+                } else {
+                    handleIncorrectMatch(selectedChip);
+                }
+            });
+        });
+
+        function handleCorrectMatch(chip, btn) {
+            isAnimating = true; 
+            
+            // Visual success feedback on category button
+            btn.classList.add('highlight');
+            
+            // Make chip disappear smoothly
+            chip.classList.add('correct-anim');
+            
+            setTimeout(() => {
+                chip.remove();
+                selectedChip = null;
+                correctCount++;
+                updateStats();
+                
+                btn.classList.remove('highlight');
+                isAnimating = false; 
+                checkWin();
+            }, 300); // Matches CSS transition duration
+        }
+
+        function handleIncorrectMatch(chip) {
+            isAnimating = true;
+            mistakes++;
+            updateStats();
+            
+            // Error visual feedback
+            chip.classList.add('shake-error');
+            chip.classList.remove('selected');
+            selectedChip = null;
+            
+            setTimeout(() => {
+                chip.classList.remove('shake-error');
+                isAnimating = false;
+            }, 400); // Matches CSS animation duration
+        }
+
+        function updateStats() {
+            countEl.textContent = totalItems - correctCount;
+            mistakesEl.textContent = mistakes;
+            
+            // Scoring System (starts at 5.0, -0.2 per error, min 1.0)
+            let calcScore = 5.0 - (mistakes * 0.2);
+            calcScore = Math.max(1.0, calcScore); 
+            calcScore = Math.min(5.0, calcScore); 
+            
+            const displayScore = calcScore.toFixed(1);
+            scoreEl.textContent = displayScore;
+            finalScoreEl.textContent = displayScore;
+            
+            // Dynamic Color Coding for grades
+            if (calcScore >= 4.0) scoreEl.style.color = "var(--success)";
+            else if (calcScore >= 3.0) scoreEl.style.color = "var(--warning)";
+            else scoreEl.style.color = "var(--error)";
+        }
+
+        function checkWin() {
+            if (correctCount === totalItems) {
+                setTimeout(() => {
+                    gameArena.style.display = 'none';
+                    winMessage.style.display = 'flex';
+                }, 300);
+            }
+        }
+
+        // Initialize safely on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>

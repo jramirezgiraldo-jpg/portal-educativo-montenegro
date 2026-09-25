@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Ondas y Luz</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --text-main: #333333;
+            --text-light: #555555;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --card-front: #1e293b;
+            --card-back: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .game-header h1 {
+            font-size: clamp(20px, 4vw, 28px);
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .game-header p {
+            font-size: clamp(14px, 3vw, 16px);
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        .stats-board {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-weight: bold;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+
+        .game-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            /* CRÍTICO: Prevención de bugs táctiles solicitada */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .card {
+            perspective: 1000px;
+            aspect-ratio: 3 / 4;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+        }
+
+        .card-front {
+            background-color: var(--card-front);
+            background-image: radial-gradient(circle, #334155 10%, transparent 11%), radial-gradient(circle at bottom left, #334155 5%, transparent 6%), radial-gradient(circle at bottom right, #334155 5%, transparent 6%), radial-gradient(circle at top left, #334155 5%, transparent 6%), radial-gradient(circle at top right, #334155 5%, transparent 6%);
+            background-size: 20px 20px;
+        }
+
+        .card-front svg {
+            width: 40%;
+            height: 40%;
+            fill: #94a3b8;
+        }
+
+        .card-back {
+            background-color: var(--card-back);
+            color: var(--text-main);
+            transform: rotateY(180deg);
+            font-size: clamp(10px, 2.5vw, 13px);
+            font-weight: 600;
+            word-wrap: break-word;
+            border: 2px solid #e2e8f0;
+        }
+
+        .card.matched .card-back {
+            background-color: #f0fdf4;
+            border-color: var(--success);
+            color: #166534;
+        }
+
+        .card.incorrect .card-back {
+            background-color: #fef2f2;
+            border-color: var(--error);
+            color: #991b1b;
+        }
+
+        .btn-restart {
+            margin-top: 20px;
+            padding: 10px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-restart:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 40px 20px;
+            border-top: 4px solid #e2e8f0;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .article-container h2 {
+            font-size: clamp(24px, 5vw, 32px);
+            color: var(--primary);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        .article-container h3 {
+            font-size: clamp(18px, 4vw, 24px);
+            color: #1e293b;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .article-container p {
+            font-size: clamp(16px, 3.5vw, 18px);
+            margin-bottom: 16px;
+            line-height: 1.8;
+            color: #475569;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+
+        .article-container li {
+            font-size: clamp(16px, 3.5vw, 18px);
+            margin-bottom: 10px;
+            color: #475569;
+        }
+
+        .workshop-section {
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+
+        .workshop-notice {
+            background-color: #fffbeb;
+            color: #b45309;
+            padding: 15px;
+            border-left: 5px solid #f59e0b;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: clamp(15px, 3vw, 17px);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: custom-counter;
+        }
+
+        .workshop-list li {
+            position: relative;
+            margin-bottom: 25px;
+            padding-left: 45px;
+            font-size: clamp(15px, 3.5vw, 17px);
+        }
+
+        .workshop-list li::before {
+            counter-increment: custom-counter;
+            content: counter(custom-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: var(--primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .activity-type {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #334155;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Física: Ondas y Luz</h1>
+                <p>Toca las cartas para voltearlas y encuentra los pares (Concepto - Definición).</p>
+                <div class="stats-board">
+                    <span>Movimientos: <span id="moves-count">0</span></span>
+                    <span>Aciertos: <span id="matches-count">0</span>/10</span>
+                    <span>Calificación: <span id="score-display">--</span></span>
+                </div>
+            </div>
+            
+            <div class="game-grid" id="game-board">
+                <!-- Las cartas se inyectarán aquí vía JS -->
+            </div>
+
+            <button class="btn-restart" onclick="initGame()">Reiniciar Juego</button>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Fenómenos Ondulatorios: La Luz, el Sonido y la Vida</h2>
+                
+                <p>Vivimos inmersos en un océano de ondas. Aunque muchas veces no podemos verlas ni tocarlas, están presentes en casi cada aspecto de nuestra cotidianidad, desde la música que escuchamos en nuestros audífonos hasta el calor que sentimos bajo el sol al mediodía. En la física, una onda se define como una perturbación que se propaga a través del espacio y del tiempo, transfiriendo energía de un punto a otro sin que haya un transporte neto de materia. Es decir, la energía viaja, pero las partículas del medio solo oscilan alrededor de su posición de equilibrio.</p>
+                
+                <h3>Tipos de Ondas: Mecánicas y Electromagnéticas</h3>
+                
+                <p>Para entender el mundo que nos rodea, la física clasifica las ondas en dos grandes familias dependiendo de si necesitan o no un medio material (como el aire, el agua o un metal) para viajar.</p>
+                
+                <ul>
+                    <li><strong>Ondas Mecánicas:</strong> Son aquellas que requieren indispensablemente de un medio material para propagarse. El ejemplo más común es el <strong>sonido</strong>. Cuando hablamos, nuestras cuerdas vocales vibran, empujando las moléculas de aire cercanas. Estas moléculas chocan con sus vecinas, transmitiendo la perturbación hasta llegar a los tímpanos de quien nos escucha. En el vacío absoluto, como en el espacio exterior, no hay moléculas que puedan vibrar, por lo tanto, el sonido no puede existir ni propagarse.</li>
+                    <li><strong>Ondas Electromagnéticas:</strong> A diferencia de las mecánicas, estas ondas no necesitan de un medio material; pueden viajar perfectamente a través del vacío del espacio. Están formadas por campos eléctricos y magnéticos oscilantes. El ejemplo más vital para nosotros es la <strong>luz</strong>. Todas las ondas electromagnéticas viajan en el vacío a la asombrosa velocidad de aproximadamente 300,000 kilómetros por segundo (la velocidad de la luz).</li>
+                </ul>
+
+                <h3>El Espectro Electromagnético</h3>
+                
+                <p>La luz que nuestros ojos pueden ver (luz visible) es solo una pequeñísima parte de lo que conocemos como el <strong>Espectro Electromagnético</strong>. Este espectro agrupa a todas las ondas electromagnéticas ordenadas según su <em>frecuencia</em> (número de ondas por segundo) y su <em>longitud de onda</em> (distancia entre dos crestas de la onda).</p>
+                
+                <p>El espectro incluye ondas de radio (usadas para las telecomunicaciones), microondas (para radares y calentar alimentos), radiación infrarroja (calor), la luz visible (los colores del arcoíris), radiación ultravioleta (que causa el bronceado y esteriliza), rayos X (usados en medicina) y los potentes rayos gamma. Todos estos son la misma naturaleza de fenómeno físico, variando únicamente en cuánta energía transportan según su frecuencia.</p>
+
+                <h3>La Luz Solar: Un viaje de Vida</h3>
+                
+                <p>Comprender que la luz solar es una onda electromagnética nos permite entender cómo es posible la vida en la Tierra. A unos 150 millones de kilómetros de distancia, en el núcleo del Sol, reacciones nucleares liberan enormes cantidades de energía. Esta energía viaja a través del vacío helado del espacio exterior en forma de ondas electromagnéticas (principalmente luz visible, ultravioleta e infrarroja).</p>
+                
+                <p>Tras un viaje de poco más de 8 minutos, estas ondas penetran nuestra atmósfera y llegan a la superficie terrestre. Aquí es donde ocurre la magia biológica: <strong>la germinación y la fotosíntesis</strong>. Las semillas enterradas detectan cambios de temperatura (ondas infrarrojas) e indicios de luz para romper su latencia y germinar. Una vez que la planta asoma sus primeras hojas, absorbe la energía específica de las ondas de luz visible a través de la clorofila. Usando esta energía ondulatoria, las plantas transforman el agua y el dióxido de carbono en azúcares (su alimento) y oxígeno, sosteniendo así toda la cadena trófica de nuestro planeta.</p>
+
+                <p>Sin la extraordinaria capacidad de las ondas electromagnéticas para viajar sin un medio físico a través del inmenso vacío espacial, la energía del Sol jamás llegaría a la Tierra. Nuestro planeta sería una esfera oscura, fría y estéril. Entender las ondas no es solo comprender fórmulas matemáticas, es entender el mismísimo mecanismo que enciende y sostiene la vida.</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso y Afianzamiento</h2>
+                    
+                    <div class="workshop-notice">
+                        📝 INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno de Física o Ciencias Naturales.
+                    </div>
+
+                    <ul class="workshop-list">
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Explica con tus propias palabras qué es una onda y cuál es su característica principal con respecto a la energía y la materia.
+                        </li>
+                        <li>
+                            <span class="activity-type">Dibujo / Ilustración</span><br>
+                            Dibuja una onda y señala con diferentes colores sus componentes principales: cresta, valle, amplitud y longitud de onda.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            En las películas de ciencia ficción a menudo se escuchan grandes explosiones de naves espaciales en el vacío del espacio. Basándote en el texto, explica científicamente por qué esto es un error y no ocurriría en la vida real.
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual que clasifique las ondas según si necesitan o no un medio para propagarse. Asegúrate de incluir la definición y al menos dos ejemplos de cada categoría.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Describe brevemente cómo es el recorrido que hace la luz solar desde que se origina en el Sol hasta que llega a una hoja de una planta en la Tierra. ¿Cuánto tiempo tarda este viaje?
+                        </li>
+                        <li>
+                            <span class="activity-type">Dibujo / Ilustración</span><br>
+                            Ilustra paso a paso (como un cómic o historieta de 3 viñetas) el proceso mediante el cual la energía de la onda electromagnética (luz solar) estimula la germinación y crecimiento de un cultivo agrícola.
+                        </li>
+                        <li>
+                            <span class="activity-type">Análisis Crítico</span><br>
+                            Imagina un universo paralelo donde la velocidad de la luz fuera igual a la velocidad del sonido (mucho más lenta). ¿Qué consecuencias tendría esto al observar un relámpago durante una tormenta nocturna en ese universo?
+                        </li>
+                        <li>
+                            <span class="activity-type">Mapa Mental</span><br>
+                            Crea un mapa mental sobre el "Espectro Electromagnético". Coloca el concepto en el centro y ramifica los diferentes tipos de ondas mencionados en la lectura (radio, microondas, etc.), destacando la luz visible.
+                        </li>
+                        <li>
+                            <span class="activity-type">Respuesta Directa</span><br>
+                            Según el texto, ¿Qué diferencia fundamental y estructural existe entre la forma en que viaja la voz de un profesor en el salón de clases y la luz que emite una linterna?
+                        </li>
+                        <li>
+                            <span class="activity-type">Ilustración y Análisis</span><br>
+                            Dibuja un invernadero agrícola moderno. Debajo del dibujo, escribe un párrafo de 5 líneas explicando cómo crees que un agricultor podría aprovechar su conocimiento sobre las ondas de luz (ej. usando luz artificial o filtros) para mejorar sus cultivos.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fase 1: 10 conceptos y 10 definiciones muy cortas (para adaptarse a pantallas pequeñas)
+        const gameData = [
+            { id: 1, text: "Onda", type: "concept", matchId: 1 },
+            { id: 2, text: "Perturbación que transfiere energía.", type: "def", matchId: 1 },
+            
+            { id: 3, text: "Onda Mecánica", type: "concept", matchId: 2 },
+            { id: 4, text: "Onda que requiere un medio material.", type: "def", matchId: 2 },
+            
+            { id: 5, text: "Onda Electromagnética", type: "concept", matchId: 3 },
+            { id: 6, text: "Onda que viaja en el vacío.", type: "def", matchId: 3 },
+            
+            { id: 7, text: "Frecuencia", type: "concept", matchId: 4 },
+            { id: 8, text: "Ciclos o vibraciones por unidad de tiempo.", type: "def", matchId: 4 },
+            
+            { id: 9, text: "Longitud de Onda", type: "concept", matchId: 5 },
+            { id: 10, text: "Distancia entre dos crestas equivalentes.", type: "def", matchId: 5 },
+            
+            { id: 11, text: "Amplitud", type: "concept", matchId: 6 },
+            { id: 12, text: "Desplazamiento máximo de una onda.", type: "def", matchId: 6 },
+            
+            { id: 13, text: "Sonido", type: "concept", matchId: 7 },
+            { id: 14, text: "Onda mecánica longitudinal que oímos.", type: "def", matchId: 7 },
+            
+            { id: 15, text: "Luz", type: "concept", matchId: 8 },
+            { id: 16, text: "Onda electromagnética que estimula la visión.", type: "def", matchId: 8 },
+            
+            { id: 17, text: "Fotosíntesis", type: "concept", matchId: 9 },
+            { id: 18, text: "Plantas usan energía lumínica para crecer.", type: "def", matchId: 9 },
+            
+            { id: 19, text: "Espectro Electromagnético", type: "concept", matchId: 10 },
+            { id: 20, text: "Rango total de las ondas electromagnéticas.", type: "def", matchId: 10 }
+        ];
+
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let isLocked = false;
+
+        const board = document.getElementById('game-board');
+        const movesEl = document.getElementById('moves-count');
+        const matchesEl = document.getElementById('matches-count');
+        const scoreEl = document.getElementById('score-display');
+
+        // Icono SVG por defecto incrustado (Icono de Onda)
+        const svgIcon = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2,12 C4,12 5,8 8,8 C11,8 13,16 16,16 C19,16 20,12 22,12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            board.innerHTML = '';
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            isLocked = false;
+            
+            updateStats();
+            
+            cards = shuffle([...gameData]);
+
+            cards.forEach((data, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.index = index;
+                card.dataset.matchId = data.matchId;
+
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-front">${svgIcon}</div>
+                        <div class="card-face card-back">${data.text}</div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => flipCard(card));
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (isLocked) return;
+            if (card === flippedCards[0]) return;
+            if (card.classList.contains('matched')) return;
+
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            isLocked = true;
+            moves++;
+            updateStats();
+
+            const matchId1 = flippedCards[0].dataset.matchId;
+            const matchId2 = flippedCards[1].dataset.matchId;
+
+            if (matchId1 === matchId2) {
+                // Correcto
+                setTimeout(() => {
+                    flippedCards[0].classList.add('matched');
+                    flippedCards[1].classList.add('matched');
+                    matchedPairs++;
+                    updateStats();
+                    resetBoard();
+                    checkWin();
+                }, 400);
+            } else {
+                // Incorrecto (Validation con color rojo y flip back)
+                setTimeout(() => {
+                    flippedCards[0].classList.add('incorrect');
+                    flippedCards[1].classList.add('incorrect');
+                }, 400);
+
+                setTimeout(() => {
+                    flippedCards[0].classList.remove('flipped', 'incorrect');
+                    flippedCards[1].classList.remove('flipped', 'incorrect');
+                    resetBoard();
+                }, 1500); // 1.5 segudos según requerimiento
+            }
+        }
+
+        function resetBoard() {
+            flippedCards = [];
+            isLocked = false;
+        }
+
+        function updateStats() {
+            movesEl.textContent = moves;
+            matchesEl.textContent = matchedPairs;
+            
+            // Calculo de calificación (1.0 a 5.0)
+            if (moves === 0) {
+                scoreEl.textContent = "--";
+            } else {
+                // Mínimo de movimientos posibles es 10
+                // Por cada movimiento extra, restamos 0.15 para hacer la curva de calificación.
+                // Ej. 10 movs = 5.0, 15 movs = 4.25, 20 movs = 3.5
+                let score = 5.0 - ((moves - 10) * 0.15);
+                score = Math.max(1.0, score); // Nota mínima 1.0
+                score = Math.min(5.0, score); // Nota máxima 5.0 (por si acaso)
+                
+                scoreEl.textContent = score.toFixed(1);
+            }
+        }
+
+        function checkWin() {
+            if (matchedPairs === 10) {
+                setTimeout(() => {
+                    const finalScore = scoreEl.textContent;
+                    // Mostrar retroalimentación en el tablero en lugar de alert
+                    board.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <h2 style="color: var(--success); font-size: 32px; margin-bottom: 10px;">¡Completado!</h2>
+                            <p style="font-size: 18px; margin-bottom: 10px;">Encontraste todos los pares.</p>
+                            <p style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">Tu calificación es: ${finalScore} / 5.0</p>
+                            <button class="btn-restart" onclick="initGame()">Jugar de Nuevo</button>
+                            <p style="margin-top: 20px; font-size: 14px; color: #666;">Ahora desliza hacia abajo y lee el artículo para resolver el taller.</p>
+                        </div>
+                    `;
+                }, 500);
+            }
+        }
+
+        // Iniciar el juego cuando carga la página
+        window.onload = initGame;
+    </script>
+</body>
+</html>

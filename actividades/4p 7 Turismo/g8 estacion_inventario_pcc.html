@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <!-- REQUISITO TÉCNICO CRÍTICO: Viewport para diseño 100% responsivo y sin zoom accidental -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Estación de Aprendizaje: Inventario Turístico Local (PCC)</title>
+    <style>
+        :root {
+            --primary: #065f46; /* Verde café/montaña */
+            --primary-hover: #047857;
+            --primary-light: #d1fae5;
+            --accent: #b45309; /* Tono café tostado */
+            --accent-light: #fef3c7;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #15803d;
+            --error: #b91c1c;
+            --modal-bg: rgba(15, 23, 42, 0.7);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #10b981;
+                --primary-hover: #34d399;
+                --primary-light: rgba(16, 185, 129, 0.15);
+                --accent: #f59e0b;
+                --accent-light: rgba(245, 158, 11, 0.15);
+                --bg-main: #0f172a;
+                --card-bg: #1e293b;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --border-color: #334155;
+                --success: #22c55e;
+                --error: #ef4444;
+                --modal-bg: rgba(0, 0, 0, 0.85);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            /* Tipografía segura del sistema 100% offline */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: clamp(12px, 3vw, 24px);
+        }
+
+        main {
+            /* Max-width para centrar en PC y 100% en móviles */
+            max-width: 950px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        header {
+            text-align: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: clamp(16px, 4vw, 28px);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: clamp(1.35rem, 3.5vw, 2rem);
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            font-weight: 500;
+        }
+
+        .instruction-banner {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .game-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: clamp(16px, 4vw, 24px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            /* CRÍTICO: Prevención de bugs táctiles en móviles */
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            font-weight: 700;
+        }
+
+        .stats-badge {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 10px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .trivia-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(8px, 2vw, 16px);
+        }
+
+        @media (max-width: 640px) {
+            .trivia-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .category-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .category-title {
+            font-weight: 800;
+            font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            padding: 10px 8px;
+            border-radius: 8px;
+            min-height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .trivia-card {
+            background: var(--bg-main);
+            border: 2px solid var(--border-color);
+            padding: clamp(14px, 3vw, 20px);
+            border-radius: 10px;
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .trivia-card:hover:not(.disabled) {
+            border-color: var(--accent);
+            background: var(--accent-light);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(180, 83, 9, 0.1);
+        }
+
+        .trivia-card:active:not(.disabled) {
+            transform: translateY(0);
+        }
+
+        .trivia-card.disabled {
+            background: var(--border-color);
+            color: var(--text-muted);
+            border-color: var(--border-color);
+            cursor: default;
+            opacity: 0.5;
+            box-shadow: none;
+        }
+
+        .game-footer {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-reset {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-reset:hover {
+            background: var(--primary-hover);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            padding: clamp(20px, 5vw, 32px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 12px;
+        }
+
+        .modal-question {
+            font-size: clamp(1.1rem, 3vw, 1.35rem);
+            font-weight: 700;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: var(--bg-main);
+            border: 2px solid var(--border-color);
+            padding: 14px 18px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .option-btn.correct {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: var(--success);
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .option-btn.incorrect {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .modal-feedback {
+            font-weight: 700;
+            font-size: 1rem;
+            text-align: center;
+            min-height: 24px;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .modal-close-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            align-self: center;
+            width: 100%;
+            display: none;
+            font-size: 1.05rem;
+            transition: background 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .reading-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: clamp(20px, 5vw, 40px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .reading-section h2 {
+            font-size: clamp(1.4rem, 4vw, 2rem);
+            color: var(--primary);
+            margin-bottom: 1.25rem;
+            font-weight: 800;
+            line-height: 1.2;
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        .reading-section h3 {
+            font-size: clamp(1.15rem, 3vw, 1.4rem);
+            color: var(--accent);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .reading-section p {
+            margin-bottom: 1.25rem;
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            color: var(--text-main);
+            text-align: justify;
+            line-height: 1.7;
+        }
+
+        .reading-section ul {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            line-height: 1.6;
+        }
+
+        .reading-section li {
+            margin-bottom: 0.75rem;
+        }
+
+        .workshop-box {
+            margin-top: 3.5rem;
+            background: var(--primary-light);
+            border: 1px solid rgba(6, 95, 70, 0.2);
+            border-radius: 16px;
+            padding: clamp(16px, 4vw, 32px);
+        }
+
+        .workshop-box h3 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: clamp(1.25rem, 3.5vw, 1.6rem);
+        }
+
+        .instruction-notebook {
+            background: var(--card-bg);
+            border: 2px dashed var(--accent);
+            color: var(--text-main);
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .activity-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: transform 0.2s;
+        }
+
+        .activity-item:hover {
+            transform: translateX(4px);
+            border-color: var(--primary);
+        }
+
+        .activity-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            background: var(--accent);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .badge-dibujo { background: #8b5cf6; }
+        .badge-analisis { background: #0284c7; }
+        .badge-mapa { background: #ea580c; }
+        .badge-directa { background: #059669; }
+
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            .game-section, header .instruction-banner, .modal-overlay { display: none !important; }
+            .reading-section, .workshop-box { border: none; box-shadow: none; padding: 0; background: white;}
+            .instruction-notebook { border: 1px solid black; background: white; }
+            .activity-item { page-break-inside: avoid; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <header>
+            <h1>Síntesis: Inventario Turístico del PCC</h1>
+            <p class="subtitle">Catálogo y Ficha Técnica del Patrimonio de la Región</p>
+            <div class="instruction-banner">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--primary);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 12 12 12 8"></polyline><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Instrucción: Toca una casilla, lee la pista y selecciona la respuesta correcta para sumar puntos.</span>
+            </div>
+        </header>
+
+        <section id="zona-juego" class="game-section">
+            <div class="game-header">
+                <div class="stats-badge">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span>Puntos:</span> <span id="score-display" style="font-weight: 800;">0</span> / 2400
+                </div>
+                <div class="stats-badge">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    <span>Respondidas:</span> <span id="answered-count" style="font-weight: 800;">0</span> / 12
+                </div>
+                <div class="stats-badge">
+                    <span>🏆 Calificación:</span> <span id="rating-display" style="font-weight: 800; color: var(--accent);">--</span>
+                </div>
+            </div>
+
+            <div class="trivia-grid" id="trivia-board">
+                <!-- El tablero se renderiza mediante JavaScript -->
+            </div>
+
+            <div class="game-footer">
+                <span id="game-status" style="font-size: 0.95rem; color: var(--text-muted); font-weight: 500;">Selecciona una casilla para comenzar el reto técnico.</span>
+                <button class="btn-reset" onclick="resetGame()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    Reiniciar Trivia
+                </button>
+            </div>
+        </section>
+
+        <div id="question-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="modal-category-tag">CATEGORÍA</span>
+                    <span id="modal-points-tag">100 PTS</span>
+                </div>
+                <div class="modal-question" id="modal-question-text">
+                    Aquí aparecerá la pista o pregunta...
+                </div>
+                <div class="options-list" id="modal-options-list">
+                    <!-- Opciones inyectadas dinámicamente -->
+                </div>
+                <div class="modal-feedback" id="modal-feedback"></div>
+                <button class="modal-close-btn" id="modal-close-btn" onclick="closeModal()">Continuar</button>
+            </div>
+        </div>
+
+        <section id="zona-lectura" class="reading-section">
+            <h2>Marco Teórico: Inventario Turístico y Valoración del Paisaje Cultural Cafetero (PCC)</h2>
+            <p>
+                Colombia es un país con una riqueza natural y cultural inigualable. Sin embargo, para que una región pueda proteger sus tradiciones, compartir su belleza con el mundo y generar un turismo responsable, primero necesita saber exactamente qué es lo que tiene. Es aquí donde entra en juego una herramienta técnica fundamental: el <strong>Inventario Turístico Local</strong>. Este proceso no es más que la catalogación sistemática, ordenada y detallada de todos los elementos que hacen que un lugar sea especial y digno de ser visitado.
+            </p>
+
+            <h3>1. ¿Qué es un Atractivo Turístico y por qué debemos inventariarlo?</h3>
+            <p>
+                En el ámbito del turismo, es vital diferenciar entre un <em>recurso turístico</em> y un <em>atractivo turístico</em>. Un <strong>recurso</strong> es cualquier elemento natural (una cascada, un bosque) o cultural (una danza, un plato típico) que tiene potencial para interesar a un visitante, pero que aún no está preparado para recibirlo. Por el contrario, un <strong>atractivo turístico</strong> es ese mismo recurso, pero ya acondicionado con infraestructura, vías de acceso, señalización y servicios (como guías o baños), listo para el disfrute seguro del turista.
+            </p>
+            <p>
+                Hacer un inventario turístico permite a los gobiernos locales y a las comunidades identificar qué recursos pueden convertirse en atractivos, cuáles atractivos necesitan mantenimiento y, lo más importante, qué elementos de nuestro patrimonio están en riesgo de desaparecer y requieren conservación urgente.
+            </p>
+
+            <h3>2. El Paisaje Cultural Cafetero (PCC) como Patrimonio de la Humanidad</h3>
+            <p>
+                Un ejemplo perfecto de la importancia de catalogar y proteger nuestra riqueza es el <strong>Paisaje Cultural Cafetero (PCC)</strong>. En el año 2011, la Organización de las Naciones Unidas para la Educación, la Ciencia y la Cultura (UNESCO) inscribió al PCC en la lista del Patrimonio Mundial. Esta región, que abarca zonas de los departamentos de Caldas, Quindío, Risaralda y Valle del Cauca, es un ejemplo excepcional de adaptación humana a condiciones geográficas difíciles.
+            </p>
+            <p>
+                El PCC no es solo café. Es un patrimonio "vivo" compuesto por diversos elementos que deben ser constantemente inventariados y protegidos:
+            </p>
+            <ul>
+                <li><strong>El cultivo en laderas:</strong> Terrenos escarpados y montañas donde el café se siembra y recolecta manualmente, creando un paisaje verde espectacular.</li>
+                <li><strong>Arquitectura de colonización antioqueña:</strong> Casas tradicionales construidas en <em>bahareque</em> (mezcla de tierra, caña, guadua y madera) con techos de teja de barro, zaguanes y balcones coloridos, diseñadas para resistir los sismos de la región andina.</li>
+                <li><strong>Cultura y Tradición:</strong> El transporte típico en mulas y en los icónicos vehículos camperos <em>Jeep Willys</em>, el atuendo del arriero (poncho, carriel, sombrero), la gastronomía y la amabilidad de su gente.</li>
+                <li><strong>Patrimonio Natural:</strong> Bosques nativos, fuentes hídricas y especies únicas como la Palma de Cera del Quindío (árbol nacional de Colombia).</li>
+            </ul>
+
+            <h3>3. La Ficha Técnica Turística: Herramienta del Investigador</h3>
+            <p>
+                Para elaborar un inventario turístico, los profesionales (y los estudiantes en sus proyectos) utilizan un formato estandarizado llamado <strong>Ficha Técnica de Inventario</strong>. Este documento funciona como la "cédula de identidad" o el "historial médico" de un atractivo turístico. Una ficha técnica básica debe contener, como mínimo, la siguiente información:
+            </p>
+            <ul>
+                <li><strong>Nombre y Ubicación:</strong> Cómo se llama el lugar, en qué municipio y vereda se encuentra, y sus coordenadas geográficas.</li>
+                <li><strong>Categoría y Tipo:</strong> ¿Es un sitio natural (río, montaña), un bien cultural (museo, arquitectura), o un evento inmaterial (fiesta patronal, leyenda)?</li>
+                <li><strong>Descripción Física:</strong> Un resumen detallado de cómo es el lugar, qué se puede observar y qué actividades se pueden realizar allí.</li>
+                <li><strong>Accesibilidad:</strong> Describe las vías de ingreso (pavimentada, trocha, sendero peatonal), el tipo de transporte necesario (bus, Jeep Willys, caminata) y el tiempo estimado de llegada desde el casco urbano.</li>
+                <li><strong>Estado de Conservación:</strong> Una evaluación objetiva de si el atractivo está bien cuidado, deteriorado, contaminado o en peligro de destrucción.</li>
+                <li><strong>Importancia / Significado:</strong> Por qué es valioso este lugar para la comunidad local y para la región (ej. hace parte del PCC).</li>
+            </ul>
+            <p>
+                Comprender y aplicar estas herramientas técnicas no solo es tarea de ingenieros o administradores turísticos; es un deber ciudadano. Al catalogar el patrimonio de nuestra región (como el Quindío y el Eje Cafetero), los jóvenes se convierten en guardianes activos de su identidad, asegurando que las futuras generaciones también puedan disfrutar y aprender del pulso de nuestra tierra.
+            </p>
+
+            <div class="workshop-box">
+                <div class="instruction-notebook">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--accent);"><path d="M2 6h4"></path><path d="M2 10h4"></path><path d="M2 14h4"></path><path d="M2 18h4"></path><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M16 2v20"></path></svg>
+                    <div>
+                        <strong style="display: block; font-size: 1.15rem;">TRABAJO EN EL CUADERNO</strong>
+                        <span>Lee detenidamente el texto anterior. Luego, escribe y resuelve las siguientes 10 actividades en tu cuaderno de apuntes.</span>
+                    </div>
+                </div>
+
+                <h3>Taller de Comprensión y Aplicación Técnica</h3>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-directa">Respuesta directa</span>
+                    <p><strong>1.</strong> Según la lectura, ¿cuál es la diferencia exacta entre un "recurso turístico" y un "atractivo turístico"?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-analisis">Análisis crítico</span>
+                    <p><strong>2.</strong> ¿Por qué crees que es importante para los habitantes de tu región (ej. el Quindío) realizar un inventario turístico de su patrimonio local?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-dibujo">Dibujo / Ilustración</span>
+                    <p><strong>3.</strong> Diseña y dibuja cómo se vería la plantilla de una "Ficha Técnica" ideal. Incluye recuadros para el nombre, un espacio para el dibujo/foto del lugar, su ubicación, accesibilidad y estado de conservación.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-mapa">Mapa conceptual</span>
+                    <p><strong>4.</strong> Elabora un mapa conceptual que explique los cuatro (4) elementos principales que componen el Paisaje Cultural Cafetero (PCC), según se mencionan en el texto.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-directa">Respuesta directa</span>
+                    <p><strong>5.</strong> ¿Qué información específica debe incluirse en la sección de "Accesibilidad" de una ficha técnica de inventario turístico?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-analisis">Análisis crítico</span>
+                    <p><strong>6.</strong> Si fueras el encargado de turismo de tu municipio y al revisar una ficha técnica descubres que el "Estado de conservación" de un atractivo es muy malo (contaminado o deteriorado), ¿qué acciones tomarías?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-dibujo">Dibujo / Ilustración</span>
+                    <p><strong>7.</strong> Ilustra detalladamente un elemento característico del patrimonio arquitectónico o cultural del PCC descrito en la lectura (por ejemplo: una casa de bahareque con balcones, o un Jeep Willys tradicional).</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-mapa">Mapa mental</span>
+                    <p><strong>8.</strong> Crea un mapa mental sobre los diferentes <em>tipos o categorías</em> de atractivos que pueden existir (naturales, culturales, etc.). Escribe al menos un ejemplo real que conozcas en tu departamento para cada rama.</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-directa">Respuesta directa</span>
+                    <p><strong>9.</strong> ¿Qué entidad internacional declaró al PCC como Patrimonio de la Humanidad en 2011 y qué significa el acrónimo PCC?</p>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-badge badge-analisis">Síntesis y Argumentación</span>
+                    <p><strong>10.</strong> Escribe un párrafo de al menos 5 líneas argumentando cómo la elaboración técnica de inventarios turísticos ayuda a prevenir la pérdida de las tradiciones culturales en los jóvenes de tu edad.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Datos del juego Trivia (Fase 1 y 2)
+        const triviaData = [
+            {
+                category: "Conceptos Básicos",
+                questions: [
+                    {
+                        points: 100,
+                        question: "¿Qué es esencialmente un 'inventario turístico local'?",
+                        options: [
+                            "Un listado ordenado y detallado de recursos y atractivos.",
+                            "Un hotel de lujo en las afueras del municipio.",
+                            "Una agencia de viajes internacional.",
+                            "Un mapa físico que muestra solo las carreteras principales."
+                        ],
+                        correct: 0,
+                        hint: "Es un proceso de catalogación sistemática que documenta lo que tiene un lugar."
+                    },
+                    {
+                        points: 200,
+                        question: "¿Cuál es la diferencia principal entre un 'recurso' y un 'atractivo' turístico?",
+                        options: [
+                            "El atractivo ya está acondicionado con infraestructura para recibir visitantes.",
+                            "Son exactamente lo mismo, solo cambia el nombre.",
+                            "El recurso siempre es artificial y el atractivo siempre es natural.",
+                            "El atractivo no se puede visitar bajo ninguna circunstancia."
+                        ],
+                        correct: 0,
+                        hint: "Piensa en un bosque salvaje (recurso) versus un bosque con senderos, guías y baños."
+                    },
+                    {
+                        points: 300,
+                        question: "¿Cuál es el objetivo principal de catalogar el patrimonio mediante un inventario?",
+                        options: [
+                            "Identificar, proteger y valorizar el patrimonio para un turismo responsable.",
+                            "Vender los atractivos naturales a otros países.",
+                            "Ocultar los lugares bonitos para que nadie los visite.",
+                            "Cambiarle el nombre histórico a los pueblos."
+                        ],
+                        correct: 0,
+                        hint: "Busca que las futuras generaciones también puedan disfrutar de su identidad cultural."
+                    }
+                ]
+            },
+            {
+                category: "El PCC",
+                questions: [
+                    {
+                        points: 100,
+                        question: "¿Qué significan las siglas PCC en el contexto de nuestra región andina?",
+                        options: [
+                            "Paisaje Cultural Cafetero",
+                            "Parque Central Colombiano",
+                            "Patrimonio Cafetero Común",
+                            "Plan de Cultura y Ciencias"
+                        ],
+                        correct: 0,
+                        hint: "Combina el entorno geográfico con la principal actividad agrícola histórica del Eje."
+                    },
+                    {
+                        points: 200,
+                        question: "¿Qué entidad internacional declaró al PCC como Patrimonio de la Humanidad en 2011?",
+                        options: [
+                            "UNESCO (Organización de las Naciones Unidas para la Educación, la Ciencia y la Cultura)",
+                            "FIFA (Federación Internacional de Fútbol Asociación)",
+                            "OMS (Organización Mundial de la Salud)",
+                            "Cruz Roja Internacional"
+                        ],
+                        correct: 0,
+                        hint: "Es la agencia de la ONU encargada de proteger los sitios de valor cultural excepcional a nivel mundial."
+                    },
+                    {
+                        points: 300,
+                        question: "¿Qué elemento NO es característico del Paisaje Cultural Cafetero?",
+                        options: [
+                            "Desiertos de arena blanca con dunas.",
+                            "Arquitectura de colonización antioqueña (bahareque).",
+                            "Cultivo de café en laderas escarpadas.",
+                            "Tradición arriera y uso del Jeep Willys."
+                        ],
+                        correct: 0,
+                        hint: "El PCC es una zona verde, montañosa y húmeda, no árida."
+                    }
+                ]
+            },
+            {
+                category: "La Ficha Técnica",
+                questions: [
+                    {
+                        points: 100,
+                        question: "¿Qué es una ficha técnica de un atractivo turístico?",
+                        options: [
+                            "Un documento estandarizado que resume sus características principales.",
+                            "Un folleto publicitario a color para entregar en aeropuertos.",
+                            "Una factura de cobro por servicios turísticos.",
+                            "Un pasaporte especial para entrar a la región."
+                        ],
+                        correct: 0,
+                        hint: "Funciona como la 'cédula de identidad' o 'historial médico' del lugar para los investigadores."
+                    },
+                    {
+                        points: 200,
+                        question: "En la ficha técnica, ¿qué significa evaluar la 'accesibilidad'?",
+                        options: [
+                            "Describir cómo se llega, las vías de ingreso y el tipo de transporte necesario.",
+                            "Contar las estrellas que tiene el hotel más cercano.",
+                            "Medir la altura de los árboles del lugar.",
+                            "Calcular el costo del plato típico de la región."
+                        ],
+                        correct: 0,
+                        hint: "Se refiere a qué tan fácil o difícil es para una persona llegar físicamente al sitio."
+                    },
+                    {
+                        points: 300,
+                        question: "Si una ficha técnica indica que un atractivo tiene 'mal estado de conservación', ¿qué significa?",
+                        options: [
+                            "Que el lugar está deteriorado, contaminado o en peligro de destrucción.",
+                            "Que el lugar acaba de ser inaugurado y está nuevo.",
+                            "Que es un atractivo muy costoso para visitar.",
+                            "Que solo pueden ingresar personas mayores de edad."
+                        ],
+                        correct: 0,
+                        hint: "Implica que se necesitan acciones urgentes para reparar o proteger el patrimonio."
+                    }
+                ]
+            },
+            {
+                category: "Patrimonio Local",
+                questions: [
+                    {
+                        points: 100,
+                        question: "Medio de transporte tradicional del PCC, fundamental para moverse en las empinadas montañas del Quindío.",
+                        options: [
+                            "El Jeep Willys (campero).",
+                            "El tren bala magnético.",
+                            "El submarino turístico.",
+                            "El tranvía eléctrico subterráneo."
+                        ],
+                        correct: 0,
+                        hint: "Es un vehículo todoterreno que suele ir cargado de racimos de plátano, bultos de café o corotos."
+                    },
+                    {
+                        points: 200,
+                        question: "Ejemplo típico de patrimonio arquitectónico que debe ser inventariado en los pueblos del PCC (como Salento o Filandia).",
+                        options: [
+                            "Casas de bahareque con techos de teja de barro y balcones coloridos.",
+                            "Rascacielos de vidrio de más de 50 pisos.",
+                            "Pirámides construidas en bloques de piedra gigante.",
+                            "Iglús de hielo estructural."
+                        ],
+                        correct: 0,
+                        hint: "Es producto de la colonización antioqueña, usando guadua, tierra y madera."
+                    },
+                    {
+                        points: 300,
+                        question: "Patrimonio natural majestuoso del Quindío (Valle de Cocora) y Árbol Nacional de Colombia.",
+                        options: [
+                            "Palma de Cera del Quindío (Ceroxylon quindiuense).",
+                            "Pino canadiense (Pinus sylvestris).",
+                            "Roble europeo (Quercus robur).",
+                            "Bonsái de interior (Ficus benjamina)."
+                        ],
+                        correct: 0,
+                        hint: "Es la palmera más alta del mundo y hábitat del loro orejiamarillo."
+                    }
+                ]
+            }
+        ];
+
+        // Estado del juego
+        let totalScore = 0;
+        let answeredCount = 0;
+        const maxScore = 2400; // 4 categories * (100+200+300) = 2400
+        const totalQuestions = 12;
+        let currentActiveQuestion = null;
+
+        // Elementos del DOM
+        const boardEl = document.getElementById('trivia-board');
+        const scoreDisplayEl = document.getElementById('score-display');
+        const answeredCountEl = document.getElementById('answered-count');
+        const ratingDisplayEl = document.getElementById('rating-display');
+        const gameStatusEl = document.getElementById('game-status');
+
+        const modalEl = document.getElementById('question-modal');
+        const modalCategoryTag = document.getElementById('modal-category-tag');
+        const modalPointsTag = document.getElementById('modal-points-tag');
+        const modalQuestionText = document.getElementById('modal-question-text');
+        const modalOptionsList = document.getElementById('modal-options-list');
+        const modalFeedback = document.getElementById('modal-feedback');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        // Inicializar el tablero
+        function initGame() {
+            boardEl.innerHTML = '';
+            totalScore = 0;
+            answeredCount = 0;
+            scoreDisplayEl.textContent = '0';
+            answeredCountEl.textContent = '0';
+            ratingDisplayEl.textContent = '--';
+            gameStatusEl.textContent = 'Selecciona una casilla para comenzar el reto técnico.';
+
+            triviaData.forEach((cat, catIndex) => {
+                const col = document.createElement('div');
+                col.className = 'category-column';
+
+                const title = document.createElement('div');
+                title.className = 'category-title';
+                title.textContent = cat.category;
+                col.appendChild(title);
+
+                cat.questions.forEach((q, qIndex) => {
+                    const card = document.createElement('div');
+                    card.className = 'trivia-card';
+                    card.textContent = `${q.points} PTS`;
+                    card.dataset.cat = catIndex;
+                    card.dataset.q = qIndex;
+                    card.addEventListener('click', () => openQuestionModal(catIndex, qIndex, card));
+                    col.appendChild(card);
+                });
+
+                boardEl.appendChild(col);
+            });
+        }
+
+        // Abrir pregunta
+        function openQuestionModal(catIndex, qIndex, cardElement) {
+            if (cardElement.classList.contains('disabled')) return;
+
+            const qData = triviaData[catIndex].questions[qIndex];
+            currentActiveQuestion = { catIndex, qIndex, cardElement, qData };
+
+            modalCategoryTag.textContent = triviaData[catIndex].category.toUpperCase();
+            modalPointsTag.textContent = `${qData.points} PUNTOS`;
+            modalQuestionText.textContent = qData.question;
+            
+            modalFeedback.textContent = `💡 Pista de campo: ${qData.hint}`;
+            modalFeedback.style.color = 'var(--text-muted)';
+            modalCloseBtn.style.display = 'none';
+
+            modalOptionsList.innerHTML = '';
+            
+            // Renderizar opciones mezcladas
+            const shuffledOptions = qData.options.map((opt, index) => ({ opt, index }))
+                                                 .sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                
+                // Icono de checkbox vacío
+                const iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>`;
+                
+                btn.innerHTML = `${iconSvg} <span>${item.opt}</span>`;
+                btn.addEventListener('click', () => handleAnswer(item.index, btn, shuffledOptions));
+                modalOptionsList.appendChild(btn);
+            });
+
+            modalEl.classList.add('active');
+        }
+
+        // Procesar respuesta
+        function handleAnswer(selectedIndex, selectedBtn, shuffledOptions) {
+            const { qData, cardElement } = currentActiveQuestion;
+            const optionButtons = modalOptionsList.querySelectorAll('.option-btn');
+
+            // Deshabilitar botones para evitar múltiples clics
+            optionButtons.forEach(b => b.disabled = true);
+
+            // Iconos de resultado
+            const correctIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+            const incorrectIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+
+            if (selectedIndex === qData.correct) {
+                selectedBtn.classList.add('correct');
+                selectedBtn.innerHTML = `${correctIcon} <span>${qData.options[selectedIndex]}</span>`;
+                modalFeedback.textContent = `¡Excelente catalogación! Has ganado ${qData.points} puntos.`;
+                modalFeedback.style.color = 'var(--success)';
+                totalScore += qData.points;
+            } else {
+                selectedBtn.classList.add('incorrect');
+                selectedBtn.innerHTML = `${incorrectIcon} <span>${qData.options[selectedIndex]}</span>`;
+                
+                // Encontrar y resaltar la correcta
+                const correctBtnIndex = shuffledOptions.findIndex(item => item.index === qData.correct);
+                if (correctBtnIndex !== -1) {
+                    optionButtons[correctBtnIndex].classList.add('correct');
+                    optionButtons[correctBtnIndex].innerHTML = `${correctIcon} <span>${qData.options[qData.correct]}</span>`;
+                }
+
+                modalFeedback.textContent = `Error en el inventario. La respuesta correcta era la señalada en verde. (0 puntos)`;
+                modalFeedback.style.color = 'var(--error)';
+            }
+
+            cardElement.classList.add('disabled');
+            answeredCount++;
+
+            scoreDisplayEl.textContent = totalScore;
+            answeredCountEl.textContent = answeredCount;
+            calculateRating();
+
+            modalCloseBtn.style.display = 'block';
+
+            if (answeredCount === totalQuestions) {
+                gameStatusEl.textContent = '¡Inventario completado! Revisa tu calificación técnica. Puedes repasar leyendo el texto inferior.';
+                gameStatusEl.style.color = 'var(--primary)';
+                gameStatusEl.style.fontWeight = 'bold';
+            }
+        }
+
+        // Cerrar Modal
+        function closeModal() {
+            modalEl.classList.remove('active');
+            currentActiveQuestion = null;
+        }
+
+        // Calcular calificación de estrellas
+        function calculateRating() {
+            const percentage = (totalScore / maxScore) * 100;
+            let rating = 1;
+            if (percentage >= 85) rating = 5;
+            else if (percentage >= 70) rating = 4;
+            else if (percentage >= 50) rating = 3;
+            else if (percentage >= 30) rating = 2;
+
+            let stars = '⭐'.repeat(rating);
+            ratingDisplayEl.textContent = `${stars} (${rating}/5)`;
+        }
+
+        // Reiniciar
+        function resetGame() {
+            initGame();
+        }
+
+        // Arrancar juego al cargar
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>

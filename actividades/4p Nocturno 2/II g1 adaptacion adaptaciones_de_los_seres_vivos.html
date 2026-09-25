@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OVA: Superpoderes de la Naturaleza (Adaptaciones)</title>
+    <style>
+        :root {
+            --primary: #059669; /* Verde esmeralda fuerte */
+            --primary-hover: #047857;
+            --secondary: #D97706; /* Naranja cálido */
+            --secondary-hover: #B45309;
+            --accent: #3B82F6; /* Azul brillante */
+            --bg-color: #ECFDF5; /* Fondo verde muy suave */
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937; /* Gris oscuro para legibilidad */
+            --highlight: #FEF08A; /* Amarillo para resaltar */
+            --error: #FEE2E2;
+            --error-text: #B91C1C;
+            --success: #D1FAE5;
+            --success-text: #047857;
+            --font-main: 'Verdana', 'Trebuchet MS', system-ui, sans-serif;
+            --shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 850px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background-color: #F8FAFC;
+            border-bottom: 2px solid #E2E8F0;
+        }
+
+        .syllable-toggle {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        }
+
+        .syllable-toggle.active {
+            background-color: #2563EB;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: #E5E7EB;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .screen {
+            display: none;
+            padding: 35px;
+            flex-direction: column;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        h1 {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        h2 {
+            font-size: 26px;
+            color: var(--secondary);
+            margin-bottom: 16px;
+        }
+
+        p { margin-bottom: 20px; }
+
+        .glossary-item {
+            background-color: #F8FAFC;
+            border-left: 6px solid var(--primary);
+            border-radius: 0 12px 12px 0;
+            padding: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .emoji-icon {
+            font-size: 45px;
+            margin-right: 15px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .reading-box {
+            background-color: #FFFBEB;
+            border: 3px solid #FDE68A;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            font-size: 22px;
+        }
+
+        .text-chunk {
+            transition: background-color 0.3s;
+            border-radius: 6px;
+            padding: 2px 4px;
+            display: inline;
+        }
+
+        .text-chunk.highlighted {
+            background-color: var(--highlight);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 18px 24px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);
+        }
+
+        .btn:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-tool {
+            background-color: white;
+            color: var(--text-main);
+            border: 3px solid #CBD5E1;
+            margin-bottom: 20px;
+            box-shadow: none;
+        }
+        .btn-tool:hover { background-color: #F1F5F9; border-color: var(--primary); }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background-color: white;
+            border: 3px solid #E2E8F0;
+            color: var(--text-main);
+            padding: 18px;
+            font-size: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .option-btn:hover { border-color: var(--secondary); background-color: #FFFBEB; }
+
+        .feedback-box {
+            display: none;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .syllable-game {
+            background-color: #EFF6FF;
+            padding: 20px;
+            border-radius: 16px;
+            border: 3px solid #BFDBFE;
+            text-align: center;
+        }
+
+        .syllable-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            min-height: 60px;
+        }
+
+        .slot {
+            width: 60px;
+            height: 60px;
+            border: 3px dashed #93C5FD;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+            background-color: white;
+        }
+
+        .syllable-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .syl-btn {
+            background-color: white;
+            border: 3px solid #3B82F6;
+            color: #1E3A8A;
+            padding: 15px 25px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .syl-btn:hover { background-color: #DBEAFE; }
+        .syl-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: #CBD5E1; }
+
+        .notebook-zone {
+            background-color: #FFFFFF;
+            background-image: repeating-linear-gradient(transparent, transparent 39px, #E2E8F0 39px, #E2E8F0 40px);
+            border: 2px solid #CBD5E1;
+            border-left: 40px solid #FCA5A5;
+            border-radius: 8px;
+            padding: 30px 20px 30px 40px;
+            position: relative;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .notebook-zone::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -30px; bottom: 0;
+            width: 4px;
+            border-left: 2px solid white;
+            border-right: 2px solid white;
+        }
+
+        .task {
+            margin-bottom: 25px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .task-title { font-weight: bold; color: #B91C1C; display: block; margin-bottom: 5px;}
+
+        @media print {
+            body { background: white; padding: 0; color: black; font-size: 16pt; }
+            .app-container { box-shadow: none; border-radius: 0; max-width: 100%; }
+            .header-controls, .progress-container, .btn, .btn-tool { display: none !important; }
+            .screen { display: none !important; padding: 0; }
+            #screen-7 { display: block !important; }
+            .notebook-zone { border: none; background-image: none; padding: 0; }
+            .notebook-zone::before { display: none; }
+            .task { border-bottom: 1px dashed #ccc; padding-bottom: 20px; }
+            h1 { color: black; }
+        }
+
+        @media (max-width: 600px) {
+            .screen { padding: 20px; }
+            h1 { font-size: 24px; }
+            h2 { font-size: 22px; }
+            body { font-size: 18px; }
+            .reading-box { font-size: 20px; padding: 15px; }
+            .syllable-toggle span { display: none; } /* Ocultar texto en móvil, dejar icono */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="header-controls">
+            <div style="font-weight: bold; color: var(--primary);">🌿 Ciencias</div>
+            <button class="syllable-toggle" id="btn-syllable" onclick="toggleSyllableMode()">
+                🔠 <span>Modo Sílabas</span>
+            </button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="screen active" id="screen-0">
+            <h1>Descubriendo los Superpoderes de la Naturaleza 🦸‍♂️🌿</h1>
+            <p class="text-chunk" data-normal="Hoy veremos cómo los animales y las plantas cambian para poder vivir felices en su casa." data-sil="Hoy ve-re-mos có-mo los a-ni-ma-les y las plan-tas cam-bian pa-ra po-der vi-vir fe-li-ces en su ca-sa.">Hoy veremos cómo los animales y las plantas cambian para poder vivir felices en su casa.</p>
+            
+            <h2>Palabras Mágicas:</h2>
+            
+            <div class="glossary-item">
+                <div class="emoji-icon">🌟</div>
+                <div>
+                    <b style="font-size: 24px; color: var(--primary);">A-dap-ta-ción:</b>
+                    <p class="text-chunk" style="margin:0;" data-normal="Un cambio en el cuerpo para vivir mejor." data-sil="Un cam-bio en el cuer-po pa-ra vi-vir me-jor.">Un cambio en el cuerpo para vivir mejor.</p>
+                </div>
+            </div>
+            
+            <div class="glossary-item">
+                <div class="emoji-icon">🦎</div>
+                <div>
+                    <b style="font-size: 24px; color: var(--primary);">Ca-mu-fla-je:</b>
+                    <p class="text-chunk" style="margin:0;" data-normal="Esconderse usando los colores del lugar." data-sil="Es-con-der-se u-san-do los co-lo-res del lu-gar.">Esconderse usando los colores del lugar.</p>
+                </div>
+            </div>
+
+            <button class="btn" onclick="nextScreen()">¡Comenzar Lectura! ➡️</button>
+        </div>
+
+        <div class="screen" id="screen-1">
+            <h2>Paso 1: ¿Qué son las adaptaciones?</h2>
+            
+            <div class="reading-box" id="box-1">
+                <p class="text-chunk" data-normal="Los animales y las plantas tienen poderes especiales." data-sil="Los a-ni-ma-les y las plan-tas tie-nen po-de-res es-pe-cia-les.">Los animales y las plantas tienen poderes especiales.</p>
+                <p class="text-chunk highlightable" data-normal="Estos poderes se llaman adaptaciones y les sirven para vivir en el frío o en el calor." data-sil="Es-tos po-de-res se lla-man a-dap-ta-cio-nes y les sir-ven pa-ra vi-vir en el frí-o o en el ca-lor.">Estos poderes se llaman adaptaciones y les sirven para vivir en el frío o en el calor.</p>
+            </div>
+
+            <button class="btn btn-tool" onclick="toggleHighlight('screen-1')">✨ Toca aquí para ver la idea principal</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-tool" onclick="prevScreen()">⬅️ Atrás</button>
+                <button class="btn" onclick="nextScreen()">Siguiente ➡️</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-2">
+            <h2>Paso 2: La planta que no toma mucha agua 🌵</h2>
+            
+            <div class="reading-box">
+                <p class="text-chunk" data-normal="El cactus vive en el desierto donde hace mucho calor." data-sil="El cac-tus vi-ve en el de-sier-to don-de ha-ce mu-cho ca-lor.">El cactus vive en el desierto donde hace mucho calor.</p>
+                <p class="text-chunk highlightable" data-normal="Por eso, el cactus guarda agua en su tallo y tiene espinas gruesas para protegerse." data-sil="Por e-so, el cac-tus guar-da a-gua en su ta-llo y tie-ne es-pi-nas grue-sas pa-ra pro-te-ger-se.">Por eso, el cactus guarda agua en su tallo y tiene espinas gruesas para protegerse.</p>
+            </div>
+
+            <button class="btn btn-tool" onclick="toggleHighlight('screen-2')">✨ Toca aquí para ver la idea principal</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-tool" onclick="prevScreen()">⬅️ Atrás</button>
+                <button class="btn" onclick="nextScreen()">Siguiente ➡️</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-3">
+            <h2>Paso 3: El truco de esconderse 🦋</h2>
+            
+            <div class="reading-box">
+                <p class="text-chunk" data-normal="Algunos animales usan el camuflaje para esconderse." data-sil="Al-gu-nos a-ni-ma-les u-san el ca-mu-fla-je pa-ra es-con-der-se.">Algunos animales usan el camuflaje para esconderse.</p>
+                <p class="text-chunk highlightable" data-normal="Un insecto puede tener forma de hoja verde para que no se lo coman otros animales." data-sil="Un in-sec-to pue-de te-ner for-ma de ho-ja ver-de pa-ra que no se lo co-man o-tros a-ni-ma-les.">Un insecto puede tener forma de hoja verde para que no se lo coman otros animales.</p>
+            </div>
+
+            <button class="btn btn-tool" onclick="toggleHighlight('screen-3')">✨ Toca aquí para ver la idea principal</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-tool" onclick="prevScreen()">⬅️ Atrás</button>
+                <button class="btn" style="background-color: var(--secondary);" onclick="nextScreen()">¡A Jugar! 🎮</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-4">
+            <h2>Reto 1: Responde 🤔</h2>
+            <p class="text-chunk" data-normal="Según lo que leímos, ¿qué hace el cactus para poder vivir en el calor?" data-sil="Se-gún lo que le-í-mos, ¿qué ha-ce el cac-tus pa-ra po-der vi-vir en el ca-lor?">Según lo que leímos, ¿qué hace el cactus para poder vivir en el calor?</p>
+            
+            <div class="options-grid">
+                <button class="option-btn" onclick="checkAnswer(1, false, this)">A) Toma sopa caliente todos los días.</button>
+                <button class="option-btn" onclick="checkAnswer(1, true, this)">B) Guarda agua en su tallo y tiene espinas.</button>
+                <button class="option-btn" onclick="checkAnswer(1, false, this)">C) Se pone un abrigo de lana gruesa.</button>
+            </div>
+
+            <div id="feedback-1" class="feedback-box"></div>
+            <button id="btn-next-1" class="btn" style="display:none;" onclick="nextScreen()">Siguiente Reto ➡️</button>
+        </div>
+
+        <div class="screen" id="screen-5">
+            <h2>Reto 2: Piensa y Conecta 🧠</h2>
+            <p class="text-chunk" data-normal="¿Por qué un insecto cambia su cuerpo para parecer una hoja verde?" data-sil="¿Por qué un in-sec-to cam-bia su cuer-po pa-ra pa-re-cer u-na ho-ja ver-de?">¿Por qué un insecto cambia su cuerpo para parecer una hoja verde?</p>
+            
+            <div class="options-grid">
+                <button class="option-btn" onclick="checkAnswer(2, true, this)">A) Para usar camuflaje y que no se lo coman.</button>
+                <button class="option-btn" onclick="checkAnswer(2, false, this)">B) Porque las hojas verdes saben a dulce.</button>
+                <button class="option-btn" onclick="checkAnswer(2, false, this)">C) Para darle sombra a las otras plantas.</button>
+            </div>
+
+            <div id="feedback-2" class="feedback-box"></div>
+            <button id="btn-next-2" class="btn" style="display:none;" onclick="nextScreen()">Último Reto ➡️</button>
+        </div>
+
+        <div class="screen" id="screen-6">
+            <h2>Reto 3: Arma la Palabra Mágica 🧩</h2>
+            <p class="text-chunk" data-normal="Ordena las sílabas para formar la palabra que significa 'esconderse usando colores'." data-sil="Or-de-na las sí-la-bas pa-ra for-mar la pa-la-bra que sig-ni-fi-ca 'es-con-der-se u-san-do co-lo-res'.">Ordena las sílabas para formar la palabra que significa 'esconderse usando colores'.</p>
+            
+            <div class="syllable-game">
+                <div class="syllable-slots" id="slots">
+                    <div class="slot" id="slot-0"></div>
+                    <div class="slot" id="slot-1"></div>
+                    <div class="slot" id="slot-2"></div>
+                    <div class="slot" id="slot-3"></div>
+                </div>
+                
+                <div class="syllable-buttons" id="syl-buttons">
+                    <button class="syl-btn" onclick="selectSyllable('FLA', this)">FLA</button>
+                    <button class="syl-btn" onclick="selectSyllable('JE', this)">JE</button>
+                    <button class="syl-btn" onclick="selectSyllable('CA', this)">CA</button>
+                    <button class="syl-btn" onclick="selectSyllable('MU', this)">MU</button>
+                </div>
+            </div>
+
+            <div id="feedback-3" class="feedback-box"></div>
+            <button id="btn-next-3" class="btn" style="display:none;" onclick="nextScreen()">Ir a mi Cuaderno 📝</button>
+        </div>
+
+        <div class="screen" id="screen-7">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Mi Cuaderno de Ciencias 📓</h2>
+                <button class="btn-tool" style="margin:0; padding: 10px;" onclick="window.print()">🖨️ Imprimir Ficha</button>
+            </div>
+            <p>¡Gran trabajo! Ahora saca tu cuaderno físico, lápiz y colores para hacer estos 5 retos.</p>
+            
+            <div class="notebook-zone">
+                <h1 style="color: black; font-size: 24px; text-align: left; border-bottom: 2px solid black;">Ficha: Los Superpoderes de la Naturaleza</h1>
+                
+                <div class="task">
+                    <span class="task-title">Reto 1: Completa</span>
+                    <p>Copia esta frase en tu cuaderno y llena el espacio en blanco:<br>
+                    "El cactus tiene _________________ para protegerse de los animales."</p>
+                </div>
+
+                <div class="task">
+                    <span class="task-title">Reto 2: Dibuja y Rotula (Sílaba a Sílaba)</span>
+                    <p>Dibuja un hermoso CACTUS en tu cuaderno. Luego, saca dos flechitas y escribe sus partes separadas por guiones:<br>
+                    Ejemplo: <b>ta - llo</b> y <b>es - pi - nas</b>.</p>
+                </div>
+
+                <div class="task">
+                    <span class="task-title">Reto 3: Compara e Imagina</span>
+                    <p>Haz un cuadro en tu cuaderno. En un lado dibuja un animal que viva en el <b>FRÍO</b> (ej. oso polar) y al otro lado uno que viva en el <b>CALOR</b> (ej. iguana). ¿Qué diferencias notas en su piel o pelo?</p>
+                </div>
+
+                <div class="task">
+                    <span class="task-title">Reto 4: Caza de Sílabas</span>
+                    <p>Busca en tu memoria o en la lectura:<br>
+                    - Escribe 2 palabras cortas (que tengan 2 sílabas. Ej: a-gua).<br>
+                    - Escribe 2 palabras largas (que tengan 3 o más sílabas. Ej: a-ni-mal).</p>
+                </div>
+
+                <div class="task">
+                    <span class="task-title">Reto 5: Mi primera oración</span>
+                    <p>Escribe tu propia oración usando la palabra <b>camuflaje</b> o la palabra <b>adaptación</b>. (Recuerda iniciar con mayúscula y terminar con un punto).</p>
+                </div>
+            </div>
+
+            <button class="btn" style="background-color: var(--secondary);" onclick="restartOVA()">🔄 Volver al Inicio</button>
+        </div>
+
+    </div>
+
+    <script>
+        let currentScreen = 0;
+        const totalScreens = 8;
+        let isSyllableMode = false;
+
+        // Navegación
+        function updateProgress() {
+            const progress = (currentScreen / (totalScreens - 1)) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function showScreen(index) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + index).classList.add('active');
+            updateProgress();
+            window.scrollTo(0, 0);
+        }
+
+        function nextScreen() {
+            if (currentScreen < totalScreens - 1) {
+                currentScreen++;
+                showScreen(currentScreen);
+            }
+        }
+
+        function prevScreen() {
+            if (currentScreen > 0) {
+                currentScreen--;
+                showScreen(currentScreen);
+            }
+        }
+
+        // Modo Sílabas
+        function toggleSyllableMode() {
+            isSyllableMode = !isSyllableMode;
+            const chunks = document.querySelectorAll('.text-chunk');
+            
+            chunks.forEach(chunk => {
+                // Preservar si estaba resaltado
+                const isHighlighted = chunk.classList.contains('highlighted');
+                chunk.innerText = isSyllableMode ? chunk.getAttribute('data-sil') : chunk.getAttribute('data-normal');
+            });
+
+            const btn = document.getElementById('btn-syllable');
+            const spanText = btn.querySelector('span');
+            
+            if (isSyllableMode) {
+                btn.classList.add('active');
+                if(spanText) spanText.innerText = 'Modo Normal';
+            } else {
+                btn.classList.remove('active');
+                if(spanText) spanText.innerText = 'Modo Sílabas';
+            }
+        }
+
+        // Resaltar ideas clave
+        function toggleHighlight(screenId) {
+            const screen = document.getElementById(screenId);
+            const highlights = screen.querySelectorAll('.highlightable');
+            highlights.forEach(h => {
+                h.classList.toggle('highlighted');
+            });
+        }
+
+        // Lógica de Trivias
+        function checkAnswer(challengeNum, isCorrect, btnElement) {
+            const feedbackBox = document.getElementById('feedback-' + challengeNum);
+            const nextBtn = document.getElementById('btn-next-' + challengeNum);
+            
+            // Limpiar estilos anteriores
+            const parent = btnElement.parentElement;
+            const buttons = parent.querySelectorAll('.option-btn');
+            buttons.forEach(b => {
+                b.style.borderColor = '#E2E8F0';
+                b.style.backgroundColor = 'white';
+            });
+            
+            btnElement.style.borderWidth = '4px';
+
+            if (isCorrect) {
+                btnElement.style.borderColor = '#059669';
+                btnElement.style.backgroundColor = '#D1FAE5';
+                feedbackBox.textContent = '¡Excelente! 🌟 Lo lograste.';
+                feedbackBox.style.backgroundColor = '#D1FAE5';
+                feedbackBox.style.color = '#047857';
+                feedbackBox.style.display = 'block';
+                nextBtn.style.display = 'flex';
+                buttons.forEach(b => b.disabled = true);
+            } else {
+                btnElement.style.borderColor = '#B91C1C';
+                btnElement.style.backgroundColor = '#FEE2E2';
+                feedbackBox.textContent = 'Intenta de nuevo. Pista: Vuelve a leer la tarjeta de arriba. 💪';
+                feedbackBox.style.backgroundColor = '#FEE2E2';
+                feedbackBox.style.color = '#B91C1C';
+                feedbackBox.style.display = 'block';
+            }
+        }
+
+        // Lógica Juego de Sílabas
+        const targetWord = ["CA", "MU", "FLA", "JE"];
+        let currentSelection = [];
+
+        function selectSyllable(syl, btnElement) {
+            if(currentSelection.length >= 4) return;
+
+            // Revisar si es la sílaba correcta en el orden
+            const expectedSyllable = targetWord[currentSelection.length];
+            const feedbackBox = document.getElementById('feedback-3');
+
+            if (syl === expectedSyllable) {
+                // Correcto
+                document.getElementById('slot-' + currentSelection.length).innerText = syl;
+                currentSelection.push(syl);
+                btnElement.disabled = true;
+                btnElement.style.backgroundColor = '#D1FAE5';
+                btnElement.style.borderColor = '#059669';
+                
+                feedbackBox.style.display = 'none';
+
+                // Si terminó
+                if (currentSelection.length === 4) {
+                    feedbackBox.textContent = '¡BRAVO! 🎉 Formaste la palabra CA-MU-FLA-JE.';
+                    feedbackBox.style.backgroundColor = '#D1FAE5';
+                    feedbackBox.style.color = '#047857';
+                    feedbackBox.style.display = 'block';
+                    document.getElementById('btn-next-3').style.display = 'flex';
+                }
+            } else {
+                // Incorrecto, sacudir y reiniciar juego de sílabas
+                feedbackBox.textContent = '¡Uy! Esa sílaba no va ahí. Volvamos a intentar. 🔄';
+                feedbackBox.style.backgroundColor = '#FEE2E2';
+                feedbackBox.style.color = '#B91C1C';
+                feedbackBox.style.display = 'block';
+                
+                setTimeout(() => {
+                    resetSyllableGame();
+                    feedbackBox.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        function resetSyllableGame() {
+            currentSelection = [];
+            for(let i=0; i<4; i++) {
+                document.getElementById('slot-' + i).innerText = '';
+            }
+            const buttons = document.getElementById('syl-buttons').querySelectorAll('.syl-btn');
+            buttons.forEach(b => {
+                b.disabled = false;
+                b.style.backgroundColor = 'white';
+                b.style.borderColor = '#3B82F6';
+            });
+        }
+
+        // Reiniciar todo
+        function restartOVA() {
+            currentScreen = 0;
+            if(isSyllableMode) toggleSyllableMode();
+            
+            // Limpiar resaltados
+            document.querySelectorAll('.highlightable').forEach(h => h.classList.remove('highlighted'));
+            
+            // Limpiar trivias
+            document.querySelectorAll('.feedback-box').forEach(b => b.style.display = 'none');
+            document.querySelectorAll('.option-btn').forEach(b => {
+                b.style.borderColor = '#E2E8F0';
+                b.style.backgroundColor = 'white';
+                b.disabled = false;
+            });
+            document.getElementById('btn-next-1').style.display = 'none';
+            document.getElementById('btn-next-2').style.display = 'none';
+            document.getElementById('btn-next-3').style.display = 'none';
+            
+            resetSyllableGame();
+            showScreen(0);
+        }
+
+        // Inicializar
+        updateProgress();
+    </script>
+</body>
+</html>

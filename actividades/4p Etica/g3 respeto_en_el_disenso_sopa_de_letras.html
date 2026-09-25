@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Respeto en el Disenso: Sopa de Letras Interactiva</title>
+    
+    <style>
+        /* Variables y configuración base */
+        :root {
+            --primary: #2b6cb0;
+            --primary-dark: #2c5282;
+            --secondary: #38b2ac;
+            --bg-body: #f7fafc;
+            --bg-card: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --grid-bg: #e2e8f0;
+            --cell-bg: #ffffff;
+            --cell-selected: #bee3f8;
+            --cell-found: #9ae6b4;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            opacity: 0.9;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .stat-icon {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary);
+        }
+
+        .rating-container {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .star {
+            width: 24px;
+            height: 24px;
+            fill: #cbd5e0; /* Gray default */
+            transition: fill 0.3s ease;
+        }
+
+        .star.active {
+            fill: #ecc94b; /* Gold */
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .game-layout {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .grid-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--grid-bg);
+            padding: 4px;
+            border-radius: 8px;
+            /* REQUISITO TÉCNICO CRÍTICO: Prevenir scroll al interactuar */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        #word-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            width: 100%;
+        }
+
+        .cell {
+            background-color: var(--cell-bg);
+            aspect-ratio: 1; /* Celdas cuadradas responsivas */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: clamp(10px, 3.5vw, 18px);
+            cursor: pointer;
+            border-radius: 2px;
+            color: var(--text-main);
+            transition: background-color 0.1s ease;
+        }
+
+        .cell.selected {
+            background-color: var(--cell-selected);
+            color: var(--primary-dark);
+        }
+
+        .cell.found {
+            background-color: var(--cell-found);
+            color: #22543d;
+        }
+
+        .word-list-container {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .word-list-container h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-size: 1.2rem;
+            text-align: center;
+            border-bottom: 2px solid var(--grid-bg);
+            padding-bottom: 0.5rem;
+        }
+
+        #word-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            #word-list {
+                flex-direction: column;
+            }
+        }
+
+        .word-item {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            padding: 0.3rem 0.6rem;
+            background: var(--grid-bg);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .word-item.found {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            background: var(--cell-found);
+            opacity: 0.7;
+        }
+
+        #zona-lectura {
+            margin-top: 3rem;
+            background: var(--bg-card);
+            padding: clamp(1.5rem, 4vw, 3rem);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        .articulo-teorico h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 0.5rem;
+        }
+
+        .articulo-teorico h3 {
+            color: var(--primary);
+            font-size: clamp(1.2rem, 3.5vw, 1.5rem);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .articulo-teorico p {
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+            text-align: justify;
+        }
+
+        .articulo-teorico ul {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .articulo-teorico li {
+            margin-bottom: 0.5rem;
+        }
+
+        .taller-repaso {
+            margin-top: 3rem;
+            background-color: #ebf8fa;
+            padding: 2rem;
+            border-radius: 8px;
+            border-left: 5px solid var(--secondary);
+        }
+
+        .taller-repaso h3 {
+            color: #2c7a7b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instruccion-taller {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #d97706;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border: 1px dashed #d97706;
+        }
+
+        .actividad-item {
+            margin-bottom: 1.5rem;
+            background: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .tipo-actividad {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: white;
+            background: var(--primary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-right: 10px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Modales/Mensajes Victoria */
+        #win-message {
+            display: none;
+            text-align: center;
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        #win-message h2 { color: #22543d; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Respeto en el Disenso</h1>
+        <p>Busca las 10 palabras clave sobre el debate respetuoso. ¡No sueltes tu dedo/ratón hasta completar la palabra!</p>
+    </header>
+
+    <main>
+        <!-- FASE 1 y 2: ZONA DE JUEGO -->
+        <section id="zona-juego">
+            
+            <div id="win-message">
+                <h2>¡Felicidades!</h2>
+                <p>Has encontrado todas las palabras clave. Ahora, continúa con la lectura y el taller abajo.</p>
+            </div>
+
+            <div class="info-panel">
+                <div class="stat-box">
+                    <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/><path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z"/></svg>
+                    <span id="timer">00:00</span>
+                </div>
+                
+                <div class="stat-box">
+                    <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-2-5.586l-2.293-2.293-1.414 1.414L10 17.243l6.707-6.707-1.414-1.414z"/></svg>
+                    <span id="counter">0 / 10</span>
+                </div>
+
+                <div class="rating-container" id="stars">
+                    <!-- Estrellas generadas por JS -->
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                    <svg class="star active" viewBox="0 0 24 24"><path d="M21.947 9.179a1.001 1.001 0 0 0-.868-.676l-5.701-.453-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107-1.49 5.852a1 1 0 0 0 1.53 1.057L12 18.202l5.445 3.03a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082c.297-.268.406-.686.278-1.065z"/></svg>
+                </div>
+            </div>
+
+            <div class="game-layout">
+                <div class="grid-container">
+                    <div id="word-grid"></div>
+                </div>
+                
+                <div class="word-list-container">
+                    <h3>Palabras a Encontrar</h3>
+                    <ul id="word-list">
+                        <!-- Llenado por JS -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- FASE 3: ZONA DE LECTURA TEÓRICA Y TALLER -->
+        <section id="zona-lectura">
+            <article class="articulo-teorico">
+                <h2>El Arte de Disentir: Respeto y Escucha Activa en el Debate</h2>
+                
+                <p>En nuestra vida diaria, en el colegio, en casa o en redes sociales, es inevitable encontrarnos con personas que piensan distinto a nosotros. La sociedad se construye sobre la base de la diversidad de pensamientos y opiniones. Los conflictos de ideas son naturales y necesarios para el progreso humano, pero a menudo nos enfrentamos a lo que conocemos como <strong>"el debate acalorado"</strong>: una discusión sobre política, deportes o convivencia que rápidamente cruza la línea del intercambio de ideas y se convierte en un intercambio de insultos.</p>
+                
+                <h3>El caso del debate acalorado</h3>
+                <p>Imagina la siguiente escena en un salón de clases: Dos estudiantes están debatiendo sobre quién tiene la culpa del mal estado de las zonas verdes del colegio. Uno opina que son los estudiantes que tiran basura, el otro argumenta que es la administración por no poner suficientes basureros. Lo que empieza como un intercambio válido de puntos de vista escala rápidamente. Uno dice: "¡Es que tú eres un sucio que no le importa el planeta!". El otro responde: "¡Y tú eres un ciego que siempre defiende a los profesores!". ¿Qué sucedió aquí? <strong>El debate fracasó.</strong> Ya no se están discutiendo las zonas verdes, se están atacando mutuamente.</p>
+                
+                <h3>Practicando la escucha activa sin invalidar</h3>
+                <p>El núcleo del respeto en el disenso radica en una habilidad fundamental: <strong>la escucha activa</strong>. Esto significa escuchar con el propósito de comprender la perspectiva del otro, no simplemente hacer una pausa para planear cómo responder o cómo "destruir" su argumento.</p>
+                <p>Escuchar activamente significa reconocer los sentimientos y argumentos de quien piensa diferente <strong>sin invalidarlos</strong>. Invalidar es decirle al otro "estás loco por pensar así", "tu opinión no tiene sentido" o "estás exagerando". Tú puedes estar en profundo desacuerdo con la idea, pero debes validar el derecho de la otra persona a expresarla y a sentir lo que siente. Comprender una postura no es lo mismo que estar de acuerdo con ella.</p>
+
+                <h3>Atacar el argumento, no a la persona</h3>
+                <p>Una regla de oro en cualquier discusión intelectual y cívica es que <strong>es posible —y necesario— atacar un argumento sin atacar la dignidad de la persona</strong>. En lógica, cuando atacamos a la persona en lugar de a su idea, cometemos una falacia conocida como <em>Ad Hominem</em>.</p>
+                <ul>
+                    <li><strong>Atacar el argumento (Correcto):</strong> "No estoy de acuerdo con tu propuesta de reducir los recesos porque los estudios demuestran que el descanso mejora la concentración en clases."</li>
+                    <li><strong>Atacar a la persona (Incorrecto):</strong> "Tu propuesta de reducir los recesos es ridícula; claro, como tú eres un perezoso que no le gusta estudiar, por eso lo dices."</li>
+                </ul>
+
+                <h3>La dignidad es intocable</h3>
+                <p>Las <strong>ideas</strong> son herramientas. Pueden ser analizadas, criticadas, desarmadas, puestas a prueba o descartadas si se demuestra que son incorrectas. Sin embargo, la <strong>dignidad humana</strong> no es una herramienta; es un valor absoluto. Las personas merecen respeto por el simple hecho de existir. Al debatir, si nuestro argumento requiere humillar, ridiculizar o insultar al otro para parecer fuerte, entonces en realidad nuestro argumento es débil.</p>
+
+                <p>Aprender a debatir con tolerancia y empatía nos prepara para ser ciudadanos democráticos. Cuando sientas que la rabia sube en medio de una discusión (cuando llega el debate acalorado), respira, pausa y pregúntate: ¿Estoy tratando de encontrar la <strong>razón</strong> y llegar a un <strong>acuerdo</strong> (o al menos a un entendimiento mutuo), o simplemente mi ego quiere ganar humillando al otro? Elegir la vía del respeto transforma el conflicto en crecimiento.</p>
+            </article>
+
+            <div class="taller-repaso">
+                <h3>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    Taller de Repaso y Aplicación
+                </h3>
+                
+                <div class="instruccion-taller">
+                    IMPORTANTE: Escribe y resuelve las siguientes 10 actividades de forma clara y ordenada en tu cuaderno escolar.
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>1.</strong> Define con tus propias palabras: ¿Qué significa "atacar el argumento" en lugar de "atacar a la persona"? Escribe un ejemplo diferente al del texto.</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Mapa Conceptual</span>
+                    <p><strong>2.</strong> Construye un mapa conceptual en tu cuaderno conectando de manera lógica las siguientes palabras: Disenso, Respeto, Escucha Activa, Argumento y Dignidad.</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Analizar</span>
+                    <p><strong>3.</strong> Recuerda un "debate acalorado" que hayas presenciado o en el que hayas participado recientemente. Analiza: ¿Se invalidó la opinión del otro? ¿Cómo se podría haber evitado el conflicto personal?</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Dibujar / Ilustrar</span>
+                    <p><strong>4.</strong> Dibuja un cómic de 3 viñetas mostrando a dos personas que tienen opiniones opuestas sobre un tema, pero logran mantener un diálogo respetuoso y empático.</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>5.</strong> Según la lectura, ¿por qué invalidar a una persona (ej: decirle "tú no sabes de lo que hablas") destruye la comunicación en un debate?</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Mapa Mental</span>
+                    <p><strong>6.</strong> Elabora un mapa mental ilustrado sobre los beneficios de aplicar la Tolerancia y el Respeto dentro de tu salón de clases escolar.</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Analizar</span>
+                    <p><strong>7.</strong> Reflexiona sobre las redes sociales. ¿Por qué crees que es tan común ver la Falacia Ad Hominem (insultos personales) en los comentarios de internet en lugar de argumentos lógicos? Escribe un párrafo de análisis.</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Dibujar / Ilustrar</span>
+                    <p><strong>8.</strong> Crea un símbolo, escudo o logotipo que represente el concepto de "Escucha Activa". (Pista: Puedes combinar elementos como oídos, un cerebro pensando y un apretón de manos).</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Responder</span>
+                    <p><strong>9.</strong> Explica detalladamente: ¿Cuál es la diferencia entre defender una idea con mucha pasión y convicción, frente a faltarle el respeto a un oponente?</p>
+                </div>
+
+                <div class="actividad-item">
+                    <span class="tipo-actividad">Diagrama</span>
+                    <p><strong>10.</strong> Diseña un diagrama de flujo de pasos (paso 1, paso 2, etc.) sobre cómo deberías reaccionar emocional y verbalmente si alguien te insulta durante un debate de ideas en el colegio.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const WORDS = [
+            "RESPETO", "ESCUCHA", "ARGUMENTO", "DIGNIDAD", 
+            "TOLERANCIA", "EMPATIA", "IDEAS", "ACUERDO", 
+            "RAZON", "DEBATE"
+        ];
+        
+        const GRID_SIZE = 15;
+        let grid = [];
+        let wordsFound = 0;
+        let foundWordStrings = [];
+        let timerInterval;
+        let secondsElapsed = 0;
+        let gameActive = true;
+
+        // Variables de interacción táctil/ratón
+        let isSelecting = false;
+        let startCell = null;
+        let currentPath = []; // Arreglo de celdas {r, c, element}
+
+        const gridContainer = document.getElementById('word-grid');
+        const wordListContainer = document.getElementById('word-list');
+        const counterElement = document.getElementById('counter');
+        const timerElement = document.getElementById('timer');
+        const stars = document.querySelectorAll('.star');
+        const winMessage = document.getElementById('win-message');
+
+        function initGame() {
+            gameActive = true;
+            wordsFound = 0;
+            foundWordStrings = [];
+            secondsElapsed = 0;
+            updateCounter();
+            updateTimerDisplay();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            generateWordSearch();
+            renderGrid();
+            renderWordList();
+            setupInteractions();
+        }
+
+        function generateWordSearch() {
+            let attempt = 0;
+            let success = false;
+            
+            // Ciclo exhaustivo: Reintentar hasta que todas las 10 palabras se acomoden
+            while (!success && attempt < 500) {
+                // Inicializar grid vacío
+                grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+                success = true;
+
+                for (let word of WORDS) {
+                    if (!placeWord(word)) {
+                        success = false;
+                        break; // Falló al ubicar esta palabra, abortar y reiniciar grid
+                    }
+                }
+                attempt++;
+            }
+
+            if (!success) {
+                console.error("Fallo crítico: No se pudieron colocar las palabras.");
+                // Fallback (teóricamente imposible en 15x15 con 10 palabras cortas, pero por seguridad)
+            }
+
+            // Rellenar espacios vacíos con letras aleatorias
+            const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    }
+                }
+            }
+        }
+
+        function placeWord(word) {
+            // Direcciones: N, S, E, W, NE, NW, SE, SW
+            const dirs = [
+                [-1, 0], [1, 0], [0, 1], [0, -1],
+                [-1, 1], [-1, -1], [1, 1], [1, -1]
+            ];
+            
+            // Barajar direcciones
+            dirs.sort(() => Math.random() - 0.5);
+
+            // Generar todas las posiciones posibles y barajarlas
+            let positions = [];
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    positions.push({r, c});
+                }
+            }
+            positions.sort(() => Math.random() - 0.5);
+
+            for (let pos of positions) {
+                for (let dir of dirs) {
+                    if (canPlaceWord(word, pos.r, pos.c, dir[0], dir[1])) {
+                        // Colocar la palabra
+                        for (let i = 0; i < word.length; i++) {
+                            grid[pos.r + i * dir[0]][pos.c + i * dir[1]] = word[i];
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false; // No encontró lugar
+        }
+
+        function canPlaceWord(word, r, c, dr, dc) {
+            let endR = r + (word.length - 1) * dr;
+            let endC = c + (word.length - 1) * dc;
+
+            // Verificar límites del grid
+            if (endR < 0 || endR >= GRID_SIZE || endC < 0 || endC >= GRID_SIZE) return false;
+
+            // Verificar colisiones
+            for (let i = 0; i < word.length; i++) {
+                let currentR = r + i * dr;
+                let currentC = c + i * dc;
+                let currentCell = grid[currentR][currentC];
+                if (currentCell !== '' && currentCell !== word[i]) {
+                    return false; // Colisión de letras incompatibles
+                }
+            }
+            return true;
+        }
+
+        function renderGrid() {
+            gridContainer.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = grid[r][c];
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function renderWordList() {
+            wordListContainer.innerHTML = '';
+            WORDS.forEach(word => {
+                const li = document.createElement('li');
+                li.className = 'word-item';
+                li.id = 'word-' + word;
+                li.textContent = word;
+                wordListContainer.appendChild(li);
+            });
+        }
+
+        function setupInteractions() {
+            // Se usa el contenedor principal para rastrear eventos pointer (mouse/touch)
+            gridContainer.addEventListener('pointerdown', handlePointerDown);
+            window.addEventListener('pointermove', handlePointerMove); // Ventana para no perder track si sale rápido
+            window.addEventListener('pointerup', handlePointerUp);
+        }
+
+        function getCellFromEvent(e) {
+            // Usamos elementFromPoint para soporte robusto táctil donde el arrastre no actualiza target original
+            let target = document.elementFromPoint(e.clientX, e.clientY);
+            if (target && target.classList.contains('cell')) {
+                return {
+                    r: parseInt(target.dataset.r),
+                    c: parseInt(target.dataset.c),
+                    el: target
+                };
+            }
+            return null;
+        }
+
+        function handlePointerDown(e) {
+            if (!gameActive) return;
+            e.preventDefault(); // Evitar comportamientos por defecto
+            
+            const cell = getCellFromEvent(e);
+            if (cell) {
+                isSelecting = true;
+                startCell = cell;
+                clearSelection();
+                currentPath = [cell];
+                cell.el.classList.add('selected');
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (!isSelecting || !gameActive) return;
+            e.preventDefault();
+
+            const currentCell = getCellFromEvent(e);
+            if (currentCell) {
+                // Verificar si es una línea recta desde el startCell
+                const path = calculateLine(startCell, currentCell);
+                if (path) {
+                    clearSelection();
+                    currentPath = path;
+                    currentPath.forEach(p => p.el.classList.add('selected'));
+                }
+            }
+        }
+
+        function handlePointerUp(e) {
+            if (!isSelecting) return;
+            isSelecting = false;
+            
+            if (currentPath.length > 0) {
+                // Construir la palabra formada
+                let selectedWord = currentPath.map(p => p.el.textContent).join('');
+                let reversedWord = selectedWord.split('').reverse().join('');
+
+                if (WORDS.includes(selectedWord) || WORDS.includes(reversedWord)) {
+                    // Si coincide con la lista y no se había encontrado ya
+                    let wordMatched = WORDS.includes(selectedWord) ? selectedWord : reversedWord;
+                    
+                    if (!foundWordStrings.includes(wordMatched)) {
+                        markWordAsFound(wordMatched, currentPath);
+                    } else {
+                        clearSelection(); // Ya estaba encontrada
+                    }
+                } else {
+                    clearSelection(); // Palabra incorrecta
+                }
+            }
+            currentPath = [];
+            startCell = null;
+        }
+
+        // Cálculo algorítmico de línea recta entre 2 puntos de la cuadrícula
+        function calculateLine(start, end) {
+            const dr = end.r - start.r;
+            const dc = end.c - start.c;
+            
+            // Debe ser horizontal, vertical o diagonal perfecta (pasos iguales)
+            if (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc)) {
+                let steps = Math.max(Math.abs(dr), Math.abs(dc));
+                let stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+                let stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+                
+                let path = [];
+                for (let i = 0; i <= steps; i++) {
+                    let r = start.r + (stepR * i);
+                    let c = start.c + (stepC * i);
+                    // Buscar elemento DOM
+                    let el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                    path.push({r, c, el});
+                }
+                return path;
+            }
+            return null; // No es línea recta
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.cell.selected').forEach(el => el.classList.remove('selected'));
+        }
+
+        function markWordAsFound(word, path) {
+            path.forEach(p => {
+                p.el.classList.remove('selected');
+                p.el.classList.add('found');
+            });
+            
+            foundWordStrings.push(word);
+            wordsFound++;
+            
+            // Tachar palabra en la lista
+            document.getElementById('word-' + word).classList.add('found');
+            
+            updateCounter();
+
+            if (wordsFound === WORDS.length) {
+                gameWin();
+            }
+        }
+
+        function updateCounter() {
+            counterElement.textContent = `${wordsFound} / ${WORDS.length}`;
+        }
+
+        function updateTimer() {
+            secondsElapsed++;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            let m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            let s = (secondsElapsed % 60).toString().padStart(2, '0');
+            timerElement.textContent = `${m}:${s}`;
+        }
+
+        function gameWin() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            winMessage.style.display = 'block';
+
+            // Sistema de calificación de 1 a 5 estrellas basado en tiempo
+            // Menos de 2 min: 5, Menos de 4 min: 4, Menos de 6 min: 3, Menos de 8 min: 2, Mas: 1
+            let activeStars = 1;
+            if (secondsElapsed <= 120) activeStars = 5;
+            else if (secondsElapsed <= 240) activeStars = 4;
+            else if (secondsElapsed <= 360) activeStars = 3;
+            else if (secondsElapsed <= 480) activeStars = 2;
+
+            stars.forEach((star, index) => {
+                if (index < activeStars) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+            
+            // Auto scroll a la zona de lectura (Suave) para que el estudiante siga con el taller
+            setTimeout(() => {
+                document.getElementById('zona-lectura').scrollIntoView({ behavior: 'smooth' });
+            }, 1500);
+        }
+
+        // Iniciar juego al cargar
+        window.onload = initGame;
+    </script>
+</body>
+</html>

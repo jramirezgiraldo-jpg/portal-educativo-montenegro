@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física 7°: El Campo Gravitacional</title>
+    
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --primary-color: #1a2538; /* Azul noche profundo (espacio) */
+            --accent-color: #3498db; /* Azul gravitacional / celeste */
+            --correct-color: #27ae60;
+            --error-color: #c0392b;
+            --card-front: #2c3e50;
+            --text-main: #333;
+            --grid-bg: #fff;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(20px, 4vw, 40px);
+            padding: clamp(10px, 3vw, 20px);
+        }
+
+        section {
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--grid-bg);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            padding: clamp(15px, 4vw, 35px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: clamp(22px, 5vw, 34px);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .instruccion {
+            font-size: clamp(15px, 3.5vw, 18px);
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-around;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 18px);
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .stats-panel span { color: var(--accent-color); }
+
+        #game-board {
+            display: grid;
+            /* CRÍTICO: Grid fluido con auto-fit y minmax. Adaptable sin media queries */
+            grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+            gap: 12px;
+            width: 100%;
+            /* CRÍTICO: Evitar zoom/scroll táctil accidental en el tablero al arrastrar/tocar */
+            touch-action: none;
+            user-select: none;
+        }
+
+        .card {
+            aspect-ratio: 1; /* Garantiza proporción cuadrada */
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, var(--card-front) 0%, #151e29 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #4a627a;
+        }
+
+        .card-front svg {
+            width: 60%;
+            height: 60%;
+            fill: var(--accent-color);
+            opacity: 0.8;
+            filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.5));
+        }
+
+        .card-back {
+            background-color: #fff;
+            color: var(--primary-color);
+            transform: rotateY(180deg);
+            border: 2px solid var(--accent-color);
+            /* Tipografía elástica: Escala automáticamente con el tamaño de la carta */
+            font-size: clamp(9px, 2.3vw, 14px);
+            font-weight: bold;
+            word-break: break-word;
+            hyphens: auto;
+            flex-direction: column;
+            line-height: 1.15;
+            text-align: center;
+        }
+
+        .card.matched .card-back {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: #1a7740;
+        }
+
+        .card.mismatch .card-back {
+            background-color: var(--error-color);
+            color: white;
+            border-color: #8c271d;
+        }
+
+        .card-type-badge {
+            font-size: clamp(8px, 1.8vw, 10px);
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin-bottom: 4px;
+            background: rgba(0,0,0,0.06);
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: #666;
+        }
+        
+        .card.matched .card-type-badge, .card.mismatch .card-type-badge {
+            color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.2);
+        }
+
+        #rating-overlay {
+            display: none;
+            text-align: center;
+            padding: clamp(15px, 4vw, 30px);
+            background: #fff;
+            border-radius: 12px;
+            margin-top: 25px;
+            border: 3px solid var(--correct-color);
+            animation: popIn 0.5s ease-out;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .stars { font-size: clamp(35px, 8vw, 55px); color: #f1c40f; margin: 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .rating-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: clamp(14px, 4vw, 16px);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        .rating-btn:active { transform: scale(0.95); }
+
+        #zona-lectura {
+            margin-top: 10px;
+        }
+
+        article h2 {
+            color: var(--primary-color);
+            font-size: clamp(24px, 5vw, 32px);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        article h3 {
+            color: #2980b9;
+            font-size: clamp(19px, 4vw, 24px);
+            margin-top: 28px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        article h3::before {
+            content: '🪐';
+            font-size: 0.9em;
+        }
+
+        article p {
+            margin-bottom: 18px;
+            font-size: clamp(16px, 3.5vw, 18px);
+            text-align: justify;
+            color: #444;
+        }
+
+        article ul {
+            margin-left: 25px;
+            margin-bottom: 22px;
+            font-size: clamp(16px, 3.5vw, 18px);
+        }
+
+        article li { margin-bottom: 10px; color: #444; }
+        
+        .resaltado {
+            background-color: rgba(52, 152, 219, 0.15);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .taller-caja {
+            background-color: #f7fbff;
+            border-left: 6px solid var(--primary-color);
+            padding: clamp(15px, 4vw, 30px);
+            margin-top: 45px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 3px 3px 15px rgba(0,0,0,0.06);
+        }
+
+        .taller-caja h2 { 
+            border-bottom-color: var(--primary-color); 
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .instruccion-taller {
+            font-weight: bold;
+            color: #d35400;
+            font-size: clamp(16px, 4vw, 19px);
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 2px dashed #d35400;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .actividad-lista {
+            list-style: none;
+            counter-reset: act-counter;
+        }
+
+        .actividad-lista li {
+            margin-bottom: 25px;
+            padding-left: clamp(45px, 10vw, 55px);
+            position: relative;
+            font-size: clamp(16px, 3.5vw, 18px);
+            background: #fff;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            padding-right: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #e1e8ed;
+        }
+
+        .actividad-lista li::before {
+            counter-increment: act-counter;
+            content: counter(act-counter);
+            position: absolute;
+            left: 10px;
+            top: 15px;
+            background: var(--primary-color);
+            color: var(--grid-bg);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .badge-tipo {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: #eee;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-directa { background: #e8d0f3; color: #6a1b9a; border: 1px solid #dcb5ed; }
+        .badge-analisis { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1;}
+        .badge-dibujo { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6;}
+        .badge-mapa { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc;}
+
+    </style>
+</head>
+<body>
+
+<main>
+    <section id="zona-juego">
+        <header>
+            <h1>Exploración: El Campo Gravitacional</h1>
+            <p class="instruccion">Toca las cartas para voltearlas y encuentra los pares (Concepto - Definición).</p>
+            <div class="stats-panel">
+                <div>Movimientos: <span id="moves">0</span></div>
+                <div>Errores: <span id="errors">0</span></div>
+                <div>Pares: <span id="matches">0</span>/10</div>
+            </div>
+        </header>
+
+        <div id="game-board">
+            <!-- Las cartas se inyectan dinámicamente aquí vía JS -->
+        </div>
+
+        <div id="rating-overlay">
+            <h2 id="rating-title" style="color: var(--primary-color);">¡Exploración Exitosa!</h2>
+            <div class="stars" id="rating-stars"></div>
+            <p id="rating-msg" style="font-size: 18px; margin-bottom: 15px; font-weight: bold;"></p>
+            <button class="rating-btn" onclick="initGame()">Jugar de Nuevo</button>
+        </div>
+    </section>
+
+    <section id="zona-lectura">
+        <article>
+            <h2>El Vínculo Invisible: Entendiendo el Campo Gravitacional</h2>
+            
+            <p>Desde la famosa (y quizás mítica) manzana que cayó sobre la cabeza de Sir Isaac Newton, hasta los cohetes espaciales que orbitan nuestro planeta en la actualidad, la humanidad ha estado fascinada por una fuerza invisible pero omnipresente: la <span class="resaltado">gravedad</span>. Aunque la experimentamos todos los días al caminar, soltar un lápiz o saltar, la gravedad es mucho más que un simple "jalón" hacia abajo. Es una compleja interacción que dicta el movimiento de todo el universo.</p>
+            
+            <h3>¿Qué es exactamente un Campo Gravitacional?</h3>
+            <p>En física, no pensamos en la gravedad simplemente como una cuerda invisible que tira de las cosas. La comprendemos a través del concepto de <strong>campo gravitacional</strong>. Imagina que el espacio que nos rodea es como una cama elástica (un trampolín) tensada. Si colocas una bola de boliche pesada (como el planeta Tierra) en el centro, la cama elástica se hunde, creando una gran curva a su alrededor.</p>
+            <p>Esa "curva" en el espacio es el campo gravitacional. Cualquier objeto más pequeño (como tú, una manzana, o la Luna) que entre en esa zona curvada, inevitablemente tenderá a "resbalar" o moverse hacia el objeto más grande. Es decir, un campo gravitacional es una región del espacio donde un cuerpo masivo ejerce una influencia física y atrae a otros objetos materiales hacia él, otorgándoles el <strong>potencial de moverse</strong>.</p>
+
+            <h3>Masa y Peso: Una confusión muy frecuente</h3>
+            <p>Para entender cómo interactúa la materia con este campo, es vital separar dos conceptos que en la vida diaria usamos como sinónimos, pero que en la física son totalmente distintos:</p>
+            <ul>
+                <li><strong>La Masa:</strong> Es la cantidad de materia que tiene un cuerpo (de cuántos átomos estás hecho). Tu masa es <em>idéntica</em> aquí en la Tierra, en la Luna o flotando en el espacio vacío. Se mide en kilogramos.</li>
+                <li><strong>El Peso:</strong> Es la <span class="resaltado">fuerza</span> con la que un campo gravitacional atrae tu masa. Como el campo gravitacional de la Tierra es mucho más fuerte que el de la Luna (porque la Tierra es más masiva), tú <em>pesas</em> mucho menos en la Luna, a pesar de seguir teniendo exactamente la misma masa (el mismo cuerpo).</li>
+            </ul>
+
+            <h3>Movimiento, Energía y Caída Libre</h3>
+            <p>Cuando un objeto se encuentra dentro de un campo gravitacional, adquiere algo llamado <strong>Energía Potencial Gravitatoria</strong>. Imagina una roca en el borde de un acantilado: por el simple hecho de estar en una posición elevada dentro del campo gravitacional de la Tierra, tiene energía acumulada, un "potencial" para moverse. Si la roca cae, esa energía potencial se transforma violentamente en energía de movimiento (cinética).</p>
+            <p>A este movimiento, donde la <em>única</em> fuerza que actúa sobre el cuerpo es la gravedad, se le llama <strong>caída libre</strong>. Curiosamente, si quitamos la resistencia del aire (como ocurre en el vacío del espacio), una pluma y un martillo en caída libre acelerarán y tocarán el suelo exactamente al mismo tiempo, algo que el astronauta David Scott demostró en la Luna en 1971.</p>
+
+            <h3>El Ballet del Universo: Órbitas y Mareas</h3>
+            <p>Si la gravedad siempre atrae, ¿por qué la Luna no se estrella contra nosotros? Aquí radica la magia del movimiento en el campo gravitacional. La Luna <em>sí</em> está cayendo constantemente hacia la Tierra, pero simultáneamente se está moviendo hacia un lado a una velocidad tremenda (inercia). Al combinar la caída libre con esa velocidad lateral extrema, la Luna entra en una curva perpetua que rodea a la Tierra: a esto le llamamos <strong>órbita</strong>.</p>
+            <p>Además, esta interacción no es de un solo sentido. La Luna también tiene su propio campo gravitacional. Al orbitarnos, su fuerza gravitatoria "tira" de los objetos en la Tierra. Como el agua de nuestros océanos es líquida y maleable, la gravedad lunar logra abultarla, creando lo que conocemos como <strong>mareas</strong> altas y bajas todos los días. ¡El campo gravitacional es verdaderamente la red invisible que mantiene conectado nuestro universo!</p>
+        </article>
+
+        <div class="taller-caja">
+            <h2>Taller de Repaso</h2>
+            <div class="instruccion-taller">
+                📝 INSTRUCCIÓN: Escribe y resuelve de forma completa estas 10 actividades en tu cuaderno de Ciencias/Física.
+            </div>
+            
+            <ul class="actividad-lista">
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Según el texto y la analogía del trampolín, define con tus propias palabras qué es un "Campo Gravitacional".
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Si un astronauta viaja al espacio exterior lejos de cualquier planeta, ¿su masa cambia? ¿Su peso cambia? Argumenta científicamente tu respuesta apoyándote en la lectura.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja la metáfora de la cama elástica (trampolín). Muestra un objeto muy masivo en el centro hundiendo la malla espacial y un objeto pequeño en el borde sintiendo la atracción hacia el centro.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Conceptual</span><br>
+                    Elabora un mapa conceptual pequeño y ordenado que conecte los siguientes términos clave: <em>Materia, Masa, Peso, Campo Gravitacional, Atracción</em>.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    ¿Qué tipo de energía adquiere un objeto, como una roca al borde de un acantilado, por el simple hecho de estar en una posición elevada dentro del campo gravitacional?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Analizando el experimento de la pluma y el martillo en la Luna (1971): ¿Por qué crees que en la Tierra una pluma cae más lento que un martillo si la gravedad atrae a todos los objetos por igual? (Pista: Piensa en qué hay en la Tierra que no hay en el vacío del espacio).
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Ilustra cómo funciona una "órbita". Dibuja el planeta Tierra en el centro y la Luna a su alrededor. Usa una flecha de un color que indique la caída (atracción gravitatoria) y otra flecha de otro color que indique la velocidad lateral (inercia).
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Mental</span><br>
+                    Diseña un mapa mental cuyo tema central sea "Efectos de la Gravedad en nuestro entorno". De las ramas principales deben salir ejemplos abordados en el texto (ej. Órbitas, Caída libre, Mareas).
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Describe qué fenómeno físico natural en nuestros océanos demuestra visualmente la interacción entre el campo gravitacional de la Tierra y el campo gravitacional de la Luna.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Si el campo gravitacional de la Tierra "desapareciera" mágicamente por un segundo, basándote en la sección de órbitas, ¿qué crees que le pasaría a la Luna? ¿Seguiría girando o saldría disparada? Argumenta tu respuesta.
+                </li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<script>
+    // 10 Conceptos y Definiciones sobre Campo Gravitacional (Total 20 cartas)
+    const pairsData = [
+        { c: "Gravedad", d: "Fuerza de atracción invisible mutua entre dos masas." },
+        { c: "Campo Gravitacional", d: "Región del espacio curvado donde se siente la influencia gravitatoria." },
+        { c: "Masa", d: "Cantidad total de materia que posee un cuerpo (átomos)." },
+        { c: "Peso", d: "Fuerza específica con la que la gravedad atrae a un objeto." },
+        { c: "Caída Libre", d: "Movimiento bajo la influencia exclusiva de la gravedad." },
+        { c: "Órbita", d: "Trayectoria curva de caída constante equilibrada con velocidad lateral." },
+        { c: "Mareas", d: "Abultamiento de los océanos causado por la gravedad lunar." },
+        { c: "Energía Potencial", d: "Energía almacenada por la altura dentro de un campo gravitacional." },
+        { c: "Isaac Newton", d: "Científico clásico asociado a las leyes de la gravitación." },
+        { c: "Vacío Espacial", d: "Zona sin resistencia del aire donde plumas y martillos caen igual." }
+    ];
+
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+    let errors = 0;
+    let isBoardLocked = false;
+
+    // SVG incrustado estáticamente para el frente de las cartas (Icono de Gravedad/Órbita)
+    const cardPatternSVG = `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Planeta central -->
+            <circle cx="50" cy="50" r="15" fill="currentColor" opacity="0.9"/>
+            <!-- Órbita 1 -->
+            <ellipse cx="50" cy="50" rx="35" ry="12" fill="none" stroke="currentColor" stroke-width="2.5" transform="rotate(30 50 50)" opacity="0.6"/>
+            <!-- Órbita 2 -->
+            <ellipse cx="50" cy="50" rx="35" ry="12" fill="none" stroke="currentColor" stroke-width="2.5" transform="rotate(-30 50 50)" opacity="0.6"/>
+            <!-- Pequeño satélite -->
+            <circle cx="80" cy="67" r="4" fill="#fff" />
+        </svg>
+    `;
+
+    function initGame() {
+        const board = document.getElementById('game-board');
+        board.innerHTML = '';
+        cards = [];
+        flippedCards = [];
+        matchedPairs = 0;
+        moves = 0;
+        errors = 0;
+        isBoardLocked = false;
+        
+        updateStats();
+        document.getElementById('rating-overlay').style.display = 'none';
+
+        // Crear array de 20 cartas (10 pares) vinculadas por un ID único
+        pairsData.forEach((pair, index) => {
+            cards.push({ id: index, text: pair.c, type: 'Concepto' });
+            cards.push({ id: index, text: pair.d, type: 'Definición' });
+        });
+
+        // Mezclar aleatoriamente el mazo matemáticamente
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+
+        // Renderizar las cartas en el DOM respetando la estructura 3D
+        cards.forEach((cardData, index) => {
+            const cardEl = document.createElement('div');
+            cardEl.classList.add('card');
+            cardEl.dataset.index = index;
+            cardEl.dataset.matchId = cardData.id;
+
+            cardEl.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        ${cardPatternSVG}
+                    </div>
+                    <div class="card-back">
+                        <span class="card-type-badge">${cardData.type}</span>
+                        <span>${cardData.text}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Usamos pointerdown para soportar clics nativos en mouse y toques sin latencia (0 lag)
+            cardEl.addEventListener('pointerdown', handleCardClick);
+            board.appendChild(cardEl);
+        });
+    }
+
+    function handleCardClick(e) {
+        e.preventDefault(); 
+        
+        if (isBoardLocked) return;
+        
+        const currentCard = e.target.closest('.card');
+        
+        if (!currentCard) return;
+        // Ignorar clics si la carta ya está volteada o emparejada
+        if (currentCard.classList.contains('flipped') || currentCard.classList.contains('matched')) return;
+
+        currentCard.classList.add('flipped');
+        flippedCards.push(currentCard);
+
+        if (flippedCards.length === 2) {
+            moves++;
+            updateStats();
+            checkForMatch();
+        }
+    }
+
+    function checkForMatch() {
+        isBoardLocked = true; // Bloquea la interacción del usuario momentáneamente
+        const [card1, card2] = flippedCards;
+        const id1 = card1.dataset.matchId;
+        const id2 = card2.dataset.matchId;
+
+        if (id1 === id2) {
+            // MATCH CORRECTO: Retraso visual leve y color verde
+            setTimeout(() => {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                updateStats();
+                resetBoard();
+                if (matchedPairs === 10) endGame();
+            }, 350);
+        } else {
+            // ERROR: Retraso, color rojo y voltea de nuevo
+            errors++;
+            updateStats();
+            
+            setTimeout(() => {
+                card1.classList.add('mismatch');
+                card2.classList.add('mismatch');
+            }, 250);
+
+            setTimeout(() => {
+                card1.classList.remove('flipped', 'mismatch');
+                card2.classList.remove('flipped', 'mismatch');
+                resetBoard();
+            }, 1500); // Exigencia: 1.5 seg antes de girar
+        }
+    }
+
+    function resetBoard() {
+        flippedCards = [];
+        isBoardLocked = false;
+    }
+
+    function updateStats() {
+        document.getElementById('moves').textContent = moves;
+        document.getElementById('errors').textContent = errors;
+        document.getElementById('matches').textContent = matchedPairs;
+    }
+
+    function endGame() {
+        const overlay = document.getElementById('rating-overlay');
+        const starsEl = document.getElementById('rating-stars');
+        const msgEl = document.getElementById('rating-msg');
+        
+        let stars = "";
+        let msg = "";
+        
+        // Calificación matemática basada en la eficiencia de los movimientos/errores
+        if (errors <= 4) {
+            stars = "⭐⭐⭐⭐⭐";
+            msg = "¡Gravedad Cero! Tu memoria está en órbita perfecta.";
+        } else if (errors <= 9) {
+            stars = "⭐⭐⭐⭐";
+            msg = "¡Excelente campo de atracción! Has dominado los conceptos.";
+        } else if (errors <= 15) {
+            stars = "⭐⭐⭐";
+            msg = "¡Bien hecho! Aterrizaste con éxito en el conocimiento.";
+        } else {
+            stars = "⭐⭐";
+            msg = "¡Misión completada! Un poco turbulento, pero seguimos aprendiendo.";
+        }
+        
+        starsEl.textContent = stars;
+        msgEl.textContent = msg;
+        overlay.style.display = "block";
+        
+        // Auto-scroll táctico hacia el mensaje de éxito usando smooth behavior
+        setTimeout(() => {
+            overlay.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }, 300);
+    }
+
+    // Inicializar de forma segura después de que el DOM esté completamente cargado
+    document.addEventListener('DOMContentLoaded', initGame);
+
+</script>
+
+</body>
+</html>

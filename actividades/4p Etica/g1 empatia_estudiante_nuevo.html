@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Empatía ante lo desconocido</title>
+    
+    <style>
+        :root {
+            /* Paleta de colores cálida y empática */
+            --bg-color: #f7f9fc;
+            --primary-color: #2b4c7e; /* Azul profundo (serenidad, profundidad) */
+            --accent-color: #d97736; /* Naranja cálido (acogida, calor humano) */
+            --accent-hover: #b8622b;
+            --correct-color: #2e8b57; /* Verde suave */
+            --error-color: #c0392b; /* Rojo alerta */
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #555555;
+            --grid-bg: #e2e8f0;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(20px, 4vw, 40px);
+            padding: clamp(10px, 3vw, 20px);
+            align-items: center;
+        }
+
+        section {
+            width: 100%;
+            max-width: 900px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+            padding: clamp(15px, 4vw, 35px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: clamp(22px, 5vw, 34px);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .instruccion {
+            font-size: clamp(15px, 3.5vw, 18px);
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-around;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 18px);
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .stats-panel span { color: #f3c262; }
+
+        #matching-game {
+            display: grid;
+            /* Grid de 2 columnas fluido */
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(10px, 2vw, 20px);
+            width: 100%;
+            /* CRÍTICO: Prevenir zoom y scroll táctil accidental sobre el tablero */
+            touch-action: pan-y; /* Permite scroll vertical de la página pero evita zoom/gestos */
+            user-select: none;
+            background: var(--grid-bg);
+            padding: clamp(10px, 2vw, 20px);
+            border-radius: 12px;
+        }
+
+        .column-header {
+            text-align: center;
+            font-weight: 800;
+            color: var(--primary-color);
+            font-size: clamp(14px, 3.5vw, 18px);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 5px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            padding: clamp(12px, 3vw, 18px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: clamp(12px, 3.2vw, 16px);
+            font-weight: 500;
+            color: var(--text-main);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-height: 80px;
+            word-break: break-word;
+            hyphens: auto;
+        }
+
+        .col-concept .card {
+            font-weight: 700;
+            color: var(--primary-color);
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .col-definition .card {
+            border-left: 5px solid var(--accent-color);
+        }
+
+        /* Estados de las tarjetas */
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card.selected {
+            background-color: #fff8e1;
+            border-color: #f5b041;
+            box-shadow: 0 0 10px rgba(245, 176, 65, 0.4);
+            transform: scale(1.02);
+            z-index: 2;
+        }
+
+        .card.matched {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: #1e613b;
+            opacity: 0.8;
+            pointer-events: none;
+            box-shadow: none;
+            transform: scale(0.95);
+        }
+
+        .card.error {
+            background-color: var(--error-color);
+            color: white;
+            border-color: #922b21;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        #rating-overlay {
+            display: none;
+            text-align: center;
+            padding: clamp(20px, 4vw, 40px);
+            background: #fff;
+            border-radius: 12px;
+            margin-top: 25px;
+            border: 3px solid var(--correct-color);
+            animation: popIn 0.5s ease-out;
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.15);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .stars { font-size: clamp(40px, 8vw, 60px); color: #f1c40f; margin: 15px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .rating-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: clamp(15px, 4vw, 17px);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .rating-btn:hover { background: var(--accent-hover); }
+        .rating-btn:active { transform: scale(0.95); }
+
+        #zona-lectura {
+            margin-top: 10px;
+            background: #ffffff;
+        }
+
+        article h2 {
+            color: var(--primary-color);
+            font-size: clamp(24px, 5vw, 32px);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-bottom: 25px;
+            line-height: 1.2;
+        }
+
+        article h3 {
+            color: #8a481c;
+            font-size: clamp(19px, 4vw, 24px);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        article h3 svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--accent-color);
+        }
+
+        article p {
+            margin-bottom: 18px;
+            font-size: clamp(16px, 3.5vw, 18px);
+            text-align: justify;
+            color: #444;
+        }
+
+        article ul {
+            margin-left: 25px;
+            margin-bottom: 22px;
+            font-size: clamp(16px, 3.5vw, 18px);
+            color: #444;
+        }
+
+        article li { margin-bottom: 10px; }
+        
+        .resaltado {
+            background-color: rgba(217, 119, 54, 0.15);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #a0501a;
+        }
+
+        .taller-caja {
+            background-color: #fdfaf7;
+            border-left: 6px solid var(--accent-color);
+            padding: clamp(15px, 4vw, 35px);
+            margin-top: 50px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 4px 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .taller-caja h2 { 
+            border-bottom-color: var(--accent-color); 
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .instruccion-taller {
+            font-weight: bold;
+            color: var(--error-color);
+            font-size: clamp(16px, 4vw, 19px);
+            text-align: center;
+            margin-bottom: 35px;
+            padding: 15px;
+            border: 2px dashed var(--error-color);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .actividad-lista {
+            list-style: none;
+            counter-reset: act-counter;
+        }
+
+        .actividad-lista li {
+            margin-bottom: 25px;
+            padding-left: clamp(45px, 10vw, 60px);
+            position: relative;
+            font-size: clamp(16px, 3.5vw, 18px);
+            background: #fff;
+            padding-top: 18px;
+            padding-bottom: 18px;
+            padding-right: 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+            border: 1px solid #f0e6dd;
+        }
+
+        .actividad-lista li::before {
+            counter-increment: act-counter;
+            content: counter(act-counter);
+            position: absolute;
+            left: 12px;
+            top: 18px;
+            background: var(--primary-color);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .badge-tipo {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            background: #eee;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-directa { background: #e8d0f3; color: #6a1b9a; border: 1px solid #dcb5ed; }
+        .badge-analisis { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1;}
+        .badge-dibujo { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6;}
+        .badge-mapa { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc;}
+
+    </style>
+</head>
+<body>
+
+<main>
+    <section id="zona-juego">
+        <header>
+            <h1>Empatía ante lo desconocido</h1>
+            <p class="instruccion">Toca un concepto en la columna izquierda y luego su definición correspondiente en la derecha para emparejarlos.</p>
+            <div class="stats-panel">
+                <div>⏱️ Tiempo: <span id="timer">00:00</span></div>
+                <div>❌ Errores: <span id="errors">0</span></div>
+                <div>✔️ Pares: <span id="matches">0</span>/10</div>
+            </div>
+        </header>
+
+        <div id="matching-game">
+            <!-- Columna de Conceptos -->
+            <div>
+                <div class="column-header">Concepto</div>
+                <div class="column col-concept" id="col-concepts">
+                    <!-- Conceptos dinámicos -->
+                </div>
+            </div>
+            <!-- Columna de Definiciones -->
+            <div>
+                <div class="column-header">Definición</div>
+                <div class="column col-definition" id="col-definitions">
+                    <!-- Definiciones dinámicas -->
+                </div>
+            </div>
+        </div>
+
+        <div id="rating-overlay">
+            <h2 id="rating-title" style="color: var(--primary-color);">¡Conexiones Logradas!</h2>
+            <div class="stars" id="rating-stars"></div>
+            <p id="rating-msg" style="font-size: 18px; margin-bottom: 15px; font-weight: bold;"></p>
+            <button class="rating-btn" onclick="initGame()">Volver a Jugar</button>
+        </div>
+    </section>
+
+    <section id="zona-lectura">
+        <article>
+            <h2>Empatía ante lo desconocido: El desafío del estudiante nuevo</h2>
+            
+            <p>El timbre suena y un nuevo día comienza en el colegio. Entre el ruido de los pasillos y las risas familiares, aparece un rostro desconocido. Es el "estudiante nuevo". Las miradas se clavan en él; algunos murmuran, otros simplemente lo ignoran. Este escenario, que ocurre todos los días en colegios de todo el mundo, es una prueba de fuego para nuestra calidad humana. Especialmente cuando ese nuevo compañero no está allí por elección, sino porque ha sido víctima del <span class="resaltado">desplazamiento forzado</span>.</p>
+            
+            <h3>
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                El dolor invisible del desplazamiento
+            </h3>
+            <p>A diferencia de alguien que se muda porque sus padres consiguieron un mejor empleo, un joven desplazado ha tenido que huir. Ha dejado atrás su hogar, sus amigos, sus mascotas y sus costumbres debido a la violencia, amenazas o crisis extremas. Llega a un nuevo territorio en un estado de profunda <span class="resaltado">vulnerabilidad</span>. No solo debe lidiar con el trauma de lo que vivió, sino también con el reto gigante de intentar encajar en un grupo que ya tiene sus reglas y amistades formadas.</p>
+
+            <h3>
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2c0-2.25 3-2.5 3-5 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 2.5-3 2.75-3 5z"/></svg>
+                La barrera del prejuicio y el aislamiento
+            </h3>
+            <p>Lamentablemente, la reacción humana más común ante lo desconocido es el miedo o la desconfianza. Sin darnos cuenta, construimos <span class="resaltado">prejuicios</span>: asumimos cosas negativas de la persona por su acento, su ropa o su lugar de origen antes de cruzar una sola palabra con ella. Esto lleva al <span class="resaltado">rechazo</span> pasivo.</p>
+            <p>El rechazo no siempre son golpes o insultos; muchas veces es simplemente hacer como si el otro no existiera. A esto lo llamamos <span class="resaltado">aislamiento social</span>. Para un joven que ya lo ha perdido todo, sentarse solo en el descanso o no tener grupo para un trabajo escolar refuerza su dolor, enviándole un mensaje silencioso pero destructivo: <em>"Tú no perteneces aquí"</em>.</p>
+
+            <h3>
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                El poder transformador de la Empatía y la Acogida
+            </h3>
+            <p>Como seres humanos, somos criaturas sociales. La psicología nos enseña que el <span class="resaltado">sentido de pertenencia</span> no es un lujo, es una necesidad básica para nuestra salud mental y emocional. Necesitamos sentir que somos parte de una "tribu".</p>
+            <p>Aquí es donde entra la <span class="resaltado">empatía</span>: el superpoder de ponerse en los zapatos del otro. Cuando practicamos la <span class="resaltado">inclusión</span> y decidimos brindarle una <span class="resaltado">acogida</span> cálida al estudiante nuevo (saludarlo, invitarlo a jugar, preguntarle cómo está), estamos creando un entorno seguro. Para un joven desplazado, este simple acto de bondad puede ser el detonante de su <span class="resaltado">resiliencia</span>, permitiéndole florecer de nuevo, superar sus traumas y aportar su valiosa perspectiva a nuestra comunidad.</p>
+        </article>
+
+        <div class="taller-caja">
+            <h2>Taller de Repaso y Reflexión</h2>
+            <div class="instruccion-taller">
+                📝 INSTRUCCIÓN: Escribe, dibuja y resuelve de forma completa estas 10 actividades en tu cuaderno de Ética/Valores.
+            </div>
+            
+            <ul class="actividad-lista">
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Según la lectura, ¿cuál es la diferencia principal entre un estudiante que se muda por el trabajo de sus padres y un estudiante víctima de "desplazamiento forzado"?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    El texto afirma que el "rechazo" no siempre consiste en insultos o violencia física. Explica con tus propias palabras qué es el "rechazo pasivo" y por qué puede ser igual de doloroso.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Dibuja una escena escolar dividida en dos partes: En la izquierda ilustra una situación de "aislamiento social" y en la derecha una situación de "acogida".
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Mental</span><br>
+                    Crea un mapa mental cuyo centro sea la palabra "PREJUICIO". En las ramas principales escribe las causas (por qué surgen) y las consecuencias (qué provocan en el estudiante nuevo).
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    Menciona por qué la psicología considera que el "sentido de pertenencia" es una necesidad humana básica y no simplemente un lujo.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Imagina que llegas a un país donde nadie habla tu idioma, no conoces a nadie y has dejado todas tus pertenencias atrás. Escribe un párrafo en primera persona describiendo cómo te sentirías el primer día de clases.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-dibujo">Dibujo / Ilustración</span><br>
+                    Ilustra mediante un símbolo, objeto o escena lo que significa para ti la palabra "Resiliencia" (Ejemplo: Una flor creciendo en medio del cemento gris). Escribe una línea explicando tu dibujo.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-mapa">Mapa Conceptual</span><br>
+                    Elabora un mapa conceptual que conecte lógicamente los siguientes 6 términos: <em>Llegada del nuevo, Miedo a lo desconocido, Prejuicios, Empatía, Inclusión, Resiliencia</em>.
+                </li>
+                <li>
+                    <span class="badge-tipo badge-directa">Respuesta Directa</span><br>
+                    ¿Qué significa la frase "la empatía es el superpoder de ponerse en los zapatos del otro" dentro del contexto del salón de clases?
+                </li>
+                <li>
+                    <span class="badge-tipo badge-analisis">Análisis Crítico</span><br>
+                    Reflexión Personal: Piensa en tu colegio. ¿Qué acción específica y sencilla podrías realizar mañana mismo para hacer sentir valorado e incluido a alguien que normalmente pasa el descanso solo?
+                </li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<script>
+    // 10 Conceptos y Definiciones
+    const data = [
+        { id: 1, concept: "Desplazamiento Forzado", definition: "Obligación de huir del hogar por peligro o violencia, dejando toda una vida atrás." },
+        { id: 2, concept: "Empatía", definition: "Capacidad de comprender y compartir los sentimientos del otro, poniéndose en su lugar." },
+        { id: 3, concept: "Aislamiento Social", definition: "Situación de soledad profunda donde una persona es ignorada o apartada por los demás." },
+        { id: 4, concept: "Pertenencia", definition: "Necesidad humana fundamental de sentirse aceptado, valorado e incluido en una comunidad." },
+        { id: 5, concept: "Prejuicio", definition: "Opinión anticipada y negativa hacia alguien, basada en ignorancia o estereotipos." },
+        { id: 6, concept: "Resiliencia", definition: "Capacidad de superar traumas, adaptarse y florecer ante las circunstancias adversas." },
+        { id: 7, concept: "Rechazo", definition: "Acción de excluir a alguien, negándole la oportunidad de integrarse al grupo." },
+        { id: 8, concept: "Inclusión", definition: "Actitud de integrar y valorar a todas las personas, celebrando sus diferencias." },
+        { id: 9, concept: "Vulnerabilidad", definition: "Estado de gran fragilidad emocional o riesgo al perder la red de apoyo social." },
+        { id: 10, concept: "Acogida", definition: "Recibir a alguien con hospitalidad, calidez y brindándole un entorno seguro." }
+    ];
+
+    let concepts = [];
+    let definitions = [];
+    let selectedConcept = null;
+    let selectedDefinition = null;
+    let matches = 0;
+    let errors = 0;
+    let seconds = 0;
+    let timerInterval = null;
+    let isProcessing = false;
+
+    // Referencias al DOM
+    const colConcepts = document.getElementById('col-concepts');
+    const colDefinitions = document.getElementById('col-definitions');
+    const matchesEl = document.getElementById('matches');
+    const errorsEl = document.getElementById('errors');
+    const timerEl = document.getElementById('timer');
+    const ratingOverlay = document.getElementById('rating-overlay');
+
+    function initGame() {
+        // Reset variables
+        selectedConcept = null;
+        selectedDefinition = null;
+        matches = 0;
+        errors = 0;
+        seconds = 0;
+        isProcessing = false;
+        
+        matchesEl.textContent = matches;
+        errorsEl.textContent = errors;
+        timerEl.textContent = "00:00";
+        ratingOverlay.style.display = "none";
+        
+        clearInterval(timerInterval);
+        startTimer();
+
+        // Preparar arrays separados y mezclados
+        concepts = [...data].map(item => ({ id: item.id, text: item.concept }));
+        definitions = [...data].map(item => ({ id: item.id, text: item.definition }));
+
+        shuffleArray(concepts);
+        shuffleArray(definitions);
+
+        renderColumn(colConcepts, concepts, 'concept');
+        renderColumn(colDefinitions, definitions, 'definition');
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function renderColumn(container, items, type) {
+        container.innerHTML = '';
+        items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.id = item.id;
+            card.dataset.type = type;
+            card.textContent = item.text;
+            
+            // Usamos pointerdown para respuesta rápida en móviles
+            card.addEventListener('pointerdown', handleCardClick);
+            container.appendChild(card);
+        });
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            seconds++;
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+        }, 1000);
+    }
+
+    function handleCardClick(e) {
+        if (isProcessing) return;
+        
+        const card = e.currentTarget;
+        
+        // Ignorar si ya está emparejada
+        if (card.classList.contains('matched')) return;
+
+        const type = card.dataset.type;
+
+        // Deseleccionar si se toca la misma tarjeta
+        if (card.classList.contains('selected')) {
+            card.classList.remove('selected');
+            if (type === 'concept') selectedConcept = null;
+            else selectedDefinition = null;
+            return;
+        }
+
+        // Marcar selección y desmarcar anteriores de la misma columna
+        if (type === 'concept') {
+            if (selectedConcept) selectedConcept.classList.remove('selected');
+            selectedConcept = card;
+        } else {
+            if (selectedDefinition) selectedDefinition.classList.remove('selected');
+            selectedDefinition = card;
+        }
+
+        card.classList.add('selected');
+
+        // Si hay una de cada lado, verificar coincidencia
+        if (selectedConcept && selectedDefinition) {
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        isProcessing = true;
+        const idConcept = selectedConcept.dataset.id;
+        const idDef = selectedDefinition.dataset.id;
+
+        if (idConcept === idDef) {
+            // MATCH CORRECTO
+            selectedConcept.classList.remove('selected');
+            selectedDefinition.classList.remove('selected');
+            
+            selectedConcept.classList.add('matched');
+            selectedDefinition.classList.add('matched');
+            
+            matches++;
+            matchesEl.textContent = matches;
+            
+            resetSelection();
+            
+            if (matches === 10) {
+                setTimeout(endGame, 500);
+            }
+        } else {
+            // MATCH INCORRECTO
+            errors++;
+            errorsEl.textContent = errors;
+            
+            selectedConcept.classList.remove('selected');
+            selectedDefinition.classList.remove('selected');
+            
+            selectedConcept.classList.add('error');
+            selectedDefinition.classList.add('error');
+
+            setTimeout(() => {
+                selectedConcept.classList.remove('error');
+                selectedDefinition.classList.remove('error');
+                resetSelection();
+            }, 800); // Dar tiempo para ver el error
+        }
+    }
+
+    function resetSelection() {
+        selectedConcept = null;
+        selectedDefinition = null;
+        isProcessing = false;
+    }
+
+    function endGame() {
+        clearInterval(timerInterval);
+        
+        const starsEl = document.getElementById('rating-stars');
+        const msgEl = document.getElementById('rating-msg');
+        
+        let stars = "";
+        let msg = "";
+        
+        if (errors === 0) {
+            stars = "⭐⭐⭐⭐⭐";
+            msg = "¡Empatía Perfecta! Tienes una comprensión absoluta de estos conceptos.";
+        } else if (errors <= 3) {
+            stars = "⭐⭐⭐⭐";
+            msg = "¡Gran corazón! Muy buen trabajo conectando las realidades.";
+        } else if (errors <= 7) {
+            stars = "⭐⭐⭐";
+            msg = "¡Buen esfuerzo! Sigue practicando tu sensibilidad hacia el otro.";
+        } else {
+            stars = "⭐⭐";
+            msg = "¡Conexión completada! El aprendizaje de la empatía es paso a paso.";
+        }
+        
+        starsEl.textContent = stars;
+        msgEl.textContent = msg;
+        ratingOverlay.style.display = "block";
+        
+        // Auto-scroll al resultado
+        setTimeout(() => {
+            ratingOverlay.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }, 300);
+    }
+
+    // Iniciar automáticamente
+    document.addEventListener('DOMContentLoaded', initGame);
+
+</script>
+
+</body>
+</html>

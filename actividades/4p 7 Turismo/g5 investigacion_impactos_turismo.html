@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Investigación Guiada: Impactos del Turismo</title>
+    <style>
+        :root {
+            /* Tema Cyberpunk - Juego */
+            --cp-bg: #0b0c10;
+            --cp-dark: #1f2833;
+            --cp-neon-cyan: #66fcf1;
+            --cp-neon-blue: #45a29e;
+            --cp-neon-green: #39ff14;
+            --cp-neon-red: #ff073a;
+            --cp-text: #c5c6c7;
+            
+            /* Tema Lectura - Teoría (Claro y legible) */
+            --read-bg: #f8fafc;
+            --read-card: #ffffff;
+            --read-text: #334155;
+            --read-title: #0f172a;
+            --read-accent: #0ea5e9;
+            --read-border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* Fuentes nativas del sistema 100% offline */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            color: var(--cp-text);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #zona-juego {
+            background-color: var(--cp-bg);
+            background-image: 
+                linear-gradient(rgba(102, 252, 241, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 252, 241, 0.05) 1px, transparent 1px);
+            background-size: 25px 25px;
+            padding: clamp(20px, 4vw, 40px) 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 4px solid var(--cp-neon-cyan);
+            box-shadow: 0 4px 20px rgba(102, 252, 241, 0.15);
+            /* Prevención crítica de scroll/zoom en móviles SOLO en esta área */
+            touch-action: none; 
+            user-select: none;
+            min-height: 100vh; /* Ocupa la pantalla completa al inicio */
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 650px;
+            background-color: rgba(31, 40, 51, 0.9);
+            border: 2px solid var(--cp-neon-blue);
+            border-radius: 12px;
+            padding: clamp(15px, 4vw, 30px);
+            box-shadow: 0 0 25px rgba(69, 162, 158, 0.2);
+            backdrop-filter: blur(8px);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--cp-neon-blue);
+            padding-bottom: 10px;
+        }
+
+        .room-indicator {
+            font-family: monospace;
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--cp-neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .score-indicator {
+            font-family: monospace;
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: var(--cp-neon-green);
+        }
+
+        .puzzle-area {
+            min-height: 120px;
+            margin-bottom: 25px;
+            background: rgba(11, 12, 16, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid var(--cp-neon-cyan);
+        }
+
+        .puzzle-text {
+            font-family: monospace;
+            font-size: clamp(14px, 3.5vw, 16px);
+            color: var(--cp-text);
+            text-align: justify;
+            text-shadow: 0 0 1px rgba(197, 198, 199, 0.3);
+        }
+
+        .display-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .digit-box {
+            width: clamp(45px, 12vw, 65px);
+            height: clamp(55px, 15vw, 75px);
+            background-color: var(--cp-dark);
+            border: 2px solid var(--cp-neon-cyan);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: monospace;
+            font-size: clamp(24px, 8vw, 36px);
+            color: var(--cp-neon-cyan);
+            box-shadow: inset 0 0 15px rgba(102, 252, 241, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .key-btn {
+            background-color: transparent;
+            border: 2px solid var(--cp-neon-blue);
+            color: var(--cp-neon-cyan);
+            padding: clamp(12px, 4vw, 18px) 0;
+            font-size: clamp(20px, 6vw, 24px);
+            font-family: monospace;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            text-align: center;
+        }
+
+        .key-btn:active {
+            background-color: var(--cp-neon-blue);
+            color: var(--cp-bg);
+            transform: scale(0.92);
+        }
+        
+        .key-clear { color: var(--cp-neon-red); border-color: var(--cp-neon-red); }
+        .key-clear:active { background-color: var(--cp-neon-red); color: white; }
+        
+        .key-enter { color: var(--cp-neon-green); border-color: var(--cp-neon-green); font-weight: bold;}
+        .key-enter:active { background-color: var(--cp-neon-green); color: black; }
+
+        .success-anim { animation: flash-green 0.8s ease-out; }
+        .fail-anim { animation: shake-red 0.5s ease-in-out; }
+
+        @keyframes flash-green {
+            0% { box-shadow: 0 0 0 rgba(57, 255, 20, 0); }
+            50% { box-shadow: 0 0 40px rgba(57, 255, 20, 0.9); border-color: var(--cp-neon-green); }
+            100% { box-shadow: 0 0 0 rgba(57, 255, 20, 0); }
+        }
+
+        @keyframes shake-red {
+            0%, 100% { transform: translateX(0); box-shadow: 0 0 0 transparent; }
+            20%, 60% { transform: translateX(-10px); box-shadow: 0 0 25px rgba(255, 7, 58, 0.7); border-color: var(--cp-neon-red); }
+            40%, 80% { transform: translateX(10px); box-shadow: 0 0 25px rgba(255, 7, 58, 0.7); border-color: var(--cp-neon-red); }
+        }
+
+        #game-complete {
+            display: none;
+            text-align: center;
+            font-family: monospace;
+        }
+        #game-complete h2 { color: var(--cp-neon-green); margin-bottom: 15px; font-size: 26px; }
+        #game-complete p { color: var(--cp-text); margin-bottom: 15px; font-size: 16px;}
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(40px, 8vw, 80px) clamp(15px, 4vw, 30px);
+            flex-grow: 1;
+        }
+
+        .reading-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background-color: var(--read-card);
+            border-radius: 16px;
+            padding: clamp(25px, 5vw, 50px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--read-border);
+        }
+
+        .reading-container h1 {
+            color: var(--read-title);
+            font-size: clamp(24px, 5vw, 36px);
+            margin-bottom: 25px;
+            line-height: 1.2;
+            border-bottom: 4px solid var(--read-accent);
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .reading-container h2 {
+            color: var(--read-accent);
+            font-size: clamp(20px, 4vw, 26px);
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--read-accent);
+            padding-left: 12px;
+        }
+
+        .reading-container h3 {
+            color: var(--read-title);
+            font-size: clamp(18px, 3.5vw, 22px);
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+
+        .reading-container p {
+            margin-bottom: 18px;
+            font-size: clamp(16px, 3vw, 18px);
+            line-height: 1.75;
+            text-align: justify;
+            color: #475569;
+        }
+
+        .reading-container ul {
+            margin-left: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .reading-container li {
+            margin-bottom: 10px;
+            font-size: clamp(16px, 3vw, 18px);
+            color: #475569;
+        }
+
+        .workshop-section {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 2px dashed #cbd5e1;
+            background-color: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .workshop-instruction {
+            background-color: #f0f9ff;
+            border-left: 5px solid var(--read-accent);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            font-weight: 600;
+            color: #0369a1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: clamp(15px, 3vw, 17px);
+        }
+
+        .activity-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: transform 0.2s;
+        }
+        
+        .activity-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        
+        .activity-type {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .type-direct { background: #dbeafe; color: #1e40af; }
+        .type-draw { background: #dcfce7; color: #166534; }
+        .type-analyze { background: #fee2e2; color: #991b1b; }
+        .type-map { background: #f3e8ff; color: #6b21a8; }
+        
+        .icon { width: 28px; height: 28px; fill: currentColor; flex-shrink: 0; }
+        
+        /* Animación de flecha para indicar que hay contenido abajo */
+        .scroll-indicator {
+            margin-top: 30px;
+            animation: bounce 2s infinite;
+            color: var(--cp-neon-cyan);
+            text-align: center;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-container" id="game-container">
+                <div class="game-header">
+                    <div class="room-indicator">Sala: <span id="room-num">1</span>/4</div>
+                    <div class="score-indicator">Nota: <span id="score-val">5.0</span></div>
+                </div>
+
+                <div class="puzzle-area">
+                    <p class="puzzle-text" id="puzzle-desc">
+                        Inicializando sistema de evaluación de impactos...
+                    </p>
+                </div>
+
+                <div class="display-container" id="display-boxes">
+                    <div class="digit-box" id="digit-0"></div>
+                    <div class="digit-box" id="digit-1"></div>
+                    <div class="digit-box" id="digit-2"></div>
+                    <div class="digit-box" id="digit-3"></div>
+                </div>
+
+                <div class="keypad">
+                    <button class="key-btn" onclick="inputDigit('1')">1</button>
+                    <button class="key-btn" onclick="inputDigit('2')">2</button>
+                    <button class="key-btn" onclick="inputDigit('3')">3</button>
+                    <button class="key-btn" onclick="inputDigit('4')">4</button>
+                    <button class="key-btn" onclick="inputDigit('5')">5</button>
+                    <button class="key-btn" onclick="inputDigit('6')">6</button>
+                    <button class="key-btn" onclick="inputDigit('7')">7</button>
+                    <button class="key-btn" onclick="inputDigit('8')">8</button>
+                    <button class="key-btn" onclick="inputDigit('9')">9</button>
+                    <button class="key-btn key-clear" onclick="clearInput()">C</button>
+                    <button class="key-btn" onclick="inputDigit('0')">0</button>
+                    <button class="key-btn key-enter" onclick="checkAnswer()">OK</button>
+                </div>
+            </div>
+
+            <!-- Pantalla final del juego -->
+            <div class="game-container" id="game-complete">
+                <h2>¡MISIÓN COMPLETADA!</h2>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:70px;height:70px;margin: 0 auto 20px auto;color:var(--cp-neon-green);display:block;">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <p>Has resuelto correctamente las variables económicas y ecológicas de la región.</p>
+                <p>Tu calificación en el simulador es: <strong id="final-score" style="color:var(--cp-neon-green); font-size:24px;"></strong></p>
+                
+                <div class="scroll-indicator">
+                    ↓ DESLIZA HACIA ABAJO PARA LA TEORÍA ↓
+                </div>
+            </div>
+        </section>
+
+        <!-- STREAMING_CHUNK:Estructurando el contenido teórico profundo (>500 palabras) -->
+        <section id="zona-lectura">
+            <div class="reading-container">
+                
+                <h1>
+                    <!-- Icono SVG integrado -->
+                    <svg class="icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    El Turismo: Entre el Motor Económico y la Huella Ecológica
+                </h1>
+                
+                <p>Viajar y descubrir nuevos destinos es una de las experiencias más enriquecedoras para el ser humano. El turismo nos permite explorar maravillas naturales, aprender de culturas milenarias, relajarnos y expandir nuestra visión del mundo. Sin embargo, el desplazamiento masivo de millones de personas cada año hacia destinos específicos genera una profunda huella en los territorios que visitan. Comprender los impactos del turismo implica observar una moneda de dos caras: por un lado, representa progreso económico y oportunidades; por el otro, conlleva riesgos sociales y ambientales que, si no se manejan responsablemente, pueden destruir el recurso mismo que atrae a los visitantes.</p>
+
+                <h2>El Lado Brillante: Impactos Económicos y Socioculturales</h2>
+                <p>El turismo es frecuentemente descrito como la "industria sin chimeneas", y por buenas razones. Para muchos países y regiones, especialmente aquellos en vías de desarrollo, el turismo es la principal fuente de ingresos económicos. Cuando un destino se vuelve popular, desencadena una reacción en cadena positiva en la economía local:</p>
+                <ul>
+                    <li><strong>Generación de Empleo:</strong> Desde guías turísticos y personal de hostelería, hasta transportistas y artesanos locales, el turismo crea miles de empleos directos e indirectos.</li>
+                    <li><strong>Mejora de Infraestructura:</strong> Para atraer y acomodar a los visitantes, los gobiernos suelen invertir en la pavimentación de vías, aeropuertos modernos, hospitales y mejora de servicios públicos, beneficiando también a la población residente.</li>
+                    <li><strong>Preservación Cultural:</strong> Cuando los turistas muestran interés genuino por la gastronomía, danzas y tradiciones locales, las comunidades sienten orgullo de sus raíces y se esfuerzan por mantener vivas costumbres que, de otro modo, podrían haberse perdido ante la globalización.</li>
+                </ul>
+
+                <h2>La Sombra del Viajero: Impactos Negativos</h2>
+                <p>Lamentablemente, cuando el número de visitantes supera lo que una región puede manejar, aparecen problemas graves que afectan la calidad de vida local y el ecosistema.</p>
+                
+                <h3>Gentrificación Turística</h3>
+                <p>La gentrificación ocurre cuando un barrio o municipio experimenta un aumento dramático en los costos de vida y vivienda debido a un agente externo; en este caso, el turismo. Con la popularidad de las plataformas de alquiler a corto plazo, muchos propietarios prefieren rentar sus casas a turistas por días (ganando mucho más dinero) en lugar de arrendarlas a familias locales mensualmente. Como resultado, <strong>el costo de los alquileres y los alimentos se dispara</strong>, forzando a los habitantes originarios a abandonar sus propios barrios para irse a la periferia. Los centros históricos terminan pareciendo parques de atracciones sin vida local genuina.</p>
+
+                <h3>Contaminación y Degradación Ambiental</h3>
+                <p>Un turista promedio consume mucha más agua y energía que un residente local. Los grandes complejos hoteleros y cruceros generan toneladas de residuos sólidos diarios que, en muchos casos, terminan en mares o vertederos a cielo abierto. Sumado a esto, el turismo irresponsable causa la degradación directa de la naturaleza: turistas que pisan y destruyen arrecifes de coral, senderos de montaña erosionados por exceso de caminantes, y fauna salvaje alterada por el ruido y la presencia humana constante.</p>
+
+                <h3>El Concepto Vital: Capacidad de Carga</h3>
+                <p>En el corazón del problema está el desconocimiento de la <strong>capacidad de carga</strong>. Este concepto ecológico define el número máximo de visitantes que un espacio turístico puede recibir al mismo tiempo sin que se produzca una destrucción de su entorno físico, ecosistema, ni una caída inaceptable en la calidad de la experiencia para el turista. Ignorar la capacidad de carga (como meter a 1,000 personas en una playa que solo soporta 200) es el camino más rápido hacia la destrucción del destino.</p>
+
+                <h2>El Turismo Sostenible: La Única Salida</h2>
+                <p>El desarrollo turístico requiere responsabilidad inmediata. No se trata de dejar de viajar, sino de transformar la forma en que lo hacemos. El <strong>turismo sostenible</strong> surge como la solución obligatoria: busca un equilibrio donde las actividades recreativas generen ingresos justos para la comunidad local sin agotar los recursos naturales. Requiere de regulaciones estrictas (como limitar la entrada diaria a parques nacionales), promover el ecoturismo (donde el dinero va directamente a la conservación), y, sobre todo, educar a un turista responsable, aquel que respeta la cultura, minimiza su consumo de plástico y entiende que el destino es el hogar permanente de otros.</p>
+
+                <div class="workshop-section">
+                    <h2>Taller de Repaso y Afianzamiento</h2>
+                    
+                    <div class="workshop-instruction">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        INSTRUCCIÓN: Toma tu cuaderno de ciencias/sociales, escribe el título del tema, numera del 1 al 10 y resuelve las siguientes actividades basándote estrictamente en el texto que acabas de leer.
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>1.</strong> Según la lectura, menciona dos beneficios económicos directos y un beneficio sociocultural que el turismo aporta a una región cuando se maneja correctamente.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-draw">Dibujo / Ilustración</span>
+                        <p><strong>2.</strong> Dibuja una escena dividida por la mitad: en el lado izquierdo ilustra un destino turístico sostenible y respetuoso, y en el lado derecho un destino arruinado por el turismo masivo y la contaminación.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analyze">Análisis Crítico</span>
+                        <p><strong>3.</strong> Explica con tus propias palabras qué es la "gentrificación turística". ¿Por qué este fenómeno obliga a las familias locales a abandonar los barrios donde nacieron?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-map">Mapa Conceptual</span>
+                        <p><strong>4.</strong> Elabora un mapa conceptual que tenga como tema central "Impactos del Turismo". Divídelo en dos ramas principales: "Positivos" y "Negativos", y agrega al menos dos ejemplos a cada rama sacados de la lectura.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>5.</strong> Define claramente qué significa el concepto de "Capacidad de Carga" de un destino turístico según el artículo.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-draw">Dibujo / Ilustración</span>
+                        <p><strong>6.</strong> Ilustra tu visión de un "Turista Responsable". Dibuja al personaje y señala con flechas al menos 3 acciones, actitudes o hábitos positivos que realiza durante su viaje para no dejar huella negativa.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analyze">Análisis Crítico</span>
+                        <p><strong>7.</strong> Analiza la siguiente frase del texto: <em>"destruir el recurso mismo que atrae a los visitantes"</em>. ¿A qué se refiere exactamente el autor? ¿Qué pasaría con un pueblo que vive del turismo si contamina totalmente su río y cascada principal?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-map">Cuadro Comparativo</span>
+                        <p><strong>8.</strong> Crea un cuadro comparativo de dos columnas entre el "Turismo Masivo e Irresponsable" y el "Turismo Sostenible". Compara cómo se manejan temas como la basura, el trato a la comunidad local y el respeto a la naturaleza en cada uno.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-direct">Respuesta Directa</span>
+                        <p><strong>9.</strong> Menciona dos ejemplos específicos de recursos naturales (ecosistemas) que suelen verse gravemente afectados por la degradación ambiental turística, según el texto.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analyze">Resolución de Problemas</span>
+                        <p><strong>10.</strong> ¡Imagina que eres el alcalde! Eres el mandatario de un municipio hermoso pero pequeño. El turismo está empezando a encarecer los arriendos y llenar las calles de basura. Propón una medida responsable para proteger a tus ciudadanos y a la naturaleza, sin tener que prohibir la entrada de turistas.</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Configuración de las salas (Acertijos y Códigos)
+        const rooms = [
+            {
+                prompt: "SALA 1: IMPACTO ECONÓMICO (POSITIVO).\nUn pueblo recibía 1200 visitantes al mes. Tras una campaña publicitaria, el turismo aumentó un 25%, trayendo más ingresos locales. ¿Cuántos visitantes reciben ahora?\n(Pista: Calcula el 25% de 1200 y súmalo al total original).",
+                code: "1500" // 1200 * 0.25 = 300. 1200 + 300 = 1500
+            },
+            {
+                prompt: "SALA 2: GENTRIFICACIÓN (NEGATIVO).\nEl alquiler mensual en el centro histórico era de 400 dólares. Por la presión de las plataformas de alquiler turístico, el precio se duplicó, forzando a los locales a irse. Ingresa el nuevo costo del alquiler en dólares.",
+                code: "0800" // 400 * 2 = 800 -> 0800
+            },
+            {
+                prompt: "SALA 3: CAPACIDAD DE CARGA (NEGATIVO).\nLa reserva natural solo soporta 350 personas al día sin dañar el ecosistema (su capacidad de carga). Hoy, por falta de control, ingresaron 1420 turistas. ¿Cuántos turistas EXCEDIERON la capacidad límite del lugar?",
+                code: "1070" // 1420 - 350 = 1070
+            },
+            {
+                prompt: "SALA 4: TURISMO SOSTENIBLE.\nUn enorme hotel consume 2500 litros de agua al día, afectando a la comunidad local. Implementando medidas ecológicas y de reutilización, logran reducir su consumo exactamente a la mitad. ¿Cuántos litros de agua consumen ahora diariamente?",
+                code: "1250" // 2500 / 2 = 1250
+            }
+        ];
+
+        // Estado interno del juego
+        let currentRoom = 0;
+        let currentInput = "";
+        let score = 5.0; // Sistema de notas basado en formato estándar (1.0 a 5.0)
+
+        // Referencias a elementos del DOM
+        const gameContainer = document.getElementById("game-container");
+        const puzzleDesc = document.getElementById("puzzle-desc");
+        const roomNum = document.getElementById("room-num");
+        const scoreVal = document.getElementById("score-val");
+        
+        const digitBoxes = [
+            document.getElementById("digit-0"),
+            document.getElementById("digit-1"),
+            document.getElementById("digit-2"),
+            document.getElementById("digit-3")
+        ];
+
+        // Función de inicialización
+        window.onload = () => {
+            renderRoom();
+        };
+
+        function renderRoom() {
+            puzzleDesc.innerText = rooms[currentRoom].prompt;
+            roomNum.innerText = currentRoom + 1;
+            scoreVal.innerText = score.toFixed(1);
+            clearInput();
+        }
+
+        // Función invocada por los botones del teclado virtual
+        function inputDigit(digit) {
+            if (currentInput.length < 4) {
+                currentInput += digit;
+                updateDisplay();
+            }
+        }
+
+        // Limpia el display actual
+        function clearInput() {
+            currentInput = "";
+            updateDisplay();
+        }
+
+        // Renderiza el texto en las cajas visuales `_ _ _ _`
+        function updateDisplay() {
+            for (let i = 0; i < 4; i++) {
+                if (i < currentInput.length) {
+                    digitBoxes[i].innerText = currentInput[i];
+                } else {
+                    digitBoxes[i].innerText = ""; 
+                }
+            }
+        }
+
+        // Valida el código al presionar OK
+        function checkAnswer() {
+            // Requiere 4 dígitos exactos para evaluar
+            if (currentInput.length < 4) return;
+
+            const correctCode = rooms[currentRoom].code;
+
+            if (currentInput === correctCode) {
+                // Éxito: Animación verde
+                gameContainer.classList.remove("fail-anim");
+                void gameContainer.offsetWidth; // Truco de reflow para reiniciar animación
+                gameContainer.classList.add("success-anim");
+
+                setTimeout(() => {
+                    currentRoom++;
+                    if (currentRoom < rooms.length) {
+                        renderRoom();
+                    } else {
+                        showGameComplete();
+                    }
+                }, 800);
+            } else {
+                // Fallo: Animación roja y penalización
+                gameContainer.classList.remove("success-anim");
+                gameContainer.classList.remove("fail-anim");
+                void gameContainer.offsetWidth;
+                gameContainer.classList.add("fail-anim");
+
+                // Restar nota penalizando errores, límite inferior 1.0
+                score = Math.max(1.0, score - 0.4);
+                scoreVal.innerText = score.toFixed(1);
+                
+                // Limpiar la pantalla tras el fallo para nuevo intento
+                setTimeout(() => {
+                    clearInput();
+                }, 600);
+            }
+        }
+
+        // Lógica de finalización del juego
+        function showGameComplete() {
+            document.getElementById("game-container").style.display = "none";
+            const completeScreen = document.getElementById("game-complete");
+            completeScreen.style.display = "block";
+            
+            // Asignar color de la nota final dependiendo de si aprobó o no (Aprobación >= 3.0)
+            const finalScoreEl = document.getElementById("final-score");
+            finalScoreEl.innerText = score.toFixed(1) + " / 5.0";
+            if(score < 3.0) {
+                finalScoreEl.style.color = "var(--cp-neon-red)";
+            }
+        }
+    </script>
+</body>
+</html>
