@@ -1,6 +1,6 @@
-# 🌌 Instituto Montenegro | Portal de Actividades Pedagógicas e Interactivas
+# 🌌 Actividades Juan Felipe Ramírez Giraldo | Instituto Montenegro
 
-Bienvenido al repositorio oficial del **Portal Web de Recursos Educativos e Interactivos del Instituto Montenegro**. Este proyecto centraliza, cataloga y despliega un conjunto de **68 actividades didácticas autónomas** (OVAs, laboratorios virtuales, desafíos, escape rooms y talleres guiados) diseñadas para fortalecer los procesos de aprendizaje en ciencias naturales, física, química, artes, ética y turismo regional.
+Bienvenido al repositorio oficial del **Portal Web de Recursos Educativos e Interactivos: Actividades Juan Felipe Ramírez Giraldo (Instituto Montenegro)**. Este proyecto centraliza, cataloga y despliega un conjunto de **101 actividades didácticas autónomas** (OVAs, laboratorios virtuales, desafíos, escape rooms y talleres guiados) diseñadas para fortalecer los procesos de aprendizaje en ciencias naturales, física, química, artes, ética y turismo regional.
 
 Desarrollado bajo una arquitectura estática de alto rendimiento, **100% autónoma y sin dependencias externas**, garantizando tiempos de carga casi instantáneos y funcionamiento pleno fuera de línea (Offline-Ready) en cualquier dispositivo móvil o de escritorio.
 
