@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Prevención de bugs táctiles y diseño responsivo -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Eficiencia Termodinámica</title>
+    
+    <style>
+        :root {
+            /* Tema Cyberpunk / Retro-Wave para el juego */
+            --cp-bg: #0b0c10;
+            --cp-dark: #1f2833;
+            --cp-cyan: #66fcf1;
+            --cp-teal: #45a29e;
+            --cp-gray: #c5c6c7;
+            --cp-red: #ff003c;
+            --cp-green: #39ff14;
+            
+            /* Tema Lectura */
+            --read-bg: #f4f6f8;
+            --read-text: #2d3436;
+            --read-heading: #1e272e;
+            --card-bg: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            color: var(--cp-gray);
+            scroll-behavior: smooth;
+        }
+
+        #zona-juego {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            background: linear-gradient(180deg, #050505 0%, #1a1a24 100%);
+            border-bottom: 5px solid var(--cp-cyan);
+            /* CRÍTICO: Prevención de bugs táctiles */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 600px; /* Mobile-first adaptado a PC */
+            background-color: var(--cp-dark);
+            border: 2px solid var(--cp-teal);
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.2);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 2px solid var(--cp-teal);
+            font-family: monospace;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            color: var(--cp-cyan);
+            text-shadow: 0 0 5px var(--cp-cyan);
+            z-index: 10;
+        }
+
+        .hud-lives {
+            color: var(--cp-red);
+            text-shadow: 0 0 5px var(--cp-red);
+        }
+
+        /* Contenedor donde caen las palabras */
+        #game-canvas {
+            width: 100%;
+            height: 65vh;
+            position: relative;
+            overflow: hidden;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 19px,
+                rgba(69, 162, 158, 0.1) 20px
+            );
+        }
+
+        .word-bubble {
+            position: absolute;
+            padding: 10px 20px;
+            background: rgba(11, 12, 16, 0.9);
+            border: 2px solid var(--cp-cyan);
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(102, 252, 241, 0.4);
+            transform: translateX(-50%); /* Centrar respecto a su punto left */
+            transition: border-color 0.1s, box-shadow 0.1s, transform 0.1s;
+            z-index: 5;
+        }
+
+        .word-bubble:active {
+            transform: translateX(-50%) scale(0.9);
+        }
+
+        @keyframes explodeAnim {
+            0% { transform: translateX(-50%) scale(1); opacity: 1; border-color: var(--cp-green); box-shadow: 0 0 20px var(--cp-green); }
+            50% { transform: translateX(-50%) scale(1.5); opacity: 0.8; background: var(--cp-green); }
+            100% { transform: translateX(-50%) scale(2); opacity: 0; }
+        }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(-50%); }
+            20%, 60% { transform: translateX(calc(-50% - 10px)); }
+            40%, 80% { transform: translateX(calc(-50% + 10px)); }
+        }
+
+        .exploding {
+            animation: explodeAnim 0.4s ease-out forwards;
+            pointer-events: none;
+            color: transparent;
+        }
+
+        .error-shake {
+            animation: shakeError 0.4s ease forwards;
+            border-color: var(--cp-red) !important;
+            box-shadow: 0 0 15px var(--cp-red) !important;
+            color: var(--cp-red);
+            pointer-events: none;
+        }
+
+        /* Pantallas de Inicio y Fin */
+        .overlay-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 12, 16, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .title-neon {
+            color: var(--cp-cyan);
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            text-shadow: 0 0 10px var(--cp-cyan), 0 0 20px var(--cp-teal);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .instruction-box {
+            background: rgba(69, 162, 158, 0.1);
+            border: 1px dashed var(--cp-teal);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            color: var(--cp-gray);
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            line-height: 1.5;
+        }
+
+        .btn-neon {
+            background: transparent;
+            color: var(--cp-cyan);
+            border: 2px solid var(--cp-cyan);
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(102, 252, 241, 0.3) inset, 0 0 10px rgba(102, 252, 241, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-neon:active {
+            background: var(--cp-cyan);
+            color: var(--cp-bg);
+            box-shadow: 0 0 20px var(--cp-cyan);
+        }
+
+        .final-score {
+            font-size: clamp(3rem, 10vw, 5rem);
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(30px, 5vw, 60px) clamp(15px, 4vw, 30px);
+            width: 100%;
+            box-sizing: border-box;
+            user-select: text; 
+            -webkit-user-select: text;
+            touch-action: auto;
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: clamp(20px, 5vw, 50px);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-top: 8px solid #f39c12;
+        }
+
+        .article-title {
+            color: var(--read-heading);
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            border-bottom: 3px solid #dfe6e9;
+            padding-bottom: 15px;
+            margin-top: 0;
+            line-height: 1.2;
+        }
+
+        .article-container h2 {
+            color: #d35400;
+            margin-top: 40px;
+            font-size: clamp(1.4rem, 5vw, 1.8rem);
+            border-left: 4px solid #f39c12;
+            padding-left: 12px;
+        }
+
+        .article-container p, .article-container li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            line-height: 1.8;
+            margin-bottom: 18px;
+            color: #4a5568;
+        }
+
+        .quote-box {
+            background-color: #fdfae6;
+            border-left: 5px solid #f1c40f;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+
+        .workshop-section {
+            margin-top: 60px;
+            background-color: #f8f9fa;
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            border: 2px dashed #b2bec3;
+        }
+
+        .workshop-header {
+            color: #2d3436;
+            text-align: center;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #b2bec3;
+            padding-bottom: 15px;
+        }
+
+        .workshop-instruction {
+            text-align: center;
+            font-weight: 700;
+            color: #856404;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: clamp(1rem, 3.5vw, 1.15rem);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .activity-card {
+            background: #ffffff;
+            border-left: 5px solid #2d3436;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .activity-type {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .type-responde { background-color: #3498db; }
+        .type-analiza { background-color: #e74c3c; }
+        .type-dibuja { background-color: #2ecc71; }
+        .type-mapa { background-color: #9b59b6; }
+        
+        .activity-card p { margin: 0; color: #2d3436; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-wrapper">
+                
+                <!-- HUD Top Bar -->
+                <div class="hud">
+                    <div id="score-display">PUNTOS: 0/15</div>
+                    <div id="lives-display" class="hud-lives">♥♥♥♥♥</div>
+                </div>
+
+                <!-- Canvas donde caen las palabras -->
+                <div id="game-canvas"></div>
+
+                <!-- Pantalla de Inicio -->
+                <div id="start-screen" class="overlay-screen">
+                    <h1 class="title-neon">Firewall<br>Termodinámico</h1>
+                    <div class="instruction-box">
+                        <p style="color: var(--cp-cyan); font-weight: bold; margin-top: 0;">OBJETIVO:</p>
+                        <p>Identifica y destruye los <strong>Conceptos de Eficiencia y Termodinámica</strong> antes de que crucen la línea inferior.</p>
+                        <p style="color: var(--cp-red); font-size: 0.9em; margin-bottom: 0;">⚠️ CUIDADO: Tocar conceptos incorrectos o dejar caer los correctos dañará el sistema (pierdes vidas).</p>
+                    </div>
+                    <button class="btn-neon" id="btn-start">Iniciar Intercepción</button>
+                    <button class="btn-neon" style="margin-top:15px; font-size: 0.9rem; border-color: var(--cp-gray); color: var(--cp-gray)" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Leer Teoría Primero ↓</button>
+                </div>
+
+                <!-- Pantalla Final -->
+                <div id="end-screen" class="overlay-screen" style="display: none;">
+                    <h2 class="title-neon" id="end-title">Simulación Terminada</h2>
+                    <p style="color: var(--cp-gray); margin-bottom: 5px;">Calificación de Desempeño:</p>
+                    <div class="final-score" id="final-grade">0.0</div>
+                    <p id="end-message" style="color: var(--cp-cyan); max-width: 80%; line-height: 1.4;"></p>
+                    <button class="btn-neon" style="margin-top: 20px;" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Acceder al Módulo Teórico ↓</button>
+                    <button class="btn-neon" style="margin-top: 15px; background: transparent; border-color: var(--cp-gray); color: var(--cp-gray);" id="btn-restart">Reiniciar Simulación</button>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h1 class="article-title">El Límite de las Máquinas: Termodinámica y la Eficiencia Perdida</h1>
+                
+                <h2>1. El Sueño de la Máquina Perfecta</h2>
+                <p>A lo largo de la historia, inventores y científicos han perseguido una fantasía fascinante: la máquina de movimiento perpetuo. Imaginemos un motor que, una vez encendido, funcione para siempre sin necesitar más combustible, o un ventilador que genere suficiente electricidad para alimentarse a sí mismo eternamente. Sería la solución definitiva a la crisis energética mundial.</p>
+                <p>Sin embargo, a pesar de miles de diseños ingeniosos, todos han fracasado. ¿Por qué? La respuesta no radica en la falta de tecnología, sino en las reglas fundamentales que gobiernan nuestro universo: las Leyes de la Termodinámica. Estas leyes actúan como un estricto "contador" cósmico que nos prohíbe crear energía de la nada y nos cobra un "impuesto" cada vez que intentamos usarla.</p>
+
+                <h2>2. Las Dos Reglas del Juego Cósmico</h2>
+                <p>Para entender por qué las máquinas fallan, debemos conocer dos principios físicos inquebrantables:</p>
+                <ul>
+                    <li><strong>Primera Ley (Conservación de la Energía):</strong> La energía no se crea ni se destruye, solo se transforma. La energía química de la gasolina se transforma en energía cinética (movimiento) y calor. No puedes obtener más energía de salida de la que introdujiste al principio.</li>
+                    <li><strong>Segunda Ley (La inevitable Entropía):</strong> Esta es la aguafiestas de la física. Establece que en cada transformación de energía, una parte de esta se vuelve "desordenada" y ya no puede usarse para realizar un trabajo útil. Este desperdicio casi siempre se manifiesta en forma de <strong>calor</strong>. </li>
+                </ul>
+
+                <div class="quote-box">
+                    En términos simples: La Primera Ley dice que no puedes ganar (no puedes crear energía). La Segunda Ley dice que ni siquiera puedes empatar (siempre perderás un poco de energía útil en el proceso).
+                </div>
+
+                <h2>3. ¿Qué es la Eficiencia Mecánica?</h2>
+                <p>En física e ingeniería, la <strong>eficiencia mecánica</strong> (o rendimiento) es una medida matemática de qué tan bien una máquina convierte la energía que consume (entrada) en trabajo útil (salida). Se calcula con una ecuación simple:</p>
+                <p style="text-align: center; font-weight: bold; background: #eee; padding: 10px; border-radius: 5px;">Eficiencia = (Trabajo Útil Obtenido / Energía Total Suministrada) x 100</p>
+                <p>Debido a la Segunda Ley de la Termodinámica, <strong>ninguna máquina real tiene una eficiencia del 100%</strong>. Siempre hay pérdidas. Los dos mayores "ladrones" de energía mecánica son:</p>
+                <ul>
+                    <li><strong>La Fricción:</strong> Cuando las piezas de metal rozan dentro de un motor, la fricción se opone al movimiento y genera calor. Parte de la gasolina se gasta solo en vencer esta fricción.</li>
+                    <li><strong>El Calor de Escape:</strong> Los motores de combustión interna requieren miniexplosiones para empujar los pistones. Ese fuego genera temperaturas altísimas que deben disiparse a través del radiador y el tubo de escape hacia la atmósfera. Todo ese calor es energía desperdiciada que no movió el vehículo.</li>
+                </ul>
+
+                <h2>4. La Cruda Realidad de los Combustibles</h2>
+                <p>Comprender la eficiencia cambia nuestra perspectiva sobre la tecnología diaria. Tomemos como ejemplo un automóvil estándar a gasolina. Podrías pensar que la mayor parte del dinero que gastas en combustible se usa para moverte de un punto A a un punto B. La realidad térmica es muy diferente.</p>
+                <p>Un motor de combustión interna típico tiene una eficiencia mecánica de apenas <strong>20% a 30%</strong>. Esto significa que por cada 10.000 pesos de gasolina que echas al tanque, solo unos 2.500 pesos se convierten en movimiento real hacia adelante. ¿Dónde quedan los otros 7.500 pesos? Se esfuman como calor por el tubo de escape, calor absorbido por el sistema de refrigeración, fricción interna, y ruido.</p>
+                <p>Esta es la razón principal por la que el mundo está haciendo la transición hacia los vehículos eléctricos. Los motores eléctricos son mucho más simples y tienen menos partes móviles, alcanzando eficiencias del 80% al 90%. Al generar mucho menos calor residual (entropía), aprovechan la energía de manera mucho más inteligente y amigable con las leyes del universo.</p>
+
+                <!-- Taller de Repaso -->
+                <div class="workshop-section">
+                    <h2 class="workshop-header">Taller de Aplicación</h2>
+                    <div class="workshop-instruction">
+                        ⚠️ INSTRUCCIÓN: Escribe y resuelve estas 10 actividades de forma ordenada en tu cuaderno de Física o Ciencias Naturales.
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">1. Responde</span>
+                        <p>Según el texto, ¿por qué es científicamente imposible construir una "máquina de movimiento perpetuo" que funcione eternamente sin añadirle energía nueva?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">2. Analiza</span>
+                        <p>Si un motor de combustión interna de un automóvil moderno solo aprovecha aproximadamente el 25% de la energía de la gasolina para generar movimiento, ¿qué ocurre exactamente con el 75% restante basándonos en la Segunda Ley de la Termodinámica?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">3. Ilustra</span>
+                        <p>Dibuja en tu cuaderno un esquema simple de un motor de gasolina. Usa flechas de diferentes tamaños para representar: la <em>Energía de Entrada</em> (gasolina, flecha grande), el <em>Trabajo Útil</em> (movimiento de las ruedas, flecha pequeña) y la <em>Energía Perdida</em> (calor, fricción y ruido, flechas medianas escapando hacia arriba).</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">4. Mapa Conceptual</span>
+                        <p>Construye un mapa conceptual que conecte lógicamente los siguientes términos: <em>Termodinámica, Eficiencia Mecánica, Energía de Entrada, Trabajo Útil de Salida, Calor Perdido, Fricción, y Entropía</em>.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">5. Responde</span>
+                        <p>Explica con tus propias palabras la analogía financiera utilizada en el texto sobre el "impuesto cósmico" que nos cobra el universo cada vez que transformamos energía.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">6. Analiza</span>
+                        <p>Un inventor aparece en las noticias afirmando haber creado una nueva turbina eólica con un recubrimiento especial que elimina totalmente la fricción, logrando una eficiencia mecánica del 100%. Basándote en el artículo, redacta un argumento científico refutando por qué su afirmación es falsa.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">7. Dibuja y Explica</span>
+                        <p>Dibuja una situación cotidiana donde actúe la "fricción" generando calor (por ejemplo: frotarse las manos en un día frío, o frenar bruscamente una bicicleta). Escribe un pequeño párrafo al lado explicando cómo este calor es una forma de energía "desordenada" que se pierde.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">8. Mapa Mental</span>
+                        <p>Crea un mapa mental que tenga como concepto central "Ventajas del Motor Eléctrico". Ramifica hacia las razones físicas dadas en la lectura por las cuales son más eficientes que los motores de gasolina (partes móviles, calor residual, porcentajes de eficiencia).</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">9. Responde</span>
+                        <p>Escribe la fórmula matemática de la <em>Eficiencia Mecánica</em> dada en la lectura e indica qué significan las variables de "Trabajo Útil" y "Energía Total".</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">10. Analiza y Concluye</span>
+                        <p>Considerando que quemar combustibles fósiles tiene bajas eficiencias (20-30%) y libera enormes cantidades de calor residual y gases al entorno, reflexiona: ¿De qué manera la <em>Segunda Ley de la Termodinámica</em> impulsa la urgencia humana por encontrar fuentes de energía renovables y sistemas tecnológicos más limpios?</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fase 1: Base de Datos de Palabras
+        const correctWords = [
+            "Calor", "Trabajo", "Entropía", "Fricción", "Eficiencia", 
+            "Energía", "Turbina", "Motor", "Pérdida", "Temperatura", 
+            "Desgaste", "Combustión", "Escape", "Irreversible", "Térmica"
+        ];
+        
+        const distractorWords = [
+            "Célula", "Gravedad", "Magnetismo", "Óptica", "Genética", 
+            "Lente", "Voltaje", "Mitosis", "Ecosistema", "ADN", 
+            "Galaxia", "Sonido", "Refracción", "Plasma", "Órbita"
+        ];
+
+        // Estado del Juego
+        let state = {
+            score: 0,
+            lives: 5,
+            maxScore: 15,
+            isGameRunning: false,
+            activeObjects: [], // { element, y, speed, isCorrect, id }
+            spawnInterval: null,
+            animationFrame: null,
+            poolCorrect: [],
+            poolDistract: [],
+            spawnRateMs: 1400,
+            baseFallSpeed: 1.5 // pixeles por frame
+        };
+
+        // Elementos del DOM
+        const canvasEl = document.getElementById('game-canvas');
+        const scoreEl = document.getElementById('score-display');
+        const livesEl = document.getElementById('lives-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const btnStart = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+        const finalGradeEl = document.getElementById('final-grade');
+        const endMessageEl = document.getElementById('end-message');
+
+        // Función para desordenar arrays
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Inicializar o Reiniciar Juego
+        function initGame() {
+            // Limpiar estado
+            state.score = 0;
+            state.lives = 5;
+            state.isGameRunning = true;
+            state.baseFallSpeed = 1.5;
+            state.spawnRateMs = 1400;
+            
+            // Limpiar Canvas
+            canvasEl.innerHTML = '';
+            state.activeObjects = [];
+
+            // Preparar Pools de palabras
+            state.poolCorrect = shuffle([...correctWords]);
+            state.poolDistract = shuffle([...distractorWords]);
+
+            // Actualizar HUD
+            updateHUD();
+
+            // Ocultar pantallas superpuestas
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+
+            // Iniciar bucles
+            state.spawnInterval = setInterval(spawnWord, state.spawnRateMs);
+            state.animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        // Bucle Principal de Animación
+        function gameLoop() {
+            if (!state.isGameRunning) return;
+
+            const canvasHeight = canvasEl.clientHeight;
+
+            // Recorrer de atrás hacia adelante para evitar saltos de índice al borrar
+            for (let i = state.activeObjects.length - 1; i >= 0; i--) {
+                let obj = state.activeObjects[i];
+                
+                // Actualizar posición Y
+                obj.y += obj.speed;
+                obj.element.style.top = obj.y + 'px';
+
+                // Chequear colisión con el fondo (se escapó)
+                if (obj.y > canvasHeight) {
+                    // Si era correcta y cayó, se penaliza
+                    if (obj.isCorrect) {
+                        loseLife();
+                        // Destello visual en el borde inferior
+                        canvasEl.style.borderBottom = "5px solid var(--cp-red)";
+                        setTimeout(() => canvasEl.style.borderBottom = "none", 200);
+                    }
+                    
+                    // Eliminar del DOM y del array
+                    if (obj.element.parentNode) canvasEl.removeChild(obj.element);
+                    state.activeObjects.splice(i, 1);
+                }
+            }
+
+            // Continuar bucle
+            state.animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        // Generar una nueva palabra cayendo
+        function spawnWord() {
+            if (!state.isGameRunning) return;
+
+            // Condición de victoria natural: se acabaron las palabras correctas
+            if (state.poolCorrect.length === 0) {
+                // Dar un par de segundos para que caigan las últimas antes de terminar
+                setTimeout(endGame, 2500); 
+                clearInterval(state.spawnInterval); // Detener spawns
+                return;
+            }
+
+            // Decidir tipo de palabra (60% probabilidad de que sea correcta)
+            let isCorrect = Math.random() < 0.6;
+            let text = "";
+
+            if (isCorrect && state.poolCorrect.length > 0) {
+                text = state.poolCorrect.pop();
+            } else if (!isCorrect && state.poolDistract.length > 0) {
+                text = state.poolDistract.pop();
+            } else if (state.poolCorrect.length > 0) {
+                // Fallback si se acabaron distractores
+                isCorrect = true;
+                text = state.poolCorrect.pop();
+            } else {
+                return; // No quedan palabras
+            }
+
+            // Crear elemento DOM
+            const bubble = document.createElement('div');
+            bubble.classList.add('word-bubble');
+            bubble.innerText = text;
+
+            // Posición X aleatoria (10% a 90% para evitar salirse por los lados)
+            const randomX = Math.floor(Math.random() * 80) + 10;
+            bubble.style.left = randomX + '%';
+            bubble.style.top = '-50px'; // Empezar arriba del canvas
+
+            // CRÍTICO: Eventos PointerDown cubren Mouse y Touch unificadamente
+            bubble.addEventListener('pointerdown', (e) => handleTap(e, bubble, isCorrect));
+
+            // Añadir al DOM y al Tracking Array
+            canvasEl.appendChild(bubble);
+            
+            // Variar levemente la velocidad de caída individual
+            const speedVariance = (Math.random() * 0.5) - 0.25;
+
+            state.activeObjects.push({
+                element: bubble,
+                y: -50,
+                speed: state.baseFallSpeed + speedVariance,
+                isCorrect: isCorrect
+            });
+
+            // Aumentar dificultad gradualmente
+            if (state.score > 5) state.baseFallSpeed = 2.0;
+            if (state.score > 10) state.baseFallSpeed = 2.5;
+        }
+
+        // Manejar toque en una palabra
+        function handleTap(e, element, isCorrect) {
+            e.preventDefault(); // Prevenir comportamientos por defecto como scroll o doble tap zoom
+
+            if (!state.isGameRunning) return;
+            
+            // Evitar doble toque si ya está animando
+            if (element.classList.contains('exploding') || element.classList.contains('error-shake')) return;
+
+            // Buscar en el array para detener su caída
+            const index = state.activeObjects.findIndex(obj => obj.element === element);
+            if (index > -1) {
+                state.activeObjects.splice(index, 1); // Quitar del tracking lógico
+            }
+
+            if (isCorrect) {
+                // ACIERTO
+                state.score++;
+                updateHUD();
+                
+                element.classList.add('exploding');
+                if (navigator.vibrate) navigator.vibrate(50); // Feedback háptico
+                
+                // Remover después de animación
+                setTimeout(() => {
+                    if (element.parentNode) canvasEl.removeChild(element);
+                }, 400);
+
+            } else {
+                // ERROR (Tocó distractor)
+                loseLife();
+                
+                element.classList.add('error-shake');
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                
+                // Remover y dejar caer simuladamente
+                setTimeout(() => {
+                    if (element.parentNode) canvasEl.removeChild(element);
+                }, 400);
+            }
+        }
+
+        // Perder una vida
+        function loseLife() {
+            state.lives--;
+            updateHUD();
+            
+            if (state.lives <= 0) {
+                endGame();
+            }
+        }
+
+        // Actualizar Textos del HUD
+        function updateHUD() {
+            scoreEl.innerText = `PUNTOS: ${state.score}/${state.maxScore}`;
+            
+            // Representar vidas con corazones
+            let hearts = "";
+            for(let i=0; i<5; i++) {
+                hearts += (i < state.lives) ? "♥" : "♡";
+            }
+            livesEl.innerText = hearts;
+        }
+
+        // Fin del Juego y Cálculo de Notas
+        function endGame() {
+            state.isGameRunning = false;
+            clearInterval(state.spawnInterval);
+            cancelAnimationFrame(state.animationFrame);
+
+            // Cálculo de calificación (1.0 a 5.0)
+            // Base 1.0. Se otorgan 4.0 puntos por atrapar las 15.
+            let grade = 1.0 + (state.score / state.maxScore) * 4.0;
+
+            // Penalización extrema si se quedó sin vidas
+            if (state.lives <= 0) {
+                grade = Math.min(grade, 2.9); // No aprueba si destruyó el sistema
+            }
+
+            // Asegurar límites numéricos
+            if (grade < 1.0) grade = 1.0;
+            if (grade > 5.0) grade = 5.0;
+
+            finalGradeEl.innerText = grade.toFixed(1);
+
+            // Estilos y mensajes según nota
+            if (grade >= 4.0) {
+                finalGradeEl.style.color = "var(--cp-green)";
+                finalGradeEl.style.textShadow = "0 0 20px var(--cp-green)";
+                endMessageEl.innerText = "SISTEMA SEGURO. Excelente identificación de los conceptos termodinámicos. La eficiencia fue máxima.";
+            } else if (grade >= 3.0) {
+                finalGradeEl.style.color = "#f1c40f";
+                finalGradeEl.style.textShadow = "0 0 20px #f1c40f";
+                endMessageEl.innerText = "INTERCEPCIÓN PARCIAL. Se contuvo la mayor parte de la entropía, pero hubo fugas de conceptos. Repasa la teoría.";
+            } else {
+                finalGradeEl.style.color = "var(--cp-red)";
+                finalGradeEl.style.textShadow = "0 0 20px var(--cp-red)";
+                endMessageEl.innerText = "FALLO CRÍTICO. El sistema colapsó por exceso de entropía y errores de identificación. Es obligatorio leer el módulo teórico inferior.";
+            }
+
+            endScreen.style.display = 'flex';
+        }
+
+        // Asignar Eventos a Botones UI
+        btnStart.addEventListener('click', initGame);
+        btnRestart.addEventListener('click', initGame);
+
+    </script>
+</body>
+</html>

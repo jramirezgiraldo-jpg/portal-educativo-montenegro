@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Configuración de viewport para móviles y prevención de zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Hidrocarburos Alifáticos - Tap & Sort</title>
+    
+    <style>
+        :root {
+            /* Paleta de colores - Tema Química/Laboratorio */
+            --bg-game: #0f172a;
+            --text-game: #f8fafc;
+            --primary: #38bdf8; /* Azul claro químico */
+            --primary-dark: #0284c7;
+            --secondary: #818cf8; /* Índigo */
+            --success: #10b981;
+            --danger: #f43f5e;
+            --chip-bg: #1e293b;
+            --chip-border: #334155;
+            
+            /* Colores de Lectura */
+            --bg-reading: #ffffff;
+            --bg-reading-alt: #f8fafc;
+            --text-reading: #334155;
+            --text-heading: #0f172a;
+            --accent-reading: #0284c7;
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-game);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: clamp(15px, 4vw, 30px);
+            background-color: var(--bg-game);
+            color: var(--text-game);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* CRÍTICO: Evitar scroll o pull-to-refresh accidental en el área del juego */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+        }
+
+        .instructions {
+            font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--chip-bg);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            border: 1px solid var(--chip-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        #score-display { color: var(--primary); }
+        #errors-display { color: var(--danger); }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(10px, 2vw, 15px);
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+            align-content: flex-start;
+        }
+
+        .chip {
+            background-color: var(--chip-bg);
+            border: 2px solid var(--chip-border);
+            border-radius: var(--radius-md);
+            padding: clamp(10px, 3.5vw, 16px);
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            flex: 1 1 calc(33% - 15px);
+            min-width: 140px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            border-color: var(--primary);
+            background-color: rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            transform: translateY(-3px);
+            color: #fff;
+        }
+
+        .chip.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .category-btn {
+            background-color: var(--chip-bg);
+            border: 2px dashed #475569;
+            border-radius: var(--radius-lg);
+            padding: clamp(10px, 3vw, 15px);
+            flex: 1 1 30%;
+            min-width: 110px;
+            color: var(--text-game);
+            font-weight: bold;
+            font-size: clamp(0.85rem, 3vw, 1rem);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn svg {
+            width: clamp(28px, 6vw, 40px);
+            height: clamp(28px, 6vw, 40px);
+            color: var(--primary);
+        }
+
+        .category-btn:active {
+            background-color: #334155;
+            transform: scale(0.98);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        
+        @keyframes flashRed {
+            0% { background-color: var(--danger); border-color: white; }
+            100% { background-color: var(--chip-bg); border-color: var(--chip-border); }
+        }
+
+        @keyframes flashGreenBtn {
+            0% { background-color: var(--success); border-color: white; color: white; transform: scale(1.05); }
+            100% { background-color: var(--chip-bg); border-color: #475569; }
+        }
+
+        .error-anim {
+            animation: shake 0.4s ease, flashRed 0.5s ease;
+        }
+
+        .success-btn-anim {
+            animation: flashGreenBtn 0.5s ease;
+        }
+
+        .end-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .end-screen.visible { display: flex; }
+
+        .end-screen h2 {
+            font-size: clamp(1.8rem, 6vw, 3rem);
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .end-screen p { margin-bottom: 20px; font-size: clamp(1.1rem, 4vw, 1.3rem); color: #cbd5e1; }
+
+        .final-grade {
+            font-size: clamp(4rem, 12vw, 6rem);
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
+            margin: 20px 0;
+        }
+
+        .scroll-down-hint {
+            margin-top: 40px;
+            color: #94a3b8;
+            animation: bounce 2s infinite;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: var(--bg-reading);
+            color: var(--text-reading);
+            /* Importante: Reestablecer comportamientos táctiles naturales aquí */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+            border-top: 6px solid var(--accent-reading);
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .article-container h2 {
+            color: var(--text-heading);
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border-bottom: 4px solid var(--accent-reading);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-container h3 {
+            color: var(--accent-reading);
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .article-container p {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-left: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-container li {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.7;
+            margin-bottom: 0.8rem;
+        }
+
+        .highlight-box {
+            background-color: var(--bg-reading-alt);
+            border-left: 5px solid var(--accent-reading);
+            padding: 1.5rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 2.5rem 0;
+            font-style: italic;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .taller-section {
+            background-color: var(--bg-reading-alt);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: var(--radius-lg);
+            margin-top: 4rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--accent-reading);
+        }
+
+        .taller-section h3 {
+            color: var(--text-heading);
+            text-align: center;
+            margin-top: 0;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+        }
+
+        .instruction-alert {
+            background-color: #fff;
+            border: 2px dashed var(--accent-reading);
+            color: var(--text-heading);
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 2.5rem;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            box-shadow: 0 4px 6px rgba(2, 132, 199, 0.1);
+        }
+
+        .taller-list {
+            list-style: none;
+            counter-reset: taller-counter;
+        }
+
+        .taller-list li {
+            position: relative;
+            background: #fff;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem 1.5rem 1.5rem 4.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 4px solid var(--secondary);
+            font-size: clamp(1rem, 3.5vw, 1.1rem);
+            line-height: 1.6;
+        }
+
+        .taller-list li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 15px;
+            top: 1.5rem;
+            background-color: var(--secondary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 5px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Clasificador de Hidrocarburos</h1>
+                <div class="instructions">
+                    💡 <strong>Misión:</strong> Toca un concepto químico (se marcará en azul) y luego toca la familia de hidrocarburos correcta a la que pertenece.
+                </div>
+            </div>
+
+            <div class="hud">
+                <div id="score-display">Aciertos: 0 / 15</div>
+                <div id="errors-display">Errores: 0</div>
+            </div>
+
+            <div class="chips-container" id="chips-container">
+                <!-- Generados vía JavaScript -->
+            </div>
+
+            <div class="categories-container">
+                <!-- Botón ALCANOS -->
+                <div class="category-btn" onclick="checkCategory('ALCANOS')" id="btn-ALCANOS">
+                    <svg viewBox="0 0 100 50" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Enlace simple -->
+                        <circle cx="20" cy="25" r="8" fill="currentColor" />
+                        <line x1="28" y1="25" x2="72" y2="25" />
+                        <circle cx="80" cy="25" r="8" fill="currentColor" />
+                    </svg>
+                    ALCANOS
+                </div>
+                <!-- Botón ALQUENOS -->
+                <div class="category-btn" onclick="checkCategory('ALQUENOS')" id="btn-ALQUENOS">
+                    <svg viewBox="0 0 100 50" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Enlace doble -->
+                        <circle cx="20" cy="25" r="8" fill="currentColor" />
+                        <line x1="28" y1="20" x2="72" y2="20" />
+                        <line x1="28" y1="30" x2="72" y2="30" />
+                        <circle cx="80" cy="25" r="8" fill="currentColor" />
+                    </svg>
+                    ALQUENOS
+                </div>
+                <!-- Botón ALQUINOS -->
+                <div class="category-btn" onclick="checkCategory('ALQUINOS')" id="btn-ALQUINOS">
+                    <svg viewBox="0 0 100 50" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Enlace triple -->
+                        <circle cx="20" cy="25" r="8" fill="currentColor" />
+                        <line x1="28" y1="15" x2="72" y2="15" />
+                        <line x1="28" y1="25" x2="72" y2="25" />
+                        <line x1="28" y1="35" x2="72" y2="35" />
+                        <circle cx="80" cy="25" r="8" fill="currentColor" />
+                    </svg>
+                    ALQUINOS
+                </div>
+            </div>
+
+            <!-- Pantalla Final del Juego -->
+            <div class="end-screen" id="end-screen">
+                <h2>¡Análisis Químico Completo!</h2>
+                <p>Has clasificado correctamente las propiedades moleculares.</p>
+                <p>Tu calificación final (basada en errores) es:</p>
+                <div class="final-grade" id="final-grade">5.0</div>
+                <div class="scroll-down-hint">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <p>Desliza para leer la lección y realizar el taller</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Química Orgánica: El Mundo de los Hidrocarburos Alifáticos</h2>
+                
+                <p>Todo lo que nos rodea en la civilización moderna, desde los combustibles que mueven tractores en el campo hasta los plásticos que usamos a diario y la cera de una vela, tiene una base química en común: el carbono. La rama de la química que estudia los compuestos basados en carbono es la <strong>Química Orgánica</strong>. Dentro de este vasto mundo, los compuestos más simples y fundamentales son los <strong>hidrocarburos</strong>, formados exclusivamente por átomos de carbono (C) e hidrógeno (H).</p>
+
+                <p>Los hidrocarburos se dividen en varias familias. Hoy exploraremos los <strong>Hidrocarburos Alifáticos</strong>, que son cadenas lineales o ramificadas de carbono, y que a su vez se clasifican en tres grandes grupos según el tipo de enlace que une a sus átomos de carbono: Alcanos, Alquenos y Alquinos.</p>
+
+                <h3>1. Alcanos: Los Hidrocarburos Saturados</h3>
+                <p>Los <strong>alcanos</strong> son la familia más simple. Se caracterizan porque todos los enlaces entre sus átomos de carbono son <strong>enlaces simples (C-C)</strong>. Debido a que el carbono puede formar un máximo de cuatro enlaces, al tener solo enlaces simples entre carbonos, el resto de los enlaces se "llenan" o "saturan" con hidrógeno. Por eso se les conoce como hidrocarburos <em>saturados</em>.</p>
+                
+                <ul>
+                    <li><strong>Fórmula General:</strong> C<sub>n</sub>H<sub>2n+2</sub> (donde 'n' es el número de carbonos).</li>
+                    <li><strong>Nomenclatura:</strong> Terminan con el sufijo <strong>"-ano"</strong> (Ej: Metano, Etano, Propano).</li>
+                    <li><strong>Propiedades y Usos:</strong> Son relativamente poco reactivos a temperatura ambiente, por lo que históricamente se les llamó "parafinas" (poca afinidad). Sin embargo, son excelentes combustibles. El metano (CH<sub>4</sub>) es el principal componente del gas natural. Los alcanos líquidos de cadena más larga forman el diésel y la gasolina, esenciales como <em>combustible agrícola</em> para tractores y maquinaria. Los alcanos de cadenas muy largas (más de 20 carbonos) son sólidos a temperatura ambiente, como la cera de parafina usada en las velas.</li>
+                </ul>
+
+                <h3>2. Alquenos: La Primera Insaturación</h3>
+                <p>Los <strong>alquenos</strong> introducen una variación crucial: contienen al menos un <strong>enlace doble (C=C)</strong> en su cadena de carbonos. Al tener un enlace doble, "pierden" dos hidrógenos en comparación con un alcano del mismo tamaño, por lo que se denominan hidrocarburos <em>insaturados</em>.</p>
+                
+                <ul>
+                    <li><strong>Fórmula General:</strong> C<sub>n</sub>H<sub>2n</sub> (para aquellos con un solo doble enlace).</li>
+                    <li><strong>Nomenclatura:</strong> Terminan con el sufijo <strong>"-eno"</strong> (Ej: Eteno, Propeno).</li>
+                    <li><strong>Propiedades y Usos:</strong> El doble enlace los hace más reactivos que los alcanos. Son fundamentales en la industria para fabricar plásticos (polietileno). En la naturaleza, el eteno (también llamado etileno) es una hormona vegetal fundamental en la agricultura, ya que es la responsable de acelerar la maduración de las frutas.</li>
+                </ul>
+
+                <h3>3. Alquinos: Alta Energía en Enlaces Triples</h3>
+                <p>Los <strong>alquinos</strong> son los más insaturados de los alifáticos, caracterizados por tener al menos un <strong>enlace triple (C≡C)</strong> entre dos carbonos. Esto los hace tener aún menos hidrógenos.</p>
+
+                <ul>
+                    <li><strong>Fórmula General:</strong> C<sub>n</sub>H<sub>2n-2</sub>.</li>
+                    <li><strong>Nomenclatura:</strong> Terminan con el sufijo <strong>"-ino"</strong> (Ej: Etino, Propino).</li>
+                    <li><strong>Propiedades y Usos:</strong> El enlace triple concentra mucha energía y hace que estos compuestos sean altamente reactivos. El más famoso es el etino (comúnmente conocido como acetileno). Cuando el acetileno se quema con oxígeno puro, produce una llama extremadamente caliente (más de 3000°C), por lo que se utiliza universalmente en equipos de soldadura y corte de metales.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>Relación Estructura-Propiedad:</strong> Las propiedades físicas de los hidrocarburos (si son gas, líquido o sólido) dependen de la longitud de su cadena. Cadenas cortas (1-4 carbonos) son gases; cadenas medianas (5-17 carbonos) son líquidos (como los combustibles para motores); y cadenas largas son sólidos (como la parafina). Además, todos son insolubles en agua, por eso el aceite no se mezcla con el agua.
+                </div>
+
+                <div class="taller-section">
+                    <h3>Taller de Repaso y Consolidación</h3>
+                    
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN OBLIGATORIA: Escribe y resuelve de forma ordenada las siguientes 10 actividades en tu cuaderno de Química.
+                    </div>
+
+                    <ul class="taller-list">
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Define qué es un hidrocarburo y explica con tus propias palabras la diferencia principal entre un hidrocarburo "saturado" y uno "insaturado".
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Teniendo en cuenta que la longitud de la cadena de carbonos define el estado físico de la sustancia, explica por qué el diésel (usado en tractores agrícolas) es un líquido, mientras que el gas de las estufas (propano/butano) es gaseoso a temperatura ambiente.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Dibuja la estructura molecular básica (líneas y símbolos C e H) para un alcano, un alqueno y un alquino de 2 carbonos (Etano, Eteno y Etino). Señala claramente dónde están los enlaces simples, dobles y triples.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual cuyo concepto principal sea "Hidrocarburos Alifáticos". Debe dividirse en las tres familias estudiadas, incluyendo la fórmula general de cada una y un ejemplo de su uso en la vida diaria.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Aplica la fórmula general de los Alcanos (C<sub>n</sub>H<sub>2n+2</sub>). Si un alcano tiene 8 átomos de carbono (Octano), ¿cuántos átomos de hidrógeno debe tener en su estructura? Escribe la fórmula molecular resultante.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Un agricultor nota que sus frutas maduran demasiado rápido cuando se almacenan cerca de ciertas sustancias. Según la lectura, ¿qué hidrocarburo específico (nombre y familia) está actuando como hormona vegetal en este proceso?
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Ilustra en un dibujo sencillo un vaso que contenga agua y aceite (un hidrocarburo líquido) mezclados. Basado en la lectura sobre sus propiedades, muestra qué sustancia flota sobre la otra y explica brevemente por qué no se mezclan.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Mental</span><br>
+                            Crea un mapa mental sobre "Aplicaciones de los Hidrocarburos". Saca tres ramas principales (Combustibles, Soldadura, Agricultura/Biología) y asocia al menos un compuesto mencionado en la lectura a cada rama.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            ¿A qué familia química pertenece la "parafina" utilizada para fabricar las velas, y qué característica tiene su cadena de carbonos para que sea sólida a temperatura ambiente?
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            El Etino (Acetileno) es fundamental para los soldadores metalúrgicos. Argumenta desde el punto de vista químico (estructura de enlaces) por qué la combustión de esta sustancia genera temperaturas tan extremadamente altas en comparación con otros gases.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Datos del Juego (15 conceptos, 5 por categoría de hidrocarburos)
+        const concepts = [
+            // ALCANOS
+            { id: 1, text: "Enlaces simples (C-C)", category: "ALCANOS" },
+            { id: 2, text: "Fórmula CnH2n+2", category: "ALCANOS" },
+            { id: 3, text: "Saturados de hidrógeno", category: "ALCANOS" },
+            { id: 4, text: "Parafina (Cera sólida)", category: "ALCANOS" },
+            { id: 5, text: "Terminación en '-ano'", category: "ALCANOS" },
+            
+            // ALQUENOS
+            { id: 6, text: "Enlace doble (C=C)", category: "ALQUENOS" },
+            { id: 7, text: "Fórmula CnH2n", category: "ALQUENOS" },
+            { id: 8, text: "Eteno (Maduración de frutos)", category: "ALQUENOS" },
+            { id: 9, text: "Insaturados (pierden 2 H)", category: "ALQUENOS" },
+            { id: 10, text: "Terminación en '-eno'", category: "ALQUENOS" },
+            
+            // ALQUINOS
+            { id: 11, text: "Enlace triple (C≡C)", category: "ALQUINOS" },
+            { id: 12, text: "Fórmula CnH2n-2", category: "ALQUINOS" },
+            { id: 13, text: "Acetileno (Etino)", category: "ALQUINOS" },
+            { id: 14, text: "Combustión para soldadura", category: "ALQUINOS" },
+            { id: 15, text: "Terminación en '-ino'", category: "ALQUINOS" }
+        ];
+
+        // 2. Estado del Juego
+        let state = {
+            score: 0,
+            errors: 0,
+            total: concepts.length,
+            selectedChipId: null,
+            shuffledConcepts: []
+        };
+
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // 3. Inicialización
+        function initGame() {
+            state.shuffledConcepts = shuffleArray([...concepts]);
+            renderChips();
+            updateHUD();
+        }
+
+        // 4. Renderizar conceptos
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = '';
+
+            state.shuffledConcepts.forEach(concept => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${concept.id}`;
+                chip.textContent = concept.text;
+                
+                // Evento click/touch
+                chip.addEventListener('click', () => selectChip(concept.id));
+                
+                container.appendChild(chip);
+            });
+        }
+
+        // 5. Manejo de selección
+        function selectChip(id) {
+            // Limpiar visualmente
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            
+            // Seleccionar el tocado si no está oculto
+            const chip = document.getElementById(`chip-${id}`);
+            if (chip && !chip.classList.contains('hidden')) {
+                chip.classList.add('selected');
+                state.selectedChipId = id;
+            }
+        }
+
+        // 6. Validación al tocar la Categoría (Botones inferiores)
+        function checkCategory(categoryName) {
+            // Evitar accion si no hay ficha seleccionada
+            if (!state.selectedChipId) return;
+
+            const concept = state.shuffledConcepts.find(c => c.id === state.selectedChipId);
+            const chipElement = document.getElementById(`chip-${state.selectedChipId}`);
+            const btnElement = document.getElementById(`btn-${categoryName}`);
+
+            if (concept.category === categoryName) {
+                // ACIERTO
+                state.score++;
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('hidden'); 
+                state.selectedChipId = null;
+                
+                // Animación de éxito en el botón
+                btnElement.classList.add('success-btn-anim');
+                setTimeout(() => btnElement.classList.remove('success-btn-anim'), 500);
+
+                updateHUD();
+                checkWinCondition();
+
+            } else {
+                // ERROR
+                state.errors++;
+                updateHUD();
+                
+                // Animación de error en la ficha
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('error-anim');
+                state.selectedChipId = null;
+                
+                setTimeout(() => {
+                    chipElement.classList.remove('error-anim');
+                }, 500);
+            }
+        }
+
+        // 7. Panel de puntuación
+        function updateHUD() {
+            document.getElementById('score-display').textContent = `Aciertos: ${state.score} / ${state.total}`;
+            document.getElementById('errors-display').textContent = `Errores: ${state.errors}`;
+        }
+
+        // 8. Condición de Victoria
+        function checkWinCondition() {
+            if (state.score === state.total) {
+                setTimeout(showEndScreen, 600); // Retardo suave al terminar
+            }
+        }
+
+        function showEndScreen() {
+            const endScreen = document.getElementById('end-screen');
+            const gradeDisplay = document.getElementById('final-grade');
+            
+            // Calcular nota (Base 5.0, penaliza 0.2 por error, mínimo 1.0)
+            let grade = 5.0 - (state.errors * 0.2);
+            if (grade < 1.0) grade = 1.0;
+            
+            gradeDisplay.textContent = grade.toFixed(1);
+            
+            // Asignar color según rendimiento
+            if (grade >= 4.0) {
+                gradeDisplay.style.color = 'var(--success)';
+            } else if (grade >= 3.0) {
+                gradeDisplay.style.color = '#eab308'; // Amarillo alerta
+            } else {
+                gradeDisplay.style.color = 'var(--danger)'; // Rojo
+            }
+
+            endScreen.classList.add('visible');
+        }
+
+        // 9. Arranque
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

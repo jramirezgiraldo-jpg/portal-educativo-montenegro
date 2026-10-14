@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Fenómenos Acústicos en Contextos Agrícolas</title>
+    <style>
+        :root {
+            --bg-body: #f0f4f8;
+            --text-main: #2d3748;
+            --primary: #2b6cb0;
+            --secondary: #3182ce;
+            --accent: #dd6b20;
+            --success: #38a169;
+            --error: #e53e3e;
+            --card-bg: #ffffff;
+            --card-hover: #ebf8ff;
+            --selected: #fbd38d;
+            --font-stack: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        main {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* --- ZONA DE JUEGO --- */
+        #zona-juego {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .game-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            gap: 10px;
+        }
+
+        .stat {
+            font-size: clamp(14px, 4vw, 18px);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .instructions {
+            text-align: center;
+            font-size: clamp(14px, 3.5vw, 16px);
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .board-container {
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .grid-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-columns {
+                gap: 8px;
+            }
+        }
+
+        .column-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .col-title {
+            text-align: center;
+            font-size: clamp(14px, 4vw, 18px);
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--secondary);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            padding: 12px 8px;
+            min-height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: clamp(12px, 3vw, 15px);
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            word-break: break-word;
+        }
+
+        .card:hover {
+            background-color: var(--card-hover);
+            border-color: var(--secondary);
+        }
+
+        .card.selected {
+            background-color: var(--selected);
+            border-color: var(--accent);
+            color: #000;
+            transform: scale(1.03);
+            box-shadow: 0 4px 10px rgba(221, 107, 32, 0.3);
+            z-index: 10;
+        }
+
+        .card.correct {
+            background-color: var(--success);
+            border-color: #276749;
+            color: white;
+            pointer-events: none;
+            opacity: 0.85;
+            box-shadow: none;
+            transform: scale(1);
+        }
+
+        .card.incorrect {
+            background-color: var(--error);
+            border-color: #9b2c2c;
+            color: white;
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        /* --- MODAL FIN DE JUEGO --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-title {
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .modal-score {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent);
+            margin: 15px 0;
+        }
+
+        .btn-restart {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .btn-restart:hover {
+            background-color: #2f855a;
+        }
+
+        /* --- ZONA DE LECTURA TEÓRICA --- */
+        #zona-lectura {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: clamp(1.5rem, 5vw, 3rem);
+        }
+
+        article header {
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        article h1 {
+            color: var(--primary);
+            font-size: clamp(22px, 5vw, 32px);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        article h2 {
+            color: var(--secondary);
+            font-size: clamp(18px, 4vw, 24px);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        article h2::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 24px;
+            background-color: var(--accent);
+            border-radius: 3px;
+        }
+
+        article p {
+            font-size: clamp(15px, 3.5vw, 17px);
+            color: #2d3748;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        article ul {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+
+        article li {
+            margin-bottom: 0.5rem;
+            font-size: clamp(15px, 3.5vw, 17px);
+            color: #2d3748;
+        }
+
+        /* --- TALLER DE REPASO --- */
+        .taller-container {
+            background-color: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: clamp(1.5rem, 5vw, 2.5rem);
+            margin-top: 3rem;
+        }
+
+        .taller-title {
+            color: var(--accent);
+            font-size: clamp(20px, 4.5vw, 28px);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border-bottom: 2px dashed #cbd5e0;
+            padding-bottom: 10px;
+        }
+
+        .instruccion-alerta {
+            display: flex;
+            align-items: center;
+            background-color: #feebc8;
+            border-left: 6px solid #ed8936;
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 2rem;
+            font-weight: bold;
+            color: #7b341e;
+            font-size: clamp(14px, 3.5vw, 16px);
+        }
+
+        .instruccion-alerta svg {
+            flex-shrink: 0;
+            margin-right: 15px;
+        }
+
+        .lista-taller {
+            list-style-type: decimal;
+            padding-left: 1.5rem;
+            font-size: clamp(15px, 3.5vw, 17px);
+        }
+
+        .lista-taller li {
+            margin-bottom: 1.8rem;
+            padding-left: 0.5rem;
+            color: #1a202c;
+        }
+
+        .tag-actividad {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .tag-dibujo { background-color: #805ad5; }
+        .tag-analisis { background-color: #dd6b20; }
+        .tag-mapa { background-color: #38a169; }
+
+    </style>
+</head>
+<body>
+
+<main>
+    <!-- FASE 2: ZONA DE JUEGO INTERACTIVO -->
+    <section id="zona-juego">
+        <div class="game-header">
+            <div class="stat">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span id="matches">0</span>/9 Parejas
+            </div>
+            <div class="stat">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                Nota: <span id="score">5.0</span>
+            </div>
+        </div>
+
+        <p class="instructions">¡Pon a prueba tu aprendizaje! Toca un concepto en la Columna A y luego su definición correspondiente en la Columna B para emparejarlos.</p>
+
+        <div class="board-container">
+            <div class="grid-columns">
+                <div class="column-wrapper">
+                    <div class="col-title">Columna A (Conceptos)</div>
+                    <div id="col-a" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+                <div class="column-wrapper">
+                    <div class="col-title">Columna B (Definiciones)</div>
+                    <div id="col-b" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FASE 3: LECTURA TEÓRICA Y TALLER (SIEMPRE VISIBLES) -->
+    <section id="zona-lectura">
+        <article>
+            <header>
+                <h1>Fenómenos Acústicos en el Entorno Agrícola: Efecto Doppler y Resonancia</h1>
+            </header>
+
+            <h2>1. Fundamentos Físicos de las Ondas Sonoras</h2>
+            <p>Para comprender cómo interactúa el sonido con nuestro entorno, primero debemos definir qué es. El sonido es una onda mecánica longitudinal; esto significa que necesita de un medio material, como el aire, el agua o las estructuras sólidas, para poder propagarse. Al viajar, genera zonas donde las partículas del medio se comprimen (alta presión) y otras donde se separan (rarefacciones).</p>
+            <p>La percepción humana del sonido depende de dos variables físicas fundamentales:</p>
+            <ul>
+                <li><strong>La Frecuencia Sonora:</strong> Es la cantidad de ciclos u oscilaciones que completa una onda en un segundo. Se mide en Hercios (Hz). Físicamente, la frecuencia determina el tono que percibimos: una alta frecuencia produce un sonido agudo (como un silbato), mientras que una baja frecuencia produce un sonido grave (como el motor de un tractor grande).</li>
+                <li><strong>La Intensidad Sonora:</strong> Se refiere a la cantidad de energía acústica que transporta la onda por unidad de área, y nosotros lo interpretamos como el "volumen". Se mide comúnmente en decibelios (dB). Un sonido de gran intensidad es fuerte, y uno de baja intensidad es débil.</li>
+            </ul>
+
+            <h2>2. El Efecto Doppler y el Transporte Agrícola</h2>
+            <p>El <strong>Efecto Doppler</strong> es un fenómeno acústico que consiste en el cambio <em>aparente</em> de la frecuencia de una onda percibida por un observador, causado por el movimiento relativo entre dicho observador y la fuente que emite el sonido. Es importante destacar la palabra "aparente", ya que la fuente no cambia su frecuencia de emisión real, sino que el movimiento altera cómo las ondas llegan al oído.</p>
+            <p>Imaginemos un contexto cotidiano rural: un agricultor se encuentra de pie a un lado de la vía mientras un gran vehículo de transporte, como un Jeep o un camión cargado de café, avanza rápidamente hacia él tocando su bocina (la fuente en movimiento).</p>
+            <p>Mientras el vehículo se <strong>acerca</strong>, se desplaza en la misma dirección que las ondas sonoras que emite hacia adelante. Esto provoca que los frentes de onda se compriman o se "aprieten". Al estar más juntos, el agricultor recibe más ondas por segundo (mayor frecuencia aparente), por lo que percibe el sonido de la bocina mucho más <strong>agudo</strong>.</p>
+            <p>En el instante en que el camión pasa y comienza a <strong>alejarse</strong>, ocurre el fenómeno opuesto. El vehículo se aleja de los frentes de onda que deja atrás, provocando que se expandan o se separen. El agricultor recibe menos ondas por segundo (menor frecuencia aparente) y percibe un tono significativamente más <strong>grave</strong>. Este cambio abrupto de agudo a grave es la firma inconfundible del Efecto Doppler.</p>
+
+            <h2>3. Resonancia Acústica y Fatiga Estructural</h2>
+            <p>Otro fenómeno acústico de gran relevancia en el sector agroindustrial es la <strong>Resonancia Acústica</strong>. Todo objeto físico posee una "frecuencia natural de vibración". Cuando un sistema es sometido a ondas sonoras externas cuya frecuencia coincide exactamente con esa frecuencia natural, el sistema absorbe la máxima cantidad de energía y comienza a vibrar con una amplitud muchísimo mayor.</p>
+            <p>En las instalaciones de un Centro de Acopio, donde se procesan y almacenan grandes cantidades de granos, es común tener maquinaria pesada (trilladoras, secadoras, motores diésel de camiones) operando simultáneamente. Si la frecuencia de baja vibración de uno de estos grandes motores coincide con la frecuencia natural de las estructuras del recinto —como los techos de láminas de zinc, las vigas metálicas o las ventanas— estas entrarán en resonancia. Las estructuras comenzarán a vibrar de forma visible y ruidosa. Este fenómeno no solo incrementa el ruido ambiental de forma exponencial, sino que a largo plazo causa <strong>fatiga estructural por vibración</strong>, debilitando los pernos, agrietando soldaduras y acortando la vida útil del edificio.</p>
+
+            <h2>4. Contaminación Acústica en Centros de Acopio</h2>
+            <p>La combinación de motores, maquinaria de procesamiento y los efectos amplificadores de la resonancia contribuyen directamente a la <strong>Contaminación Acústica</strong>. Este término se refiere a la presencia en el ambiente de ruidos excesivos o molestos que superan los límites de tolerancia humana y afectan la calidad de vida y la salud ocupacional.</p>
+            <p>Dentro de los centros de acopio en temporada de cosecha, el ruido continuo supera fácilmente los 85 decibelios (el umbral de riesgo según normativas internacionales). La exposición prolongada de los operarios a esta alta intensidad sonora provoca consecuencias graves, tales como:</p>
+            <ul>
+                <li>Hipoacusia (pérdida progresiva de la audición).</li>
+                <li>Aumento de la presión arterial y estrés crónico.</li>
+                <li>Bajo rendimiento y alto riesgo de accidentes laborales por la incapacidad de escuchar alarmas o advertencias.</li>
+            </ul>
+            <p>Para mitigar estos impactos, la física acústica y la salud ocupacional proponen soluciones como: instalar aislamientos acústicos en los cuartos de máquinas, realizar mantenimientos preventivos a los motores para evitar vibraciones irregulares (reduciendo así posibles resonancias), y hacer obligatorio el uso de Elementos de Protección Personal (EPP), como orejeras o tapones auditivos, que reducen la intensidad sonora (decibelios) que llega al tímpano del trabajador.</p>
+        </article>
+
+        <!-- TALLER DE REPASO -->
+        <div class="taller-container">
+            <h2 class="taller-title">Taller de Repaso y Afianzamiento</h2>
+            
+            <div class="instruccion-alerta">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                <span>¡ATENCIÓN! Lee cuidadosamente el artículo anterior. Luego, escribe y resuelve las siguientes 10 actividades obligatorias en tu cuaderno físico.</span>
+            </div>
+            
+            <ul class="lista-taller">
+                <li>
+                    <span class="tag-actividad">Responder Directamente</span><br>
+                    Según el artículo leído, ¿cuáles son las dos variables físicas fundamentales que nos permiten percibir el tono (agudo/grave) y el volumen (fuerte/débil) de un sonido? Menciona sus unidades de medida.
+                </li>
+                <li>
+                    <span class="tag-actividad tag-dibujo">Dibujar / Ilustrar</span><br>
+                    Realiza un dibujo detallado de un vehículo agrícola (ej. un Jeep) acercándose a un observador. Dibuja los "frentes de onda" frente al vehículo y detrás de él, evidenciando dónde están comprimidos y dónde expandidos.
+                </li>
+                <li>
+                    <span class="tag-actividad tag-analisis">Analizar Críticamente</span><br>
+                    El texto hace énfasis en que el Efecto Doppler es un cambio <em>"aparente"</em> de la frecuencia. Explica con tus propias palabras por qué la bocina del camión no está cambiando realmente el sonido que emite.
+                </li>
+                <li>
+                    <span class="tag-actividad tag-mapa">Mapa Conceptual</span><br>
+                    Elabora un mapa conceptual sobre el "Efecto Doppler". Debe incluir las variaciones que sufre la onda (compresión y expansión) y cómo percibe el oído humano el tono en los casos de acercamiento y alejamiento.
+                </li>
+                <li>
+                    <span class="tag-actividad">Responder Directamente</span><br>
+                    Define qué es la "Frecuencia natural de vibración" y qué condición física exacta debe cumplirse para que ocurra el fenómeno de Resonancia Acústica.
+                </li>
+                <li>
+                    <span class="tag-actividad tag-dibujo">Dibujar / Ilustrar</span><br>
+                    Imagina la lámina de zinc del techo de un centro de acopio. Dibuja dos escenarios: uno donde las ondas de un motor no coinciden con la frecuencia natural de la lámina (estado de reposo relativo), y otro donde sí coinciden y ocurre la resonancia (estado de alta amplitud).
+                </li>
+                <li>
+                    <span class="tag-actividad tag-analisis">Analizar Críticamente</span><br>
+                    Analiza las implicaciones a largo plazo de la resonancia acústica en la infraestructura de un centro de procesamiento agrícola. ¿Qué es la "fatiga estructural por vibración" y cómo puede afectar económicamente a la empresa?
+                </li>
+                <li>
+                    <span class="tag-actividad tag-mapa">Mapa Mental</span><br>
+                    Diseña un mapa mental sobre la "Contaminación Acústica en Centros de Acopio". Ramifica hacia sus causas (fuentes de ruido), las consecuencias físicas y psicológicas en los operarios, y las estrategias de prevención sugeridas.
+                </li>
+                <li>
+                    <span class="tag-actividad">Responder Directamente</span><br>
+                    ¿Qué son los decibelios (dB) y a partir de qué umbral de ruido continuo se considera que existe un riesgo para la salud ocupacional de los trabajadores, según el texto?
+                </li>
+                <li>
+                    <span class="tag-actividad tag-analisis">Analizar Críticamente</span><br>
+                    Basándote en los conceptos físicos estudiados (Frecuencia, Intensidad, Doppler, Resonancia), redacta una breve conclusión justificando por qué es vital que un ingeniero agrónomo o administrador de empresas agrícolas entienda sobre acústica.
+                </li>
+            </ul>
+        </div>
+    </section>
+</main>
+
+<!-- Modal de Fin de Juego -->
+<div class="modal-overlay" id="modal-fin">
+    <div class="modal-content">
+        <h2 class="modal-title">¡Misión Cumplida!</h2>
+        <p style="font-size: 18px; color: #4a5568; margin-bottom: 10px;">Has conectado todos los conceptos físicos correctamente.</p>
+        <div class="modal-score">Nota Final: <span id="modal-score-val">5.0</span></div>
+        <p style="font-size: 16px; color: #718096;">Tiempo invertido: <strong id="modal-time-val">00:00</strong></p>
+        <button class="btn-restart" onclick="iniciarJuego()">Jugar de Nuevo</button>
+    </div>
+</div>
+
+<script>
+    // FASE 1: DEFINICIÓN DE CONCEPTOS
+    const datosJuego = [
+        { id: 1, concepto: "Efecto Doppler", definicion: "Cambio aparente en la frecuencia de una onda percibida por el observador, provocado por el movimiento relativo entre la fuente sonora y este." },
+        { id: 2, concepto: "Resonancia Acústica", definicion: "Fenómeno que ocurre cuando un sistema recibe ondas sonoras con una frecuencia igual a su frecuencia natural, vibrando con máxima amplitud." },
+        { id: 3, concepto: "Frecuencia Sonora", definicion: "Número de ciclos por segundo que completa una onda (medido en Hz). Define si percibimos un tono agudo o grave." },
+        { id: 4, concepto: "Intensidad Sonora", definicion: "Energía transportada por la onda que el oído interpreta como el volumen (fuerte o débil). Se mide comúnmente en decibelios (dB)." },
+        { id: 5, concepto: "Contaminación Acústica", definicion: "Presencia de niveles de ruido ambiental nocivos generados por motores y maquinarias que afectan la salud ocupacional." },
+        { id: 6, concepto: "Frentes Comprimidos (Acercamiento)", definicion: "Agrupación de ondas delante de un vehículo en movimiento, lo que hace que el sonido se perciba con un tono agudo." },
+        { id: 7, concepto: "Frentes Expandidos (Alejamiento)", definicion: "Separación de las ondas detrás de un vehículo que se aleja, provocando que el receptor escuche un tono más grave." },
+        { id: 8, concepto: "Movimiento Relativo", definicion: "Condición física de desplazamiento entre el emisor del sonido (ej. un tractor) y la persona que lo escucha." },
+        { id: 9, concepto: "Fatiga Estructural", definicion: "Desgaste paulatino en techos y vigas provocado por la vibración constante y excesiva generada por motores en resonancia." }
+    ];
+
+    // Variables de Estado
+    let seleccionA = null;
+    let seleccionB = null;
+    let parejasCompletadas = 0;
+    let puntaje = 5.0;
+    
+    // Variables de Cronómetro
+    let tiempoSegundos = 0;
+    let cronometro = null;
+
+    // Elementos DOM
+    const contColA = document.getElementById('col-a');
+    const contColB = document.getElementById('col-b');
+    const txtTimer = document.getElementById('timer');
+    const txtMatches = document.getElementById('matches');
+    const txtScore = document.getElementById('score');
+    
+    const modalFin = document.getElementById('modal-fin');
+    const txtModalScore = document.getElementById('modal-score-val');
+    const txtModalTime = document.getElementById('modal-time-val');
+
+    // Función para mezclar arreglos (Fisher-Yates)
+    function barajarArreglo(array) {
+        let actual = array.length, aleatorio;
+        while (actual !== 0) {
+            aleatorio = Math.floor(Math.random() * actual);
+            actual--;
+            [array[actual], array[aleatorio]] = [array[aleatorio], array[actual]];
+        }
+        return array;
+    }
+
+    // Actualizador de tiempo
+    function ticTac() {
+        tiempoSegundos++;
+        let min = Math.floor(tiempoSegundos / 60);
+        let seg = tiempoSegundos % 60;
+        txtTimer.textContent = `${min.toString().padStart(2, '0')}:${seg.toString().padStart(2, '0')}`;
+    }
+
+    // Actualizador de puntaje visual
+    function refrescarNota() {
+        if (puntaje < 1.0) puntaje = 1.0;
+        txtScore.textContent = puntaje.toFixed(1);
+    }
+
+    // Iniciar o reiniciar el juego
+    function iniciarJuego() {
+        // Resetear variables
+        clearInterval(cronometro);
+        tiempoSegundos = 0;
+        txtTimer.textContent = "00:00";
+        parejasCompletadas = 0;
+        puntaje = 5.0;
+        seleccionA = null;
+        seleccionB = null;
+        
+        txtMatches.textContent = parejasCompletadas;
+        refrescarNota();
+        modalFin.style.display = 'none';
+        
+        contColA.innerHTML = '';
+        contColB.innerHTML = '';
+
+        // Copiar y barajar datos de forma independiente
+        let listaA = barajarArreglo([...datosJuego]);
+        let listaB = barajarArreglo([...datosJuego]);
+
+        // Renderizar Tarjetas
+        listaA.forEach(obj => crearTarjeta(obj, 'A', contColA));
+        listaB.forEach(obj => crearTarjeta(obj, 'B', contColB));
+
+        // Arrancar cronómetro
+        cronometro = setInterval(ticTac, 1000);
+    }
+
+    function crearTarjeta(datos, columna, contenedor) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        // Asignar texto según la columna
+        div.textContent = columna === 'A' ? datos.concepto : datos.definicion;
+        div.dataset.id = datos.id;
+        div.dataset.col = columna;
+        
+        // Manejador de eventos adaptado para clicks y touch (el click los cubre ambos en móviles)
+        div.addEventListener('click', () => procesarToque(div, columna));
+        
+        contenedor.appendChild(div);
+    }
+
+    function procesarToque(tarjeta, columna) {
+        // Bloquear si la tarjeta ya fue acertada o es la misma ya seleccionada
+        if (tarjeta.classList.contains('correct') || tarjeta.classList.contains('selected')) return;
+
+        // Limpiar selecciones previas de la MISMA columna
+        if (columna === 'A') {
+            if (seleccionA) seleccionA.classList.remove('selected');
+            seleccionA = tarjeta;
+            seleccionA.classList.add('selected');
+        } else {
+            if (seleccionB) seleccionB.classList.remove('selected');
+            seleccionB = tarjeta;
+            seleccionB.classList.add('selected');
+        }
+
+        // Si hay una de cada columna seleccionada, validar
+        if (seleccionA && seleccionB) {
+            comprobarPareja();
+        }
+    }
+
+    function comprobarPareja() {
+        // Bloquear interacción mientras se evalúa
+        contColA.style.pointerEvents = 'none';
+        contColB.style.pointerEvents = 'none';
+
+        const idA = seleccionA.dataset.id;
+        const idB = seleccionB.dataset.id;
+
+        if (idA === idB) {
+            // ACIERTO
+            seleccionA.classList.remove('selected');
+            seleccionB.classList.remove('selected');
+            seleccionA.classList.add('correct');
+            seleccionB.classList.add('correct');
+            
+            parejasCompletadas++;
+            txtMatches.textContent = parejasCompletadas;
+
+            limpiarSelecciones();
+            verificarVictoria();
+            
+            // Desbloquear interacción
+            contColA.style.pointerEvents = 'auto';
+            contColB.style.pointerEvents = 'auto';
+        } else {
+            // ERROR
+            seleccionA.classList.remove('selected');
+            seleccionB.classList.remove('selected');
+            seleccionA.classList.add('incorrect');
+            seleccionB.classList.add('incorrect');
+            
+            // Penalizar (restar 0.3)
+            puntaje -= 0.3;
+            refrescarNota();
+
+            // Quitar animación de error y desbloquear tras 500ms
+            setTimeout(() => {
+                seleccionA.classList.remove('incorrect');
+                seleccionB.classList.remove('incorrect');
+                limpiarSelecciones();
+                
+                contColA.style.pointerEvents = 'auto';
+                contColB.style.pointerEvents = 'auto';
+            }, 500);
+        }
+    }
+
+    function limpiarSelecciones() {
+        seleccionA = null;
+        seleccionB = null;
+    }
+
+    function verificarVictoria() {
+        if (parejasCompletadas === datosJuego.length) {
+            clearInterval(cronometro);
+            setTimeout(() => {
+                txtModalScore.textContent = puntaje.toFixed(1);
+                txtModalTime.textContent = txtTimer.textContent;
+                modalFin.style.display = 'flex';
+            }, 500);
+        }
+    }
+
+    // Autoiniciar el juego cuando el DOM cargue
+    window.addEventListener('DOMContentLoaded', iniciarJuego);
+</script>
+</body>
+</html>

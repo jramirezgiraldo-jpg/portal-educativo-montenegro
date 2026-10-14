@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Estructura del ADN y ARN</title>
+    
+    <style>
+        :root {
+            /* Tema Cyberpunk - Genética (Magenta, Cyan, Neón) */
+            --cp-bg: #090a0f;
+            --cp-dark: #161824;
+            --cp-cyan: #00f3ff;
+            --cp-magenta: #ff00ff;
+            --cp-purple: #9d00ff;
+            --cp-green: #00ff73;
+            --cp-red: #ff2a2a;
+            --cp-gray: #a9b1d6;
+            
+            /* Tema Lectura Clásica */
+            --read-bg: #f8f9fa;
+            --read-text: #2b2b2b;
+            --read-heading: #1a1a2e;
+            --card-bg: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            color: var(--cp-gray);
+            scroll-behavior: smooth;
+        }
+
+        #zona-juego {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            background: radial-gradient(circle at 50% 50%, #161824 0%, #050508 100%);
+            border-bottom: 5px solid var(--cp-magenta);
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 600px;
+            background-color: rgba(22, 24, 36, 0.8);
+            border: 2px solid var(--cp-purple);
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3), inset 0 0 15px rgba(0, 243, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            height: 70vh;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 2px solid var(--cp-magenta);
+            font-family: monospace;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            color: var(--cp-cyan);
+            text-shadow: 0 0 8px var(--cp-cyan);
+            z-index: 10;
+        }
+
+        .hud-lives {
+            color: var(--cp-red);
+            text-shadow: 0 0 8px var(--cp-red);
+            letter-spacing: 2px;
+        }
+
+        #game-canvas {
+            width: 100%;
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(
+                180deg,
+                rgba(0, 243, 255, 0.05) 0%,
+                rgba(157, 0, 255, 0.05) 100%
+            );
+        }
+
+        /* Rejilla decorativa de fondo */
+        #game-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .word-bubble {
+            position: absolute;
+            padding: 12px 24px;
+            background: rgba(9, 10, 15, 0.95);
+            border: 2px solid var(--cp-cyan);
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 800;
+            font-size: clamp(0.95rem, 3.5vw, 1.25rem);
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            transform: translateX(-50%);
+            transition: transform 0.1s;
+            z-index: 5;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .word-bubble:active {
+            transform: translateX(-50%) scale(0.9);
+        }
+
+        @keyframes explodeAnim {
+            0% { transform: translateX(-50%) scale(1); border-color: var(--cp-green); box-shadow: 0 0 20px var(--cp-green); color: var(--cp-green); }
+            50% { transform: translateX(-50%) scale(1.4); opacity: 0.9; background: rgba(0, 255, 115, 0.2); }
+            100% { transform: translateX(-50%) scale(1.8); opacity: 0; filter: blur(4px); }
+        }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(-50%); }
+            20%, 60% { transform: translateX(calc(-50% - 12px)); }
+            40%, 80% { transform: translateX(calc(-50% + 12px)); }
+        }
+
+        .exploding {
+            animation: explodeAnim 0.35s ease-out forwards;
+            pointer-events: none;
+        }
+
+        .error-shake {
+            animation: shakeError 0.4s ease forwards;
+            border-color: var(--cp-red) !important;
+            box-shadow: 0 0 20px var(--cp-red) !important;
+            color: var(--cp-red) !important;
+            pointer-events: none;
+        }
+
+        .overlay-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(9, 10, 15, 0.95);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 25px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .title-neon {
+            color: var(--cp-magenta);
+            font-size: clamp(2rem, 7vw, 3rem);
+            text-shadow: 0 0 10px var(--cp-magenta), 0 0 25px var(--cp-purple);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .instruction-box {
+            background: rgba(157, 0, 255, 0.1);
+            border: 1px solid var(--cp-purple);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            color: var(--cp-gray);
+            font-size: clamp(1rem, 3.8vw, 1.2rem);
+            line-height: 1.6;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .btn-neon {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--cp-cyan);
+            border: 2px solid var(--cp-cyan);
+            padding: 15px 35px;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            text-transform: uppercase;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3) inset, 0 0 15px rgba(0, 243, 255, 0.3);
+            transition: all 0.2s;
+            letter-spacing: 2px;
+        }
+
+        .btn-neon:active {
+            background: var(--cp-cyan);
+            color: var(--cp-bg);
+            box-shadow: 0 0 30px var(--cp-cyan);
+            transform: scale(0.95);
+        }
+
+        .final-score {
+            font-size: clamp(4rem, 12vw, 6rem);
+            font-weight: 900;
+            margin: 15px 0;
+            font-family: monospace;
+            line-height: 1;
+        }
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(40px, 6vw, 80px) clamp(20px, 5vw, 40px);
+            width: 100%;
+            box-sizing: border-box;
+            user-select: text; 
+            -webkit-user-select: text;
+            touch-action: auto;
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: clamp(25px, 6vw, 60px);
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+            border-top: 10px solid #6c5ce7;
+        }
+
+        .article-title {
+            color: var(--read-heading);
+            font-size: clamp(2rem, 7vw, 3rem);
+            border-bottom: 4px solid #f1f2f6;
+            padding-bottom: 20px;
+            margin-top: 0;
+            line-height: 1.15;
+            font-weight: 900;
+        }
+
+        .article-container h2 {
+            color: #6c5ce7;
+            margin-top: 45px;
+            font-size: clamp(1.5rem, 5.5vw, 2rem);
+            border-left: 5px solid #a29bfe;
+            padding-left: 15px;
+            line-height: 1.3;
+        }
+        
+        .article-container h3 {
+            color: #2d3436;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            margin-top: 30px;
+        }
+
+        .article-container p, .article-container li {
+            font-size: clamp(1.1rem, 3.8vw, 1.25rem);
+            line-height: 1.85;
+            margin-bottom: 20px;
+            color: #353b48;
+        }
+
+        .highlight-box {
+            background-color: #f6f5ff;
+            border-left: 5px solid #6c5ce7;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-style: normal;
+            color: #2d3436;
+            font-weight: 500;
+        }
+
+        .workshop-section {
+            margin-top: 70px;
+            background-color: #ffffff;
+            padding: clamp(25px, 6vw, 50px);
+            border-radius: 16px;
+            border: 2px dashed #a29bfe;
+            box-shadow: inset 0 0 20px rgba(108, 92, 231, 0.05);
+        }
+
+        .workshop-header {
+            color: #2d3436;
+            text-align: center;
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 900;
+        }
+
+        .workshop-instruction {
+            text-align: center;
+            font-weight: 700;
+            color: #0984e3;
+            background-color: #e3f2fd;
+            border: 2px solid #74b9ff;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.2);
+        }
+
+        .activity-card {
+            background: #fdfdfd;
+            border-left: 6px solid #2d3436;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 0 10px 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .activity-card:hover {
+            transform: translateX(5px);
+        }
+
+        .activity-type {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .type-responde { background-color: #0984e3; }
+        .type-analiza { background-color: #d63031; }
+        .type-dibuja { background-color: #00b894; }
+        .type-mapa { background-color: #e84393; }
+        
+        .activity-card p { margin: 0; color: #2d3436; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- SECCIÓN DE JUEGO -->
+        <section id="zona-juego">
+            <div class="game-wrapper">
+                
+                <div class="hud">
+                    <div id="score-display">PUNTOS: 0/15</div>
+                    <div id="lives-display" class="hud-lives">♥♥♥♥♥</div>
+                </div>
+
+                <div id="game-canvas"></div>
+
+                <!-- Pantalla de Inicio -->
+                <div id="start-screen" class="overlay-screen">
+                    <h1 class="title-neon">Secuencia<br>Genética</h1>
+                    <div class="instruction-box">
+                        <p style="color: var(--cp-magenta); font-weight: 900; margin-top: 0; font-size: 1.2em;">INSTRUCCIONES:</p>
+                        <p>Toca y explota ÚNICAMENTE las palabras relacionadas con la <strong>Estructura del ADN, ARN y Genética</strong>.</p>
+                        <p style="color: var(--cp-red); font-size: 0.9em; margin-bottom: 0;">⚠️ Si dejas caer un concepto correcto o tocas un distractor (otras áreas de la biología), la secuencia sufrirá una mutación (pierdes vida).</p>
+                    </div>
+                    <button class="btn-neon" id="btn-start">Iniciar Secuenciación</button>
+                    <button class="btn-neon" style="margin-top:20px; font-size: 1rem; border-color: var(--cp-gray); color: var(--cp-gray); background: transparent; padding: 10px 20px;" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Leer Teoría Primero ↓</button>
+                </div>
+
+                <!-- Pantalla Final -->
+                <div id="end-screen" class="overlay-screen" style="display: none;">
+                    <h2 class="title-neon" id="end-title" style="font-size: clamp(1.8rem, 6vw, 2.5rem);">Análisis Terminado</h2>
+                    <p style="color: var(--cp-gray); margin-bottom: 5px; font-size: 1.2rem;">Calificación de Desempeño:</p>
+                    <div class="final-score" id="final-grade">0.0</div>
+                    <p id="end-message" style="color: var(--cp-cyan); max-width: 90%; line-height: 1.5; font-size: 1.1rem;"></p>
+                    <button class="btn-neon" style="margin-top: 25px;" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Ir al Taller y Teoría ↓</button>
+                    <button class="btn-neon" style="margin-top: 15px; background: transparent; border-color: var(--cp-purple); color: var(--cp-purple); font-size: 1rem; padding: 10px 20px;" id="btn-restart">Intentar de Nuevo</button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECCIÓN TEÓRICA -->
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h1 class="article-title">El Código de la Vida: Arquitectura del ADN y ARN</h1>
+                
+                <h2>1. ¿Qué son los ácidos nucleicos?</h2>
+                <p>Imagina que quieres construir un ser humano completo desde cero, o un perro, o incluso un árbol. Necesitarías un manual de instrucciones gigantesco, extremadamente detallado y libre de errores. En la biología, ese manual de instrucciones existe dentro de casi todas las células vivas y se almacena en unas macromoléculas extraordinarias llamadas <strong>ácidos nucleicos</strong>.</p>
+                <p>Existen dos tipos principales de ácidos nucleicos: el <strong>ADN</strong> (Ácido Desoxirribonucleico) y el <strong>ARN</strong> (Ácido Ribonucleico). Juntos, actúan como la memoria y el sistema de comunicación de la célula, dictando qué proteínas deben fabricarse, cómo debe funcionar la célula y qué rasgos heredarán las futuras generaciones. Son, literalmente, las moléculas que contienen la información genética básica de la vida.</p>
+
+                <h2>2. El ADN: La biblioteca maestra</h2>
+                <p>El ADN se encuentra protegido dentro del núcleo de nuestras células, empaquetado fuertemente en estructuras llamadas <strong>cromosomas</strong>. Fue en 1953 cuando los científicos James Watson y Francis Crick (basándose en los cruciales datos de Rosalind Franklin) descubrieron su icónica forma de <strong>doble hélice</strong>, similar a una escalera de caracol retorcida.</p>
+                <p>Esta "escalera" está formada por bloques de construcción llamados <strong>nucleótidos</strong>. Cada nucleótido tiene tres partes:</p>
+                <ul>
+                    <li>Un grupo <strong>fosfato</strong> (actúa como el armazón exterior).</li>
+                    <li>Un azúcar llamado <strong>desoxirribosa</strong>.</li>
+                    <li>Una <strong>base nitrogenada</strong> (los "peldaños" de la escalera).</li>
+                </ul>
+                <p>El verdadero secreto de la vida reside en las bases nitrogenadas, que son solo cuatro: <strong>Adenina (A), Timina (T), Citosina (C) y Guanina (G)</strong>. Estas bases tienen una regla estricta de apareamiento (se unen para formar los peldaños de la hélice). La <strong>Adenina siempre se une con la Timina (A-T)</strong>, y la <strong>Citosina siempre con la Guanina (C-G)</strong>. El orden de estas letras a lo largo de la cadena forma los <strong>genes</strong>, que son las oraciones que la célula lee para fabricar sus componentes.</p>
+
+                <div class="highlight-box">
+                    <strong>Analogía:</strong> Piensa en el ADN como un gigantesco libro de recetas antiguo (la biblioteca maestra) que no puede salir de la sala de archivo (el núcleo) porque es demasiado valioso y podría dañarse.
+                </div>
+
+                <h2>3. El ARN: El mensajero y constructor</h2>
+                <p>Si el ADN es un libro de recetas encerrado en el núcleo, ¿cómo llega la información a las "cocinas" de la célula (los ribosomas) para hacer las proteínas? Aquí es donde entra el <strong>ARN</strong>.</p>
+                <p>A diferencia del ADN, el ARN es una molécula de <strong>cadena sencilla</strong> (no es doble), su azúcar es la <strong>ribosa</strong>, y reemplaza la base Timina por una nueva llamada <strong>Uracilo (U)</strong>. El ARN es el trabajador activo y se presenta en tres formas principales:</p>
+                <ul>
+                    <li><strong>ARN mensajero (ARNm):</strong> Es una fotocopia de un pequeño segmento del ADN (un gen). Toma esta copia de las instrucciones y viaja fuera del núcleo hasta los ribosomas.</li>
+                    <li><strong>ARN de transferencia (ARNt):</strong> Actúa como un camión de reparto. Lee el mensaje del ARNm y trae los aminoácidos correctos (los ladrillos de las proteínas) para empezar a ensamblarlos.</li>
+                    <li><strong>ARN ribosómico (ARNr):</strong> Es parte de la estructura misma de los ribosomas, la "máquina" que une los aminoácidos.</li>
+                </ul>
+
+                <h2>4. Síntesis de proteínas: Del gen a la vida</h2>
+                <p>La función última de toda esta maquinaria genética es fabricar <strong>proteínas</strong>. Las proteínas son las que hacen todo el trabajo en tu cuerpo: forman tus músculos, el color de tus ojos, los anticuerpos que te defienden y las enzimas que digieren tu comida. El proceso ocurre en dos grandes pasos:</p>
+                <p><strong>1. Transcripción:</strong> La doble hélice de ADN se abre temporalmente en una zona específica (un gen). Se crea una molécula de ARNm usando el ADN como molde. Una vez hecha la copia, el ADN se vuelve a cerrar y el ARNm sale del núcleo.</p>
+                <p><strong>2. Traducción:</strong> El ARNm llega al ribosoma. Allí, el mensaje se lee en grupos de tres letras llamados <strong>codones</strong>. Cada codón es el código para un aminoácido específico. El ARNt trae los aminoácidos uno a uno, formando una larga cadena. Cuando la cadena está completa, se pliega en una forma 3D y se convierte en una proteína funcional.</p>
+
+                <h2>5. Mutaciones: Alterando el código</h2>
+                <p>En ocasiones, ocurren errores al copiar el ADN, ya sea por radiación, químicos o errores naturales de la célula. Una <strong>mutación</strong> es un cambio en la secuencia de letras (A, T, C, G). </p>
+                <p>Si cambia una letra, puede cambiar un codón. Si el codón cambia, el ARNt podría traer el aminoácido equivocado. Esto resultaría en una proteína mal formada que no puede cumplir su función. Así es como se originan muchas enfermedades genéticas. Sin embargo, las mutaciones no siempre son malas; a veces, crean variaciones que le dan a un organismo una ventaja para sobrevivir, siendo este el motor de la evolución a lo largo de millones de años.</p>
+
+                <div class="workshop-section">
+                    <h2 class="workshop-header">Taller de Aplicación</h2>
+                    <div class="workshop-instruction">
+                        ⚠️ INSTRUCCIÓN: Escribe y resuelve de manera clara y ordenada estas 10 actividades en tu cuaderno de Ciencias Naturales o Biología.
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">1. Responde</span>
+                        <p>Según el texto, ¿por qué al ADN se le compara con una "biblioteca maestra" o un libro de recetas antiguo, y en qué parte exacta de la célula permanece guardado?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">2. Dibuja e Identifica</span>
+                        <p>Ilustra en tu cuaderno un único "nucleótido" del ADN. Señala claramente con flechas y nombres sus tres componentes estructurales fundamentales.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">3. Analiza el Código</span>
+                        <p>Si tienes una cadena de ADN con la siguiente secuencia: <strong>A - T - C - G - A</strong>, escribe cuál sería la cadena complementaria que se uniría a ella, aplicando las reglas de apareamiento de bases nitrogenadas de Watson y Crick.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">4. Mapa Conceptual</span>
+                        <p>Construye un mapa conceptual que diferencie al <strong>ADN</strong> y al <strong>ARN</strong>. Debes incluir al menos tres diferencias clave (ej. número de cadenas, tipo de azúcar, y la base nitrogenada que cambia).</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">5. Responde</span>
+                        <p>¿Qué es un <strong>codón</strong> y cuántas "letras" (bases nitrogenadas) lo conforman? Explica su función específica al momento de crear una proteína.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">6. Analiza un Caso Crítico</span>
+                        <p>Imagina que una toxina entra a la célula y destruye todo el <strong>ARN mensajero (ARNm)</strong> justo después de que se forma. ¿Podría la célula fabricar proteínas? Argumenta tu respuesta basándote en la función de comunicación del ARN.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">7. Ilustra el Proceso</span>
+                        <p>Haz un dibujo secuencial (en dos o tres pasos) que represente la <strong>Transcripción</strong>: muestra la hélice de ADN abriéndose para permitir que se forme la cadena simple de ARN mensajero, y luego el ADN volviéndose a cerrar.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">8. Mapa Mental (Tipos de ARN)</span>
+                        <p>Crea un mapa mental cuyo centro sea "Tipos de ARN en la Síntesis de Proteínas". Ramifica hacia las tres variantes principales (ARNm, ARNt, ARNr) y resume con tus propias palabras qué "trabajo" hace cada uno.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">9. Responde</span>
+                        <p>¿Por qué el texto afirma que la función final de los ácidos nucleicos es fabricar proteínas? Menciona al menos tres ejemplos de funciones vitales que realizan las proteínas en nuestro cuerpo.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">10. Analiza (Mutaciones)</span>
+                        <p>Explica con tus palabras la reacción en cadena que causa una mutación perjudicial. Sigue este orden lógico en tu respuesta: 1) Error en el ADN -> 2) Alteración del codón en el ARNm -> 3) Efecto en el ARNt -> 4) Resultado en la proteína.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fase 1: Base de Datos de Palabras
+        const correctWords = [
+            "ADN", "ARN", "Adenina", "Guanina", "Citosina", 
+            "Timina", "Uracilo", "Ribosa", "Desoxirribosa", 
+            "Fosfato", "Hélice", "Cromosoma", "Gen", 
+            "Codón", "Mutación", "Transcripción"
+        ];
+        
+        const distractorWords = [
+            "Lípido", "Glucosa", "Almidón", "Celulosa", 
+            "Ósmosis", "Clorofila", "Estoma", "Xilema", 
+            "Floema", "Neurona", "Sinapsis", "Axón", 
+            "Lisosoma", "Hemoglobina", "Bilis", "Hormona"
+        ];
+
+        // Estado del Juego
+        let state = {
+            score: 0,
+            lives: 5,
+            maxScore: 15, // Puntos necesarios para el 5.0
+            isGameRunning: false,
+            activeObjects: [], // { element, y, speed, isCorrect }
+            spawnInterval: null,
+            animationFrame: null,
+            poolCorrect: [],
+            poolDistract: [],
+            spawnRateMs: 1300,
+            baseFallSpeed: 1.5 // pixeles por frame para pantalla 70vh
+        };
+
+        // Elementos del DOM
+        const canvasEl = document.getElementById('game-canvas');
+        const scoreEl = document.getElementById('score-display');
+        const livesEl = document.getElementById('lives-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const btnStart = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+        const finalGradeEl = document.getElementById('final-grade');
+        const endMessageEl = document.getElementById('end-message');
+
+        // Función para desordenar arrays (Fisher-Yates)
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            // Limpiar estado
+            state.score = 0;
+            state.lives = 5;
+            state.isGameRunning = true;
+            state.baseFallSpeed = window.innerHeight < 800 ? 1.2 : 1.6; // Ajuste sensible a altura móvil
+            state.spawnRateMs = 1300;
+            
+            // Limpiar Canvas
+            canvasEl.innerHTML = '';
+            state.activeObjects = [];
+
+            // Preparar Pools (Clonando los originales)
+            state.poolCorrect = shuffle([...correctWords]);
+            state.poolDistract = shuffle([...distractorWords]);
+
+            // Actualizar HUD
+            updateHUD();
+
+            // Ocultar modales
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+
+            // Iniciar bucles de tiempo
+            state.spawnInterval = setInterval(spawnWord, state.spawnRateMs);
+            state.animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop() {
+            if (!state.isGameRunning) return;
+
+            const canvasHeight = canvasEl.clientHeight;
+
+            // Recorrer el array en reversa para eliminar de forma segura
+            for (let i = state.activeObjects.length - 1; i >= 0; i--) {
+                let obj = state.activeObjects[i];
+                
+                // Gravedad / Caída
+                obj.y += obj.speed;
+                obj.element.style.top = obj.y + 'px';
+
+                // Chequear si salió del fondo del contenedor
+                if (obj.y > canvasHeight + 10) {
+                    
+                    // Lógica fundamental de penalización por dejar caer las correctas
+                    if (obj.isCorrect) {
+                        loseLife();
+                        // Feedback visual de daño en el borde
+                        canvasEl.style.boxShadow = "inset 0 -20px 20px -20px var(--cp-red)";
+                        setTimeout(() => canvasEl.style.boxShadow = "none", 250);
+                    }
+                    
+                    // Limpiar RAM y DOM
+                    if (obj.element.parentNode) canvasEl.removeChild(obj.element);
+                    state.activeObjects.splice(i, 1);
+                }
+            }
+
+            // Siguiente frame
+            state.animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function spawnWord() {
+            if (!state.isGameRunning) return;
+
+            // Revisar si ya terminamos las correctas
+            if (state.score >= state.maxScore || (state.poolCorrect.length === 0 && state.activeObjects.filter(o => o.isCorrect).length === 0)) {
+                setTimeout(endGame, 2000); // Dar 2 segundos de gracia
+                clearInterval(state.spawnInterval);
+                return;
+            }
+
+            // Ratio 60% correcta, 40% distractor (Aproximado)
+            let isCorrect = Math.random() < 0.6;
+            let text = "";
+
+            if (isCorrect && state.poolCorrect.length > 0) {
+                text = state.poolCorrect.pop();
+            } else if (!isCorrect && state.poolDistract.length > 0) {
+                text = state.poolDistract.pop();
+            } else if (state.poolCorrect.length > 0) {
+                isCorrect = true;
+                text = state.poolCorrect.pop();
+            } else {
+                return; // Pools vacíos
+            }
+
+            // Crear Nodo DOM
+            const bubble = document.createElement('div');
+            bubble.classList.add('word-bubble');
+            bubble.innerText = text;
+
+            // Posición Horizontal: Entre 15% y 85% para evitar recortes en bordes
+            const randomX = Math.floor(Math.random() * 70) + 15;
+            bubble.style.left = randomX + '%';
+            bubble.style.top = '-50px';
+
+            // CRÍTICO: 'pointerdown' para soportar tap táctil y click de mouse unificados
+            bubble.addEventListener('pointerdown', (e) => handleTap(e, bubble, isCorrect));
+
+            canvasEl.appendChild(bubble);
+            
+            // Variar velocidad para que no caigan uniformes
+            const speedVariance = (Math.random() * 0.6) - 0.3;
+
+            state.activeObjects.push({
+                element: bubble,
+                y: -50,
+                speed: state.baseFallSpeed + speedVariance,
+                isCorrect: isCorrect
+            });
+
+            // Curva de dificultad (Acelerar ligeramente)
+            if (state.score === 5) state.baseFallSpeed += 0.3;
+            if (state.score === 10) state.baseFallSpeed += 0.4;
+        }
+
+        function handleTap(e, element, isCorrect) {
+            e.preventDefault(); // Evita scroll o zoom doble-tap
+
+            if (!state.isGameRunning) return;
+            
+            // Evitar multitoques en animaciones
+            if (element.classList.contains('exploding') || element.classList.contains('error-shake')) return;
+
+            // Desvincular de físicas
+            const index = state.activeObjects.findIndex(obj => obj.element === element);
+            if (index > -1) {
+                state.activeObjects.splice(index, 1);
+            }
+
+            if (isCorrect) {
+                // ÉXITO
+                state.score++;
+                updateHUD();
+                
+                element.classList.add('exploding');
+                if (navigator.vibrate) navigator.vibrate(40); // Feedback suave
+                
+                // Limpieza tras animación
+                setTimeout(() => {
+                    if (element.parentNode) canvasEl.removeChild(element);
+                }, 350);
+
+                // Terminar anticipadamente si llega al score máximo
+                if(state.score >= state.maxScore) {
+                    endGame();
+                }
+
+            } else {
+                // FALLO (Tocó un distractor)
+                loseLife();
+                
+                element.classList.add('error-shake');
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Patrón error
+                
+                // Limpieza
+                setTimeout(() => {
+                    if (element.parentNode) canvasEl.removeChild(element);
+                }, 400);
+            }
+        }
+
+        function loseLife() {
+            state.lives--;
+            updateHUD();
+            
+            // Terminar si muere
+            if (state.lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateHUD() {
+            scoreEl.innerText = `PUNTOS: ${state.score}/${state.maxScore}`;
+            
+            let hearts = "";
+            for(let i=0; i<5; i++) {
+                hearts += (i < state.lives) ? "♥" : "♡";
+            }
+            livesEl.innerText = hearts;
+        }
+
+        function endGame() {
+            if(!state.isGameRunning) return; // Evitar disparos múltiples
+            
+            state.isGameRunning = false;
+            clearInterval(state.spawnInterval);
+            cancelAnimationFrame(state.animationFrame);
+
+            // Fórmula de Calificación Escolar (Base 1.0 a 5.0)
+            let grade = 1.0 + (state.score / state.maxScore) * 4.0;
+
+            // Si se quedó sin vidas, la nota máxima está capada (no puede sacar más de 2.9 aunque tenga 14 puntos)
+            if (state.lives <= 0) {
+                grade = Math.min(grade, 2.9);
+            }
+
+            // Asegurar límites
+            if (grade < 1.0) grade = 1.0;
+            if (grade > 5.0) grade = 5.0;
+
+            finalGradeEl.innerText = grade.toFixed(1);
+
+            // Mensajes Dinámicos
+            if (grade >= 4.0) {
+                finalGradeEl.style.color = "var(--cp-green)";
+                finalGradeEl.style.textShadow = "0 0 25px var(--cp-green)";
+                endMessageEl.innerText = "SECUENCIACIÓN PERFECTA. Identificaste correctamente la arquitectura de los ácidos nucleicos. Estás listo para replicar proteínas.";
+            } else if (grade >= 3.0) {
+                finalGradeEl.style.color = "#ffdd59";
+                finalGradeEl.style.textShadow = "0 0 25px #ffdd59";
+                endMessageEl.innerText = "SECUENCIA ESTABLE, PERO CON ERRORES. Tuviste algunos fallos en los conceptos, lo que podría generar una proteína defectuosa. Repasa el texto abajo.";
+            } else {
+                finalGradeEl.style.color = "var(--cp-red)";
+                finalGradeEl.style.textShadow = "0 0 25px var(--cp-red)";
+                endMessageEl.innerText = "MUTACIÓN CRÍTICA DEL SISTEMA. El código genético se ha corrompido por falta de conocimiento. Lee el módulo teórico para reparar el ADN.";
+            }
+
+            endScreen.style.display = 'flex';
+        }
+
+        btnStart.addEventListener('click', initGame);
+        btnRestart.addEventListener('click', initGame);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- REQUISITO TÉCNICO CRÍTICO 2: Viewport para mobile-first y prevención de bugs -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Hidrocarburos Aromáticos y Benceno</title>
+    
+    <style>
+        :root {
+            /* Tema Cyberpunk - Química Neón (Cyan, Magenta, Oscuro) */
+            --cp-bg: #0b0c10;
+            --cp-dark: #1f2833;
+            --cp-cyan: #66fcf1;
+            --cp-cyan-dim: #45a29e;
+            --cp-magenta: #ff00ff;
+            --cp-green: #39ff14;
+            --cp-red: #ff2a2a;
+            --cp-gray: #c5c6c7;
+            
+            /* Tema Lectura Académica (Claro, Alto Contraste) */
+            --read-bg: #f8f9fa;
+            --read-text: #212529;
+            --read-heading: #1a252f;
+            --card-bg: #ffffff;
+            --accent-blue: #0056b3;
+            --accent-orange: #d35400;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            color: var(--cp-gray);
+            scroll-behavior: smooth;
+        }
+
+        #zona-juego {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            background: radial-gradient(circle at 50% 50%, var(--cp-dark) 0%, var(--cp-bg) 100%);
+            border-bottom: 5px solid var(--cp-magenta);
+            /* CRÍTICO: Prevenir comportamientos táctiles por defecto (zoom, scroll) */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 600px;
+            background-color: rgba(11, 12, 16, 0.85);
+            border: 2px solid var(--cp-cyan);
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(102, 252, 241, 0.15), inset 0 0 15px rgba(255, 0, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            height: 75vh;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border-bottom: 2px solid var(--cp-magenta);
+            font-family: monospace;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            color: var(--cp-cyan);
+            text-shadow: 0 0 8px var(--cp-cyan);
+            z-index: 10;
+        }
+
+        .hud-lives {
+            color: var(--cp-red);
+            text-shadow: 0 0 8px var(--cp-red);
+            letter-spacing: 2px;
+        }
+
+        #game-canvas {
+            width: 100%;
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(
+                180deg,
+                rgba(102, 252, 241, 0.05) 0%,
+                rgba(255, 0, 255, 0.05) 100%
+            );
+        }
+
+        /* Rejilla Matrix Fondo */
+        #game-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(102, 252, 241, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 252, 241, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .word-bubble {
+            position: absolute;
+            padding: 10px 20px;
+            background: rgba(31, 40, 51, 0.95);
+            border: 2px solid var(--cp-magenta);
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 800;
+            font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+            /* Transform se manejará vía JS, pero aseguramos centrado horizontal respecto a 'left' */
+            transform: translateX(-50%); 
+            z-index: 5;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            user-select: none;
+            will-change: transform; /* Optimización de hardware */
+        }
+
+        .word-bubble:active {
+            filter: brightness(1.2);
+        }
+
+        @keyframes explodeAnim {
+            0% { transform: translateX(-50%) scale(1); border-color: var(--cp-green); box-shadow: 0 0 20px var(--cp-green); color: var(--cp-green); }
+            50% { transform: translateX(-50%) scale(1.3); opacity: 0.9; background: rgba(57, 255, 20, 0.2); }
+            100% { transform: translateX(-50%) scale(1.6); opacity: 0; filter: blur(3px); }
+        }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(-50%); }
+            20%, 60% { transform: translateX(calc(-50% - 15px)); }
+            40%, 80% { transform: translateX(calc(-50% + 15px)); }
+        }
+
+        .exploding {
+            animation: explodeAnim 0.3s ease-out forwards;
+            pointer-events: none;
+        }
+
+        .error-shake {
+            animation: shakeError 0.4s ease forwards;
+            border-color: var(--cp-red) !important;
+            box-shadow: 0 0 20px var(--cp-red) !important;
+            color: var(--cp-red) !important;
+            pointer-events: none;
+        }
+
+        .overlay-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 12, 16, 0.95);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 25px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .title-neon {
+            color: var(--cp-cyan);
+            font-size: clamp(2rem, 7vw, 3rem);
+            text-shadow: 0 0 10px var(--cp-cyan), 0 0 20px var(--cp-cyan-dim);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .instruction-box {
+            background: rgba(102, 252, 241, 0.05);
+            border: 1px solid var(--cp-magenta);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            color: var(--cp-gray);
+            font-size: clamp(0.95rem, 3.8vw, 1.15rem);
+            line-height: 1.5;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .btn-neon {
+            background: rgba(102, 252, 241, 0.1);
+            color: var(--cp-cyan);
+            border: 2px solid var(--cp-cyan);
+            padding: 15px 35px;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            text-transform: uppercase;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.2) inset, 0 0 15px rgba(102, 252, 241, 0.2);
+            transition: all 0.2s;
+            letter-spacing: 2px;
+            font-family: inherit;
+        }
+
+        .btn-neon:active {
+            background: var(--cp-cyan);
+            color: var(--cp-bg);
+            box-shadow: 0 0 30px var(--cp-cyan);
+            transform: scale(0.95);
+        }
+
+        .final-score {
+            font-size: clamp(4rem, 12vw, 6rem);
+            font-weight: 900;
+            margin: 15px 0;
+            font-family: monospace;
+            line-height: 1;
+        }
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(40px, 6vw, 80px) clamp(20px, 5vw, 40px);
+            width: 100%;
+            box-sizing: border-box;
+            user-select: text; 
+            -webkit-user-select: text;
+            touch-action: auto;
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: clamp(25px, 6vw, 60px);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-top: 10px solid var(--accent-blue);
+        }
+
+        .article-title {
+            color: var(--read-heading);
+            font-size: clamp(2rem, 7vw, 3rem);
+            border-bottom: 4px solid #e9ecef;
+            padding-bottom: 20px;
+            margin-top: 0;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+
+        .article-container h2 {
+            color: var(--accent-blue);
+            margin-top: 45px;
+            font-size: clamp(1.5rem, 5.5vw, 2rem);
+            border-left: 5px solid var(--cp-cyan-dim);
+            padding-left: 15px;
+            line-height: 1.3;
+        }
+        
+        .article-container h3 {
+            color: #495057;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            margin-top: 30px;
+        }
+
+        .article-container p, .article-container li {
+            font-size: clamp(1.1rem, 3.8vw, 1.25rem);
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+
+        .highlight-box {
+            background-color: #e3f2fd;
+            border-left: 5px solid var(--accent-blue);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-style: normal;
+            color: #0d47a1;
+            font-weight: 500;
+        }
+
+        /* Taller de Repaso */
+        .workshop-section {
+            margin-top: 70px;
+            background-color: #ffffff;
+            padding: clamp(25px, 6vw, 50px);
+            border-radius: 16px;
+            border: 2px dashed var(--accent-blue);
+            box-shadow: inset 0 0 20px rgba(0, 86, 179, 0.05);
+        }
+
+        .workshop-header {
+            color: var(--read-heading);
+            text-align: center;
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 900;
+        }
+
+        .workshop-instruction {
+            text-align: center;
+            font-weight: 700;
+            color: var(--accent-orange);
+            background-color: #fff3cd;
+            border: 2px solid #ffeeba;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            box-shadow: 0 5px 15px rgba(211, 84, 0, 0.1);
+        }
+
+        .activity-card {
+            background: #fdfdfd;
+            border-left: 6px solid var(--read-text);
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 0 10px 10px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .activity-card:hover {
+            transform: translateX(5px);
+        }
+
+        .activity-type {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .type-responde { background-color: #0056b3; }
+        .type-analiza { background-color: #d35400; }
+        .type-dibuja { background-color: #28a745; }
+        .type-mapa { background-color: #6f42c1; }
+        
+        .activity-card p { margin: 0; color: var(--read-text); font-weight: 500; }
+
+        /* Icono SVG Benceno para decoración */
+        .benzene-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-wrapper">
+                
+                <div class="hud">
+                    <div id="score-display">ANILLOS: 0/15</div>
+                    <div id="lives-display" class="hud-lives">♥♥♥♥♥</div>
+                </div>
+
+                <div id="game-canvas"></div>
+
+                <!-- Pantalla de Inicio -->
+                <div id="start-screen" class="overlay-screen">
+                    
+                    <svg class="benzene-icon" viewBox="0 0 100 100" fill="none" stroke="var(--cp-cyan)" stroke-width="4">
+                        <polygon points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5"></polygon>
+                        <circle cx="50" cy="50" r="25" stroke="var(--cp-magenta)"></circle>
+                    </svg>
+
+                    <h1 class="title-neon">Química<br>Aromática</h1>
+                    <div class="instruction-box">
+                        <p style="color: var(--cp-magenta); font-weight: 900; margin-top: 0; font-size: 1.2em;">PROTOCOLOS DE EXTRACCIÓN:</p>
+                        <p>Identifica y atrapa (toca) ÚNICAMENTE los conceptos relacionados con <strong>Compuestos Aromáticos, Estructura del Benceno y Aroma del Café</strong>.</p>
+                        <ul style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                            <li><span style="color:var(--cp-green)">Acertar Aromático:</span> +1 Anillo.</li>
+                            <li><span style="color:var(--cp-red)">Tocar un Distractor:</span> Daño estructural (Pierdes 1 vida).</li>
+                            <li><span style="color:var(--cp-red)">Dejar caer Aromático:</span> Fuga química (Pierdes 1 vida).</li>
+                            <li>Dejar caer un distractor no penaliza.</li>
+                        </ul>
+                    </div>
+                    <button class="btn-neon" id="btn-start">Iniciar Síntesis</button>
+                    <button class="btn-neon" style="margin-top:20px; font-size: 1rem; border-color: var(--cp-gray); color: var(--cp-gray); background: transparent; padding: 10px 20px;" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Consultar Teoría ↓</button>
+                </div>
+
+                <!-- Pantalla Final -->
+                <div id="end-screen" class="overlay-screen" style="display: none;">
+                    <h2 class="title-neon" id="end-title" style="font-size: clamp(1.8rem, 6vw, 2.5rem);">Síntesis Completada</h2>
+                    <p style="color: var(--cp-gray); margin-bottom: 5px; font-size: 1.2rem;">Evaluación de Laboratorio:</p>
+                    <div class="final-score" id="final-grade">0.0</div>
+                    <p id="end-message" style="color: var(--cp-magenta); max-width: 90%; line-height: 1.5; font-size: 1.1rem;"></p>
+                    <button class="btn-neon" style="margin-top: 25px;" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Bajar al Taller Académico ↓</button>
+                    <button class="btn-neon" style="margin-top: 15px; background: transparent; border-color: var(--cp-cyan); color: var(--cp-cyan); font-size: 1rem; padding: 10px 20px;" id="btn-restart">Reiniciar Laboratorio</button>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h1 class="article-title">Hidrocarburos Aromáticos: El Benceno, la Resonancia y el Aroma del Café</h1>
+                
+                <h2>1. ¿Qué es un Compuesto Aromático?</h2>
+                <p>En los inicios de la química orgánica, los científicos descubrieron una serie de compuestos extraídos de resinas, bálsamos y aceites esenciales que se caracterizaban por poseer olores intensos y agradables (como la vainilla o la canela). Por esta razón, se les denominó <strong>compuestos aromáticos</strong>.</p>
+                <p>Sin embargo, hoy en día el término "aromático" en química no se refiere estrictamente al olor, sino a una propiedad química fundamental: la <strong>estabilidad excepcional</strong> que poseen ciertas estructuras cíclicas debido a una nube de electrones deslocalizados. El representante más famoso e importante de esta familia es el <strong>Benceno (C₆H₆)</strong>.</p>
+
+                <h2>2. El Enigma del Benceno y la Resonancia</h2>
+                <p>La estructura del benceno fue un rompecabezas durante muchos años. Friedrich August Kekulé propuso en 1865 que el benceno era un anillo hexagonal formado por seis átomos de carbono con enlaces simples y dobles alternados. Según esta idea, las posiciones de los dobles enlaces estarían cambiando rápidamente de un lugar a otro.</p>
+                
+                <div class="highlight-box">
+                    <strong>La verdadera estructura:</strong> La mecánica cuántica moderna demostró que los dobles enlaces del benceno no son fijos ni saltan. En realidad, los electrones pi (π) de los dobles enlaces se "comparten" entre los seis átomos de carbono, formando una <strong>nube de electrones deslocalizada</strong> en forma de anillo por encima y por debajo del plano de la molécula. A este fenómeno estabilizador se le llama <strong>Resonancia</strong>.
+                </div>
+                
+                <p>Por esta razón, la estructura del benceno se dibuja comúnmente como un hexágono con un círculo en el centro, representando la nube pi deslocalizada, en lugar de dibujar dobles enlaces estáticos.</p>
+
+                <h2>3. La Regla de Hückel</h2>
+                <p>No cualquier anillo con dobles enlaces es aromático. Para que una molécula se considere aromática, debe cumplir con la <strong>Regla de Hückel</strong>. Esta regla establece que la molécula debe ser:</p>
+                <ul>
+                    <li>Cíclica (formar un anillo).</li>
+                    <li>Plana (para que los orbitales p puedan alinearse).</li>
+                    <li>Tener un número de electrones pi (π) deslocalizados que cumpla la fórmula <strong>4n + 2</strong> (donde n es un número entero: 0, 1, 2, 3...).</li>
+                </ul>
+                <p>En el caso del benceno, tiene 3 dobles enlaces, es decir, 6 electrones pi. Si aplicamos la fórmula 4n + 2 = 6, encontramos que n = 1 (un número entero), confirmando su aromaticidad.</p>
+
+                <h2>4. Reacciones Químicas: ¿Por qué no reacciona como un alqueno?</h2>
+                <p>Los alquenos (cadenas con dobles enlaces) reaccionan fácilmente "rompiendo" su doble enlace para añadir nuevos átomos, un proceso llamado <em>reacción de adición</em>. Sin embargo, el benceno se resiste fuertemente a las reacciones de adición porque eso destruiría su estable nube de resonancia.</p>
+                <p>En su lugar, los compuestos aromáticos prefieren sufrir reacciones de <strong>Sustitución Electrofílica Aromática (SEA)</strong>. En estas reacciones, un átomo de hidrógeno del anillo es reemplazado por otro grupo químico (como un cloro, un grupo nitro, o un grupo metilo), manteniendo intacta la estabilidad del anillo aromático. Ejemplos clásicos son la Halogenación, Nitración y Sulfonación.</p>
+
+                <h2>5. Química Local: Los Compuestos Aromáticos en el Aroma y Tostión del Café</h2>
+                <p>Si vives en el Eje Cafetero colombiano o disfrutas de una buena taza de café, debes saber que su aroma y sabor característicos son producto de reacciones químicas complejas. Cuando el grano verde de café se somete a altas temperaturas durante la <strong>tostión</strong>, ocurre la famosa <em>Reacción de Maillard</em> (interacción entre aminoácidos y azúcares) y la degradación térmica.</p>
+                <p>Durante este proceso se generan cientos de compuestos orgánicos volátiles, muchos de ellos <strong>compuestos aromáticos y heterocíclicos</strong> (anillos aromáticos que contienen oxígeno o nitrógeno). Algunos de los más importantes son:</p>
+                <ul>
+                    <li><strong>Guaiacol y compuestos fenólicos:</strong> Aportan las notas ahumadas, a madera y a especias. Pertenecen a la familia de los fenoles (un anillo de benceno con un grupo OH).</li>
+                    <li><strong>Piridinas:</strong> Anillos aromáticos que contienen un átomo de nitrógeno. Aportan notas tostadas y astringentes.</li>
+                    <li><strong>Furanos:</strong> Responsables de las notas dulces y acarameladas del café recién tostado.</li>
+                </ul>
+                <p>Así, la química de los hidrocarburos aromáticos no solo se estudia en un laboratorio o en la industria del petróleo, sino que está presente en la magia de la taza de café que millones de personas disfrutan cada mañana.</p>
+
+                <div class="workshop-section">
+                    <h2 class="workshop-header">Taller de Repaso</h2>
+                    <div class="workshop-instruction">
+                        ✍️ INSTRUCCIÓN: Escribe y resuelve de manera clara y ordenada estas 10 actividades en tu cuaderno de Química.
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">1. Responde</span>
+                        <p>Basado en la lectura, ¿cuál fue el origen histórico del término "compuesto aromático" y a qué se refiere realmente este término en la química moderna?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">2. Dibuja e Ilustra</span>
+                        <p>Dibuja en tu cuaderno la estructura del Benceno propuesta originalmente por Kekulé (con dobles enlaces alternados) y, al lado, dibuja la representación moderna de resonancia (el hexágono con el círculo en el centro). Escribe una breve frase explicando la diferencia.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">3. Analiza la Regla</span>
+                        <p>Si tienes un anillo plano cíclico con 8 electrones pi deslocalizados, ¿sería considerado aromático? Aplica la ecuación matemática de la Regla de Hückel (4n + 2) para justificar tu respuesta paso a paso.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">4. Mapa Conceptual</span>
+                        <p>Elabora un mapa conceptual sobre la "Regla de Hückel". Las ramas principales deben ser las tres condiciones estrictas que una molécula debe cumplir para ser considerada aromática.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">5. Responde (Reacciones)</span>
+                        <p>¿Por qué el benceno prefiere realizar reacciones de "Sustitución Electrofílica Aromática" en lugar de "Reacciones de Adición" como lo hacen los alquenos comunes?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">6. Analiza el Proceso Local</span>
+                        <p>En el contexto del Eje Cafetero, ¿por qué el café verde no huele igual que el café tostado? Analiza y describe qué proceso físico-químico genera los compuestos aromáticos volátiles en el grano.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">7. Ilustra una Reacción</span>
+                        <p>Dibuja un hexágono simple que represente un benceno. Dibuja una flecha indicando una reacción y dibuja el benceno resultante con un átomo de Hidrógeno reemplazado por un grupo "Nitro" (-NO2). Titula el dibujo como "Ejemplo de Sustitución Aromática".</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">8. Mapa Mental (Café)</span>
+                        <p>Crea un mapa mental sobre "Los Compuestos Aromáticos en el Café". Del centro deben salir ramas hacia los compuestos mencionados en la lectura (Guaiacol, Piridinas, Furanos) indicando qué tipo de aroma aporta cada uno.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">9. Responde (Concepto)</span>
+                        <p>Define con tus propias palabras qué significa el concepto de "Nube de electrones deslocalizada" o "Resonancia" en el anillo de benceno.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">10. Analiza (Impacto Químico)</span>
+                        <p>La química orgánica indica que la estabilidad del anillo aromático dificulta que estas moléculas se descompongan fácilmente. Analiza: ¿Por qué algunos contaminantes sintéticos derivados del benceno (como ciertos pesticidas) pueden permanecer tantos años en el medio ambiente sin degradarse?</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Bases de datos de palabras
+        const correctWords = [
+            "Benceno", "Tolueno", "Fenol", "Anilina", 
+            "Regla Hückel", "Nube Pi", "Guaiacol", "Piridina", 
+            "Resonancia", "Aromático", "Naftaleno", "Xileno", "Sustitución"
+        ];
+        
+        const distractorWords = [
+            "Metano", "Ciclohexano", "Alcano", "Glucosa", 
+            "Enlace Iónico", "Protón", "Lípido", "ADN", 
+            "Ósmosis", "Alqueno", "Etanol", "Celulosa", "Mitocondria"
+        ];
+
+        // Estado Global del Juego
+        let state = {
+            score: 0,
+            lives: 5,
+            maxScore: 15,
+            isGameRunning: false,
+            activeObjects: [], 
+            lastSpawnTime: 0,
+            spawnRateMs: 1400, // Tiempo entre spawns
+            baseFallSpeed: 1.5, // Pixeles por frame (aprox 60fps)
+            poolCorrect: [],
+            poolDistract: [],
+            animationFrame: null
+        };
+
+        // Referencias al DOM
+        const canvasEl = document.getElementById('game-canvas');
+        const scoreEl = document.getElementById('score-display');
+        const livesEl = document.getElementById('lives-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const btnStart = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+        const finalGradeEl = document.getElementById('final-grade');
+        const endMessageEl = document.getElementById('end-message');
+
+        // Función para barajar arrays aleatoriamente (Fisher-Yates)
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            state.score = 0;
+            state.lives = 5;
+            state.isGameRunning = true;
+            
+            // Adaptar velocidad según dispositivo (altura)
+            state.baseFallSpeed = window.innerHeight < 750 ? 1.2 : 1.6;
+            state.spawnRateMs = 1300;
+            
+            canvasEl.innerHTML = '';
+            state.activeObjects = [];
+            
+            // Recargar pools de palabras de forma aleatoria multiplicándolos para alcanzar 15 aciertos
+            state.poolCorrect = shuffle([...correctWords, ...correctWords]); 
+            state.poolDistract = shuffle([...distractorWords, ...distractorWords]);
+
+            updateHUD();
+
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+
+            state.lastSpawnTime = performance.now();
+            state.animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop(currentTime) {
+            if (!state.isGameRunning) return;
+
+            // Lógica de aparición (Spawn)
+            if (currentTime - state.lastSpawnTime > state.spawnRateMs) {
+                spawnWord();
+                state.lastSpawnTime = currentTime;
+            }
+
+            const canvasHeight = canvasEl.clientHeight;
+
+            // Lógica de físicas y actualización de posiciones (recorrer hacia atrás)
+            for (let i = state.activeObjects.length - 1; i >= 0; i--) {
+                let obj = state.activeObjects[i];
+                
+                obj.y += obj.speed;
+                // Usamos transform translateY en vez de top para rendimiento en móviles
+                obj.element.style.transform = `translateX(-50%) translateY(${obj.y}px)`;
+
+                // Salida de pantalla (Fondo)
+                if (obj.y > canvasHeight + 20) {
+                    
+                    if (obj.isCorrect) {
+                        // Dejó caer un concepto correcto
+                        loseLife();
+                        // Destello rojo en el borde inferior
+                        canvasEl.style.boxShadow = "inset 0 -15px 25px -15px var(--cp-red)";
+                        setTimeout(() => canvasEl.style.boxShadow = "none", 250);
+                    }
+                    
+                    // Limpieza
+                    if (obj.element.parentNode) canvasEl.removeChild(obj.element);
+                    state.activeObjects.splice(i, 1);
+                }
+            }
+
+            // Continuar bucle
+            state.animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function spawnWord() {
+            if (!state.isGameRunning) return;
+
+            // Verificar condición de victoria
+            if (state.score >= state.maxScore) {
+                endGame();
+                return;
+            }
+
+            // Ratio: ~55% correctas, ~45% distractores
+            let isCorrect = Math.random() < 0.55;
+            let text = "";
+
+            if (isCorrect && state.poolCorrect.length > 0) {
+                text = state.poolCorrect.pop();
+            } else if (!isCorrect && state.poolDistract.length > 0) {
+                text = state.poolDistract.pop();
+            } else if (state.poolCorrect.length > 0) {
+                isCorrect = true;
+                text = state.poolCorrect.pop();
+            } else {
+                return;
+            }
+
+            const bubble = document.createElement('div');
+            bubble.classList.add('word-bubble');
+            bubble.innerText = text;
+
+            // Posición X aleatoria entre 15% y 85%
+            const randomX = Math.floor(Math.random() * 70) + 15;
+            bubble.style.left = randomX + '%';
+            
+            // Iniciar por encima del lienzo, el translateY sumará sobre esta base relativa a position absolute
+            bubble.style.top = '-50px';
+            bubble.style.transform = `translateX(-50%) translateY(0px)`;
+
+            // Evento Unificado (Mouse y Touch)
+            bubble.addEventListener('pointerdown', (e) => handleTap(e, bubble, isCorrect));
+
+            canvasEl.appendChild(bubble);
+            
+            // Variación leve en velocidad
+            const speedVariance = (Math.random() * 0.6) - 0.3;
+
+            state.activeObjects.push({
+                element: bubble,
+                y: 0,
+                speed: state.baseFallSpeed + speedVariance,
+                isCorrect: isCorrect
+            });
+
+            // Incremento de dificultad
+            if (state.score === 6) state.baseFallSpeed += 0.2;
+            if (state.score === 11) state.baseFallSpeed += 0.3;
+        }
+
+        function handleTap(e, element, isCorrect) {
+            e.preventDefault(); 
+
+            if (!state.isGameRunning) return;
+            if (element.classList.contains('exploding') || element.classList.contains('error-shake')) return;
+
+            // Retirar del motor de actualización
+            const index = state.activeObjects.findIndex(obj => obj.element === element);
+            if (index > -1) {
+                state.activeObjects.splice(index, 1);
+            }
+
+            // Reiniciar transform para que la animación CSS tome control limpio de translation/scale
+            const computedStyle = window.getComputedStyle(element);
+            const matrix = new WebKitCSSMatrix(computedStyle.transform);
+            element.style.top = `${element.offsetTop + matrix.m42}px`;
+            element.style.transform = `translateX(-50%)`;
+
+            if (isCorrect) {
+                // ACIERTO
+                state.score++;
+                updateHUD();
+                
+                element.classList.add('exploding');
+                if (navigator.vibrate) navigator.vibrate(30); 
+                
+                setTimeout(() => {
+                    if (element.parentNode) canvasEl.removeChild(element);
+                }, 300);
+
+                if(state.score >= state.maxScore) {
+                    setTimeout(endGame, 400); // Pequeño retraso visual
+                }
+
+            } else {
+                // ERROR
+                loseLife();
+                
+                element.classList.add('error-shake');
+                if (navigator.vibrate) navigator.vibrate([80, 50, 80]); 
+                
+                setTimeout(() => {
+                    if (element.parentNode) canvasEl.removeChild(element);
+                }, 400);
+            }
+        }
+
+        function loseLife() {
+            state.lives--;
+            updateHUD();
+            
+            if (state.lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateHUD() {
+            scoreEl.innerText = `ANILLOS: ${state.score}/${state.maxScore}`;
+            
+            let hearts = "";
+            for(let i=0; i<5; i++) {
+                hearts += (i < state.lives) ? "♥" : "♡";
+            }
+            livesEl.innerText = hearts;
+        }
+
+        function endGame() {
+            if(!state.isGameRunning) return; 
+            
+            state.isGameRunning = false;
+            cancelAnimationFrame(state.animationFrame);
+
+            // Fórmula de Calificación Colombiana (1.0 a 5.0)
+            let grade = 1.0 + (state.score / state.maxScore) * 4.0;
+
+            // Penalización: Si pierde por vidas, máximo 3.5
+            if (state.lives <= 0) {
+                grade = Math.min(grade, 3.5);
+            }
+
+            // Redondeo a 1 decimal
+            grade = Math.max(1.0, Math.min(5.0, grade));
+            finalGradeEl.innerText = grade.toFixed(1);
+
+            // Mensajes según desempeño
+            if (grade >= 4.0) {
+                finalGradeEl.style.color = "var(--cp-green)";
+                finalGradeEl.style.textShadow = "0 0 25px var(--cp-green)";
+                endMessageEl.innerText = "¡ESTABILIDAD ALCANZADA! Tu conocimiento sobre la química aromática es sólido como un anillo de benceno.";
+            } else if (grade >= 3.0) {
+                finalGradeEl.style.color = "#f1c40f"; // Amarillo
+                finalGradeEl.style.textShadow = "0 0 25px #f1c40f";
+                endMessageEl.innerText = "SÍNTESIS PARCIAL. Reconoces algunos compuestos, pero la resonancia te ha confundido. Repasa la teoría.";
+            } else {
+                finalGradeEl.style.color = "var(--cp-red)";
+                finalGradeEl.style.textShadow = "0 0 25px var(--cp-red)";
+                endMessageEl.innerText = "¡RUPTURA DEL ANILLO! La estructura colapsó. Necesitas estudiar urgentemente los conceptos teóricos abajo.";
+            }
+
+            endScreen.style.display = 'flex';
+        }
+
+        // Asignación de Eventos
+        btnStart.addEventListener('click', initGame);
+        btnRestart.addEventListener('click', initGame);
+
+    </script>
+</body>
+</html>

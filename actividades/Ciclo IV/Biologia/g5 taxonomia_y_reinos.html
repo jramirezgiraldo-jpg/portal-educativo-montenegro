@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Taxonomía y Reinos de la Naturaleza</title>
+    
+    <style>
+        :root {
+            /* Theme Colors - Biología (Verde y Tierra) */
+            --primary: #2e7d32;      /* Green 800 */
+            --primary-light: #e8f5e9;/* Green 50 */
+            --secondary: #d84315;    /* Deep Orange 800 */
+            --secondary-light: #fbe9e7;
+            --text-dark: #1c2833;
+            --text-light: #f8f9f9;
+            --bg-color: #f4f6f6;
+            --card-bg: #ffffff;
+            --success: #27ae60;
+            --error: #c0392b;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: clamp(10px, 2vw, 20px);
+        }
+
+        /* HEADER & DASHBOARD UI */
+        header {
+            background: linear-gradient(135deg, var(--primary), #1b5e20);
+            color: var(--text-light);
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.25);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: -20%;
+            right: -5%;
+            width: 150px;
+            height: 150px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1.5'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E");
+            background-size: cover;
+            pointer-events: none;
+            transform: rotate(15deg);
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            gap: 15px;
+            backdrop-filter: blur(4px);
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(1.1rem, 2vw, 1.3rem);
+            font-weight: bold;
+        }
+
+        .stat-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .rating-box {
+            color: #ffd54f;
+            letter-spacing: 2px;
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            text-shadow: 0 0 5px rgba(255, 213, 79, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #zona-juego {
+            background: var(--card-bg);
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            margin-bottom: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .memory-grid {
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: clamp(8px, 2vw, 15px);
+            /* CRÍTICO: Previene scroll/zoom nativo al tocar rápidamente en móviles */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            perspective: 1000px; /* Para el efecto 3D */
+            margin: 0 auto;
+        }
+
+        @media (min-width: 600px) {
+            .memory-grid {
+                grid-template-columns: repeat(5, 1fr); /* 5 columnas x 4 filas = 20 cartas */
+            }
+        }
+
+        .card {
+            aspect-ratio: 1; /* Cartas siempre cuadradas */
+            background-color: transparent;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .card.is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+        }
+
+        /* Frontal de la carta (Oculta) */
+        .card-front {
+            background: linear-gradient(135deg, var(--secondary), #bf360c);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .card-front svg {
+            width: 50%;
+            height: 50%;
+            opacity: 0.8;
+        }
+
+        /* Reverso de la carta (Concepto Descubierto) */
+        .card-back {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            transform: rotateY(180deg);
+            border: 2px solid var(--primary);
+            font-size: clamp(0.7rem, 2.5vw, 1.1rem);
+            font-weight: 800;
+            text-align: center;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: 1.2;
+        }
+
+        /* Estados de Validación */
+        .card.matched .card-back {
+            background-color: var(--success);
+            color: white;
+            border-color: #1e8449;
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
+            animation: pulseMatch 0.5s;
+        }
+
+        .card.mismatched .card-back {
+            background-color: var(--error);
+            color: white;
+            border-color: #922b21;
+            animation: shakeMismatch 0.4s;
+        }
+
+        @keyframes pulseMatch {
+            0% { transform: rotateY(180deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.08); }
+            100% { transform: rotateY(180deg) scale(1); }
+        }
+
+        @keyframes shakeMismatch {
+            0%, 100% { transform: rotateY(180deg) translateX(0); }
+            20%, 60% { transform: rotateY(180deg) translateX(-5px); }
+            40%, 80% { transform: rotateY(180deg) translateX(5px); }
+        }
+
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(28, 40, 51, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: clamp(25px, 5vw, 45px);
+            border-radius: 16px;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-restart {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .btn-restart:hover {
+            background: #1b5e20;
+            transform: translateY(-2px);
+        }
+
+        #zona-lectura {
+            background: var(--card-bg);
+            padding: clamp(25px, 6vw, 50px);
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+        }
+
+        .article-content {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #374151;
+        }
+
+        .article-content h2 {
+            color: var(--primary);
+            font-size: clamp(1.8rem, 4vw, 2.4rem);
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--primary-light);
+            line-height: 1.2;
+        }
+
+        .article-content h3 {
+            color: var(--secondary);
+            font-size: clamp(1.3rem, 3vw, 1.7rem);
+            margin: 35px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .article-content h3::before {
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: var(--secondary-light);
+            border-radius: 4px;
+            border: 4px solid var(--secondary);
+        }
+
+        .article-content p {
+            margin-bottom: 18px;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        .article-content ul {
+            margin: 20px 0 25px 35px;
+            background: var(--bg-color);
+            padding: 20px 20px 20px 40px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .article-content li {
+            margin-bottom: 12px;
+        }
+
+        .highlight-box {
+            background: #fff8e1;
+            border-left: 6px solid #ffb300;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-style: italic;
+            font-weight: 500;
+            color: #8f5000;
+        }
+
+        /* Sección Taller */
+        .workshop-section {
+            margin-top: 60px;
+            background: #fdfefe;
+            padding: clamp(25px, 5vw, 40px);
+            border-radius: 16px;
+            border: 2px solid var(--primary-light);
+            position: relative;
+        }
+
+        .workshop-section h2 {
+            color: var(--primary);
+            border-bottom: none;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+        }
+
+        .workshop-instruction {
+            background: var(--secondary-light);
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 35px;
+            color: var(--secondary);
+            border: 2px dashed #ffab91;
+            font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-list li {
+            margin-bottom: 25px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 0.2s;
+        }
+        
+        .activity-list li:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (min-width: 700px) {
+            .activity-list li {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .activity-type {
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            white-space: nowrap;
+            text-align: center;
+            width: fit-content;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-type.respond { background: #0288d1; }
+        .activity-type.analysis { background: #e53935; }
+        .activity-type.drawing { background: #8e24aa; }
+        .activity-type.map { background: #00897b; }
+
+        .activity-text {
+            font-size: clamp(1.05rem, 2vw, 1.15rem);
+            color: #475569;
+            line-height: 1.6;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Taxonomía y Reinos</h1>
+        <p class="instruction">Toca las cartas para voltearlas y encuentra los 10 pares de conceptos idénticos.</p>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <!-- SVG Reloj -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat-box">
+                <!-- SVG Intentos (Ojo/Mira) -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                <span id="attempts">Intentos: 0</span>
+            </div>
+            <div class="stat-box">
+                <!-- SVG Fallos (X) -->
+                <svg class="stat-icon" viewBox="0 0 24 24" style="color: #ffccbc;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                <span id="fails" style="color: #ffccbc;">Fallos: 0</span>
+            </div>
+            <div class="stat-box rating-box">
+                <span>Nota: </span>
+                <span id="rating">5.0</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="memory-grid" class="memory-grid">
+                <!-- Cards generated by JS -->
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>El Orden en la Diversidad: Taxonomía y Reinos de la Naturaleza</h2>
+                
+                <p>Nuestro planeta es un inmenso lienzo rebosante de vida. Desde las microscópicas bacterias que habitan en fuentes termales hasta las majestuosas ballenas azules que surcan los océanos, la Tierra alberga una <strong>biodiversidad</strong> abrumadora. Ante tal magnitud de formas vivas, la ciencia se ha enfrentado históricamente a un reto monumental: ¿cómo podemos organizar, nombrar y estudiar a todos estos seres sin caer en el caos?</p>
+
+                <p>La respuesta a este desafío es la <strong>taxonomía</strong>. Esta es la rama fundamental de la biología encargada de identificar, nombrar y clasificar a todos los organismos vivos. Funciona como una gigantesca biblioteca universal donde cada especie tiene su lugar específico, permitiendo a los científicos de todo el mundo comunicarse en un mismo "idioma" sin importar su cultura local.</p>
+
+                <h3>La Revolución del Nombre: Nomenclatura Binomial</h3>
+                <p>En el siglo XVIII, el brillante botánico sueco Carlos Linneo revolucionó la biología al establecer la <strong>nomenclatura binomial</strong>. Antes de Linneo, una planta o animal podía tener decenas de nombres populares distintos (por ejemplo, el 'puma' también se llama 'león de montaña', 'pantera' o 'cougar').</p>
+                <p>El sistema binomial asigna a cada especie un nombre científico universal compuesto por dos palabras en latín: el género (con inicial mayúscula) y la especie (en minúsculas). Así, el ser humano es conocido científicamente como <em>Homo sapiens</em> y el perro doméstico como <em>Canis lupus</em>. Este sistema es el pilar de la taxonomía moderna.</p>
+
+                <h3>Criterios Clave: La Célula y la Nutrición</h3>
+                <p>Para agrupar a los seres vivos en diferentes "Reinos", los científicos no solo observan su apariencia externa, sino que analizan profundamente su anatomía celular y su fisiología (cómo funcionan). Existen dos criterios biológicos críticos para esta clasificación:</p>
+                
+                <ol>
+                    <li><strong>Estructura Celular:</strong> Los organismos pueden estar formados por células <strong>procariotas</strong> (primitivas, pequeñas y sin un núcleo que proteja su ADN) o por células <strong>eucariotas</strong> (más grandes, complejas y con un núcleo verdadero).</li>
+                    <li><strong>Nutrición Fisiológica:</strong> Los organismos pueden ser <strong>autótrofos</strong> (capaces de fabricar su propio alimento usando la luz solar o químicos, como las plantas) o <strong>heterótrofos</strong> (necesitan consumir a otros seres vivos para obtener energía, como los animales).</li>
+                </ol>
+
+                <h3>Los Grandes Reinos de la Naturaleza</h3>
+                <p>Basados en estos y otros criterios evolutivos, la biodiversidad se organiza tradicionalmente en grandes Reinos. Los más representativos son:</p>
+
+                <div class="highlight-box">
+                    <strong>Reino Monera (Bacterias y Arqueas):</strong> Son los organismos más antiguos del planeta. Todos son unicelulares y sus células son exclusivamente procariotas. Aunque no los vemos, son fundamentales para la vida, reciclando nutrientes e incluso ayudando en nuestra digestión.
+                </div>
+
+                <ul>
+                    <li><strong>Reino Protista:</strong> Es el reino más diverso y peculiar. Agrupa a todos los organismos que tienen células eucariotas pero que no encajan como plantas, animales o animales. Aquí encontramos a las algas (que hacen fotosíntesis) y a los protozoos (que cazan a otros microbios).</li>
+                    <li><strong>Reino Fungi (Hongos):</strong> Durante años se confundieron con plantas, pero son muy diferentes. Los hongos tienen células eucariotas, pero son estrictamente heterótrofos: no hacen fotosíntesis. Absorben los nutrientes del medio descomponiendo materia muerta. Son los grandes recicladores del bosque.</li>
+                    <li><strong>Reino Plantae (Plantas):</strong> Organismos multicelulares, eucariotas y autótrofos. Gracias a la fotosíntesis, producen el oxígeno que respiramos y son la base alimenticia de casi todos los ecosistemas terrestres.</li>
+                    <li><strong>Reino Animalia (Animales):</strong> Organismos multicelulares, eucariotas y heterótrofos. A diferencia de las plantas y los hongos, los animales no tienen pared celular, lo que les ha permitido desarrollar sistemas musculares y nerviosos para moverse de forma activa en busca de alimento.</li>
+                </ul>
+
+                <p>Comprender la taxonomía y los reinos de la naturaleza no es solo un ejercicio de memorización escolar. Es la herramienta principal que tenemos para proteger la biodiversidad en peligro, descubrir nuevas medicinas en plantas u hongos tropicales, y comprender nuestra propia historia evolutiva en el gran árbol de la vida.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h2>Taller Práctico de Repaso</h2>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Lee atentamente el texto científico superior. Luego, escribe y resuelve las siguientes 10 actividades en tu cuaderno de biología.
+                </div>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>1.</strong> Define con tus propias palabras qué es la "Taxonomía" y explica brevemente por qué es considerada una herramienta vital para la ciencia mundial.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Conceptual</span>
+                        <div class="activity-text"><strong>2.</strong> Elabora un mapa conceptual que conecte los dos grandes tipos de células (Procariota y Eucariota) con los Reinos de la naturaleza a los que pertenecen, según lo explicado en el texto.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>3.</strong> Imagina que eres un científico en 1700 antes de Carlos Linneo. Describe qué graves problemas de comunicación tendrías al intentar hablar sobre una especie de ave sudamericana con un científico en Rusia.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Dibujar</span>
+                        <div class="activity-text"><strong>4.</strong> Realiza un dibujo esquemático dividiendo la página en dos. A la izquierda, dibuja una célula eucariota señalando su núcleo; a la derecha, dibuja una célula procariota señalando la ausencia de núcleo.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>5.</strong> Según los criterios de fisiología nutricional, ¿cuál es la diferencia principal entre un organismo autótrofo y uno heterótrofo? Menciona un Reino como ejemplo para cada uno.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Mental</span>
+                        <div class="activity-text"><strong>6.</strong> Diseña un mapa mental exclusivo sobre el "Reino Fungi". Debe incluir sus características celulares, su forma de nutrición y su importancia ecológica (reciclaje) extraída del texto.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>7.</strong> Si en una expedición descubres un organismo multicelular, que no se mueve y que es heterótrofo (se alimenta descomponiendo madera podrida), ¿a qué reino pertenece? Argumenta por qué NO es una planta.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Ilustrar</span>
+                        <div class="activity-text"><strong>8.</strong> Ilustra en tu cuaderno el concepto de "Nomenclatura Binomial". Dibuja a un ser humano y a un perro doméstico, y escríbeles encima su nombre científico correctamente formateado (Género y especie).</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>9.</strong> ¿Por qué el Reino Protista es considerado por el texto como el "más diverso y peculiar" en comparación con los otros reinos eucariotas?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>10.</strong> Basado en el último párrafo del texto, redacta un párrafo crítico analizando cómo la taxonomía podría ayudar a salvar de la extinción a especies de anfibios en la selva amazónica.</div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="win-modal">
+    <div class="modal-content">
+        <!-- SVG Trofeo / Corona -->
+        <svg style="width: 90px; height: 90px; margin: 0 auto 15px auto; display: block; fill: #f39c12;" viewBox="0 0 24 24">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+        </svg>
+        <h2 style="color: var(--primary); font-size: 2.2rem; margin-bottom: 15px;">¡Clasificación Exitosa!</h2>
+        <p style="font-size: 1.25rem; margin-bottom: 25px; color: #555;">Has emparejado todos los conceptos taxonómicos.</p>
+        <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="font-size: 1.15rem; margin-bottom: 8px;"><strong>Tiempo:</strong> <span id="final-time" style="color: var(--secondary); font-weight: 800;"></span></p>
+            <p style="font-size: 1.15rem; margin-bottom: 8px;"><strong>Intentos Fallidos:</strong> <span id="final-fails" style="color: var(--error); font-weight: 800;"></span></p>
+            <p style="font-size: 1.3rem;"><strong>Nota Final:</strong> <span id="final-rating" style="color: #f39c12; font-weight: 800;"></span></p>
+        </div>
+        <button class="btn-restart" onclick="initGame()">Reiniciar Laboratorio</button>
+    </div>
+</div>
+
+<script>
+    /* 10 Conceptos Clave (Exactamente 10 parejas = 20 cartas) */
+    const CONCEPTS = [
+        "TAXONOMÍA", 
+        "BIODIVERSIDAD", 
+        "PROCARIOTA", 
+        "EUCARIOTA", 
+        "AUTÓTROFO", 
+        "HETERÓTROFO", 
+        "REINO FUNGI", 
+        "REINO PLANTAE", 
+        "REINO ANIMALIA", 
+        "NOMENCLATURA BINOMIAL"
+    ];
+
+    // Variables de Estado del Juego
+    let deck = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let attempts = 0;
+    let fails = 0;
+    let lockBoard = false;
+    
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let currentRating = 5.0;
+
+    // Elementos del DOM
+    const gridEl = document.getElementById('memory-grid');
+    const timerEl = document.getElementById('timer');
+    const attemptsEl = document.getElementById('attempts');
+    const failsEl = document.getElementById('fails');
+    const ratingEl = document.getElementById('rating');
+    const modalEl = document.getElementById('win-modal');
+
+    // SVG genérico para el frente (oculto) de la carta
+    const cardFrontSVG = `
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.07 12.85c.77-1.39 2.25-2.21 3.11-3.44.91-1.29.4-3.7-2.18-3.7-1.69 0-2.52 1.28-2.87 2.34L6.54 6.96C7.25 4.83 9.18 3 12 3c4.6 0 7.24 2.9 7.24 5.97 0 2.1-.91 3.66-2.56 5.55-1.13 1.3-1.74 2.2-1.74 3.48h-3.87c0-2.62 0-3.69-.01-5.15zM9 21c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+        </svg>
+    `;
+
+    /* Boot Sequence */
+    function initGame() {
+        // Reset Variables
+        flippedCards = [];
+        matchedPairs = 0;
+        attempts = 0;
+        fails = 0;
+        lockBoard = false;
+        secondsElapsed = 0;
+        currentRating = 5.0;
+        
+        updateStatsUI();
+        modalEl.style.display = "none";
+        
+        if (timerInterval) clearInterval(timerInterval);
+        startTimer();
+
+        // Crear Mazo (2 de cada concepto)
+        deck = [...CONCEPTS, ...CONCEPTS];
+        shuffleArray(deck);
+        renderBoard();
+    }
+
+    /* Mezcla de Fisher-Yates */
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    /* Renderizar cartas en el grid DOM */
+    function renderBoard() {
+        gridEl.innerHTML = ''; // Clear board
+        
+        deck.forEach((concept, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.concept = concept;
+            card.dataset.index = index;
+
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">${cardFrontSVG}</div>
+                    <div class="card-back">${concept}</div>
+                </div>
+            `;
+
+            // Evento Click/Touch manejado nativamente por el navegador
+            card.addEventListener('click', flipCard);
+            gridEl.appendChild(card);
+        });
+    }
+
+    /* Lógica Principal de Volteo */
+    function flipCard() {
+        if (lockBoard) return;
+        // Evitar click doble en la misma carta o en cartas ya emparejadas
+        if (this.classList.contains('is-flipped') || this.classList.contains('matched')) return;
+
+        this.classList.add('is-flipped');
+        flippedCards.push(this);
+
+        if (flippedCards.length === 2) {
+            attempts++;
+            checkForMatch();
+        }
+    }
+
+    /* Lógica de Validación de Parejas */
+    function checkForMatch() {
+        lockBoard = true;
+        
+        const card1 = flippedCards[0];
+        const card2 = flippedCards[1];
+        
+        const isMatch = card1.dataset.concept === card2.dataset.concept;
+
+        if (isMatch) {
+            disableCards(card1, card2);
+        } else {
+            fails++;
+            unflipCards(card1, card2);
+        }
+        
+        calculateRating();
+        updateStatsUI();
+    }
+
+    /* Acierto */
+    function disableCards(card1, card2) {
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        
+        matchedPairs++;
+        flippedCards = [];
+        lockBoard = false;
+        
+        if (matchedPairs === CONCEPTS.length) {
+            gameOver();
+        }
+    }
+
+    /* Fallo */
+    function unflipCards(card1, card2) {
+        card1.classList.add('mismatched');
+        card2.classList.add('mismatched');
+
+        // Delay de 1.2 segundos requerido por instrucción
+        setTimeout(() => {
+            card1.classList.remove('is-flipped', 'mismatched');
+            card2.classList.remove('is-flipped', 'mismatched');
+            flippedCards = [];
+            lockBoard = false;
+        }, 1200);
+    }
+
+    /* Sistema de Calificación Dinámica (Min 1.0, Max 5.0) */
+    function calculateRating() {
+        // Fórmula pedagógica: penaliza fallos y tiempo prolongado
+        let penalty = (fails * 0.15) + (Math.floor(secondsElapsed / 30) * 0.1);
+        currentRating = 5.0 - penalty;
+        
+        if (currentRating < 1.0) currentRating = 1.0;
+        ratingEl.textContent = currentRating.toFixed(1);
+    }
+
+    /* Manejo del Cronómetro y UI */
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+            
+            // Recalcular nota cada segundo por si el usuario se demora mucho
+            calculateRating();
+        }, 1000);
+    }
+
+    function updateStatsUI() {
+        attemptsEl.textContent = `Intentos: ${attempts}`;
+        failsEl.textContent = `Fallos: ${fails}`;
+    }
+
+    /* Secuencia de Fin de Juego */
+    function gameOver() {
+        clearInterval(timerInterval);
+        
+        // Populate modal data
+        document.getElementById('final-time').textContent = timerEl.textContent;
+        document.getElementById('final-fails').textContent = fails.toString();
+        document.getElementById('final-rating').textContent = currentRating.toFixed(1);
+        
+        // Show modal with slight delay for last animation to finish
+        setTimeout(() => {
+            modalEl.style.display = "flex";
+        }, 600);
+    }
+
+    // Arrancar la aplicación al cargar el DOM
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>

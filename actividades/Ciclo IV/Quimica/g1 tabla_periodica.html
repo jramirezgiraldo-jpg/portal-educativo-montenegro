@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Tabla Periódica y Propiedades</title>
+    <style>
+        :root {
+            /* Theme Colors - Chemistry (Teal & Amber) */
+            --primary: #00838f;      /* Cyan 800 */
+            --primary-light: #e0f7fa;/* Cyan 50 */
+            --primary-dark: #006064; /* Cyan 900 */
+            --secondary: #ff8f00;    /* Amber 800 */
+            --secondary-light: #fff8e1;
+            --text-dark: #263238;
+            --text-light: #ffffff;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --success: #2e7d32;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: clamp(10px, 2vw, 20px);
+        }
+
+        /* HEADER UI */
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: var(--text-light);
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 15px rgba(0, 96, 100, 0.25);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative Periodic Table Grid Background */
+        header::before {
+            content: "";
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1.5'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");
+            background-size: cover;
+            pointer-events: none;
+            transform: rotate(10deg);
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.25);
+            padding: 12px;
+            border-radius: 8px;
+            gap: 15px;
+            backdrop-filter: blur(4px);
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(1.1rem, 2vw, 1.3rem);
+            font-weight: bold;
+        }
+
+        .stat-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .stars {
+            color: #ffd54f;
+            letter-spacing: 2px;
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            text-shadow: 0 0 5px rgba(255, 213, 79, 0.4);
+        }
+
+        #zona-juego {
+            background: var(--card-bg);
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            margin-bottom: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .words-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 12px);
+            margin-bottom: 25px;
+        }
+
+        .word-item {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: 700;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .word-item.found {
+            background: var(--success);
+            color: white;
+            border-color: #1e8449;
+            text-decoration: line-through;
+            opacity: 0.9;
+            transform: scale(0.95);
+        }
+
+        .grid-wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: clamp(1px, 0.5vw, 3px);
+            /* CRÍTICO PARA DISPOSITIVOS TÁCTILES: Previene scroll/zoom al arrastrar */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            background: #b2ebf2; /* Grid gap color */
+            border: 5px solid var(--primary);
+            border-radius: 10px;
+            padding: clamp(3px, 1vw, 6px);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            background: #fff;
+            aspect-ratio: 1; /* Celdas perfectamente cuadradas */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(12px, 3.5vw, 22px);
+            font-weight: 800;
+            color: var(--primary-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s, transform 0.1s;
+        }
+
+        /* Estados de la Celda */
+        .cell.selecting {
+            background: var(--secondary);
+            color: white;
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(255, 143, 0, 0.4);
+        }
+
+        .cell.found {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Ventana Modal */
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(38, 50, 56, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: clamp(25px, 5vw, 45px);
+            border-radius: 16px;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .btn-restart {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-weight: bold;
+            width: 100%;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(255, 143, 0, 0.3);
+        }
+
+        .btn-restart:hover {
+            background: #e65100;
+            transform: translateY(-2px);
+        }
+
+        /* Sección Teórica */
+        #zona-lectura {
+            background: var(--card-bg);
+            padding: clamp(25px, 6vw, 50px);
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        }
+
+        .article-content {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #374151;
+        }
+
+        .article-content h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 4px solid var(--primary-light);
+            line-height: 1.2;
+        }
+
+        .article-content h3 {
+            color: var(--primary);
+            font-size: clamp(1.3rem, 3vw, 1.7rem);
+            margin: 35px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Icono decorativo de viñeta para H3 */
+        .article-content h3::before {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300838f'%3E%3Cpolygon points='12 2 22 8 22 16 12 22 2 16 2 8'/%3E%3C/svg%3E");
+            background-size: cover;
+        }
+
+        .article-content p {
+            margin-bottom: 18px;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        .article-content ul {
+            margin: 20px 0 25px 35px;
+            background: var(--bg-color);
+            padding: 20px 20px 20px 40px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .article-content li {
+            margin-bottom: 12px;
+        }
+
+        .highlight-box {
+            background: var(--secondary-light);
+            border-left: 6px solid var(--secondary);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-style: italic;
+            font-weight: 500;
+            color: #8f5000;
+        }
+
+        /* Sección del Taller */
+        .workshop-section {
+            margin-top: 60px;
+            background: #fafafa;
+            padding: clamp(25px, 5vw, 40px);
+            border-radius: 16px;
+            border: 2px solid var(--primary-light);
+        }
+
+        .workshop-section h2 {
+            color: var(--primary-dark);
+            border-bottom: none;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+        }
+
+        .workshop-instruction {
+            background: #e0f2f1;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 35px;
+            color: #00695c;
+            border: 2px dashed #4db6ac;
+            font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-list li {
+            margin-bottom: 25px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border-left: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+        
+        .activity-list li:hover {
+            transform: translateY(-3px);
+            border-left-color: var(--secondary);
+        }
+
+        @media (min-width: 700px) {
+            .activity-list li {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .activity-type {
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            white-space: nowrap;
+            text-align: center;
+            width: fit-content;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Colores por formato de actividad */
+        .activity-type.respond { background: #0288d1; } /* Blue */
+        .activity-type.analysis { background: #d32f2f; } /* Red */
+        .activity-type.drawing { background: #7b1fa2; } /* Purple */
+        .activity-type.map { background: #00897b; }     /* Teal */
+
+        .activity-text {
+            font-size: clamp(1.05rem, 2vw, 1.15rem);
+            color: #475569;
+            line-height: 1.6;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Tabla Periódica</h1>
+        <p class="instruction">Encuentra las 10 palabras sobre las propiedades periódicas deslizando tu dedo o ratón.</p>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <!-- SVG Reloj -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat-box">
+                <!-- SVG Contador -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                <span id="counter">0 / 10</span>
+            </div>
+            <div class="stat-box">
+                <span id="rating" class="stars">★★★★★</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="words-list" class="words-container">
+                <!-- Palabras inyectadas dinámicamente -->
+            </div>
+            
+            <div class="grid-wrapper">
+                <div id="grid" class="letter-grid">
+                    <!-- Cuadrícula inyectada dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>El Mapa del Universo: La Tabla Periódica y sus Propiedades</h2>
+                
+                <p>Todo lo que puedes ver, tocar y respirar, desde la pantalla de tu celular hasta las estrellas en el cielo nocturno, está compuesto por una combinación de elementos químicos fundamentales. Para organizar este inmenso catálogo de "ladrillos del universo", la ciencia desarrolló la <strong>Tabla Periódica</strong>. Su diseño no es casualidad; es un mapa increíblemente preciso creado inicialmente por Dimitri Mendeleev, quien descubrió que al ordenar los elementos según su peso atómico, sus propiedades químicas se repetían de forma... periódica.</p>
+
+                <h3>Estructura: Períodos, Grupos y Familias</h3>
+                <p>La tabla periódica moderna organiza a los <strong>elementos</strong> de acuerdo a su número atómico (la cantidad de protones en su núcleo). Esta organización forma una cuadrícula con filas horizontales y columnas verticales:</p>
+                
+                <ul>
+                    <li><strong>Períodos:</strong> Son las 7 filas horizontales. Un período indica el número de niveles de energía que tienen los electrones de esos átomos. A medida que bajas de período, el átomo es más grande.</li>
+                    <li><strong>Grupos o Familias:</strong> Son las 18 columnas verticales. Los elementos de un mismo grupo tienen algo extraordinario en común: poseen la misma cantidad de electrones de <strong>valencia</strong> (los electrones en su última capa). Por esto, los elementos de un mismo grupo comparten propiedades químicas muy similares y reaccionan de manera casi idéntica.</li>
+                </ul>
+
+                <h3>Metales, No Metales y Metaloides</h3>
+                <p>Si miras la tabla como un paisaje, verás una división clara. A la izquierda y en el centro, habitan los <strong>metales</strong> (buenos conductores de calor y electricidad, brillantes y maleables). A la extrema derecha, se esconden los no metales (opacos, malos conductores). Entre ellos, como una frontera en escalera, están los metaloides, que comparten características de ambos mundos.</p>
+
+                <h3>Propiedades Periódicas Clave</h3>
+                <p>La magia de este mapa es su poder predictivo. Al movernos por los grupos y períodos, ciertas propiedades cambian siguiendo patrones matemáticos exactos:</p>
+
+                <div class="highlight-box">
+                    <strong>1. Radio Atómico:</strong> Es literalmente el tamaño del átomo. Aumenta a medida que bajamos en un grupo (porque se añaden niveles de energía) y disminuye a medida que nos movemos hacia la derecha en un período (porque más protones en el núcleo atraen más fuertemente a los electrones hacia el centro).
+                </div>
+
+                <p><strong>2. Energía de Ionización:</strong> Es la cantidad de energía necesaria para "arrancarle" un electrón a un átomo. Los no metales a la derecha de la tabla "agarran" sus electrones con mucha fuerza, por lo que tienen una alta energía de ionización. Los metales a la izquierda los sueltan fácilmente.</p>
+
+                <p><strong>3. Electronegatividad:</strong> Es la capacidad de un átomo para atraer hacia sí los electrones cuando forma un enlace químico con otro átomo. Aumenta de abajo hacia arriba y de izquierda a derecha. El Flúor, situado arriba a la derecha, es el campeón absoluto: el elemento más electronegativo del universo.</p>
+
+                <h3>La Reactividad Química en la Naturaleza</h3>
+                <p>Estas propiedades dictan cómo interactúan las sustancias. La <strong>reactividad</strong> nos dice qué tan fácil un elemento forma compuestos. Por ejemplo, los metales alcalinos (Grupo 1) son tan reactivos que explotan al tocar el agua, pues están desesperados por perder su único electrón de valencia. En contraste, los Gases Nobles (Grupo 18) tienen su última capa completa; son los "reyes solitarios" de la tabla, pues son inertes y casi no reaccionan con nadie.</p>
+                
+                <p>Entender la tabla periódica es entender el lenguaje secreto de la naturaleza, permitiéndonos predecir el comportamiento de materiales que aún no hemos descubierto.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h2>Taller de Análisis Químico</h2>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Lee atentamente el texto científico superior. Luego, escribe y resuelve las siguientes 10 actividades en tu cuaderno de química.
+                </div>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>1.</strong> ¿Qué son los "períodos" y los "grupos" en la tabla periódica y qué información estructural nos revelan sobre los átomos?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Dibujar</span>
+                        <div class="activity-text"><strong>2.</strong> Dibuja un esquema general o silueta de la tabla periódica. Usa colores diferentes para señalar aproximadamente en qué zonas habitan los metales, los no metales y los metaloides.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>3.</strong> Si un elemento se encuentra en el Grupo 1 (metales alcalinos) y otro en el Grupo 18 (gases nobles), ¿cuál de los dos será altamente reactivo en la naturaleza y cuál inerte? Justifica tu respuesta según la lectura.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Conceptual</span>
+                        <div class="activity-text"><strong>4.</strong> Elabora un mapa conceptual sobre la "Estructura de la Tabla Periódica". Divídelo en las categorías principales: Grupos (o Familias) y Períodos, detallando qué representa cada uno.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>5.</strong> Explica con tus propias palabras qué significa la "electronegatividad" y hacia qué dirección aumenta cuando te mueves por la tabla periódica.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Ilustrar</span>
+                        <div class="activity-text"><strong>6.</strong> Ilustra de manera creativa a dos átomos interactuando: uno que representa una alta energía de <strong>ionización</strong> (que no quiere soltar su electrón) y otro con baja energía de ionización. Añade una breve descripción.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>7.</strong> Según el texto, el Flúor es el elemento más electronegativo. Si el Flúor se encuentra con un átomo de Sodio (un metal a la izquierda de la tabla), ¿quién "tirará" más fuerte de los electrones y por qué?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Mental</span>
+                        <div class="activity-text"><strong>8.</strong> Diseña un mapa mental exclusivo sobre las "Propiedades Periódicas", donde las ramas principales sean el Radio Atómico, la Energía de Ionización y la Electronegatividad.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>9.</strong> ¿Por qué los elementos que pertenecen al mismo grupo o <strong>familia</strong> comparten propiedades químicas muy similares? Menciona a los electrones responsables de este fenómeno.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>10.</strong> Piensa como científico: La lectura menciona el "poder predictivo" de la tabla de Mendeleev. Sabiendo que Mendeleev dejó espacios vacíos en su primer mapa, argumenta por qué esta decisión demostró el inmenso valor de las propiedades periódicas.</div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Ventana Modal de Fin de Juego -->
+<div id="win-modal">
+    <div class="modal-content">
+        <!-- SVG Erlenmeyer Flask / Chemistry -->
+        <svg style="width: 90px; height: 90px; margin: 0 auto 15px auto; display: block; fill: var(--secondary);" viewBox="0 0 24 24">
+            <path d="M21 2H3v2h2v4l7 9v3h-3v2h6v-2h-3v-3l7-9V4h2V2zm-5.7 6l-3.3 4.2V14l-3-3.8V4h6.3v4z"/>
+        </svg>
+        <h2 style="color: var(--primary-dark); font-size: 2.2rem; margin-bottom: 15px;">¡Análisis Completado!</h2>
+        <p style="font-size: 1.25rem; margin-bottom: 25px; color: #555;">Has identificado todos los patrones atómicos.</p>
+        <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="font-size: 1.15rem; margin-bottom: 8px;"><strong>Tiempo de Reacción:</strong> <span id="final-time" style="color: var(--secondary); font-weight: 800;"></span></p>
+            <p style="font-size: 1.15rem;"><strong>Desempeño Analítico:</strong> <span id="final-stars" class="stars"></span></p>
+        </div>
+        <button class="btn-restart" onclick="initGame()">Iniciar Nuevo Experimento</button>
+    </div>
+</div>
+
+<script>
+    /* Configuración: Exactamente 10 palabras sobre Tabla Periódica normalizadas */
+    const RAW_WORDS = [
+        "PERIODICA", 
+        "GRUPOS", 
+        "PERIODOS", 
+        "METALES", 
+        "REACTIVIDAD", 
+        "IONIZACION", 
+        "ATOMICO", 
+        "VALENCIA", 
+        "FAMILIAS", 
+        "ELEMENTOS"
+    ];
+    
+    const GRID_SIZE = 15; // Cuadrícula de 15x15 requerida
+    const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+    
+    // Variables de Estado del Juego
+    let wordsToFind = [];
+    let foundWords = [];
+    let grid = [];
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    
+    // Control de Interacción Táctil y Ratón
+    let isDragging = false;
+    let startRow = -1;
+    let startCol = -1;
+    let currentPath = []; // Elementos DOM actualmente seleccionados
+
+    // Normalización de seguridad
+    function normalizeWords(words) {
+        return words.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    }
+
+    // Inicialización del Motor del Juego
+    function initGame() {
+        wordsToFind = normalizeWords(RAW_WORDS);
+        foundWords = [];
+        secondsElapsed = 0;
+        
+        if(timerInterval) clearInterval(timerInterval);
+        
+        document.getElementById("win-modal").style.display = "none";
+        document.getElementById("timer").textContent = "00:00";
+        document.getElementById("counter").textContent = `0 / ${wordsToFind.length}`;
+        updateRating();
+
+        renderWordsList();
+        generateBoard();
+        
+        // Arrancar Cronómetro
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById("timer").textContent = `${m}:${s}`;
+            updateRating();
+        }, 1000);
+    }
+
+    /* REQUISITO CRÍTICO: Ciclo exhaustivo para garantizar posición de TODAS las 10 palabras */
+    function generateBoard() {
+        let boardPlaced = false;
+        
+        while (!boardPlaced) {
+            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
+            boardPlaced = true;
+
+            // Ordenar por longitud descendente aumenta radicalmente la probabilidad de empacar
+            const sortedWords = [...wordsToFind].sort((a, b) => b.length - a.length);
+
+            for (const word of sortedWords) {
+                let placed = false;
+                let attempts = 0;
+                const maxAttempts = 600; // Límite de búsqueda profunda
+
+                while (!placed && attempts < maxAttempts) {
+                    // Direcciones: 0: N, 1: NE, 2: E, 3: SE, 4: S, 5: SW, 6: W, 7: NW
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * GRID_SIZE);
+                    const col = Math.floor(Math.random() * GRID_SIZE);
+
+                    if (canPlaceWord(word, row, col, direction)) {
+                        placeWord(word, row, col, direction);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+
+                if (!placed) {
+                    // El algoritmo falló en posicionar una palabra.
+                    // Rompe el bucle for y el while reiniciará la matriz desde cero.
+                    boardPlaced = false;
+                    break; 
+                }
+            }
+        }
+
+        // Rellenar vacíos con letras aleatorias
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+                }
+            }
+        }
+
+        renderGrid();
+    }
+
+    function canPlaceWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            const nr = r + i * dr[dir];
+            const nc = c + i * dc[dir];
+
+            // Revisar Límites del tablero
+            if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+            // Choques de colisión: debe estar vacía o compartir la misma letra exacta
+            if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+        }
+        return true;
+    }
+
+    function placeWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            grid[r + i * dr[dir]][c + i * dc[dir]] = word[i];
+        }
+    }
+
+    function renderWordsList() {
+        const container = document.getElementById("words-list");
+        container.innerHTML = "";
+        wordsToFind.forEach(word => {
+            const div = document.createElement("div");
+            div.className = "word-item";
+            div.id = `word-${word}`;
+            div.textContent = word;
+            container.appendChild(div);
+        });
+    }
+
+    function renderGrid() {
+        const container = document.getElementById("grid");
+        container.innerHTML = "";
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.textContent = grid[r][c];
+                container.appendChild(cell);
+            }
+        }
+        
+        setupPointerInteractions();
+    }
+
+    function updateRating() {
+        let stars = 5;
+        if (secondsElapsed > 300) stars = 1;      // > 5 mins
+        else if (secondsElapsed > 240) stars = 2; // > 4 mins
+        else if (secondsElapsed > 180) stars = 3; // > 3 mins
+        else if (secondsElapsed > 120) stars = 4; // > 2 mins
+
+        const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+        document.getElementById("rating").textContent = starStr;
+    }
+
+    /* Sistema de Interacción Unificado (Ratón y Pantallas Táctiles) */
+    function setupPointerInteractions() {
+        const gridEl = document.getElementById("grid");
+        
+        // CRÍTICO PARA MÓVILES: Evita el scroll nativo de la pantalla cuando se desliza sobre el juego
+        gridEl.addEventListener('touchstart', (e) => {
+            if(e.target.classList.contains('cell')) {
+                e.preventDefault(); 
+            }
+        }, { passive: false });
+
+        gridEl.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("pointermove", handlePointerMove); 
+        document.addEventListener("pointerup", handlePointerUp);
+    }
+
+    function handlePointerDown(e) {
+        if (e.target.classList.contains('cell')) {
+            isDragging = true;
+            startRow = parseInt(e.target.dataset.row);
+            startCol = parseInt(e.target.dataset.col);
+            
+            clearSelection();
+            e.target.classList.add('selecting');
+            currentPath = [e.target];
+        }
+    }
+
+    function handlePointerMove(e) {
+        if (!isDragging) return;
+        
+        // elementFromPoint determina sobre qué celda real está pasando el puntero/dedo en tiempo real
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        
+        if (target && target.classList.contains('cell')) {
+            const currentRow = parseInt(target.dataset.row);
+            const currentCol = parseInt(target.dataset.col);
+            
+            updateSelectionLine(startRow, startCol, currentRow, currentCol);
+        }
+    }
+
+    function handlePointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        validateFoundWord();
+        clearSelection();
+    }
+
+    // Calcula y valida el trazo matemático de la línea recta seleccionada
+    function updateSelectionLine(r1, c1, r2, c2) {
+        const dr = r2 - r1;
+        const dc = c2 - c1;
+        
+        // Restricción Geométrica: Solo permite Horizontal, Vertical, o Diagonal a 45 grados
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+            return; // No es una línea recta permitida
+        }
+
+        clearSelection();
+        currentPath = [];
+
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+        for (let i = 0; i <= steps; i++) {
+            const currR = r1 + i * stepR;
+            const currC = c1 + i * stepC;
+            const cell = document.querySelector(`.cell[data-row="${currR}"][data-col="${currC}"]`);
+            if (cell) {
+                cell.classList.add('selecting');
+                currentPath.push(cell);
+            }
+        }
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.selecting').forEach(el => el.classList.remove('selecting'));
+    }
+
+    function validateFoundWord() {
+        if (currentPath.length < 2) return;
+
+        let selectedWord = currentPath.map(cell => cell.textContent).join('');
+        let selectedWordReverse = currentPath.map(cell => cell.textContent).reverse().join('');
+        
+        let found = false;
+        let wordMatched = "";
+
+        // Chequea si hace match al derecho o al revés
+        if (wordsToFind.includes(selectedWord) && !foundWords.includes(selectedWord)) {
+            found = true;
+            wordMatched = selectedWord;
+        } else if (wordsToFind.includes(selectedWordReverse) && !foundWords.includes(selectedWordReverse)) {
+            found = true;
+            wordMatched = selectedWordReverse;
+        }
+
+        if (found) {
+            foundWords.push(wordMatched);
+            
+            // Animación visual al encontrar la palabra
+            currentPath.forEach(cell => {
+                cell.classList.add('found');
+                cell.style.transform = 'scale(1.15)';
+                setTimeout(() => cell.style.transform = 'scale(1)', 150);
+            });
+
+            // Actualiza interfaz (Lista y Contador)
+            document.getElementById(`word-${wordMatched}`).classList.add('found');
+            document.getElementById("counter").textContent = `${foundWords.length} / ${wordsToFind.length}`;
+
+            // Validar si el juego terminó
+            if (foundWords.length === wordsToFind.length) {
+                clearInterval(timerInterval);
+                setTimeout(showWinModal, 600); // Delay suave antes del modal
+            }
+        }
+    }
+
+    function showWinModal() {
+        document.getElementById("final-time").textContent = document.getElementById("timer").textContent;
+        document.getElementById("final-stars").textContent = document.getElementById("rating").textContent;
+        document.getElementById("win-modal").style.display = "flex";
+    }
+
+    // Arranque
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Pirámides Ecológicas</title>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --primary-dark: #1b5e20;
+            --secondary-color: #fbc02d;
+            --secondary-dark: #f9a825;
+            --bg-color: #f1f8e9;
+            --text-main: #333333;
+            --text-light: #ffffff;
+            --correct-color: #4caf50;
+            --incorrect-color: #f44336;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        header p {
+            margin: 0.5rem 0 0 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            opacity: 0.9;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding: clamp(1rem, 4vw, 2rem);
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* --- FASE 2: ZONA DE JUEGO --- */
+        #zona-juego {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            touch-action: none;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            color: var(--primary-dark);
+            border: 2px solid #c5e1a5;
+        }
+
+        .jeopardy-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.25rem, 1.5vw, 1rem);
+        }
+
+        .grid-header {
+            background-color: var(--secondary-color);
+            color: var(--primary-dark);
+            font-weight: 800;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.25rem;
+            border-radius: 8px;
+            font-size: clamp(0.7rem, 2.5vw, 1.1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+        }
+
+        .grid-btn {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(1.2rem, 5vw, 2rem);
+            font-weight: bold;
+            padding: clamp(1rem, 4vw, 2rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .grid-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .grid-btn:disabled {
+            background-color: #e0e0e0;
+            color: #9e9e9e;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        /* Modales */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--secondary-dark);
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-question {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: #eeeeee;
+            border-color: #bdbdbd;
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: white;
+            border-color: var(--incorrect-color);
+        }
+
+        .feedback {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .btn-continue {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-continue:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .grade-display {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+        }
+
+        /* --- FASE 3: ZONA DE LECTURA Y TALLER --- */
+        #zona-lectura {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .article-content h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .article-content h2:first-child {
+            margin-top: 0;
+        }
+
+        .article-content h3 {
+            color: var(--primary-color);
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            margin-top: 2rem;
+        }
+
+        .article-content p, .article-content li {
+            font-size: clamp(1rem, 3.5vw, 1.15rem);
+            color: #424242;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .article-content ul {
+            padding-left: 1.5rem;
+        }
+
+        /* Taller de Repaso */
+        .taller-container {
+            margin-top: 4rem;
+            background-color: #fffde7;
+            border: 2px dashed var(--secondary-dark);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .taller-container h2 {
+            margin-top: 0;
+            color: var(--secondary-dark);
+            border-bottom-color: var(--secondary-dark);
+            text-align: center;
+        }
+
+        .taller-instruction {
+            background-color: var(--secondary-color);
+            color: var(--text-main);
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .taller-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .taller-list li {
+            background-color: #ffffff;
+            border-left: 6px solid var(--primary-color);
+            padding: 1.2rem;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .activity-type {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .activity-text {
+            font-size: clamp(1rem, 3.5vw, 1.15rem);
+            color: var(--text-main);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Pirámides Ecológicas</h1>
+        <p>Toca una casilla, lee la pista y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <!-- ZONA DE JUEGO -->
+        <section id="zona-juego">
+            <div class="game-stats">
+                <div>Puntos: <span id="score">0</span></div>
+                <div>Progreso: <span id="progress">0</span>/12</div>
+            </div>
+            <div class="jeopardy-grid" id="grid-container">
+                <!-- El tablero se genera mediante JavaScript -->
+            </div>
+        </section>
+
+        <!-- ZONA DE LECTURA (SIEMPRE VISIBLE) -->
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>El Flujo de la Vida en la Región Cafetera</h2>
+                
+                <p>Nuestra región cafetera no es únicamente un vasto terreno agrícola destinado a la producción económica. En realidad, es un <strong>ecosistema dinámico y complejo</strong> donde coexisten miles de especies de plantas, animales, hongos y microorganismos. Como en cualquier otro ecosistema del planeta, la supervivencia de estas especies depende de una regla fundamental: la necesidad constante de energía. Pero, ¿de dónde proviene esta energía y cómo viaja a través de los diferentes seres vivos que habitan nuestros cafetales y bosques andinos?</p>
+
+                <p>Para comprender esta dinámica, los ecólogos utilizan herramientas conceptuales como los <strong>niveles tróficos</strong>, las <strong>cadenas y redes alimenticias</strong>, y las <strong>pirámides ecológicas</strong>. Estos conceptos nos permiten trazar la ruta de la energía alimentaria y entender el papel vital que juega cada organismo, desde la planta de café hasta el depredador más sigiloso del bosque.</p>
+
+                <h2>Los Niveles Tróficos: ¿Quién come a quién?</h2>
+                <p>Un nivel trófico es, esencialmente, el escalón o posición que ocupa un ser vivo dentro de la cadena alimentaria, determinado por la forma en que obtiene su energía. Estos se dividen en tres grandes categorías:</p>
+
+                <h3>1. Los Productores (Autótrofos)</h3>
+                <p>Son la base absoluta de la vida en la Tierra. Se denominan "productores" porque tienen la asombrosa capacidad de fabricar su propio alimento. Utilizando la energía lumínica del <strong>Sol</strong>, extraen agua y nutrientes del suelo, y capturan dióxido de carbono del aire para realizar la <strong>fotosíntesis</strong>. En el Eje Cafetero, los productores más representativos son los arbustos de café (el cafeto), el plátano, la yuca y los inmensos árboles de guamo o nogal cafetero que proporcionan sombra y refugio.</p>
+
+                <h3>2. Los Consumidores (Heterótrofos)</h3>
+                <p>Son todos aquellos animales que no pueden realizar fotosíntesis y, por ende, deben alimentarse de otros seres vivos para sobrevivir. Según su dieta, se subdividen en:</p>
+                <ul>
+                    <li><strong>Consumidores Primarios (Herbívoros):</strong> Se alimentan directamente de las plantas productoras. Un ejemplo crítico en nuestra región es la <em>broca del café</em>, un pequeño escarabajo que perfora y consume el grano. Otros ejemplos incluyen las orugas, los loros, las ardillas y las abejas.</li>
+                    <li><strong>Consumidores Secundarios (Carnívoros de primer orden):</strong> Son animales que cazan y comen herbívoros. En los cafetales es común observar al hermoso <em>barranquero</em> (o soledad), un ave insectívora que ayuda a controlar naturalmente plagas como la broca. Las ranas y pequeñas serpientes también ocupan este nivel.</li>
+                    <li><strong>Consumidores Terciarios (Grandes depredadores):</strong> Se ubican en la cima de la cadena. Cazan tanto a consumidores primarios como secundarios. En los relictos de bosque nativo que rodean las fincas, aún habitan majestuosos depredadores como el <em>tigrillo</em>, el puma o las grandes águilas rapaces.</li>
+                </ul>
+
+                <h3>3. Los Descomponedores</h3>
+                <p>A menudo ignorados, pero absolutamente indispensables. Son los recicladores de la naturaleza: hongos, lombrices y bacterias microscópicas que habitan en el suelo. Cuando las hojas caen o los animales mueren, los descomponedores degradan esta materia orgánica muerta y la transforman de nuevo en minerales y nutrientes inorgánicos. Sin ellos, el suelo del cafetal perdería rápidamente su fertilidad y el ciclo de la vida se detendría por completo.</p>
+
+                <h2>Cadenas y Redes Alimenticias</h2>
+                <p>Una <strong>cadena alimenticia</strong> es una representación lineal y simplificada de cómo pasa la energía. Por ejemplo: <em>Planta de Café → Broca → Barranquero → Tigrillo</em>. Sin embargo, los ecosistemas reales son mucho más complejos. El barranquero no solo come brocas, también consume frutos y otros insectos; el tigrillo caza aves, pero también roedores. Cuando conectamos y superponemos múltiples cadenas alimenticias interactuando entre sí, formamos una <strong>red alimenticia</strong>, un mapa mucho más preciso de las relaciones en el ecosistema.</p>
+
+                <h2>El Flujo de Energía y la Regla del 10%</h2>
+                <p>Toda la energía del ecosistema ingresa gracias al Sol. Sin embargo, a medida que esta energía pasa de un nivel trófico al siguiente (cuando un animal se come a otro), se pierde una cantidad enorme. ¿Por qué? Porque cada organismo gasta la mayor parte de la energía que consume en moverse, respirar, crecer y reproducirse, liberando gran parte de ella al ambiente en forma de <strong>calor</strong>.</p>
+                <p>La ciencia ha establecido la <strong>Regla del 10%</strong>: en promedio, solo el 10% de la energía almacenada en un nivel trófico se transfiere al siguiente. El 90% restante se utiliza o se disipa como calor.</p>
+                <p>Es por esto que utilizamos la representación de una <strong>Pirámide Ecológica</strong>. La base (los productores) debe ser sumamente ancha y abundante, conteniendo millones de plantas y muchísima energía. A medida que subimos hacia los consumidores primarios y secundarios, la pirámide se estrecha porque hay menos energía disponible, lo que significa que el ecosistema puede sostener a menos individuos. Finalmente, en la punta más estrecha, encontramos a los grandes depredadores. Hay muy pocos pumas o tigrillos en la región porque la energía que llega hasta la cima de la pirámide es mínima.</p>
+                <p>Comprender las pirámides ecológicas nos enseña una lección vital: si alteramos la base destruyendo los bosques, o si eliminamos los eslabones intermedios usando pesticidas indiscriminados, toda la estructura de la vida colapsa. La conservación de la región cafetera exige respetar cada uno de sus niveles tróficos.</p>
+            </article>
+
+            <!-- TALLER DE REPASO -->
+            <div class="taller-container">
+                <h2>Taller de Repaso y Aplicación</h2>
+                
+                <div class="taller-instruction">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <span>ATENCIÓN: Escribe y resuelve estas actividades en tu cuaderno.</span>
+                </div>
+
+                <ul class="taller-list">
+                    <li>
+                        <span class="activity-type">Responder Directamente</span>
+                        <span class="activity-text">1. Según el texto, ¿cuál es la fuente de energía principal de todo el ecosistema y qué proceso realizan las plantas para capturarla?</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Dibujar / Ilustrar</span>
+                        <span class="activity-text">2. Dibuja una Pirámide Ecológica grande en tu cuaderno. Divídela en 4 niveles y dibuja ejemplos exclusivos de la región cafetera (plantas, insectos, aves y felinos mencionados en la lectura) en el nivel correcto.</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Análisis Crítico</span>
+                        <span class="activity-text">3. Si la regla del flujo de energía dice que solo pasa el 10% al siguiente nivel, explica con tus propias palabras: ¿Por qué en un bosque del Eje Cafetero hay millones de insectos pero es casi imposible encontrarse con más de dos o tres pumas?</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Mapa Conceptual</span>
+                        <span class="activity-text">4. Elabora un mapa conceptual sobre los "Niveles Tróficos". Asegúrate de incluir los Productores, los tres tipos de Consumidores, los Descomponedores y su principal característica alimenticia.</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Responder Directamente</span>
+                        <span class="activity-text">5. Explica de forma clara y concisa cuál es la diferencia fundamental entre una "Cadena Alimenticia" y una "Red Alimenticia".</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Ilustrar Secuencia</span>
+                        <span class="activity-text">6. Dibuja una historieta o cómic de tres viñetas que muestre el trabajo de los descomponedores: Viñeta 1 (un animal muere o una hoja cae), Viñeta 2 (actúan los descomponedores), Viñeta 3 (la planta de café absorbe los nutrientes).</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Análisis Crítico / Hipótesis</span>
+                        <span class="activity-text">7. Imagina que un caficultor aplica un químico en el suelo que elimina accidentalmente a TODOS los hongos y bacterias de su finca. ¿Qué crees que pasaría con la fertilidad de la tierra y con las plantas de café a mediano plazo? Justifica tu respuesta.</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Mapa Mental</span>
+                        <span class="activity-text">8. Crea un mapa mental colorido enfocado únicamente en la palabra "Consumidores". Saca tres ramas principales (Primarios, Secundarios, Terciarios) e ilustra las dietas y ejemplos de cada uno.</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Responder Directamente</span>
+                        <span class="activity-text">9. Cuando el pájaro barranquero se come a una broca, sabemos que el 90% de la energía de ese insecto no pasa al ave. ¿Qué sucede exactamente con ese 90% de energía perdida, en qué se gasta o transforma?</span>
+                    </li>
+                    <li>
+                        <span class="activity-type">Análisis Crítico / Reflexión</span>
+                        <span class="activity-text">10. Escribe un párrafo de reflexión (mínimo 5 renglones): ¿Qué consecuencias sufriría la cosecha de un caficultor si decidiera cazar y alejar a todas las aves insectívoras (consumidores secundarios) de su finca para que no hagan ruido?</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE PREGUNTA -->
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modal-category-pts">Categoría - Puntos</div>
+            <div class="modal-question" id="modal-question-text">¿Aquí va la pregunta?</div>
+            <div id="options-container">
+                <!-- Botones inyectados por JS -->
+            </div>
+            <div class="feedback" id="feedback-message"></div>
+            <button class="btn-continue" id="btn-continue">Continuar al Tablero</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE RESULTADO FINAL -->
+    <div class="modal-overlay" id="final-modal">
+        <div class="modal-content">
+            <div class="modal-header">¡Misión Completada!</div>
+            <div class="modal-question">Has respondido todas las pistas de la cuadrícula.</div>
+            
+            <div style="font-size: 1.2rem; color: #555; margin-bottom: 1rem;">
+                Tu puntuación es de <strong id="final-score" style="color: var(--primary-dark)">0</strong> sobre 2400 puntos posibles.
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold;">Tu calificación final es:</div>
+            <div class="grade-display" id="final-grade">5.0</div>
+            
+            <p style="font-size: 1.1rem; color: #424242; margin-bottom: 2rem;">
+                ¡Excelente esfuerzo! Ahora haz scroll hacia abajo para leer el artículo teórico detallado y resolver el taller en tu cuaderno.
+            </p>
+            
+            <button class="btn-continue" style="display: block;" onclick="document.getElementById('final-modal').style.display='none'">Ir al Texto y Taller</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DEL JUEGO Y CONTENIDO
+        const gameData = [
+            {
+                category: "Productores",
+                questions: [
+                    { pts: 100, q: "Es el principal productor de la región y la base económica de miles de familias colombianas.", options: ["La Yuca", "El Cafeto (Café)", "El Guadual"], correct: 1 },
+                    { pts: 200, q: "Árbol grande muy común en la región, utilizado tradicionalmente para darle sombra a los cafetales.", options: ["El Guamo", "El Pino", "El Frailejón"], correct: 0 },
+                    { pts: 300, q: "Proceso vital donde los productores transforman la luz del Sol, el agua y el CO2 en su propio alimento.", options: ["Respiración Celular", "Polinización", "Fotosíntesis"], correct: 2 }
+                ]
+            },
+            {
+                category: "Consumidores",
+                questions: [
+                    { pts: 100, q: "Consumidor Primario (herbívoro) que es la mayor plaga de la región porque perfora el grano de café.", options: ["La Broca", "La Abeja", "La Hormiga Arriera"], correct: 0 },
+                    { pts: 200, q: "Ave colorida de cola larga (Consumidor Secundario) que vive en cafetales y se alimenta de insectos.", options: ["El Cóndor", "El Loro Orejiamarillo", "El Barranquero"], correct: 2 },
+                    { pts: 300, q: "Gran felino (Consumidor Terciario) que actúa como súper depredador en los bosques nativos de la región.", options: ["El Tigrillo", "El Oso de Anteojos", "El Lobo"], correct: 0 }
+                ]
+            },
+            {
+                category: "Descomp.",
+                questions: [
+                    { pts: 100, q: "Junto con las bacterias, son los principales organismos encargados de descomponer la materia orgánica muerta.", options: ["Los Hongos", "Los Musgos", "Los Helechos"], correct: 0 },
+                    { pts: 200, q: "Su trabajo vital consiste en devolver a la tierra elementos esenciales para que las plantas vuelvan a crecer. ¿Cuáles son?", options: ["Agua y Luz", "Nutrientes y Minerales", "Oxígeno puro"], correct: 1 },
+                    { pts: 300, q: "¿Qué le ocurriría al suelo del cafetal si los descomponedores desaparecieran repentinamente?", options: ["Se volvería más fértil", "Perdería su fertilidad rápidamente", "No pasaría absolutamente nada"], correct: 1 }
+                ]
+            },
+            {
+                category: "Energía",
+                questions: [
+                    { pts: 100, q: "Es la fuente de energía absoluta original para la inmensa mayoría de los ecosistemas en el planeta.", options: ["El Núcleo de la Tierra", "El Agua de los ríos", "El Sol"], correct: 2 },
+                    { pts: 200, q: "Según la regla ecológica, ¿qué porcentaje de energía logra pasar a un nivel trófico superior cuando un animal es devorado?", options: ["Aproximadamente el 10%", "Exactamente el 50%", "Cerca del 90%"], correct: 0 },
+                    { pts: 300, q: "Representación gráfica que demuestra que la base (plantas) debe ser gigante porque la energía disminuye hacia la cima.", options: ["Círculo Alimenticio", "Pirámide Ecológica", "Red Trófica"], correct: 1 }
+                ]
+            }
+        ];
+
+        // VARIABLES DE ESTADO
+        let currentScore = 0;
+        let questionsAnswered = 0;
+        const totalQuestions = 12;
+        const maxScore = 2400; // 4 columnas * (100+200+300) = 2400
+
+        let activeBtn = null;
+        let activeData = null;
+
+        // ELEMENTOS DOM
+        const gridContainer = document.getElementById('grid-container');
+        const scoreDisplay = document.getElementById('score');
+        const progressDisplay = document.getElementById('progress');
+        
+        const qModal = document.getElementById('question-modal');
+        const mCategoryPts = document.getElementById('modal-category-pts');
+        const mQuestionText = document.getElementById('modal-question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const btnContinue = document.getElementById('btn-continue');
+
+        // INICIALIZACIÓN
+        function initGame() {
+            // Renderizar encabezados de columnas
+            gameData.forEach(col => {
+                const header = document.createElement('div');
+                header.className = 'grid-header';
+                header.textContent = col.category;
+                gridContainer.appendChild(header);
+            });
+
+            // Renderizar botones por filas (100, 200, 300)
+            for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
+                gameData.forEach((col) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'grid-btn';
+                    const qData = col.questions[rowIndex];
+                    btn.textContent = qData.pts;
+                    
+                    // Evento Click/Touch (se usan métodos estándar, preventDefault no necesario aquí gracias a touch-action:none en CSS)
+                    btn.addEventListener('click', () => {
+                        openQuestion(col.category, qData, btn);
+                    });
+                    
+                    gridContainer.appendChild(btn);
+                });
+            }
+        }
+
+        // ABRIR PREGUNTA
+        function openQuestion(categoryName, qData, btnElement) {
+            activeBtn = btnElement;
+            activeData = qData;
+
+            mCategoryPts.textContent = `${categoryName} - ${qData.pts} Puntos`;
+            mQuestionText.textContent = qData.q;
+            
+            // Limpiar modal
+            optionsContainer.innerHTML = '';
+            feedbackMessage.style.display = 'none';
+            btnContinue.style.display = 'none';
+
+            // Generar opciones
+            qData.options.forEach((optText, index) => {
+                const optBtn = document.createElement('button');
+                optBtn.className = 'option-btn';
+                optBtn.textContent = optText;
+                optBtn.addEventListener('click', () => handleAnswer(index, optBtn));
+                optionsContainer.appendChild(optBtn);
+            });
+
+            qModal.style.display = 'flex';
+        }
+
+        // EVALUAR RESPUESTA
+        function handleAnswer(selectedIndex, clickedBtn) {
+            // Deshabilitar todas las opciones
+            const allOptions = optionsContainer.querySelectorAll('.option-btn');
+            allOptions.forEach(btn => btn.disabled = true);
+
+            const isCorrect = (selectedIndex === activeData.correct);
+
+            feedbackMessage.style.display = 'block';
+
+            if (isCorrect) {
+                clickedBtn.classList.add('correct');
+                currentScore += activeData.pts;
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackMessage.textContent = `¡Excelente! Respuesta correcta. Sumas ${activeData.pts} puntos.`;
+                feedbackMessage.style.backgroundColor = '#e8f5e9';
+                feedbackMessage.style.color = '#2e7d32';
+                feedbackMessage.style.border = '2px solid #a5d6a7';
+            } else {
+                clickedBtn.classList.add('incorrect');
+                // Resaltar la correcta
+                allOptions[activeData.correct].classList.add('correct');
+                
+                feedbackMessage.textContent = 'Incorrecto. La energía se pierde, no sumas puntos en esta ronda.';
+                feedbackMessage.style.backgroundColor = '#ffebee';
+                feedbackMessage.style.color = '#c62828';
+                feedbackMessage.style.border = '2px solid #ef9a9a';
+            }
+
+            // Actualizar tablero principal
+            activeBtn.disabled = true;
+            activeBtn.textContent = 'X';
+            questionsAnswered++;
+            progressDisplay.textContent = questionsAnswered;
+
+            // Mostrar botón continuar
+            btnContinue.style.display = 'block';
+        }
+
+        // CONTINUAR / CERRAR MODAL
+        btnContinue.addEventListener('click', () => {
+            qModal.style.display = 'none';
+            
+            // Verificar si el juego terminó
+            if (questionsAnswered === totalQuestions) {
+                setTimeout(showFinalResults, 500);
+            }
+        });
+
+        // MOSTRAR RESULTADOS Y CALIFICAR
+        function showFinalResults() {
+            document.getElementById('final-score').textContent = currentScore;
+            
+            // Cálculo de calificación de 1.0 a 5.0 lineal basado en porcentaje
+            const percentage = currentScore / maxScore;
+            const grade = (percentage * 4.0) + 1.0;
+            const finalGradeText = grade.toFixed(1);
+            
+            const gradeElement = document.getElementById('final-grade');
+            gradeElement.textContent = finalGradeText;
+
+            // Colorear calificación
+            if (grade >= 4.0) {
+                gradeElement.style.color = 'var(--correct-color)';
+            } else if (grade >= 3.0) {
+                gradeElement.style.color = 'var(--secondary-dark)';
+            } else {
+                gradeElement.style.color = 'var(--incorrect-color)';
+            }
+
+            document.getElementById('final-modal').style.display = 'flex';
+        }
+
+        // Arrancar juego al cargar
+        window.addEventListener('DOMContentLoaded', initGame);
+
+    </script>
+</body>
+</html>

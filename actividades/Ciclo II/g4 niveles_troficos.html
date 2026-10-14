@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Juego y Estudio: Niveles Tróficos</title>
+    <style>
+        :root {
+            --bg-main: #f4f9f4;
+            --text-dark: #2c3e50;
+            --text-light: #546e7a;
+            --primary: #4caf50;
+            --primary-dark: #2e7d32;
+            --secondary: #ff9800;
+            --danger: #e53935;
+            --danger-dark: #b71c1c;
+            --white: #ffffff;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        header {
+            background: var(--white);
+            padding: clamp(1rem, 3vw, 2rem);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        header h1 {
+            color: var(--primary-dark);
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        header p {
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+            color: var(--text-light);
+        }
+
+        .highlight {
+            color: var(--primary-dark);
+            font-weight: bold;
+            background: rgba(76, 175, 80, 0.15);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        #zona-juego {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #game-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--primary);
+            color: var(--white);
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .lives-container {
+            display: flex;
+            gap: 5px;
+        }
+
+        .heart-icon {
+            width: clamp(24px, 5vw, 32px);
+            height: clamp(24px, 5vw, 32px);
+            fill: #ff5252;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+            transition: all 0.3s ease;
+        }
+
+        .heart-icon.lost {
+            fill: #95a5a6;
+            opacity: 0.5;
+            transform: scale(0.8);
+            filter: none;
+        }
+
+        #game-canvas {
+            position: relative;
+            height: 70vh;
+            min-height: 400px;
+            background: linear-gradient(to bottom, #c8e6c9 0%, #fff9c4 100%);
+            overflow: hidden;
+            /* CRÍTICO PARA MÓVILES */
+            touch-action: none;
+            user-select: none;
+        }
+
+        .word-bubble {
+            position: absolute;
+            padding: clamp(10px, 2.5vw, 15px) clamp(15px, 4vw, 25px);
+            background: var(--white);
+            border: 3px solid var(--primary);
+            border-radius: 40px;
+            font-weight: 800;
+            font-size: clamp(14px, 4vw, 22px);
+            color: var(--primary-dark);
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transform-origin: center;
+            will-change: transform, top;
+            touch-action: manipulation;
+            user-select: none;
+            transition: background-color 0.1s, border-color 0.1s, color 0.1s;
+        }
+
+        @keyframes popSuccess {
+            0% { transform: scale(1); opacity: 1; }
+            40% { transform: scale(1.4); background: var(--primary); color: white; border-color: white; box-shadow: 0 0 25px var(--primary); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        @keyframes shakeError {
+            0% { transform: translateX(0); background: var(--danger); color: white; border-color: var(--danger-dark); }
+            20% { transform: translateX(-12px) rotate(-5deg); }
+            40% { transform: translateX(12px) rotate(5deg); }
+            60% { transform: translateX(-12px) rotate(-5deg); }
+            80% { transform: translateX(12px) rotate(5deg); }
+            100% { transform: translateX(0) scale(0); opacity: 0; }
+        }
+
+        .anim-pop {
+            animation: popSuccess 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .anim-shake {
+            animation: shakeError 0.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .overlay-title {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .rules-list {
+            text-align: left;
+            margin: 1.5rem 0;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            color: var(--text-dark);
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-radius: 10px;
+            border-left: 5px solid var(--secondary);
+            max-width: 600px;
+        }
+
+        .rules-list li {
+            margin-bottom: 10px;
+            list-style-type: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .grade-display {
+            font-size: clamp(4rem, 10vw, 6rem);
+            font-weight: 900;
+            color: var(--secondary);
+            line-height: 1;
+            margin: 10px 0;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+        }
+
+        #zona-lectura {
+            background: var(--white);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-header h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            line-height: 1.2;
+        }
+
+        article.teoria {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        article.teoria h3 {
+            color: var(--primary-dark);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            border-left: 5px solid var(--primary);
+            padding-left: 12px;
+            background: linear-gradient(90deg, rgba(76,175,80,0.1) 0%, rgba(255,255,255,0) 100%);
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        article.teoria p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        article.teoria ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        article.teoria li {
+            margin-bottom: 0.5rem;
+        }
+
+        .taller-repaso {
+            margin-top: 4rem;
+            background: #fafaf9;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: clamp(1rem, 4vw, 2.5rem);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .taller-repaso h3 {
+            color: var(--primary-dark);
+            text-align: center;
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            margin-bottom: 1.5rem;
+        }
+
+        .instruccion-cuaderno {
+            background: #fff3cd;
+            border-left: 6px solid #ffc107;
+            padding: 1.2rem;
+            margin-bottom: 2.5rem;
+            font-weight: bold;
+            color: #856404;
+            text-align: center;
+            border-radius: 0 8px 8px 0;
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .actividad {
+            margin-bottom: 1.8rem;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        
+        .actividad:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.12);
+        }
+
+        .badge-tipo {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--white);
+            display: inline-block;
+            margin-bottom: 1rem;
+            background: var(--secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .actividad p {
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .actividad strong.num {
+            color: var(--primary-dark);
+            font-size: 1.3rem;
+            margin-right: 8px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>El Equilibrio del Ecosistema</h1>
+            <p>Tema: <span class="highlight">Niveles Tróficos (Productores, Consumidores, Descomponedores)</span></p>
+        </header>
+
+        <main>
+            <section id="zona-juego">
+                <div id="game-hud">
+                    <div>Puntos: <span id="score-display">0</span></div>
+                    <div class="lives-container" id="lives-display">
+                        <!-- Corazones SVG inyectados por JS -->
+                    </div>
+                </div>
+
+                <div id="game-canvas">
+                    <!-- Elementos interactivos generados dinámicamente -->
+                </div>
+
+                <!-- Pantalla de Inicio -->
+                <div id="start-screen" class="overlay">
+                    <h2 class="overlay-title">¡Protege el Ecosistema!</h2>
+                    <p style="font-size: 1.2rem; max-width: 600px;">
+                        Toca <strong>SOLO</strong> los nombres de organismos vivos (Seres biológicos que pertenezcan a un nivel trófico) antes de que caigan al suelo. Ignora los objetos inertes.
+                    </p>
+                    <ul class="rules-list">
+                        <li>✅ <strong>Tocar Ser Vivo:</strong> +1 Punto.</li>
+                        <li>❌ <strong>Tocar Objeto inerte:</strong> Pierdes 1 vida.</li>
+                        <li>⚠️ <strong>Dejar caer un Ser Vivo:</strong> Pierdes 1 vida.</li>
+                        <li>💨 <strong>Dejar caer Objeto inerte:</strong> No pasa nada.</li>
+                    </ul>
+                    <button class="btn" id="btn-start">Iniciar Reto</button>
+                </div>
+
+                <!-- Pantalla Fin de Juego -->
+                <div id="end-screen" class="overlay hidden">
+                    <h2 class="overlay-title">Fin del Recorrido</h2>
+                    <p style="font-size: 1.3rem;">Total de organismos salvados: <strong id="final-score" style="color: var(--primary); font-size: 1.8rem;">0</strong></p>
+                    
+                    <div style="margin: 20px 0;">
+                        <p style="font-size: 1.2rem;">Tu Calificación:</p>
+                        <div class="grade-display" id="final-grade">0.0</div>
+                        <p id="grade-message" style="font-weight: bold; color: var(--text-light); font-size: 1.2rem;"></p>
+                    </div>
+
+                    <button class="btn" id="btn-restart">Intentar de Nuevo</button>
+                    <p style="margin-top: 20px; font-size: 1rem; color: #7f8c8d; font-weight: bold;">
+                        👇 Desliza hacia abajo para estudiar la teoría y realizar tu taller. 👇
+                    </p>
+                </div>
+            </section>
+
+            <section id="zona-lectura">
+                <div class="section-header">
+                    <h2>La Red de la Vida: ¿Quién se come a quién?</h2>
+                    <p>Lee con mucha atención el siguiente texto para entender cómo funciona la naturaleza y poder resolver tu taller.</p>
+                </div>
+                
+                <article class="teoria">
+                    <p>Si miras a tu alrededor en un bosque, un parque o incluso en el jardín de tu casa, verás muchos tipos de seres vivos. Todos ellos necesitan energía para sobrevivir, crecer y moverse. Esa energía proviene del alimento. En la naturaleza, la forma en que la energía y los nutrientes pasan de un ser vivo a otro forma lo que llamamos una cadena alimenticia. Para entender mejor este proceso, los científicos agrupan a los seres vivos en categorías según su función. A estas categorías las llamamos <strong>Niveles Tróficos</strong>.</p>
+                    <p>Imagina los niveles tróficos como los pisos de un gran edificio donde cada piso depende del que está debajo para no derrumbarse. Existen tres grupos principales: Productores, Consumidores y Descomponedores.</p>
+
+                    <h3>1. Los Productores: La base de todo</h3>
+                    <p>En el primer nivel (la base del edificio) se encuentran los <strong>Productores</strong>. Estos organismos son asombrosos porque son <em>autótrofos</em>, lo que significa que fabrican su propio alimento. No necesitan comer a otros seres vivos.</p>
+                    <p>¿Cómo lo hacen? Utilizan la energía del sol, el agua del suelo y un gas llamado dióxido de carbono del aire en un proceso maravilloso llamado <strong>fotosíntesis</strong>. Las plantas (como los árboles, el pasto y las orquídeas) y las algas en los océanos son los principales productores. Son esenciales porque introducen toda la energía al ecosistema. Sin ellos, ningún otro ser vivo podría existir.</p>
+
+                    <h3>2. Los Consumidores: Los que comen</h3>
+                    <p>En los siguientes niveles están los <strong>Consumidores</strong>. Estos organismos son <em>heterótrofos</em>, es decir, no pueden fabricar su propio alimento. Para obtener energía, necesitan comer (consumir) a otros seres vivos. Dependiendo de lo que coman, se dividen en diferentes tipos:</p>
+                    <ul>
+                        <li><strong>Consumidores Primarios (Herbívoros):</strong> Son los animales que se alimentan directamente de los productores (las plantas). Ejemplos de ellos son las vacas, los conejos, las orugas, las mariposas y algunos peces. Ellos ocupan el segundo nivel trófico.</li>
+                        <li><strong>Consumidores Secundarios (Carnívoros):</strong> Son los animales que se comen a los herbívoros. Por ejemplo, una rana que se come a un insecto, o una serpiente que caza un ratón.</li>
+                        <li><strong>Consumidores Terciarios (Superdepredadores):</strong> Son los grandes cazadores que se comen a otros carnívoros. Aquí encontramos a las águilas, los tiburones, los leones o los tigres. Ocupan la parte más alta de la cadena.</li>
+                    </ul>
+                    <p>También existen los animales <em>omnívoros</em> (como los osos, los cerdos y los seres humanos), que pueden comer tanto plantas como animales, participando en varios niveles tróficos a la vez.</p>
+
+                    <h3>3. Los Descomponedores: El equipo de limpieza y reciclaje</h3>
+                    <p>Finalmente, existe un grupo sin el cual la Tierra estaría cubierta de hojas secas y restos de animales: los <strong>Descomponedores</strong>. Principalmente formados por <strong>hongos</strong> (como los champiñones o el moho) y <strong>bacterias</strong> microscópicas.</p>
+                    <p>Su función es alimentarse de los restos de seres vivos que mueren y de sus desechos. Al hacer esto, descomponen la materia muerta y devueliden al suelo nutrientes vitales (como minerales). Gracias a los descomponedores, el suelo se vuelve fértil nuevamente, permitiendo que nuevas plantas (productores) crezcan. ¡Cierran el ciclo de la vida!</p>
+
+                    <p>En conclusión, cada nivel trófico cumple una misión irremplazable. Si quitamos a los productores, no habrá comida para nadie. Si quitamos a los depredadores (consumidores), los herbívoros se multiplicarían demasiado y acabarían con todas las plantas. Y si quitamos a los descomponedores, la vida se detendría por falta de nutrientes en la tierra. En la biología, todo está perfectamente conectado.</p>
+                </article>
+
+                <aside class="taller-repaso">
+                    <h3>Taller de Consolidación</h3>
+                    <div class="instruccion-cuaderno">
+                        ✏️ INSTRUCCIÓN OBLIGATORIA: Abre tu cuaderno, escribe el título del tema de hoy y resuelve cada una de las siguientes actividades de forma ordenada.
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Respuesta Directa</span>
+                        <p><strong class="num">1.</strong> Según la lectura, define con tus propias palabras qué son los "Niveles Tróficos" y menciona los tres grupos principales.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Ilustración</span>
+                        <p><strong class="num">2.</strong> Dibuja en tu cuaderno una planta realizando la "fotosíntesis". Señala con flechas (dibujadas por ti) los tres elementos que necesita para fabricar su alimento, según el texto.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Análisis Crítico</span>
+                        <p><strong class="num">3.</strong> Imagina que una enfermedad misteriosa elimina por completo a todos los "Consumidores Secundarios y Terciarios" de un bosque. Explica detalladamente qué crees que le pasaría a la población de Consumidores Primarios (herbívoros) y, como consecuencia, qué le pasaría a las plantas.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Mapa Conceptual</span>
+                        <p><strong class="num">4.</strong> Elabora un mapa conceptual utilizando los siguientes términos: <em>Seres Vivos, Niveles Tróficos, Autótrofos, Heterótrofos, Productores, Consumidores, Descomponedores</em>.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Respuesta Directa</span>
+                        <p><strong class="num">5.</strong> ¿Cuál es la diferencia fundamental entre un organismo "autótrofo" y uno "heterótrofo"? Usa ejemplos del texto para explicar tu respuesta.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Ilustración</span>
+                        <p><strong class="num">6.</strong> Dibuja una cadena alimenticia simple de 3 eslabones. Debe incluir un productor de tu región, un consumidor primario y un consumidor secundario. Escribe debajo de cada dibujo el nivel al que pertenece.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Análisis Crítico</span>
+                        <p><strong class="num">7.</strong> Algunas personas aplastan los hongos que ven en el bosque porque les parecen feos o peligrosos. Basándote en el párrafo de los "Descomponedores", redacta un pequeño mensaje explicando por qué esta es una mala idea y cuál es el "superpoder" de reciclaje que tienen los hongos.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Mapa Mental</span>
+                        <p><strong class="num">8.</strong> Crea un mapa mental colorido en el centro de la página con la palabra "CONSUMIDORES". Dibuja 3 ramas que salgan de ella para los tres tipos (Primarios, Secundarios, Terciarios). Al final de cada rama, anota su dieta (qué comen) y dibuja un animal de ejemplo.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Respuesta Directa</span>
+                        <p><strong class="num">9.</strong> ¿Por qué el texto compara a los niveles tróficos con "los pisos de un gran edificio"? ¿Qué significa esa analogía?</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Ilustración / Cuadro</span>
+                        <p><strong class="num">10.</strong> Divide una página de tu cuaderno en tres grandes columnas. Titula la primera "Productor", la segunda "Consumidor (Omnívoro)" y la tercera "Descomponedor". Dibuja un ejemplo claro para cada columna (diferentes a los de los puntos anteriores).</p>
+                    </div>
+                </aside>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // --- 1. DATOS DEL JUEGO (PALABRAS) ---
+        const correctWords = [
+            "Árbol", "Pasto", "Algas", "Vaca", "León", 
+            "Humano", "Hongo", "Bacteria", "Mariposa", "Águila", 
+            "Conejo", "Lombriz", "Tiburón", "Orquídea", "Rana"
+        ];
+        
+        const distractors = [
+            "Roca", "Agua", "Sol", "Nube", "Automóvil", 
+            "Ladrillo", "Viento", "Fuego", "Plástico", "Vidrio", 
+            "Arena", "Metal", "Reloj", "Zapato", "Computador"
+        ];
+
+        // Icono SVG para las vidas
+        const heartSVG = `<svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+
+        // Referencias al DOM
+        const canvas = document.getElementById('game-canvas');
+        const scoreEl = document.getElementById('score-display');
+        const livesEl = document.getElementById('lives-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const btnStart = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+
+        // Estado del juego
+        let state = {
+            score: 0,
+            lives: 3,
+            isPlaying: false,
+            fallingObjects: [],
+            baseSpeed: 1.2,
+            spawnRate: 1600,
+            animFrameId: null,
+            spawnIntervalId: null,
+            idCounter: 0
+        };
+
+        // --- 2. FUNCIONES DE UI ---
+        function updateHUD() {
+            scoreEl.textContent = state.score;
+            livesEl.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                let heartContainer = document.createElement('div');
+                heartContainer.innerHTML = heartSVG;
+                if (i >= state.lives) {
+                    heartContainer.querySelector('svg').classList.add('lost');
+                }
+                livesEl.appendChild(heartContainer);
+            }
+        }
+
+        function flashDamage() {
+            canvas.style.backgroundColor = 'rgba(229, 57, 53, 0.4)'; // Rojo suave
+            setTimeout(() => {
+                if(state.isPlaying) canvas.style.backgroundColor = '';
+            }, 150);
+        }
+
+        // --- 3. LÓGICA DE SPAWN ---
+        function spawnWord() {
+            if (!state.isPlaying) return;
+
+            // Probabilidad: 65% correcto, 35% distractor
+            const isCorrect = Math.random() < 0.65;
+            const list = isCorrect ? correctWords : distractors;
+            const text = list[Math.floor(Math.random() * list.length)];
+            
+            // Crear el elemento DOM
+            const el = document.createElement('div');
+            el.className = 'word-bubble';
+            el.textContent = text;
+            el.dataset.type = isCorrect ? 'correct' : 'distractor';
+            
+            // Posición X aleatoria (evitar bordes extremos, entre 5% y 75% del ancho)
+            const randomX = Math.floor(Math.random() * 70) + 5;
+            el.style.left = `${randomX}%`;
+            el.style.top = `-80px`; // Fuera de pantalla arriba
+            
+            canvas.appendChild(el);
+            
+            // Velocidad ligeramente aleatoria por objeto
+            const speed = state.baseSpeed + (Math.random() * 1.5);
+            
+            state.fallingObjects.push({
+                id: state.idCounter++,
+                el: el,
+                y: -80,
+                speed: speed,
+                type: el.dataset.type,
+                handled: false
+            });
+        }
+
+        // --- 4. BUCLE DEL JUEGO (CAÍDA) ---
+        function gameLoop() {
+            if (!state.isPlaying) return;
+
+            const containerHeight = canvas.clientHeight;
+
+            // Recorrer al revés para poder eliminar elementos con splice sin saltar índices
+            for (let i = state.fallingObjects.length - 1; i >= 0; i--) {
+                let obj = state.fallingObjects[i];
+                
+                if(obj.handled) continue;
+
+                // Aplicar movimiento
+                obj.y += obj.speed;
+                obj.el.style.top = `${obj.y}px`;
+
+                // Detectar colisión con el suelo (fuera del contenedor)
+                if (obj.y > containerHeight) {
+                    if (obj.type === 'correct') {
+                        // Penalización por dejar caer un ser vivo correcto
+                        loseLife();
+                    }
+                    
+                    // Eliminar del DOM y de la lógica
+                    obj.el.remove();
+                    state.fallingObjects.splice(i, 1);
+                }
+            }
+
+            state.animFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- 5. INTERACCIÓN (TOQUE/CLIC) ---
+        canvas.addEventListener('pointerdown', (e) => {
+            if (!state.isPlaying) return;
+            
+            // Verificar si el toque fue en una burbuja
+            const target = e.target.closest('.word-bubble');
+            if (!target) return;
+            
+            e.preventDefault(); // Prevenir comportamientos default móviles
+
+            // Buscar el objeto en el array lógico
+            const index = state.fallingObjects.findIndex(obj => obj.el === target);
+            if (index === -1) return;
+            
+            const obj = state.fallingObjects[index];
+            
+            // Evitar múltiples toques rápidos en el mismo elemento
+            if (obj.handled) return; 
+            obj.handled = true;
+
+            if (obj.type === 'correct') {
+                // ACIERTO
+                target.classList.add('anim-pop');
+                state.score++;
+                
+                // Incrementar dificultad suavemente
+                if(state.score > 0 && state.score % 5 === 0) {
+                    state.baseSpeed += 0.25;
+                    state.spawnRate = Math.max(700, state.spawnRate - 120);
+                    clearInterval(state.spawnIntervalId);
+                    state.spawnIntervalId = setInterval(spawnWord, state.spawnRate);
+                }
+            } else {
+                // ERROR (Tocó un distractor)
+                target.classList.add('anim-shake');
+                loseLife();
+            }
+
+            updateHUD();
+
+            // Quitarlo inmediatamente del array para que no siga cayendo ni evalúe salida
+            state.fallingObjects.splice(index, 1);
+            
+            // Quitarlo del DOM luego de la animación (0.5s max)
+            setTimeout(() => {
+                if(target.parentNode) target.remove();
+            }, 500);
+        });
+
+        // --- 6. MECÁNICAS DE SALUD Y FIN ---
+        function loseLife() {
+            if(!state.isPlaying) return;
+            state.lives--;
+            updateHUD();
+            flashDamage();
+
+            if (state.lives <= 0) {
+                gameOver();
+            }
+        }
+
+        function gameOver() {
+            state.isPlaying = false;
+            cancelAnimationFrame(state.animFrameId);
+            clearInterval(state.spawnIntervalId);
+            
+            // Cálculo de la nota (Escala 1.0 a 5.0)
+            // Asumiremos que 25 puntos es la nota máxima (5.0) para esta dificultad.
+            const maxScoreMeta = 25;
+            let ratio = state.score / maxScoreMeta;
+            ratio = Math.min(1, ratio); // Tope en 100%
+            
+            let grade = 1.0 + (ratio * 4.0);
+            grade = grade.toFixed(1);
+            
+            // Renderizar info final
+            document.getElementById('final-score').textContent = state.score;
+            const gradeEl = document.getElementById('final-grade');
+            const msgEl = document.getElementById('grade-message');
+            
+            gradeEl.textContent = grade;
+            
+            // Mensajes según desempeño
+            if (grade >= 4.5) {
+                gradeEl.style.color = "var(--primary)";
+                msgEl.textContent = "¡Guardián del ecosistema! Dominas la red trófica. 🌍";
+            } else if (grade >= 3.5) {
+                gradeEl.style.color = "var(--secondary)";
+                msgEl.textContent = "¡Buen trabajo! Reconoces bien a los seres vivos. 🌱";
+            } else {
+                gradeEl.style.color = "var(--danger)";
+                msgEl.textContent = "Hay confusión en el ecosistema. ¡Lee la teoría de abajo! 📖";
+            }
+
+            endScreen.classList.remove('hidden');
+        }
+
+        // --- 7. CONTROL DE INICIO ---
+        function startGame() {
+            // Resetear estado general
+            state.score = 0;
+            state.lives = 3;
+            state.baseSpeed = 1.2;
+            state.spawnRate = 1600;
+            state.isPlaying = true;
+            state.fallingObjects = [];
+            
+            // Limpiar DOM de objetos anteriores
+            const bubbles = document.querySelectorAll('.word-bubble');
+            bubbles.forEach(b => b.remove());
+            canvas.style.backgroundColor = '';
+
+            // Limpiar UI Modales
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            updateHUD();
+
+            // Iniciar motores
+            state.spawnIntervalId = setInterval(spawnWord, state.spawnRate);
+            gameLoop();
+        }
+
+        // --- EVENTOS DE BOTONES ---
+        btnStart.addEventListener('click', startGame);
+        btnRestart.addEventListener('click', startGame);
+
+        // Inicializar UI por defecto al cargar
+        updateHUD();
+
+    </script>
+</body>
+</html>

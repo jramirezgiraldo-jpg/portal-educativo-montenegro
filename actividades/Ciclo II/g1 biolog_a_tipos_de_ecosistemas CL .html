@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Módulo Comunitario: Tipos de Ecosistemas y Riqueza Local</title>
+    <style>
+        :root {
+            --bg-color: #FDFBF7;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --primary: #0284C7;
+            --primary-hover: #0369A1;
+            --secondary: #16A34A;
+            --secondary-hover: #15803D;
+            --accent: #D97706;
+            --border-radius: 12px;
+            --syl-a: #1E3A8A;
+            --syl-b: #047857;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 20px;
+            line-height: 1.85;
+            letter-spacing: 0.02em;
+            padding-bottom: 120px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 20px;
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Barra Flotante de Controles */
+        .floating-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #FFFFFF;
+            border-top: 2px solid #CBD5E1;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .bar-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: #F1F5F9;
+            color: var(--text-main);
+            border: 2px solid #CBD5E1;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 48px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover { background: #E2E8F0; }
+        .action-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .action-btn.primary:hover { background: var(--primary-hover); }
+        .action-btn.active-tool { background: #FEF3C7; border-color: var(--accent); color: #B45309; }
+
+        /* Estructura de Secciones / Pasos */
+        .step-section {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .step-section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: #FFFFFF;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border: 2px solid #E2E8F0;
+        }
+
+        /* Vocabulario */
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .vocab-card {
+            background: #F8FAFC;
+            border: 2px solid #CBD5E1;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .vocab-word {
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+            letter-spacing: 0.05em;
+        }
+
+        .syllable-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            background: #E2E8F0;
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* Módulos de Lectura */
+        .module-box {
+            background: #FFFFFF;
+            border-left: 6px solid var(--primary);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            border-top: 1px solid #E2E8F0;
+            border-right: 1px solid #E2E8F0;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 2px solid #F1F5F9;
+            padding-bottom: 15px;
+        }
+
+        .module-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .module-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Líneas de Lectura y Modo Foco */
+        .reading-line {
+            margin-bottom: 18px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.25s ease;
+        }
+
+        body.focus-mode .reading-line {
+            opacity: 0.25;
+        }
+
+        body.focus-mode .reading-line.active-focus,
+        body.focus-mode .reading-line:hover {
+            opacity: 1 !important;
+            background-color: #FEF08A !important;
+            border: 2px solid #B45309 !important;
+            box-shadow: 0 2px 8px rgba(180, 83, 9, 0.2);
+        }
+
+        /* Modo Sílabas con guiones y colores */
+        .syl-a { color: var(--syl-a); font-weight: 700; }
+        .syl-b { color: var(--syl-b); font-weight: 700; }
+        .syl-hyphen { color: #94A3B8; font-weight: normal; margin: 0 1px; }
+
+        /* Idea Clave Local */
+        .is-key-idea.highlighted {
+            background-color: #FEF08A;
+            border-left: 4px solid #D97706;
+            padding-left: 12px;
+            font-weight: bold;
+        }
+
+        /* Quizzes de Autocomprobación */
+        .quiz-container {
+            background: #F8FAFC;
+            border: 2px dashed #CBD5E1;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--text-main);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            background: #FFFFFF;
+            border: 2px solid #CBD5E1;
+            padding: 14px 18px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quiz-option:hover { border-color: var(--primary); background: #EFF6FF; }
+        .quiz-option.correct { background: #DCFCE7; border-color: #16A34A; color: #166534; }
+        .quiz-option.incorrect { background: #FEE2E2; border-color: #DC2626; color: #991B1B; }
+
+        .feedback-box {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+        }
+        .feedback-box.success { background: #DCFCE7; color: #166534; display: block; }
+        .feedback-box.error { background: #FEE2E2; color: #991B1B; display: block; }
+
+        /* Gimnasio Interactivo */
+        .gym-container {
+            background: #F1F5F9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #CBD5E1;
+        }
+
+        .tap-pool, .tap-target {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: #FFFFFF;
+            border-radius: 8px;
+            min-height: 70px;
+            border: 2px dashed #94A3B8;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .tap-target { border-style: solid; border-color: var(--primary); }
+
+        .syllable-block {
+            background: #FFFFFF;
+            border: 2px solid #475569;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            user-select: none;
+        }
+        .syllable-block:active { transform: scale(0.95); }
+
+        /* Estilo Cuaderno / Ficha Escolar */
+        .notebook-card {
+            background: #FFFDF9;
+            border: 3px solid #334155;
+            border-radius: 8px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            position: relative;
+        }
+
+        .notebook-card::before {
+            content: "📓 PARA RESOLVER EN EL CUADERNO";
+            position: absolute;
+            top: -14px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 4px 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .notebook-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1E293B;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #CBD5E1;
+            padding-bottom: 8px;
+        }
+
+        .writing-lines {
+            background-image: linear-gradient(transparent, transparent 33px, #CBD5E1 34px);
+            background-size: 100% 34px;
+            min-height: 102px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* Impresión (@media print) */
+        @media print {
+            body { background: white; color: black; font-size: 16pt; padding-bottom: 0; }
+            .floating-bar, header p, .quiz-container, .gym-container, .action-btn { display: none !important; }
+            .step-section { display: block !important; page-break-after: always; }
+            .notebook-card { border: 2px solid black; box-shadow: none; margin-top: 15px; page-break-inside: avoid; background: white; }
+            .notebook-card::before { background: black; color: white; }
+            header { border-bottom: 2px solid black; margin-bottom: 15px; }
+            header h1 { color: black; font-size: 22pt; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Tipos de Ecosistemas y Riqueza Local</h1>
+            <p>Guía de aprendizaje andragógico para el fortalecimiento de la lectura, escritura y comprensión comunitaria.</p>
+        </header>
+
+        <!-- ================= PASO 1: BANCO DE PALABRAS + RETO CUADERNO 1 ================= -->
+        <section id="step-1" class="step-section active">
+            <div class="card">
+                <h2 style="color: var(--primary); margin-bottom: 15px;">Paso 1: Banco de Palabras Clave</h2>
+                <p style="margin-bottom: 25px;">Conozca y escuche las palabras fundamentales que usaremos en este módulo de aprendizaje.</p>
+                
+                <div class="vocab-grid">
+                    <!-- Palabra 1 -->
+                    <div class="vocab-card">
+                        <div>
+                            <div class="vocab-word" data-normal="ECOSISTEMA" data-syllables="E-co-sis-te-ma">ECOSISTEMA</div>
+                            <span class="syllable-display">5 sílabas</span>
+                            <p style="font-size: 0.95rem; margin-top: 10px;">Lugar donde conviven seres vivos y elementos naturales del entorno.</p>
+                        </div>
+                        <button class="action-btn primary" style="margin-top: 15px;" onclick="speakText('Ecosistema. Lugar donde conviven seres vivos y elementos naturales del entorno.')">🔊 Escuchar</button>
+                    </div>
+
+                    <!-- Palabra 2 -->
+                    <div class="vocab-card">
+                        <div>
+                            <div class="vocab-word" data-normal="TERRESTRE" data-syllables="Ter-res-tre">TERRESTRE</div>
+                            <span class="syllable-display">3 sílabas</span>
+                            <p style="font-size: 0.95rem; margin-top: 10px;">Todo aquello que se encuentra o habita sobre la tierra firme.</p>
+                        </div>
+                        <button class="action-btn primary" style="margin-top: 15px;" onclick="speakText('Terrestre. Todo aquello que se encuentra o habita sobre la tierra firme.')">🔊 Escuchar</button>
+                    </div>
+
+                    <!-- Palabra 3 -->
+                    <div class="vocab-card">
+                        <div>
+                            <div class="vocab-word" data-normal="ACUÁTICO" data-syllables="A-cuá-ti-co">ACUÁTICO</div>
+                            <span class="syllable-display">4 sílabas</span>
+                            <p style="font-size: 0.95rem; margin-top: 10px;">Ambiente formado principalmente por agua, como ríos y cañadas.</p>
+                        </div>
+                        <button class="action-btn primary" style="margin-top: 15px;" onclick="speakText('Acuático. Ambiente formado principalmente por agua, como ríos y cañadas.')">🔊 Escuchar</button>
+                    </div>
+
+                    <!-- Palabra 4 -->
+                    <div class="vocab-card">
+                        <div>
+                            <div class="vocab-word" data-normal="CULTIVO" data-syllables="Cul-ti-vo">CULTIVO</div>
+                            <span class="syllable-display">3 sílabas</span>
+                            <p style="font-size: 0.95rem; margin-top: 10px;">Terreno sembrado por el ser humano para producir alimentos.</p>
+                        </div>
+                        <button class="action-btn primary" style="margin-top: 15px;" onclick="speakText('Cultivo. Terreno sembrado por el ser humano para producir alimentos.')">🔊 Escuchar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ficha Cuaderno Reto 1 -->
+            <div class="notebook-card">
+                <div class="notebook-title">Reto 1 para su Cuaderno</div>
+                <p>Escriba la fecha de hoy, como título <strong>"Palabras Clave"</strong>, y copie cada una de las 4 palabras separándolas con guiones en sus sílabas correspondientes:</p>
+                <div class="writing-lines"></div>
+                <div class="writing-lines"></div>
+            </div>
+        </section>
+
+        <!-- ================= PASO 2: LECTURA APLICADA (3 MÓDULOS) ================= -->
+        <section id="step-2" class="step-section">
+            
+            <!-- MÓDULO 1 -->
+            <div class="module-box">
+                <div class="module-header">
+                    <div class="module-title">Módulo 1: El Concepto en Nuestra Realidad</div>
+                    <div class="module-controls">
+                        <button class="action-btn" onclick="speakContainer('module-1-content')">🔊 Escuchar Lectura</button>
+                        <button class="action-btn" id="btn-key-1" onclick="toggleLocalKey(1)">💡 Idea Clave</button>
+                    </div>
+                </div>
+
+                <div id="module-1-content">
+                    <p class="reading-line" data-normal="Un ecosistema es un espacio natural donde se relacionan la vida y el territorio." data-syllables="Un e-co-sis-te-ma es un es-pa-cio na-tu-ral don-de se re-la-cio-nan la vi-da y el te-rri-to-rio.">Un ecosistema es un espacio natural donde se relacionan la vida y el territorio.</p>
+                    <p class="reading-line is-key-idea" data-normal="En este gran espacio conviven las plantas, los animales, el agua, la tierra y el clima." data-syllables="En es-te gran es-pa-cio con-vi-ven las plan-tas, los a-ni-ma-les, el a-gua, la tie-rra y el cli-ma.">En este gran espacio conviven las plantas, los animales, el agua, la tierra y el clima.</p>
+                    <p class="reading-line" data-normal="Cada ser vivo depende de su entorno para crecer fuerte y mantener el equilibrio." data-syllables="Ca-da ser vi-vo de-pen-de de su en-tor-no pa-ra cre-cer fuer-te y man-te-ner el e-qui-li-brio.">Cada ser vivo depende de su entorno para crecer fuerte y mantener el equilibrio.</p>
+                </div>
+
+                <div class="quiz-container">
+                    <div class="quiz-question">Autocomprobación: ¿Qué elementos conforman un ecosistema según el texto?</div>
+                    <div class="quiz-options">
+                        <button class="quiz-option" onclick="checkQuiz(this, false, 1)">A) Solamente animales salvajes y rocas grandes.</button>
+                        <button class="quiz-option" onclick="checkQuiz(this, true, 1)">B) Seres vivos, plantas, animales, agua, tierra y clima en relación.</button>
+                    </div>
+                    <div id="feedback-1" class="feedback-box"></div>
+                </div>
+            </div>
+
+            <!-- Ficha Cuaderno Reto 2 -->
+            <div class="notebook-card">
+                <div class="notebook-title">Reto 2 para su Cuaderno</div>
+                <p>Complete la siguiente frase en su cuaderno usando las pistas silábicas:</p>
+                <p style="margin-top: 10px; font-weight: bold;">Las plan-tas ne-ce-si-tan a-____ pa-ra vi-vir.</p>
+                <div class="writing-lines"></div>
+            </div>
+
+            <!-- MÓDULO 2 -->
+            <div class="module-box" style="margin-top: 40px;">
+                <div class="module-header">
+                    <div class="module-title">Módulo 2: Cómo Funciona y Diferencias Prácticas</div>
+                    <div class="module-controls">
+                        <button class="action-btn" onclick="speakContainer('module-2-content')">🔊 Escuchar Lectura</button>
+                        <button class="action-btn" id="btn-key-2" onclick="toggleLocalKey(2)">💡 Idea Clave</button>
+                    </div>
+                </div>
+
+                <div id="module-2-content">
+                    <p class="reading-line" data-normal="En nuestras regiones distinguimos los ecosistemas terrestres y los ecosistemas acuáticos." data-syllables="En nues-tras re-gio-nes dis-tin-gui-mos los e-co-sis-te-mas te-rres-tres y los e-co-sis-te-mas a-cuá-ti-cos.">En nuestras regiones distinguimos los ecosistemas terrestres y los ecosistemas acuáticos.</p>
+                    <p class="reading-line is-key-idea" data-normal="Los cultivos sembrados por las familias son espacios terrestres creados para producir alimentos." data-syllables="Los cul-ti-vos sem-bra-dos por las fa-mi-lias son es-pa-cios te-rres-tres crea-dos pa-ra pro-du-cir a-li-men-tos.">Los cultivos sembrados por las familias son espacios terrestres creados para producir alimentos.</p>
+                    <p class="reading-line" data-normal="Por otro lado, las cañadas y ríos locales albergan una gran riqueza natural de peces y plantas silvestres." data-syllables="Por o-tro la-do, las ca-ña-das y rí-os lo-ca-les al-ber-gan un gran ri-que-za na-tu-ral de pe-ces y plan-tas sil-ves-tres.">Por otro lado, las cañadas y ríos locales albergan una gran riqueza natural de peces y plantas silvestres.</p>
+                </div>
+
+                <div class="quiz-container">
+                    <div class="quiz-question">Autocomprobación: ¿Qué diferencia principal existe entre un cultivo y una cañada natural?</div>
+                    <div class="quiz-options">
+                        <button class="quiz-option" onclick="checkQuiz(this, true, 2)">B) El cultivo es para alimentos de la familia; la cañada conserva riqueza silvestre de agua y vida.</button>
+                        <button class="quiz-option" onclick="checkQuiz(this, false, 2)">A) Ambos son idénticos y no tienen ninguna diferencia.</button>
+                    </div>
+                    <div id="feedback-2" class="feedback-box"></div>
+                </div>
+            </div>
+
+            <!-- Ficha Cuaderno Reto 3 -->
+            <div class="notebook-card">
+                <div class="notebook-title">Reto 3 para su Cuaderno</div>
+                <p>Dibuje una tabla de dos columnas en su cuaderno: <strong>Palabras Cortas (1 o 2 sílabas)</strong> y <strong>Palabras Largas (3 o más sílabas)</strong>. Clasifique allí las palabras: <em>Sol, Ecosistema, Río, Naturaleza</em>.</p>
+                <div class="writing-lines"></div>
+                <div class="writing-lines"></div>
+            </div>
+
+            <!-- MÓDULO 3 -->
+            <div class="module-box" style="margin-top: 40px;">
+                <div class="module-header">
+                    <div class="module-title">Módulo 3: Utilidad, Cuidado y Toma de Decisiones</div>
+                    <div class="module-controls">
+                        <button class="action-btn" onclick="speakContainer('module-3-content')">🔊 Escuchar Lectura</button>
+                        <button class="action-btn" id="btn-key-3" onclick="toggleLocalKey(3)">💡 Idea Clave</button>
+                    </div>
+                </div>
+
+                <div id="module-3-content">
+                    <p class="reading-line" data-normal="El agua limpia de los ríos y cañadas es vital para el consumo humano y animal." data-syllables="El a-gua lim-pia de los rí-os y ca-ña-das es vi-tal pa-ra el con-su-mo hu-ma-no y a-ni-mal.">El agua limpia de los ríos y cañadas es vital para el consumo humano y animal.</p>
+                    <p class="reading-line is-key-idea" data-normal="Cuidar el entorno previene la sequía y garantiza buenas cosechas para el futuro de la comunidad." data-syllables="Cui-dar el en-tor-no pre-vie-ne la se-quía y ga-ran-ti-za bue-nas co-se-chas pa-ra el fu-tu-ro de la co-mu-ni-dad.">Cuidar el entorno previene la sequía y garantiza buenas cosechas para el futuro de la comunidad.</p>
+                    <p class="reading-line" data-normal="La participación de todos los vecinos protege la biodiversidad local y asegura nuestro bienestar." data-syllables="La par-ti-ci-pa-ción de to-dos los ve-ci-nos pro-te-ge la bio-di-ver-si-dad lo-cal y a-se-gu-ra nues-tro bien-es-tar.">La participación de todos los vecinos protege la biodiversidad local y asegura nuestro bienestar.</p>
+                </div>
+
+                <div class="quiz-container">
+                    <div class="quiz-question">Autocomprobación: ¿Por qué es importante cuidar el agua y las cañadas locales?</div>
+                    <div class="quiz-options">
+                        <button class="quiz-option" onclick="checkQuiz(this, true, 3)">A) Porque previene la sequía y garantiza buenas cosechas para la comunidad.</button>
+                        <button class="quiz-option" onclick="checkQuiz(this, false, 3)">B) Porque no tiene ninguna utilidad práctica para las personas.</button>
+                    </div>
+                    <div id="feedback-3" class="feedback-box"></div>
+                </div>
+            </div>
+
+            <!-- Ficha Cuaderno Reto 4 -->
+            <div class="notebook-card">
+                <div class="notebook-title">Reto 4 para su Cuaderno</div>
+                <p>Copie en su cuaderno y una con una flecha la causa con su consecuencia:</p>
+                <p style="margin-top: 10px;"><strong>Causa:</strong> Cuidamos el agua de la cañada. &nbsp;&nbsp;&nbsp;&nbsp; ➔ &nbsp;&nbsp;&nbsp;&nbsp; <strong>Consecuencia:</strong> Se protege la vida silvestre.</p>
+                <div class="writing-lines"></div>
+            </div>
+        </section>
+
+        <!-- ================= PASO 3: GIMNASIO INTERACTIVO + RETO 5 ================= -->
+        <section id="step-3" class="step-section">
+            <div class="card">
+                <h2 style="color: var(--primary); margin-bottom: 15px;">Paso 3: Gimnasio Interactivo de Práctica</h2>
+                
+                <!-- Actividad A: Constructor Silábico (Dos palabras: CULTIVO y CAÑADA) -->
+                <div class="gym-container">
+                    <h3 style="margin-bottom: 10px;">Actividad A1: Constructor Silábico (Palabra 1)</h3>
+                    <p style="font-size: 0.95rem; margin-bottom: 15px;">Toca las sílabas en orden correcto para formar: <strong>CULTIVO</strong></p>
+                    
+                    <div id="target-syl-1" class="tap-target"></div>
+                    <div id="pool-syl-1" class="tap-pool">
+                        <button class="syllable-block" onclick="moveSyl(this, 'target-syl-1')">VO</button>
+                        <button class="syllable-block" onclick="moveSyl(this, 'target-syl-1')">CUL</button>
+                        <button class="syllable-block" onclick="moveSyl(this, 'target-syl-1')">TI</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="action-btn primary" onclick="verifySyl('target-syl-1', 'CULTIVO', 'gym-fb-1')">Verificar Palabra 1</button>
+                        <button class="action-btn" onclick="resetSyl('target-syl-1', 'pool-syl-1', 'gym-fb-1')">Reiniciar</button>
+                    </div>
+                    <div id="gym-fb-1" class="feedback-box"></div>
+                </div>
+
+                <div class="gym-container" style="margin-top: 25px;">
+                    <h3 style="margin-bottom: 10px;">Actividad A2: Constructor Silábico (Palabra 2)</h3>
+                    <p style="font-size: 0.95rem; margin-bottom: 15px;">Toca las sílabas en orden correcto para formar: <strong>CAÑADA</strong></p>
+                    
+                    <div id="target-syl-2" class="tap-target"></div>
+                    <div id="pool-syl-2" class="tap-pool">
+                        <button class="syllable-block" onclick="moveSyl(this, 'target-syl-2')">DA</button>
+                        <button class="syllable-block" onclick="moveSyl(this, 'target-syl-2')">CA</button>
+                        <button class="syllable-block" onclick="moveSyl(this, 'target-syl-2')">ÑA</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="action-btn primary" onclick="verifySyl('target-syl-2', 'CAÑADA', 'gym-fb-2')">Verificar Palabra 2</button>
+                        <button class="action-btn" onclick="resetSyl('target-syl-2', 'pool-syl-2', 'gym-fb-2')">Reiniciar</button>
+                    </div>
+                    <div id="gym-fb-2" class="feedback-box"></div>
+                </div>
+
+                <!-- Actividad B: Constructor de Oraciones -->
+                <div class="gym-container" style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 10px;">Actividad B: Armemos una Oración Comunitaria</h3>
+                    <p style="font-size: 0.95rem; margin-bottom: 15px;">Ordene las fichas para formar la oración en orden directo: <strong>El río tiene vida.</strong></p>
+                    
+                    <div id="target-sent" class="tap-target"></div>
+                    <div id="pool-sent" class="tap-pool">
+                        <button class="syllable-block" onclick="moveSent(this)">vida.</button>
+                        <button class="syllable-block" onclick="moveSent(this)">El</button>
+                        <button class="syllable-block" onclick="moveSent(this)">río</button>
+                        <button class="syllable-block" onclick="moveSent(this)">tiene</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="action-btn primary" onclick="verifySent()">Verificar Oración</button>
+                        <button class="action-btn" onclick="resetSent()">Reiniciar</button>
+                    </div>
+                    <div id="gym-fb-3" class="feedback-box"></div>
+                </div>
+            </div>
+
+            <!-- Ficha Cuaderno Reto 5 -->
+            <div class="notebook-card">
+                <div class="notebook-title">Reto 5 para su Cuaderno</div>
+                <p>Transcriba la oración armada y complete su compromiso comunitario:</p>
+                <p style="margin-top: 10px; font-style: italic;">"Mi compromiso para cuidar nuestra cañada local es ____________________________________________"</p>
+                <div class="writing-lines"></div>
+                <div class="writing-lines"></div>
+            </div>
+        </section>
+
+        <!-- ================= BARRA DE NAVEGACIÓN FLOTANTE ================= -->
+        <div class="floating-bar">
+            <div class="bar-group">
+                <button class="action-btn" id="prev-btn" onclick="changeStep(-1)" disabled>⬆️ Anterior</button>
+                <span id="step-indicator" style="font-weight: bold; color: var(--primary);">Paso 1 de 3</span>
+                <button class="action-btn primary" id="next-btn" onclick="changeStep(1)">Siguiente ⬇️</button>
+            </div>
+            
+            <div class="bar-group">
+                <button class="action-btn" id="tool-syl" onclick="toggleSyllableMode()">📖 Modo Sílabas</button>
+                <button class="action-btn" id="tool-focus" onclick="toggleFocusMode()">🔦 Foco de Renglón</button>
+                <button class="action-btn primary" onclick="window.print()">🖨️ Imprimir Guía</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= SCRIPT DE CONTROL Y FUNCIONALIDAD ================= -->
+    <script>
+        // --- 1. NAVEGACIÓN ENTRE PASOS ---
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function changeStep(direction) {
+            currentStep += direction;
+            if (currentStep < 1) currentStep = 1;
+            if (currentStep > totalSteps) currentStep = totalSteps;
+
+            document.querySelectorAll('.step-section').forEach((sec, idx) => {
+                sec.classList.toggle('active', idx + 1 === currentStep);
+            });
+
+            document.getElementById('prev-btn').disabled = (currentStep === 1);
+            document.getElementById('next-btn').disabled = (currentStep === totalSteps);
+            document.getElementById('step-indicator').textContent = `Paso ${currentStep} de ${totalSteps}`;
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
+        // --- 2. SÍNTESIS DE VOZ NATIVA ---
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-ES';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function speakContainer(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            let textToRead = "";
+            container.querySelectorAll('.reading-line').forEach(line => {
+                textToRead += line.getAttribute('data-normal') + " ";
+            });
+            speakText(textToRead);
+        }
+
+        // --- 3. MODO SÍLABAS CON GUIONES Y COLOR ---
+        let syllableModeActive = false;
+
+        function toggleSyllableMode() {
+            syllableModeActive = !syllableModeActive;
+            const btn = document.getElementById('tool-syl');
+            btn.classList.toggle('active-tool', syllableModeActive);
+
+            // Vocabulario
+            document.querySelectorAll('.vocab-word').forEach(el => {
+                const normal = el.getAttribute('data-normal');
+                const syllables = el.getAttribute('data-syllables');
+                if (syllableModeActive) {
+                    el.innerHTML = formatSyllablesHTML(syllables);
+                } else {
+                    el.textContent = normal;
+                }
+            });
+
+            // Lecturas
+            document.querySelectorAll('.reading-line').forEach(el => {
+                const normal = el.getAttribute('data-normal');
+                const syllables = el.getAttribute('data-syllables');
+                if (syllableModeActive) {
+                    el.innerHTML = formatSentenceSyllables(syllables);
+                } else {
+                    el.textContent = normal;
+                }
+            });
+        }
+
+        function formatSyllablesHTML(sylStr) {
+            const parts = sylStr.split('-');
+            return parts.map((part, idx) => {
+                const cls = (idx % 2 === 0) ? 'syl-a' : 'syl-b';
+                let html = `<span class="${cls}">${part}</span>`;
+                if (idx < parts.length - 1) html += `<span class="syl-hyphen">-</span>`;
+                return html;
+            }).join('');
+        }
+
+        function formatSentenceSyllables(sylStr) {
+            const words = sylStr.split(' ');
+            return words.map(word => {
+                const parts = word.split('-');
+                return parts.map((part, idx) => {
+                    const cls = (idx % 2 === 0) ? 'syl-a' : 'syl-b';
+                    let html = `<span class="${cls}">${part}</span>`;
+                    if (idx < parts.length - 1) html += `<span class="syl-hyphen">-</span>`;
+                    return html;
+                }).join('');
+            }).join(' ');
+        }
+
+        // --- 4. FOCO DE RENGLÓN CON MOUSEENTER Y CLIC ---
+        let focusModeActive = false;
+
+        function toggleFocusMode() {
+            focusModeActive = !focusModeActive;
+            document.body.classList.toggle('focus-mode', focusModeActive);
+            const btn = document.getElementById('tool-focus');
+            btn.classList.toggle('active-tool', focusModeActive);
+        }
+
+        document.addEventListener('mouseover', (e) => {
+            if (!focusModeActive) return;
+            const line = e.target.closest('.reading-line');
+            if (line) {
+                document.querySelectorAll('.reading-line').forEach(l => l.classList.remove('active-focus'));
+                line.classList.add('active-focus');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!focusModeActive) return;
+            const line = e.target.closest('.reading-line');
+            if (line) {
+                document.querySelectorAll('.reading-line').forEach(l => l.classList.remove('active-focus'));
+                line.classList.add('active-focus');
+            }
+        });
+
+        // --- 5. IDEA CLAVE LOCAL ---
+        function toggleLocalKey(modNum) {
+            const moduleBox = document.getElementById(`module-${modNum}-content`);
+            const btn = document.getElementById(`btn-key-${modNum}`);
+            const keyElement = moduleBox.querySelector('.is-key-idea');
+            
+            if (keyElement) {
+                const isActive = keyElement.classList.toggle('highlighted');
+                btn.classList.toggle('active-tool', isActive);
+            }
+        }
+
+        // --- 6. VALIDACIÓN DE QUIZZES ---
+        function checkQuiz(button, isCorrect, modNum) {
+            const container = button.closest('.quiz-options');
+            container.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                opt.style.opacity = '0.6';
+            });
+
+            button.style.opacity = '1';
+            button.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+            const fb = document.getElementById(`feedback-${modNum}`);
+            fb.className = 'feedback-box ' + (isCorrect ? 'success' : 'error');
+            fb.textContent = isCorrect ? '¡Excelente! Respuesta correcta.' : 'Incorrecto. Revise la lectura anterior e intente de nuevo.';
+        }
+
+        // --- 7. GIMNASIO INTERACTIVO (LÓGICA TÁCTIL) ---
+        // Actividad A (Palabras)
+        function moveSyl(btn, targetId) {
+            const target = document.getElementById(targetId);
+            target.appendChild(btn);
+        }
+        function resetSyl(targetId, poolId, fbId) {
+            const pool = document.getElementById(poolId);
+            const target = document.getElementById(targetId);
+            while (target.firstChild) pool.appendChild(target.firstChild);
+            document.getElementById(fbId).style.display = 'none';
+        }
+        function verifySyl(targetId, targetWord, fbId) {
+            const target = document.getElementById(targetId);
+            const blocks = target.querySelectorAll('.syllable-block');
+            let res = "";
+            blocks.forEach(b => res += b.textContent);
+            
+            const fb = document.getElementById(fbId);
+            fb.style.display = 'block';
+            if (res === targetWord) {
+                fb.className = 'feedback-box success';
+                fb.textContent = `¡Correcto! Ha formado la palabra ${targetWord}.`;
+            } else {
+                fb.className = 'feedback-box error';
+                fb.textContent = `Orden incorrecto. Debe formar ${targetWord}.`;
+            }
+        }
+
+        // Actividad B (Oraciones)
+        function moveSent(btn) {
+            const target = document.getElementById('target-sent');
+            target.appendChild(btn);
+        }
+        function resetSent() {
+            const pool = document.getElementById('pool-sent');
+            const target = document.getElementById('target-sent');
+            while (target.firstChild) pool.appendChild(target.firstChild);
+            document.getElementById('gym-fb-3').style.display = 'none';
+        }
+        function verifySent() {
+            const target = document.getElementById('target-sent');
+            const blocks = target.querySelectorAll('.syllable-block');
+            let res = [];
+            blocks.forEach(b => res.push(b.textContent));
+            const fullSentence = res.join(' ');
+
+            const fb = document.getElementById('gym-fb-3');
+            fb.style.display = 'block';
+            if (fullSentence === "El río tiene vida.") {
+                fb.className = 'feedback-box success';
+                fb.textContent = '¡Muy bien! La oración está perfectamente estructurada en orden directo.';
+            } else {
+                fb.className = 'feedback-box error';
+                fb.textContent = 'Aún no es correcta. Recuerde: Sujeto + Verbo + Predicado (El río tiene vida).';
+            }
+        }
+    </script>
+</body>
+</html>
+```eof

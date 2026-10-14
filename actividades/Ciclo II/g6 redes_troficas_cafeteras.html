@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- REQUISITO CRÍTICO: Prevención de bugs en móviles y responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Redes Tróficas: Región Cafetera</title>
+    <style>
+        :root {
+            --bg-color: #f4f1ea;
+            --text-color: #2c3e50;
+            --primary: #27ae60;
+            --primary-dark: #1e8449;
+            --secondary: #d35400;
+            --accent: #2980b9;
+            --error: #c0392b;
+            --error-bg: #fadbd8;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Tipografía del sistema para modo offline 100% */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Contenedor centralizado para monitores, 100% para móviles */
+        main {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* ==================== ZONA DE JUEGO ==================== */
+        #zona-juego {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* Tipografía elástica (clamp) */
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .instruccion {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: #555;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            background-color: #eaf2f8;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            padding: 0.5rem;
+            background-color: #f8f9f9;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+        }
+
+        .stat-item span {
+            color: var(--accent);
+        }
+
+        .stat-item .nota {
+            color: var(--primary);
+            font-size: 1.2em;
+        }
+
+        /* REGLA CRÍTICA: touch-action none para el tablero */
+        .game-board {
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            padding: 1rem 0;
+            min-height: 200px;
+        }
+
+        .items-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            min-height: 120px;
+        }
+
+        .item-chip {
+            background-color: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 20px;
+            padding: 0.6rem 1.2rem;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Estados del Chip */
+        .item-chip.selected {
+            border-color: var(--accent) !important;
+            background-color: #ebf5fb !important;
+            color: var(--accent);
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(41, 128, 185, 0.3);
+            z-index: 10;
+        }
+
+        .item-chip.hidden {
+            opacity: 0;
+            transform: scale(0) translateY(-20px);
+            pointer-events: none;
+        }
+
+        .item-chip.shake-error {
+            animation: shake 0.4s ease-in-out;
+            border-color: var(--error) !important;
+            background-color: var(--error-bg) !important;
+            color: var(--error) !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px) rotate(-2deg); }
+            40% { transform: translateX(6px) rotate(2deg); }
+            60% { transform: translateX(-6px) rotate(-2deg); }
+            80% { transform: translateX(6px) rotate(2deg); }
+        }
+
+        .categories-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .categories-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .category-btn {
+            background-color: #fff;
+            border: 2px dashed #95a5a6;
+            border-radius: var(--border-radius);
+            padding: 1rem 0.5rem;
+            font-size: clamp(0.85rem, 2.2vw, 1rem);
+            font-weight: bold;
+            color: #34495e;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn svg {
+            width: 36px;
+            height: 36px;
+            fill: currentColor;
+        }
+
+        .category-btn:hover, .category-btn:active {
+            background-color: #f8f9f9;
+            border-color: var(--primary);
+            color: var(--primary);
+            border-style: solid;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .victoria-msg {
+            display: none;
+            background-color: #d4efdf;
+            color: #196f3d;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+            border: 2px solid #27ae60;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== ZONA DE LECTURA ==================== */
+        #zona-lectura {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem clamp(1.2rem, 4vw, 3rem);
+        }
+
+        .lectura-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .lectura-header h2 {
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            color: var(--primary-dark);
+        }
+
+        article h3 {
+            color: var(--secondary);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-size: clamp(1.3rem, 3vw, 1.7rem);
+            border-left: 5px solid var(--secondary);
+            padding-left: 12px;
+        }
+
+        article p {
+            margin-bottom: 1.4rem;
+            font-size: 1.1rem;
+            text-align: justify;
+            color: #34495e;
+        }
+
+        article ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.8rem;
+        }
+
+        article li {
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+            color: #34495e;
+        }
+
+        .taller-container {
+            margin-top: 3.5rem;
+            background-color: #fdf2e9;
+            padding: 2.5rem clamp(1rem, 3vw, 2rem);
+            border-radius: var(--border-radius);
+            border: 1px solid #f5cba7;
+        }
+
+        .taller-container h3 {
+            color: #ba4a00;
+            text-align: center;
+            border: none;
+            font-size: 2rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .taller-instruccion {
+            background-color: #ba4a00;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 4px 6px rgba(186, 74, 0, 0.2);
+            font-size: 1.1rem;
+        }
+
+        .taller-lista {
+            list-style: none;
+            counter-reset: taller-counter;
+        }
+
+        .taller-lista li {
+            position: relative;
+            margin-bottom: 1.8rem;
+            padding-left: 3.5rem;
+            font-size: 1.1rem;
+            background: #fff;
+            padding-top: 1.2rem;
+            padding-bottom: 1.2rem;
+            padding-right: 1.2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+            border-left: 4px solid #f0b27a;
+        }
+
+        .taller-lista li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 12px;
+            top: 20px;
+            background-color: var(--secondary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .tipo-actividad {
+            display: inline-block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            background-color: #ebedef;
+            color: #555;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <h1>Clasificador Trófico Cafetero</h1>
+            <p class="instruccion">
+                👆 <strong>Paso 1:</strong> Toca un elemento de la lista (se marcará en azul).<br>
+                📥 <strong>Paso 2:</strong> Toca el contenedor de la categoría correcta a la que pertenece.
+            </p>
+
+            <div class="stats-bar">
+                <div class="stat-item">Aciertos: <span id="score">0</span>/15</div>
+                <div class="stat-item">Errores: <span id="errors" style="color:var(--error)">0</span></div>
+                <div class="stat-item">Calificación: <span id="grade" class="nota">5.0</span></div>
+            </div>
+
+            <div class="game-board">
+                <div class="items-container" id="items-container">
+                    <!-- Los items se generarán dinámicamente con JS -->
+                </div>
+
+                <div class="categories-container">
+                    <!-- SVG incrustados para cumplir requisito Offline -->
+                    <button class="category-btn" onclick="seleccionarCategoria('productor')">
+                        <svg viewBox="0 0 24 24"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 7,11.5 7,11.5C7,11.5 10.5,5 17,8Z"/></svg>
+                        Productores
+                    </button>
+                    <button class="category-btn" onclick="seleccionarCategoria('primario')">
+                        <svg viewBox="0 0 24 24"><path d="M14,14H10V17H8V13H16V17H14V14M20,10.51V12H21V14H20.73L19.46,18.42C19.16,19.46 18.23,20 17.2,20H6.8C5.77,20 4.84,19.46 4.54,18.42L3.27,14H3V12H4V10.51C4,8.57 5.57,7 7.5,7H8V6A2,2 0 0,1 10,4H14A2,2 0 0,1 16,6V7H16.5C18.43,7 20,8.57 20,10.51M14,6H10V7H14V6M18,10.51C18,9.68 17.33,9 16.5,9H7.5C6.67,9 6,9.68 6,10.51V12H18V10.51Z"/></svg>
+                        C. Primarios (Herbívoros)
+                    </button>
+                    <button class="category-btn" onclick="seleccionarCategoria('secundario')">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C7.58 2 4 5.58 4 10C4 11.85 4.63 13.55 5.68 14.91L4.31 16.29L5.72 17.71L7.1 16.32C8.47 17.38 10.17 18 12 18C16.42 18 20 14.42 20 10C20 5.58 16.42 2 12 2M12 4C15.31 4 18 6.69 18 10C18 13.31 15.31 16 12 16C8.69 16 6 13.31 6 10C6 6.69 8.69 4 12 4M10 8C9.45 8 9 8.45 9 9C9 9.55 9.45 10 10 10C10.55 10 11 9.55 11 9C11 8.45 10.55 8 10 8M14 8C13.45 8 13 8.45 13 9C13 9.55 13.45 10 14 10C14.55 10 15 9.55 15 9C15 8.45 14.55 8 14 8M12 12C10.9 12 10 12.9 10 14C10 15.1 10.9 16 12 16C13.1 16 14 15.1 14 14C14 12.9 13.1 12 12 12Z"/></svg>
+                        C. Secundarios (Depredadores)
+                    </button>
+                    <button class="category-btn" onclick="seleccionarCategoria('descomponedor')">
+                        <svg viewBox="0 0 24 24"><path d="M11,15H13V17H11V15M11,11H13V13H11V11M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20Z"/></svg>
+                        Descomponedores
+                    </button>
+                </div>
+            </div>
+
+            <div id="victoria" class="victoria-msg">
+                <h2>¡Excelente trabajo! 🌟</h2>
+                <p>Has clasificado correctamente todas las especies de la región cafetera.</p>
+                <p style="margin-top: 10px; font-size: 1.2em;">Tu calificación final es: <strong id="nota-final">5.0</strong></p>
+                <p style="margin-top: 15px; font-size: 1em; color: #145a32; font-weight: bold;">
+                    👇 Continúa abajo para leer la teoría y realizar el taller en tu cuaderno.
+                </p>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="lectura-header">
+                <h2>El Flujo de la Vida: Redes Tróficas en la Región Cafetera Colombiana</h2>
+            </div>
+            
+            <article>
+                <h3>Introducción a los Ecosistemas Cafeteros</h3>
+                <p>
+                    La región cafetera colombiana no es solo un vasto conjunto de montañas sembradas con árboles de café; es un ecosistema vibrante, complejo y lleno de biodiversidad sin igual. En estos majestuosos paisajes andinos conviven miles de especies de plantas, insectos, aves, mamíferos, reptiles y microorganismos que interactúan constantemente día y noche. Estas interacciones son absolutamente fundamentales para mantener el equilibrio natural ecológico que permite, entre otras maravillas, que los cultivos de los campesinos prosperen sin sucumbir ante plagas incontrolables. Para comprender a fondo cómo funciona y se mantiene este delicado equilibrio, debemos estudiar rigurosamente cómo se transfiere la energía de un ser vivo a otro a través de la alimentación.
+                </p>
+
+                <h3>¿Qué es una Cadena y una Red Trófica?</h3>
+                <p>
+                    Toda la energía que impulsa la vida en nuestro planeta Tierra proviene inicialmente del Sol. Una <strong>cadena trófica</strong> es una representación lineal, sencilla y simplificada que nos muestra de forma directa cómo esa energía solar, capturada inicialmente por las plantas, fluye en una sola dirección cuando un organismo se come a otro. Por ejemplo, imaginemos esta secuencia: una hoja de plátano es comida por un gusano cogollero, el gusano es atrapado por un pájaro barranquero, y finalmente el pájaro es cazado por una serpiente toche.
+                </p>
+                <p>
+                    Sin embargo, en la naturaleza salvaje las cosas rara vez son tan simples y lineales. Un pájaro no come solamente un tipo de gusano; también se alimenta de frutas silvestres, pequeñas arañas y múltiples insectos. A su vez, ese mismo pájaro puede ser la presa de varios depredadores diferentes, no solo de las serpientes. Cuando entrelazamos y conectamos todas las posibles cadenas alimenticias de un ecosistema determinado, formamos una <strong>red trófica</strong>. Las redes tróficas nos muestran el mapa real, complejo y multidireccional de las relaciones de alimentación, demostrando que todas las especies están interconectadas de manera profunda. Si un hilo de esta red se rompe, toda la estructura sufre las consecuencias.
+                </p>
+
+                <h3>Niveles Tróficos en Nuestro Entorno Cafetero</h3>
+                <p>
+                    En el estudio de las redes tróficas, los ecólogos organizan a los seres vivos en categorías específicas llamadas <strong>niveles tróficos</strong>. Esta clasificación depende exclusivamente de cómo obtienen su alimento y energía. En nuestra rica región cafetera, estos niveles se distribuyen biológicamente de la siguiente manera:
+                </p>
+
+                <ul>
+                    <li>
+                        <strong>Productores (Primer Nivel Trófico):</strong> Son la base absoluta del ecosistema y de toda la vida. Poseen la increíble y exclusiva capacidad biológica de crear su propio alimento orgánico a través del proceso de la fotosíntesis, utilizando la luz solar inorgánica, el agua y los minerales del suelo. En nuestra región, los productores más representativos incluyen la <em>Planta de Café</em>, los grandes y frondosos árboles de sombrío como el <em>Árbol Yarumo</em> o el <em>Nogal Cafetero</em>, las extensas matas de <em>Plátano</em> y la imponente y útil <em>Guadua</em>.
+                    </li>
+                    <li>
+                        <strong>Consumidores Primarios (Segundo Nivel Trófico):</strong> Son los animales herbívoros estrictos, es decir, aquellos organismos que se alimentan directa y únicamente de las plantas (los productores). Obtienen su energía comiendo hojas tiernas, frutos maduros, raíces subterráneas o savia fresca. Aquí encontramos especies muy conocidas como la <em>Ardilla de cola roja</em> (que consume ansiosamente frutos y semillas), el colorido <em>Loro Orejiamarillo</em>, y también una inmensa variedad de insectos. Algunos de estos insectos, por su proliferación, pueden convertirse en graves plagas para los agricultores si no se controlan, como la temida <em>Broca del café</em> o el voraz <em>Gusano cogollero</em>.
+                    </li>
+                    <li>
+                        <strong>Consumidores Secundarios y Terciarios (Depredadores):</strong> En este nivel agrupamos a los animales carnívoros u omnívoros que se alimentan activamente de los consumidores primarios (y en ocasiones de otros consumidores secundarios). Son ecológicamente cruciales para controlar el tamaño de las poblaciones herbívoras, evitando que estas arrasen con la vegetación. Aves de plumajes hermosos como el <em>Barranquero</em> cazan insectos al vuelo y pequeños lagartos. Mamíferos nocturnos como el <em>Cusumbo</em> o la <em>Zarigüeya (comúnmente llamada Chucha)</em> consumen tanto frutos silvestres como pequeños animales, siendo excelentes controladores. En la cima de estos niveles, manteniendo todo en orden, encontramos depredadores más especializados y temidos como la sigilosa <em>Serpiente Toche</em>, las <em>Ranas de Cristal</em> devoradoras de mosquitos, o las grandes aves rapaces que patrullan el cielo.
+                    </li>
+                    <li>
+                        <strong>Descomponedores (Recicladores de la Naturaleza):</strong> Aunque a menudo pasan completamente desapercibidos por su pequeño tamaño o por vivir bajo tierra, son biológicamente indispensables. Cuando cualquier planta o animal muere, o cuando los animales producen desechos fecales, los descomponedores entran inmediatamente en acción. Se alimentan de esta materia orgánica muerta o en estado de putrefacción, descomponiéndola a nivel químico y liberando minerales esenciales de vuelta al suelo. Estos minerales actúan como un abono natural perfecto para que las plantas (los productores) los absorban nuevamente, reiniciando así el ciclo de la vida. Ejemplos vitales en los suelos cafeteros son los microscópicos <em>Hongos de la pudrición</em>, las incansables <em>Lombrices de tierra</em> y el fascinante <em>Escarabajo estercolero</em>.
+                    </li>
+                </ul>
+
+                <h3>La Importancia del Equilibrio y el Control Biológico Natural</h3>
+                <p>
+                    Comprender profundamente la red trófica cafetera es un requisito vital para garantizar una agricultura verdaderamente sostenible y amigable con el medio ambiente. Cada vez que una especie desaparece por la acción humana, o aumenta desproporcionadamente rompiendo su ciclo, toda la red ecológica se estremece. Por ejemplo, si los seres humanos utilizan insecticidas químicos extremadamente fuertes y tóxicos, y eliminan a todos los insectos (incluyendo a los inofensivos o beneficiosos), aves hermosas como el Barranquero se quedarán súbitamente sin su fuente principal de alimento. Como consecuencia, estas aves se verán obligadas a migrar lejos o, tristemente, morirán de inanición. 
+                </p>
+                <p>
+                    Por otro lado, cuando un cultivo de cafetal se maneja con inteligencia ecológica y mantiene una alta diversidad de especies (conservando árboles nativos, atrayendo aves, protegiendo ranas e insectos depredadores), la red trófica en sí misma actúa como un mecanismo infalible de <strong>control biológico natural</strong>. Las aves insectívoras, las arañas tejedoras y las ranas se comen diariamente a la broca y a otros insectos perjudiciales. De esta forma, mantienen la plaga a raya de forma natural, constante y totalmente gratuita para el campesino. Proteger los diferentes niveles tróficos no es solo un ideal romántico; es, en esencia, proteger la vida misma, asegurar la producción de alimentos y salvaguardar la economía ancestral de la región cafetera.
+                </p>
+            </article>
+
+            <div class="taller-container">
+                <h3>Taller de Repaso y Aplicación</h3>
+                <div class="taller-instruccion">
+                    ✍️ ATENCIÓN ESTUDIANTE: Lee atentamente, escribe y resuelve las siguientes 10 actividades en tu cuaderno de Biología.
+                </div>
+                
+                <ul class="taller-lista">
+                    <li>
+                        <span class="tipo-actividad">Respuesta Directa</span>
+                        Según el texto leído, ¿cuál es la diferencia exacta y fundamental entre una "cadena trófica" y una "red trófica"?
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Análisis Crítico</span>
+                        Imagina que un agricultor, buscando sembrar más café, decide talar absolutamente todos los árboles de Yarumo y Guamo (productores de sombra) en su finca. ¿Cómo afectaría esta drástica decisión a los consumidores primarios y, en consecuencia, al resto de la red ecológica? Argumenta tu respuesta basándote en la lectura.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Dibujo / Ilustración</span>
+                        Dibuja grande en tu cuaderno una cadena alimenticia lineal típica de la región cafetera que incluya exactamente tres eslabones: un productor, un consumidor primario y un consumidor secundario. ¡No olvides dibujar las flechas indicando correctamente hacia dónde fluye la energía!
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Mapa Conceptual</span>
+                        Elabora un mapa conceptual jerárquico que organice y conecte de forma lógica los siguientes términos clave: <em>Energía Solar, Productores, Fotosíntesis, Consumidores Primarios, Depredadores, Descomponedores y Nutrientes del Suelo</em>.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Respuesta Directa</span>
+                        ¿Por qué los descomponedores reciben el importante título de "recicladores de la naturaleza"? Menciona al menos tres ejemplos concretos de descomponedores presentes en los cafetales que se nombran en el artículo.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Análisis Crítico</span>
+                        En la dinámica de la red trófica explicada, ¿qué sucedería a mediano plazo con la población de la plaga conocida como "Broca del café" si desaparecieran repentinamente todas las aves, ranas y arañas (consumidores secundarios) del ecosistema debido a la contaminación?
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Dibujo / Ilustración</span>
+                        Ilustra paso a paso el "ciclo completo de la materia": Dibuja cómo un fruto de café maduro cae al suelo, es aprovechado y descompuesto por un hongo o lombriz (descomponedor), y cómo los nutrientes resultantes viajan por la tierra para regresar a las raíces de una nueva planta.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Mapa Mental</span>
+                        Crea un mapa mental muy colorido ocupando toda una página sobre la "Biodiversidad de la Región Cafetera". Usa 4 ramas principales correspondientes a los 4 niveles tróficos estudiados, y añade en cada rama al menos dos ejemplos específicos de animales o plantas mencionados en el texto.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Respuesta Directa</span>
+                        Responde de forma clara: ¿Cuál es la principal fuente de energía universal de la que depende TODA la red trófica, y cuál es el único grupo de organismos vivos capaz de capturarla y transformarla directamente?
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Análisis Crítico (Solución de problemas)</span>
+                        Basándote estrictamente en el concepto de "Control Biológico Natural" explicado al final de la lectura, redacta una propuesta formal de 4 líneas donde le aconsejes a un cultivador de café local cómo puede controlar las plagas de insectos en su finca sin tener que comprar ni usar químicos tóxicos.
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Datos del juego (15 conceptos equilibrados para mayor desafío)
+        const conceptos = [
+            // Productores (4)
+            { id: 1, name: 'Planta de Café', cat: 'productor' },
+            { id: 2, name: 'Árbol Yarumo', cat: 'productor' },
+            { id: 3, name: 'Guadua', cat: 'productor' },
+            { id: 4, name: 'Mata de Plátano', cat: 'productor' },
+            // Consumidores Primarios (4)
+            { id: 5, name: 'Broca del Café', cat: 'primario' },
+            { id: 6, name: 'Ardilla Cola Roja', cat: 'primario' },
+            { id: 7, name: 'Loro Orejiamarillo', cat: 'primario' },
+            { id: 8, name: 'Gusano Cogollero', cat: 'primario' },
+            // Consumidores Secundarios (4)
+            { id: 9, name: 'Barranquero (Ave)', cat: 'secundario' },
+            { id: 10, name: 'Zarigüeya (Chucha)', cat: 'secundario' },
+            { id: 11, name: 'Serpiente Toche', cat: 'secundario' },
+            { id: 12, name: 'Rana de Cristal', cat: 'secundario' },
+            // Descomponedores (3)
+            { id: 13, name: 'Hongo de Pudrición', cat: 'descomponedor' },
+            { id: 14, name: 'Lombriz de Tierra', cat: 'descomponedor' },
+            { id: 15, name: 'Escarabajo Estercolero', cat: 'descomponedor' }
+        ];
+
+        let selectedElementId = null;
+        let aciertos = 0;
+        let errores = 0;
+        const totalItems = conceptos.length;
+
+        // Referencias al DOM
+        const itemsContainer = document.getElementById('items-container');
+        const scoreUI = document.getElementById('score');
+        const errorsUI = document.getElementById('errors');
+        const gradeUI = document.getElementById('grade');
+
+        // Algoritmo de Fisher-Yates para barajar elementos aleatoriamente
+        function barajarArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function inicializarJuego() {
+            barajarArray(conceptos);
+            conceptos.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-chip';
+                div.id = 'chip-' + item.id;
+                div.textContent = item.name;
+                
+                // Evento unificado para clics y toques táctiles (Tap)
+                div.addEventListener('click', () => seleccionarItem(item.id, div));
+                
+                itemsContainer.appendChild(div);
+            });
+            
+            // Actualizar total en la interfaz
+            scoreUI.nextSibling.textContent = '/' + totalItems;
+        }
+
+        function seleccionarItem(id, elementoHtml) {
+            // Limpiar selección previa en todos los chips
+            document.querySelectorAll('.item-chip').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Establecer nueva selección
+            selectedElementId = id;
+            elementoHtml.classList.add('selected');
+        }
+
+        function seleccionarCategoria(categoriaSeleccionada) {
+            // Si el usuario no ha tocado un elemento previo, ignorar toque en categoría
+            if (!selectedElementId) return;
+
+            const itemData = conceptos.find(c => c.id === selectedElementId);
+            const chipHtml = document.getElementById('chip-' + selectedElementId);
+
+            if (itemData.cat === categoriaSeleccionada) {
+                // -> VALIDACIÓN CORRECTA
+                aciertos++;
+                actualizarMarcadores();
+                
+                // Animación suave de salida
+                chipHtml.style.transition = 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                chipHtml.classList.add('hidden');
+                
+                // Remover del DOM visible tras terminar la animación
+                setTimeout(() => {
+                    chipHtml.style.display = 'none';
+                    verificarVictoria();
+                }, 400);
+
+                // Resetear selección
+                selectedElementId = null;
+            } else {
+                // -> VALIDACIÓN INCORRECTA
+                errores++;
+                actualizarMarcadores();
+
+                // Quitar selección y aplicar animación de error
+                chipHtml.classList.remove('selected');
+                chipHtml.classList.add('shake-error');
+                
+                // Restaurar estado neutral para volver a intentar
+                setTimeout(() => {
+                    chipHtml.classList.remove('shake-error');
+                }, 400);
+
+                // Obliga a seleccionar el elemento de nuevo
+                selectedElementId = null;
+            }
+        }
+
+        function actualizarMarcadores() {
+            scoreUI.textContent = aciertos;
+            errorsUI.textContent = errores;
+
+            // Calcular nota (Base 5.0, penalización por error de 0.25)
+            // Se resta 0.25 para que un par de errores bajen a 4.5, 4.0, etc.
+            let nota = 5.0 - (errores * 0.25);
+            if (nota < 1.0) nota = 1.0; // Nota mínima escolar
+            
+            gradeUI.textContent = nota.toFixed(1);
+            
+            // Feedback de color semáforo según la nota
+            if(nota < 3.0) {
+                gradeUI.style.color = 'var(--error)'; // Rojo - Reprobado
+            } else if(nota < 4.0) {
+                gradeUI.style.color = 'var(--secondary)'; // Naranja - Básico
+            } else {
+                gradeUI.style.color = 'var(--primary)'; // Verde - Alto/Superior
+            }
+        }
+
+        function verificarVictoria() {
+            if (aciertos === totalItems) {
+                // Ocultar elementos de interacción
+                itemsContainer.style.display = 'none';
+                document.querySelector('.categories-container').style.display = 'none';
+                
+                // Configurar y mostrar banner de victoria
+                const winDiv = document.getElementById('victoria');
+                document.getElementById('nota-final').textContent = gradeUI.textContent;
+                
+                // Copiar el color de la calificación final al mensaje
+                document.getElementById('nota-final').style.color = gradeUI.style.color;
+                
+                winDiv.style.display = 'block';
+                
+                // Scroll automático suave hacia el mensaje de éxito
+                winDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Ejecutar el ciclo inicial al cargar el DOM
+        window.onload = function() {
+            inicializarJuego();
+        };
+    </script>
+</body>
+</html>

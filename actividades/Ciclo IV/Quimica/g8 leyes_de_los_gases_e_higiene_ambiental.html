@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Leyes de los Gases e Higiene Ambiental</title>
+    <style>
+        :root {
+            /* Paleta inspirada en el aire, la atmósfera y la ecología */
+            --primary: #0277bd; /* Azul atmósfera */
+            --primary-dark: #01579b;
+            --secondary: #00838f; /* Cian oscuro */
+            --secondary-dark: #006064;
+            --accent: #43a047; /* Verde ecológico */
+            --bg-page: #f0f8ff; /* Alice blue (aire) */
+            --bg-card: #ffffff;
+            --text-main: #263238;
+            --text-light: #ffffff;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --border-radius: 12px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header {
+            background-color: var(--primary);
+            background-image: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border-bottom: 5px solid var(--accent);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.6rem, 5vw, 2.8rem);
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            margin: 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: rgba(0,0,0,0.2);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: clamp(1rem, 4vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        /* --- ZONA DE JUEGO --- */
+        #zona-juego {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            /* REQUISITO CRÍTICO: Prevención de bugs táctiles */
+            touch-action: none;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e1f5fe;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            color: var(--primary-dark);
+            border: 2px solid #b3e5fc;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.3rem, 1.5vw, 1rem);
+        }
+
+        .category-title {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            font-weight: 900;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.2rem;
+            border-radius: 8px;
+            font-size: clamp(0.65rem, 2.5vw, 1.1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+            word-break: break-word;
+        }
+
+        .pts-btn {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
+            font-weight: 900;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pts-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .pts-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        /* --- MODALES --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 8px solid var(--accent);
+        }
+
+        .modal-header-text {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--secondary);
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-question-text {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #eceff1;
+            border-color: #b0bec5;
+        }
+
+        .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); }
+        .opt-btn.incorrect { background-color: var(--danger); color: white; border-color: var(--danger); }
+
+        .feedback-alert {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .continue-btn {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #1b5e20;
+        }
+
+        .continue-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #1b5e20;
+        }
+
+        .final-mark {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- ZONA DE LECTURA Y TALLER --- */
+        #zona-lectura {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .theory-article h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            border-bottom: 4px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .theory-article h2:first-child { margin-top: 0; }
+
+        .theory-article h3 {
+            color: var(--secondary-dark);
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2rem;
+        }
+
+        .theory-article p, .theory-article li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: #37474f;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .theory-article ul { padding-left: 1.5rem; }
+
+        .workshop-container {
+            margin-top: 4rem;
+            background-color: #f1f8e9; /* Verde muy claro ecológico */
+            border: 3px dashed var(--accent);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .workshop-container h2 {
+            margin-top: 0;
+            color: var(--success);
+            border-bottom: none;
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+        }
+
+        .instruction-banner {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .workshop-list li {
+            background-color: #ffffff;
+            border-left: 8px solid var(--accent);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tag-format {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            background-color: #e1f5fe;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .question-text {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Leyes de los Gases e Higiene Ambiental</h1>
+        <p>Toca una casilla de la cuadrícula, lee la pista y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <!-- FASE 2: ZONA DE JUEGO INTERACTIVA -->
+        <section id="zona-juego">
+            <div class="stats-panel">
+                <div>Puntuación: <span id="score-counter">0</span></div>
+                <div>Progreso: <span id="progress-counter">0</span>/12</div>
+            </div>
+            <div class="grid-container" id="jeopardy-grid">
+                <!-- Inyectado dinámicamente mediante JavaScript -->
+            </div>
+        </section>
+
+        <!-- FASE 3: ZONA DE LECTURA TEÓRICA Y TALLER (Siempre visible) -->
+        <section id="zona-lectura">
+            <article class="theory-article">
+                <h2>El Comportamiento de los Gases y la Atmósfera Terrestre</h2>
+                
+                <p>El aire que respiramos, el viento que sentimos y el clima que experimentamos están dictados por el comportamiento de los gases. A diferencia de los sólidos o líquidos, los gases no tienen forma ni volumen definidos. Sus partículas están en constante y caótico movimiento, chocando entre sí y contra las paredes de cualquier recipiente que los contenga. Para comprender la física detrás de los gases, debemos analizar tres variables fundamentales: <strong>Volumen (V)</strong>, <strong>Presión (P)</strong> y <strong>Temperatura (T)</strong>.</p>
+                
+                <p>La Presión es la fuerza que ejercen las partículas del gas al chocar contra una superficie; el Volumen es el espacio tridimensional que ocupa el gas; y la Temperatura es la medida de la energía cinética (velocidad) de esas partículas, la cual en cálculos químicos siempre debe medirse en grados <strong>Kelvin (K)</strong> absoluto.</p>
+
+                <h2>Las Tres Leyes Clásicas de los Gases</h2>
+                <p>A través de la historia, varios científicos descubrieron reglas matemáticas infalibles (leyes) que predicen cómo reaccionan los gases al modificar una de estas variables, siempre y cuando se mantenga constante una tercera:</p>
+                
+                <h3>1. Ley de Boyle (Temperatura Constante)</h3>
+                <p>El científico Robert Boyle descubrió que, a temperatura constante, <strong>la Presión y el Volumen son inversamente proporcionales</strong>. Esto significa que si aprietas o reduces el volumen de un recipiente, la presión del gas en su interior aumentará porque las partículas chocarán más frecuentemente por la falta de espacio. Un ejemplo perfecto es el funcionamiento de nuestros pulmones: al expandir la caja torácica (aumenta el volumen), la presión interior disminuye, permitiendo que el aire exterior entre de golpe.</p>
+
+                <h3>2. Ley de Charles (Presión Constante)</h3>
+                <p>Jacques Charles determinó que, manteniendo la presión constante, <strong>el Volumen y la Temperatura son directamente proporcionales</strong>. Es decir, si calientas un gas, sus partículas se moverán más rápido y empujarán hacia afuera, haciendo que el volumen aumente (el gas se expande). Esto explica cómo funcionan los globos aerostáticos: al calentar el aire de su interior con fuego, este se expande, se vuelve menos denso que el aire exterior y el globo se eleva.</p>
+
+                <h3>3. Ley de Gay-Lussac (Volumen Constante)</h3>
+                <p>Joseph Gay-Lussac demostró que, en un recipiente cerrado que no puede cambiar de tamaño (volumen constante), <strong>la Presión y la Temperatura son directamente proporcionales</strong>. Si calientas un gas encerrado, las partículas chocarán con tremenda fuerza contra las paredes, elevando la presión. Por esto nunca debes lanzar una lata de aerosol vacía al fuego; el calor extremo aumentará la presión del gas residual hasta hacer explotar el envase.</p>
+
+                <h2>La Presión Atmosférica y la Altitud</h2>
+                <p>Vivimos en el fondo de un inmenso "océano de aire" llamado atmósfera. Todo ese peso del aire sobre nosotros ejerce lo que conocemos como <strong>Presión Atmosférica</strong>, medida tradicionalmente con un instrumento llamado barómetro. A nivel del mar, hay una gran columna de aire sobre nuestras cabezas, por lo que la presión es máxima. Pero si viajamos a regiones montañosas (como la región andina colombiana), hay menos aire sobre nosotros y, por ende, <strong>la presión atmosférica disminuye a mayor altitud</strong>.</p>
+                <p>Esta menor presión en la altura hace que los líquidos hiervan más rápido. Por ejemplo, en Bogotá, el agua no hierve a 100°C sino a unos 92°C, porque necesita menos calor para vencer la presión aplastante de la atmósfera.</p>
+
+                <h2>Higiene Ambiental y el Efecto Invernadero</h2>
+                <p>La química de los gases también rige nuestro impacto en el medio ambiente. La "higiene ambiental" se refiere a mantener la pureza y el equilibrio de nuestra atmósfera. Históricamente, la atmósfera contiene una mezcla estable de Nitrógeno (78%), Oxígeno (21%) y trazas de otros gases como el Dióxido de Carbono (CO2).</p>
+                <p>El CO2 y el metano son gases de <strong>Efecto Invernadero</strong>. Funcionan como el cristal de un invernadero: dejan entrar la luz del sol, pero atrapan el calor, impidiendo que rebote al espacio. En niveles naturales, esto es excelente, ya que mantiene la Tierra caliente para albergar vida. Sin embargo, la quema masiva de combustibles fósiles (carbón, petróleo) y las industrias han inyectado un exceso letal de CO2 a la atmósfera.</p>
+                <p>¿El resultado? El <strong>Calentamiento Global</strong>. Las altas temperaturas expanden los gases oceánicos, derriten los polos y alteran el clima mundial. Además, las industrias emiten gases tóxicos que, al quedar atrapados en las ciudades, forman <strong>Smog</strong>, deteriorando gravemente la higiene ambiental y causando enfermedades respiratorias. Comprender las leyes de los gases es el primer paso para regular nuestra tecnología y salvar nuestro frágil escudo atmosférico.</p>
+            </article>
+
+            <div class="workshop-container">
+                <h2>Taller de Comprensión y Aplicación</h2>
+                
+                <div class="instruction-banner">
+                    <!-- Icono SVG en línea para no depender de fuentes externas -->
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>ATENCIÓN: Escribe y resuelve TODAS estas actividades en tu cuaderno.</span>
+                </div>
+
+                <ul class="workshop-list">
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">1. Define brevemente cuáles son las tres variables fundamentales que dictan el comportamiento físico de los gases.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Ilustrar / Dibujar</span>
+                        <span class="question-text">2. Dibuja el funcionamiento de la "Ley de Boyle" usando una jeringa tapada. Dibuja el estado 1 (émbolo arriba, volumen grande = presión baja) y el estado 2 (émbolo presionado, volumen pequeño = presión alta).</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico / Explicación</span>
+                        <span class="question-text">3. Según la Ley de Gay-Lussac, explica científicamente por qué las etiquetas de los aerosoles o desodorantes indican: "Peligro: No exponer al fuego o altas temperaturas". ¿Qué le ocurre al gas atrapado adentro?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Conceptual</span>
+                        <span class="question-text">4. Elabora un mapa conceptual de las "Leyes Clásicas de los Gases". Usa tres ramas (Boyle, Charles, Gay-Lussac), escribe la relación (directa o inversa) e indica cuál variable se mantiene CONSTANTE en cada una.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">5. De acuerdo con el texto, ¿qué sucede con la presión atmosférica a medida que escalamos una montaña y por qué el agua hierve a menor temperatura allí?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Ilustrar / Secuencia</span>
+                        <span class="question-text">6. Dibuja una historieta o secuencia de dos viñetas que explique la "Ley de Charles". Viñeta 1: Un globo aerostático desinflado y frío. Viñeta 2: El globo inflado y elevándose gracias al fuego que calienta el gas en su interior.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">7. El Efecto Invernadero es un proceso natural. Entonces, ¿cuál ha sido el error de la intervención humana (uso de industrias y combustibles) que ha transformado este fenómeno en un grave problema de calentamiento global?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Mental</span>
+                        <span class="question-text">8. Construye un Mapa Mental titulado "Higiene Ambiental de la Atmósfera". Saca ramificaciones sobre el Efecto Invernadero, los Gases Contaminantes (CO2, Metano), el Smog y sus consecuencias en la salud.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">9. ¿Cuál es la escala de medición obligatoria para la temperatura cuando los científicos realizan cálculos usando las leyes de los gases?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico y Deducción</span>
+                        <span class="question-text">10. Teniendo en cuenta la Ley de Charles (el calor expande el volumen de los gases y líquidos), escribe un párrafo deduciendo qué terrible consecuencia traerá el aumento de temperatura global a los océanos del planeta y las ciudades costeras.</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Pregunta -->
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header-text" id="modal-cat-pts">Categoría - Puntos</div>
+            <div class="modal-question-text" id="modal-q-text">¿Pregunta?</div>
+            <div id="options-area">
+                <!-- Se inyectan opciones vía JS -->
+            </div>
+            <div class="feedback-alert" id="feedback-alert"></div>
+            <button class="continue-btn" id="btn-next">Volver al Tablero</button>
+        </div>
+    </div>
+
+    <!-- Modal Final de Calificación -->
+    <div class="modal-overlay" id="results-modal">
+        <div class="modal-content" style="border-top-color: var(--success);">
+            <div class="modal-question-text" style="color: var(--primary-dark); margin-bottom: 0.5rem;">¡Análisis Atmosférico Completado!</div>
+            <p style="font-size: 1.2rem; color: #546e7a;">Has despejado todas las incógnitas de los gases.</p>
+            
+            <div style="font-size: 1.4rem; font-weight: bold; margin-top:1rem;">
+                Puntos Ganados: <span id="final-pts-text" style="color: var(--accent);">0</span> / 2400
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top:1.5rem;">Tu Calificación Final es:</div>
+            <div class="final-mark" id="final-grade-display">5.0</div>
+            
+            <p style="font-size: 1.1rem; background-color: #e8f5e9; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--success); margin-bottom: 2rem; color: #1b5e20;">
+                <strong>Siguiente Misión:</strong> Cierra esta ventana, haz scroll hacia abajo para leer detalladamente el artículo sobre gases y resuelve el taller en tu cuaderno.
+            </p>
+            
+            <button class="continue-btn" style="display: block; box-shadow: 0 4px 0 #1b5e20; background-color: var(--success);" onclick="document.getElementById('results-modal').style.display='none'">Cerrar e ir al Taller</button>
+        </div>
+    </div>
+
+    <script>
+        // Estructura de Datos de las Preguntas del Juego
+        const gameData = [
+            {
+                category: "Básicos",
+                questions: [
+                    { pts: 100, q: "¿Qué variable física mide la cantidad e intensidad de los choques de las partículas de un gas contra las paredes del recipiente?", options: ["Volumen", "Masa", "Presión"], correctIdx: 2 },
+                    { pts: 200, q: "Es la medida del espacio tridimensional que ocupan las partículas expandidas de un gas.", options: ["Temperatura", "Volumen", "Densidad"], correctIdx: 1 },
+                    { pts: 300, q: "Unidad de medida estándar y obligatoria para calcular la Temperatura Absoluta en las leyes de los gases.", options: ["Grados Celsius (°C)", "Grados Fahrenheit (°F)", "Kelvin (K)"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "Las Leyes",
+                questions: [
+                    { pts: 100, q: "Ley de Boyle: Afirma que a temperatura constante, si el volumen de un gas se reduce (lo aprietas), su presión...", options: ["Aumenta (inversamente proporcional)", "Disminuye a cero", "Se mantiene igual"], correctIdx: 0 },
+                    { pts: 200, q: "Ley que explica por qué los globos aerostáticos se elevan: Relaciona de forma directa el Volumen y la Temperatura.", options: ["Ley de Newton", "Ley de Charles", "Ley de Avogadro"], correctIdx: 1 },
+                    { pts: 300, q: "Ley de Gay-Lussac: Relaciona Presión y Temperatura a volumen constante. Un ejemplo de esto es...", options: ["Un pulmón respirando", "Una jeringa tapada", "Una olla a presión"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "Higiene",
+                questions: [
+                    { pts: 100, q: "Capa inmensa de gases (principalmente Nitrógeno y Oxígeno) que envuelve nuestro planeta.", options: ["Litósfera", "Atmósfera", "Estratosfera térmica"], correctIdx: 1 },
+                    { pts: 200, q: "Fenómeno que retiene el calor del Sol gracias a la acumulación de gases, causando calentamiento global cuando hay exceso.", options: ["Efecto Invernadero", "Inversión Térmica", "Deforestación"], correctIdx: 0 },
+                    { pts: 300, q: "Es la niebla contaminante producida en las grandes ciudades por las emisiones industriales y vehiculares.", options: ["Rocío matutino", "Vapor de agua", "Smog"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "Altitud",
+                questions: [
+                    { pts: 100, q: "A medida que ascendemos a una montaña y ganamos altitud, la presión atmosférica...", options: ["Aumenta drásticamente", "Disminuye", "Se convierte en vacío total"], correctIdx: 1 },
+                    { pts: 200, q: "Instrumento científico histórico diseñado para medir la presión atmosférica.", options: ["Barómetro", "Termómetro", "Sismógrafo"], correctIdx: 0 },
+                    { pts: 300, q: "¿Por qué el agua hierve a menor temperatura en ciudades altas (ej. Bogotá) en comparación con el nivel del mar?", options: ["Porque hace más frío afuera", "Por la menor cantidad de gravedad", "Porque hay menos presión atmosférica aplastándola"], correctIdx: 2 }
+                ]
+            }
+        ];
+
+        // Variables de Estado del Juego
+        let currentScore = 0;
+        let answeredQuestions = 0;
+        const totalQuestions = 12;
+        const maxScore = 2400; // 4 columnas * (100+200+300) = 2400
+        
+        let activeColIdx = -1;
+        let activeRowIdx = -1;
+        let activeBtnElement = null;
+
+        // Referencias del DOM
+        const gridContainer = document.getElementById("jeopardy-grid");
+        const scoreDisplay = document.getElementById("score-counter");
+        const progressDisplay = document.getElementById("progress-counter");
+        
+        const qModal = document.getElementById("question-modal");
+        const mCatPts = document.getElementById("modal-cat-pts");
+        const mQuestion = document.getElementById("modal-q-text");
+        const optionsArea = document.getElementById("options-area");
+        const feedbackAlert = document.getElementById("feedback-alert");
+        const btnNext = document.getElementById("btn-next");
+
+        // Construcción inicial del Tablero
+        function buildGame() {
+            // Renderizar Cabeceras
+            gameData.forEach(col => {
+                const header = document.createElement("div");
+                header.className = "category-title";
+                header.textContent = col.category;
+                gridContainer.appendChild(header);
+            });
+
+            // Renderizar Botones interactivos por filas
+            for (let row = 0; row < 3; row++) {
+                gameData.forEach((col, colIdx) => {
+                    const btn = document.createElement("button");
+                    btn.className = "pts-btn";
+                    const points = col.questions[row].pts;
+                    btn.textContent = points;
+                    
+                    // Asignar evento click (compatible con touch gracias a touch-action:none)
+                    btn.addEventListener("click", () => openModal(colIdx, row, btn));
+                    
+                    gridContainer.appendChild(btn);
+                });
+            }
+        }
+
+        // Abrir Modal de Preguntas
+        function openModal(colIdx, rowIdx, btnElement) {
+            activeColIdx = colIdx;
+            activeRowIdx = rowIdx;
+            activeBtnElement = btnElement;
+
+            const qData = gameData[colIdx].questions[rowIdx];
+            
+            mCatPts.textContent = `${gameData[colIdx].category} | ${qData.pts} Pts`;
+            mQuestion.textContent = qData.q;
+            
+            // Limpiar área de opciones
+            optionsArea.innerHTML = "";
+            feedbackAlert.style.display = "none";
+            btnNext.style.display = "none";
+
+            // Inyectar opciones
+            qData.options.forEach((optText, optIdx) => {
+                const optBtn = document.createElement("button");
+                optBtn.className = "opt-btn";
+                optBtn.textContent = optText;
+                optBtn.addEventListener("click", () => handleAnswer(optIdx, optBtn));
+                optionsArea.appendChild(optBtn);
+            });
+
+            qModal.style.display = "flex";
+        }
+
+        // Validar y procesar la respuesta seleccionada
+        function handleAnswer(selectedIdx, clickedElement) {
+            // Deshabilitar botones para evitar clics múltiples
+            const allOpts = optionsArea.querySelectorAll(".opt-btn");
+            allOpts.forEach(b => b.disabled = true);
+
+            const qData = gameData[activeColIdx].questions[activeRowIdx];
+            const isCorrect = (selectedIdx === qData.correctIdx);
+
+            feedbackAlert.style.display = "block";
+            
+            if (isCorrect) {
+                clickedElement.classList.add("correct");
+                currentScore += qData.pts;
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackAlert.textContent = `¡Respuesta Correcta! Concepto aplicado con éxito. +${qData.pts} puntos.`;
+                feedbackAlert.style.backgroundColor = "#e8f5e9";
+                feedbackAlert.style.color = "var(--success)";
+                feedbackAlert.style.border = "2px solid #a5d6a7";
+            } else {
+                clickedElement.classList.add("incorrect");
+                allOpts[qData.correctIdx].classList.add("correct"); // Mostrar respuesta correcta real
+                
+                feedbackAlert.textContent = `Incorrecto. La energía (puntos) se ha disipado. 0 puntos.`;
+                feedbackAlert.style.backgroundColor = "#ffebee";
+                feedbackAlert.style.color = "var(--danger)";
+                feedbackAlert.style.border = "2px solid #ef9a9a";
+            }
+
+            // Actualizar variables de progreso
+            answeredQuestions++;
+            progressDisplay.textContent = answeredQuestions;
+            
+            // Apagar botón en el grid
+            activeBtnElement.disabled = true;
+            activeBtnElement.textContent = "—";
+
+            btnNext.style.display = "block";
+        }
+
+        // Continuar y verificar si terminó el juego
+        btnNext.addEventListener("click", () => {
+            qModal.style.display = "none";
+            
+            if (answeredQuestions === totalQuestions) {
+                setTimeout(showFinalGrade, 600);
+            }
+        });
+
+        // Calcular calificación y mostrar modal final
+        function showFinalGrade() {
+            const resultsModal = document.getElementById("results-modal");
+            document.getElementById("final-pts-text").textContent = currentScore;
+
+            // Escala lineal de 1.0 a 5.0
+            const percentage = currentScore / maxScore;
+            const computedGrade = (percentage * 4.0) + 1.0;
+            const finalGradeStr = computedGrade.toFixed(1);
+
+            const gradeDisplay = document.getElementById("final-grade-display");
+            gradeDisplay.textContent = finalGradeStr;
+            
+            // Lógica de color de calificación
+            if (computedGrade >= 4.0) {
+                gradeDisplay.style.color = "var(--success)";
+            } else if (computedGrade >= 3.0) {
+                gradeDisplay.style.color = "var(--accent)";
+            } else {
+                gradeDisplay.style.color = "var(--danger)";
+            }
+
+            resultsModal.style.display = "flex";
+        }
+
+        // Inicializar la aplicación segura post-carga
+        window.addEventListener("DOMContentLoaded", buildGame);
+    </script>
+</body>
+</html>

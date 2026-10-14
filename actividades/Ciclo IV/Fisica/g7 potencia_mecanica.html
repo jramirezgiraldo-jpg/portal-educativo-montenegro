@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Configuración de viewport para móviles y prevención de zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Potencia Mecánica - Tap & Sort</title>
+    
+    <style>
+        :root {
+            /* Colores del Juego */
+            --bg-game: #1e293b;
+            --text-game: #f8fafc;
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --chip-bg: #334155;
+            --chip-border: #475569;
+            
+            /* Colores de Lectura */
+            --bg-reading: #ffffff;
+            --bg-reading-alt: #f1f5f9;
+            --text-reading: #334155;
+            --text-heading: #0f172a;
+            --accent-reading: #0ea5e9;
+            
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-game);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: clamp(10px, 3vw, 20px);
+            background-color: var(--bg-game);
+            color: var(--text-game);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* CRÍTICO: Evitar gestos táctiles por defecto como scroll o pull-to-refresh en el área interactiva */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions {
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            color: #94a3b8;
+            margin-bottom: 1rem;
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--primary);
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            background-color: #0f172a;
+            padding: 10px 15px;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            border: 1px solid var(--chip-border);
+        }
+
+        #score-display { color: var(--success); }
+        #errors-display { color: var(--danger); }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(8px, 2vw, 12px);
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+            align-content: flex-start;
+        }
+
+        .chip {
+            background-color: var(--chip-bg);
+            border: 2px solid var(--chip-border);
+            border-radius: var(--radius-md);
+            padding: clamp(10px, 3vw, 15px);
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            flex: 1 1 calc(33% - 12px); /* Crece y se encoge, aprox 3 por fila */
+            min-width: 140px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            border-color: var(--primary);
+            background-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .chip.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .category-btn {
+            background-color: #1e293b;
+            border: 2px dashed #64748b;
+            border-radius: var(--radius-lg);
+            padding: clamp(15px, 4vw, 20px);
+            flex: 1 1 30%;
+            min-width: 110px;
+            color: var(--text-game);
+            font-weight: bold;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn:active {
+            background-color: #334155;
+            transform: scale(0.98);
+        }
+
+        /* Animaciones */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        @keyframes flashRed {
+            0% { background-color: var(--danger); border-color: white; }
+            100% { background-color: var(--chip-bg); border-color: var(--chip-border); }
+        }
+
+        @keyframes flashGreenBtn {
+            0% { background-color: var(--success); border-color: white; }
+            100% { background-color: #1e293b; border-color: #64748b; }
+        }
+
+        .error-anim {
+            animation: shake 0.4s ease, flashRed 0.5s ease;
+        }
+
+        .success-btn-anim {
+            animation: flashGreenBtn 0.5s ease;
+        }
+
+        /* Modal de Fin de Juego */
+        .end-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .end-screen.visible { display: flex; }
+
+        .end-screen h2 {
+            font-size: clamp(2rem, 6vw, 3rem);
+            color: var(--success);
+            margin-bottom: 10px;
+        }
+
+        .end-screen p { margin-bottom: 20px; font-size: 1.2rem; }
+
+        .final-grade {
+            font-size: clamp(3rem, 10vw, 5rem);
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            margin: 20px 0;
+        }
+
+        .scroll-down-hint {
+            margin-top: 30px;
+            color: #94a3b8;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: var(--bg-reading);
+            color: var(--text-reading);
+            /* Importante para permitir scroll natural aquí */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 2rem);
+        }
+
+        .article-container h2 {
+            color: var(--text-heading);
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border-bottom: 4px solid var(--accent-reading);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-container h3 {
+            color: var(--accent-reading);
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-container p {
+            font-size: clamp(1.05rem, 3vw, 1.15rem);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-container li {
+            font-size: clamp(1.05rem, 3vw, 1.15rem);
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background-color: var(--bg-reading-alt);
+            border-left: 5px solid var(--accent-reading);
+            padding: 1.5rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 2rem 0;
+            font-style: italic;
+        }
+
+        /* Estilos del Taller */
+        .taller-section {
+            background-color: var(--bg-reading-alt);
+            padding: clamp(1.5rem, 4vw, 3rem);
+            border-radius: var(--radius-lg);
+            margin-top: 4rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--secondary);
+        }
+
+        .taller-section h3 {
+            color: var(--secondary);
+            text-align: center;
+            margin-top: 0;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .instruction-alert {
+            background-color: #fff;
+            border: 2px dashed var(--secondary);
+            color: var(--text-heading);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 2rem;
+        }
+
+        .taller-list {
+            list-style: none;
+            counter-reset: taller-counter;
+        }
+
+        .taller-list li {
+            position: relative;
+            background: #fff;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem 1.5rem 1.5rem 4rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            border-left: 4px solid var(--primary);
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            line-height: 1.5;
+        }
+
+        .taller-list li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Tap & Sort: Potencia Mecánica</h1>
+                <div class="instructions">
+                    💡 <strong>Guía:</strong> Toca un concepto de la lista (se marcará en azul) y luego toca el contenedor correcto al que pertenece.
+                </div>
+            </div>
+
+            <div class="hud">
+                <div id="score-display">Puntos: 0 / 15</div>
+                <div id="errors-display">Errores: 0</div>
+            </div>
+
+            <div class="chips-container" id="chips-container">
+                <!-- Los chips se generarán por JS -->
+            </div>
+
+            <div class="categories-container">
+                <div class="category-btn" onclick="checkCategory('TRABAJO')" id="btn-TRABAJO">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    TRABAJO
+                </div>
+                <div class="category-btn" onclick="checkCategory('TIEMPO')" id="btn-TIEMPO">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    TIEMPO
+                </div>
+                <div class="category-btn" onclick="checkCategory('POTENCIA')" id="btn-POTENCIA">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    POTENCIA
+                </div>
+            </div>
+
+            <div class="end-screen" id="end-screen">
+                <h2>¡Clasificación Completa!</h2>
+                <p>Has organizado todos los conceptos correctamente.</p>
+                <p>Tu calificación final basada en tus errores es:</p>
+                <div class="final-grade" id="final-grade">5.0</div>
+                <div class="scroll-down-hint">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <p>Desliza hacia abajo para la lección y el taller</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Potencia Mecánica: La Rapidez del Trabajo en Nuestro Entorno</h2>
+                
+                <p>Imagina que estás en una finca cafetera y necesitas subir 1000 litros de agua desde un pozo hasta un tanque ubicado en lo alto de una colina. Tienes dos opciones: contratar a una persona con baldes que tardará todo el día en hacerlo, o encender una motobomba eléctrica que subirá toda el agua en apenas 15 minutos. Al final, en ambos casos, los 1000 litros de agua llegaron al tanque. Es decir, se realizó exactamente el <strong>mismo trabajo</strong>. Sin embargo, hay una diferencia abismal entre las dos situaciones: <strong>la rapidez</strong> con la que se hizo ese trabajo. Aquí es donde entra en juego el concepto estelar de la física llamado <strong>Potencia Mecánica</strong>.</p>
+
+                <h3>1. El Trabajo Mecánico (W)</h3>
+                <p>En física, la palabra "trabajo" (identificada con la letra <em>W</em> del inglés <em>Work</em>) tiene un significado muy específico. No se refiere a ir a la oficina, sino a la aplicación de una <strong>Fuerza (F)</strong> para mover un objeto a lo largo de una <strong>Distancia (d)</strong>. Si empujas un tractor atascado en el lodo con todas tus fuerzas pero no logras moverlo ni un milímetro, biológicamente estarás agotado, pero para la física, tu trabajo mecánico fue cero. El trabajo es una forma de <em>transferir energía</em> y se mide en unidades llamadas <strong>Joules (J)</strong>.</p>
+                <ul>
+                    <li><strong>Fórmula:</strong> Trabajo = Fuerza × distancia (W = F × d)</li>
+                    <li><strong>Ejemplo:</strong> Empujar una carretilla llena de abono a lo largo de 50 metros.</li>
+                </ul>
+
+                <h3>2. El Factor Tiempo (t)</h3>
+                <p>El tiempo, medido generalmente en <strong>segundos (s)</strong> en el Sistema Internacional, es la variable que determina cuánto demora un proceso. El tiempo por sí solo transcurre, pero cuando lo relacionamos con el Trabajo, nos permite evaluar la eficiencia y el rendimiento de máquinas, motores e incluso de nuestro propio cuerpo.</p>
+
+                <h3>3. La Potencia Mecánica (P)</h3>
+                <p>La Potencia es, de forma sencilla, <strong>la rapidez con la que se realiza un trabajo</strong>. Es la cantidad de trabajo (Joules) que una máquina o persona puede entregar por cada segundo que pasa.</p>
+                
+                <div class="highlight-box">
+                    "Tener mucha potencia no significa necesariamente poder mover algo más pesado, sino poder moverlo mucho más rápido."
+                </div>
+
+                <p>La fórmula matemática que define la potencia es:</p>
+                <ul>
+                    <li><strong>Fórmula:</strong> Potencia = Trabajo / tiempo (P = W / t)</li>
+                </ul>
+
+                <p><strong>Unidades de medida de la Potencia:</strong></p>
+                <ul>
+                    <li><strong>Watts (W):</strong> También llamados Vatios. Un Watt equivale a realizar un trabajo de 1 Joule en 1 segundo (1 W = 1 J/s). Es muy común en motores eléctricos pequeños y electrodomésticos.</li>
+                    <li><strong>Caballos de Fuerza (HP - Horsepower):</strong> Es una unidad histórica. Durante la revolución industrial, James Watt necesitaba vender sus motores de vapor y quería que los granjeros entendieran qué tan fuertes eran. Así que calculó cuánto trabajo podía hacer un caballo de tiro promedio en un tiempo determinado y creó el HP. Hoy en día se usa para motores de carros, tractores y bombas de agua grandes. Un HP equivale aproximadamente a 746 Watts.</li>
+                </ul>
+
+                <h3>Aplicaciones en el Mundo Real</h3>
+                <p>Comprender la potencia es vital para la ingeniería y la agricultura. Si un campesino compra una picadora de pasto de baja potencia, la máquina hará el trabajo, pero tomará horas procesar el alimento. Si invierte en una de mayor potencia, el motor hará el mismo trabajo en una fracción del tiempo, ahorrando dinero y esfuerzo humano. Evaluar el rendimiento de las máquinas a través de su potencia es lo que permite a la humanidad construir herramientas cada vez más rápidas y eficientes.</p>
+
+                <div class="taller-section">
+                    <h3>Taller de Repaso y Consolidación</h3>
+                    
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN: Escribe y resuelve de forma ordenada las siguientes 10 actividades en tu cuaderno de Ciencias/Física.
+                    </div>
+
+                    <ul class="taller-list">
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Define con tus propias palabras qué es la "Potencia Mecánica" y cuál es la diferencia principal que tiene frente al concepto de "Trabajo".
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Dos tractores (Tractor A y Tractor B) aran un campo de café exactamente del mismo tamaño. El Tractor A termina la tarea en 2 horas y el Tractor B en 5 horas. ¿Cuál realizó mayor Trabajo Mecánico? ¿Cuál demostró tener más Potencia? Explica tu razonamiento basándote en la teoría.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Dibuja una escena donde se evidencie el concepto de "Trabajo Mecánico" (por ejemplo, una persona empujando un bulto). En tu dibujo, usa flechas de colores para señalar dónde se aplica la <strong>Fuerza (F)</strong> y cuál es la <strong>Distancia (d)</strong>.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual jerárquico que conecte los tres conceptos principales: Trabajo, Tiempo y Potencia. Incluye sus símbolos (W, t, P) y sus unidades de medida (Joules, Segundos, Watts).
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            ¿Qué significa físicamente que el motor de una licuadora o de una bomba de agua tenga una potencia de "1000 Watts (W)"? Explícalo usando la relación entre Joules y Segundos.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Imagina que un deportista de halterofilia levanta una barra de 100 kg sobre su cabeza y se queda completamente quieto sosteniéndola durante 10 segundos para la foto. Según las reglas estrictas de la física, ¿está realizando trabajo mecánico durante esos 10 segundos? ¿Está generando potencia? Justifica tu respuesta.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Crea una analogía visual (un dibujo comparativo) para explicar la diferencia entre medir en Watts (W) y medir en Caballos de Fuerza (HP). Usa tu creatividad basada en la historia de James Watt.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Mental</span><br>
+                            Elabora un mapa mental con la palabra "POTENCIA" en el centro. Saca ramificaciones hacia: su fórmula matemática, sus unidades de medida, y al menos tres ejemplos de máquinas cotidianas donde sea importante conocer su potencia.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Si tienes que subir agua a un tanque muy alto, el trabajo mecánico necesario será enorme (mucha fuerza por mucha distancia). Si quieres que la fórmula P = W / t te dé como resultado una Potencia (P) muy grande, ¿el factor tiempo (t) debe ser un número grande o un número pequeño? Explica la matemática detrás de esto.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            ¿Por qué crees que en el mundo automotriz, de los tractores y de la maquinaria agrícola pesada, se sigue prefiriendo utilizar los "Caballos de Fuerza (HP)" para describir los motores, en lugar de utilizar exclusivamente los "Watts", a pesar de que ambos miden la potencia?
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Datos del Juego (15 conceptos, 5 por categoría)
+        const concepts = [
+            { id: 1, text: "Fuerza aplicada por una distancia", category: "TRABAJO" },
+            { id: 2, text: "Se mide en Joules (J)", category: "TRABAJO" },
+            { id: 3, text: "Empujar una carretilla 50 metros", category: "TRABAJO" },
+            { id: 4, text: "Es una transferencia de energía", category: "TRABAJO" },
+            { id: 5, text: "Fórmula: W = F × d", category: "TRABAJO" },
+            
+            { id: 6, text: "Se mide en segundos (s)", category: "TIEMPO" },
+            { id: 7, text: "Indica cuánto demora un proceso", category: "TIEMPO" },
+            { id: 8, text: "Lo mide un cronómetro", category: "TIEMPO" },
+            { id: 9, text: "Los minutos que opera un tractor", category: "TIEMPO" },
+            { id: 10, text: "Denominador en la fórmula P = W / t", category: "TIEMPO" },
+            
+            { id: 11, text: "Rapidez para realizar un trabajo", category: "POTENCIA" },
+            { id: 12, text: "Se mide en Watts (W)", category: "POTENCIA" },
+            { id: 13, text: "Caballos de Fuerza (HP)", category: "POTENCIA" },
+            { id: 14, text: "Motor que sube agua muy rápido", category: "POTENCIA" },
+            { id: 15, text: "Fórmula: P = W / t", category: "POTENCIA" }
+        ];
+
+        // 2. Estado del Juego
+        let state = {
+            score: 0,
+            errors: 0,
+            total: concepts.length,
+            selectedChipId: null,
+            shuffledConcepts: []
+        };
+
+        // Utilidad: Mezclar array (Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 3. Inicialización
+        function initGame() {
+            state.shuffledConcepts = shuffleArray([...concepts]);
+            renderChips();
+            updateHUD();
+        }
+
+        // 4. Renderizar los chips
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = '';
+
+            state.shuffledConcepts.forEach(concept => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${concept.id}`;
+                chip.textContent = concept.text;
+                
+                // Evento Táctil/Click para seleccionar
+                chip.addEventListener('click', () => selectChip(concept.id));
+                
+                container.appendChild(chip);
+            });
+        }
+
+        // 5. Seleccionar un chip
+        function selectChip(id) {
+            // Remover selección previa
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            
+            // Marcar nuevo
+            const chip = document.getElementById(`chip-${id}`);
+            if (chip && !chip.classList.contains('hidden')) {
+                chip.classList.add('selected');
+                state.selectedChipId = id;
+            }
+        }
+
+        // 6. Comprobar Categoría
+        function checkCategory(categoryName) {
+            // Si no hay nada seleccionado, no hacer nada
+            if (!state.selectedChipId) return;
+
+            const concept = state.shuffledConcepts.find(c => c.id === state.selectedChipId);
+            const chipElement = document.getElementById(`chip-${state.selectedChipId}`);
+            const btnElement = document.getElementById(`btn-${categoryName}`);
+
+            if (concept.category === categoryName) {
+                // ACIERTO
+                state.score++;
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('hidden'); // Desaparece suave (por CSS opacidad)
+                state.selectedChipId = null;
+                
+                // Animación de éxito en botón
+                btnElement.classList.add('success-btn-anim');
+                setTimeout(() => btnElement.classList.remove('success-btn-anim'), 500);
+
+                updateHUD();
+                checkWin();
+
+            } else {
+                // FALLO
+                state.errors++;
+                updateHUD();
+                
+                // Animación de error en chip
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('error-anim');
+                state.selectedChipId = null;
+                
+                // Quitar clase de error luego de la animación
+                setTimeout(() => {
+                    chipElement.classList.remove('error-anim');
+                }, 500);
+            }
+        }
+
+        // 7. Actualizar Marcador
+        function updateHUD() {
+            document.getElementById('score-display').textContent = `Puntos: ${state.score} / ${state.total}`;
+            document.getElementById('errors-display').textContent = `Errores: ${state.errors}`;
+        }
+
+        // 8. Condición de Victoria y Calificación
+        function checkWin() {
+            if (state.score === state.total) {
+                setTimeout(showEndScreen, 600); // Pequeña pausa para ver desaparecer el último
+            }
+        }
+
+        function showEndScreen() {
+            const endScreen = document.getElementById('end-screen');
+            const gradeDisplay = document.getElementById('final-grade');
+            
+            // Sistema de calificación: Inicia en 5.0, pierde 0.2 por cada error. Mínimo 1.0.
+            let grade = 5.0 - (state.errors * 0.2);
+            if (grade < 1.0) grade = 1.0;
+            
+            gradeDisplay.textContent = grade.toFixed(1);
+            
+            // Color de la nota
+            if (grade >= 4.0) {
+                gradeDisplay.style.color = 'var(--success)';
+            } else if (grade >= 3.0) {
+                gradeDisplay.style.color = '#fbbf24'; // Amarillo
+            } else {
+                gradeDisplay.style.color = 'var(--danger)';
+            }
+
+            endScreen.classList.add('visible');
+        }
+
+        // Iniciar al cargar
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

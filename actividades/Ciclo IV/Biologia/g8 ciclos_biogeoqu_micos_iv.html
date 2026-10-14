@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Ciclos Biogeoquímicos y la Biosfera</title>
+    <style>
+        :root {
+            --primary: #00796b; /* Verde azulado oscuro */
+            --primary-dark: #004d40;
+            --secondary: #fbc02d; /* Amarillo dorado */
+            --secondary-dark: #f57f17;
+            --accent: #d32f2f; /* Rojo impacto humano */
+            --bg-page: #f4f8f7;
+            --bg-card: #ffffff;
+            --text-main: #263238;
+            --text-light: #ffffff;
+            --success: #388e3c;
+            --danger: #d32f2f;
+            --border-radius: 12px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1.2rem, 3vw, 2rem) 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border-bottom: 5px solid var(--secondary);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.6rem, 5vw, 2.5rem);
+            letter-spacing: 0.5px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: rgba(0,0,0,0.2);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: clamp(1rem, 4vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        #zona-juego {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+            /* CRÍTICO: Prevención de bugs táctiles (scroll/zoom accidental) */
+            touch-action: none;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e0f2f1;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            color: var(--primary-dark);
+            border: 2px solid #b2dfdb;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.3rem, 1.5vw, 1rem);
+        }
+
+        .category-title {
+            background-color: var(--secondary);
+            color: var(--text-main);
+            font-weight: 900;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.2rem;
+            border-radius: 8px;
+            font-size: clamp(0.7rem, 2.5vw, 1.1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+            word-break: break-word;
+        }
+
+        .pts-btn {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
+            font-weight: 900;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pts-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .pts-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 8px solid var(--secondary);
+        }
+
+        .modal-header-text {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--primary-dark);
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-question-text {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f8f9fa;
+            border: 2px solid #cfd8dc;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #eceff1;
+            border-color: #90a4ae;
+        }
+
+        .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); }
+        .opt-btn.incorrect { background-color: var(--danger); color: white; border-color: var(--danger); }
+
+        .feedback-alert {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .continue-btn {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 var(--primary-dark);
+        }
+
+        .continue-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .final-mark {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary-dark);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #zona-lectura {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .theory-article h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            border-bottom: 4px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .theory-article h2:first-child { margin-top: 0; }
+
+        .theory-article h3 {
+            color: #00695c;
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2rem;
+        }
+
+        .theory-article p, .theory-article li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: #37474f;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .theory-article ul { padding-left: 1.5rem; }
+
+        .workshop-container {
+            margin-top: 4rem;
+            background-color: #fffde7;
+            border: 3px dashed var(--secondary);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .workshop-container h2 {
+            margin-top: 0;
+            color: #f57f17;
+            border-bottom: none;
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+        }
+
+        .instruction-banner {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .workshop-list li {
+            background-color: #ffffff;
+            border-left: 8px solid var(--secondary);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tag-format {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            background-color: #e0f2f1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .question-text {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Ciclos Biogeoquímicos de la Tierra</h1>
+        <p>Toca una casilla, lee la pista y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div class="stats-panel">
+                <div>Puntuación: <span id="score-counter">0</span></div>
+                <div>Progreso: <span id="progress-counter">0</span>/12</div>
+            </div>
+            <div class="grid-container" id="jeopardy-grid">
+                <!-- Se inyecta dinámicamente mediante JavaScript -->
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="theory-article">
+                <h2>El Motor de la Biosfera: Los Ciclos Biogeoquímicos</h2>
+                
+                <p>Si observas el planeta Tierra desde el espacio, verás una inmensa esfera aislada en el vacío. En nuestra "nave espacial" Tierra, no llegan cargamentos de agua fresca, ni cilindros de oxígeno o carbono desde otros planetas. Toda la materia que existe para formar y sostener la vida hoy, es exactamente la misma que existía hace millones de años. La gran pregunta es: si billones de seres vivos nacen, comen, respiran y mueren constantemente, ¿por qué no se nos acaban los recursos esenciales? La respuesta es la ley de la conservación de la materia: <strong>la materia no se crea ni se destruye, solo se transforma y se recicla</strong> a través de los Ciclos Biogeoquímicos.</p>
+                <p>La palabra <em>biogeoquímico</em> está compuesta por tres partes fundamentales: <strong>"Bio"</strong> (porque involucra a los seres vivos), <strong>"Geo"</strong> (porque ocurre en la tierra, la atmósfera y los océanos) y <strong>"Químico"</strong> (porque se trata de elementos químicos que cambian de estado y forma). Los elementos más críticos para la vida son el Carbono (C), el Nitrógeno (N), el Fósforo (P) y el Agua (H2O).</p>
+
+                <h2>El Ciclo del Agua (H2O): El vehículo de la vida</h2>
+                <p>El agua es el medio universal en el que ocurren las reacciones químicas de la vida. Su ciclo está impulsado por la inmensa energía térmica del Sol.</p>
+                <ul>
+                    <li><strong>Evaporación y Transpiración:</strong> El calor del Sol evapora el agua líquida de océanos y ríos. Las plantas también aportan vapor a la atmósfera a través de un proceso llamado <em>transpiración</em>.</li>
+                    <li><strong>Condensación y Precipitación:</strong> El vapor asciende, se enfría y forma las nubes (condensación). Al volverse pesadas, caen como lluvia, nieve o granizo.</li>
+                    <li><strong>Infiltración:</strong> El agua que cae al suelo se filtra, formando reservas subterráneas llamadas <em>acuíferos</em>, las cuales son vitales para mantener los ríos vivos durante los meses de sequía.</li>
+                </ul>
+
+                <h2>El Ciclo del Carbono (C): El ladrillo de los seres vivos</h2>
+                <p>Todo tejido vivo (hojas, músculos, piel) está construido a base de carbono. Además, en la atmósfera existe como Dióxido de Carbono (CO2), un gas clave para regular la temperatura del planeta.</p>
+                <p>El ciclo inicia cuando las plantas absorben CO2 del aire para realizar la <strong>fotosíntesis</strong>, produciendo sus propios alimentos. Los animales herbívoros consumen estas plantas y absorben el carbono. El carbono regresa a la atmósfera cuando plantas y animales exhalan CO2 en la <strong>respiración celular</strong>, o cuando los organismos mueren y los <strong>descomponedores</strong> (hongos y bacterias) pudren la materia, liberando el carbono nuevamente al suelo y al aire.</p>
+
+                <h2>El Ciclo del Nitrógeno (N): Proteínas y ADN</h2>
+                <p>El nitrógeno es esencial para crear ADN y proteínas. Curiosamente, el 78% del aire que respiramos es nitrógeno gaseoso, pero ni las plantas ni los animales pueden usarlo en esa forma. Es como morir de sed flotando en el mar.</p>
+                <p>Para solucionar esto, dependemos de microorganismos especializados: las <strong>bacterias fijadoras de nitrógeno</strong>. Estas bacterias viven en el suelo o en las raíces de algunas plantas (como los frijoles) y "atrapan" el gas del aire, transformándolo en nitratos y amoníaco. Las plantas sí pueden absorber estos compuestos por sus raíces para crecer vigorosamente. Finalmente, otras bacterias (desnitrificantes) devuelven el nitrógeno al aire completando el ciclo.</p>
+
+                <h2>El Ciclo del Fósforo (P): El ciclo lento</h2>
+                <p>El fósforo es vital para la energía celular (ATP) y los huesos. A diferencia de los otros ciclos, el fósforo <strong>no tiene una fase gaseosa significativa en la atmósfera</strong>. Es un ciclo sedimentario, muy lento. Se encuentra principalmente en rocas, las cuales, al desgastarse por la lluvia y el viento (meteorización), liberan fosfatos al suelo y al agua, donde son absorbidos por las plantas.</p>
+
+                <h2>Impacto Humano: Rompiendo el equilibrio</h2>
+                <p>La intervención de la humanidad ha alterado drásticamente estos ciclos naturales a una velocidad sin precedentes:</p>
+                <ul>
+                    <li><strong>Alteración del Carbono:</strong> Durante millones de años, enormes cantidades de carbono quedaron sepultadas formando carbón y petróleo (combustibles fósiles). Al quemarlos masivamente, el ser humano libera exceso de CO2 a la atmósfera. Este gas atrapa el calor solar, causando el <strong>Calentamiento Global</strong> y el Cambio Climático.</li>
+                    <li><strong>Alteración del Nitrógeno y Fósforo:</strong> Para producir comida rápida, la agricultura industrial usa cantidades masivas de fertilizantes artificiales ricos en nitrógeno y fósforo. Cuando llueve, el exceso de estos químicos es arrastrado a lagos y ríos. Esto causa un fenómeno llamado <strong>Eutrofización</strong>: las algas crecen descontroladamente cubriendo la superficie, bloquean la luz del sol, agotan el oxígeno del agua y asfixian a todos los peces y la vida acuática, creando "zonas muertas".</li>
+                    <li><strong>Alteración del Agua:</strong> La deforestación masiva rompe el ciclo del agua; sin árboles que transpiren, disminuyen las lluvias (causando sequías), y sin raíces que retengan la tierra, se impide la infiltración, secando los acuíferos subterráneos.</li>
+                </ul>
+            </article>
+
+            <div class="workshop-container">
+                <h2>Taller de Aplicación y Análisis</h2>
+                
+                <div class="instruction-banner">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>ATENCIÓN: Escribe y resuelve estas 10 actividades obligatoriamente en tu cuaderno.</span>
+                </div>
+
+                <ul class="workshop-list">
+                    <li>
+                        <span class="tag-format">Responder Directamente</span>
+                        <span class="question-text">1. Explica detalladamente el significado de la palabra "Biogeoquímico", separando y definiendo sus tres partes (Bio, Geo, Químico).</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Dibujar / Ilustrar</span>
+                        <span class="question-text">2. Dibuja el Ciclo del Agua en tu cuaderno. Asegúrate de incluir y nombrar estas 4 fases clave: Evaporación, Transpiración de plantas, Condensación e Infiltración.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">3. Si el 78% de la atmósfera terrestre es Nitrógeno, ¿por qué las plantas no pueden simplemente "respirarlo"? ¿De qué microorganismos dependen para poder utilizarlo?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Conceptual</span>
+                        <span class="question-text">4. Elabora un Mapa Conceptual del "Ciclo del Carbono". Usa términos como: Fotosíntesis, Plantas, Animales, Respiración Celular, Descomponedores y Dióxido de Carbono (CO2).</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Responder Directamente</span>
+                        <span class="question-text">5. ¿Cuál es la principal diferencia entre el Ciclo del Fósforo y los demás ciclos (Carbono, Nitrógeno, Agua)? Pista: piensa en la atmósfera.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico / Explicar</span>
+                        <span class="question-text">6. Explica con tus propias palabras qué es el proceso de "Eutrofización", qué actividad humana la provoca y cuáles son sus devastadoras consecuencias para los lagos y ríos.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Ilustrar / Secuencia</span>
+                        <span class="question-text">7. Dibuja una historieta de tres viñetas mostrando el impacto humano en el ciclo del carbono: (1) Carbón subterráneo (2) Una fábrica quemándolo (3) Consecuencia final en la temperatura de la Tierra.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Mental</span>
+                        <span class="question-text">8. Construye un Mapa Mental titulado "Impacto Humano en los Ciclos". Ramifica los tres grandes problemas causados por nuestra especie: Calentamiento Global, Eutrofización y Deforestación, explicando brevemente la causa química de cada uno.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Responder Directamente</span>
+                        <span class="question-text">9. Según la lectura, si talamos (deforestamos) todos los árboles de un ecosistema, ¿qué le ocurre al proceso de Infiltración del ciclo del agua y a las reservas subterráneas?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Reflexión Profunda</span>
+                        <span class="question-text">10. Escribe un párrafo de reflexión (mínimo 5 renglones): Teniendo en cuenta la frase "la materia no se crea ni se destruye", ¿qué significa esto para el agua que bebes a diario o el carbono de tus células respecto a la historia antigua del planeta?</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Pregunta -->
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header-text" id="modal-cat-pts">Categoría - Puntos</div>
+            <div class="modal-question-text" id="modal-q-text">¿Pregunta?</div>
+            <div id="options-area">
+                <!-- Se inyectan opciones vía JS -->
+            </div>
+            <div class="feedback-alert" id="feedback-alert"></div>
+            <button class="continue-btn" id="btn-next">Volver al Tablero</button>
+        </div>
+    </div>
+
+    <!-- Modal Final de Calificación -->
+    <div class="modal-overlay" id="results-modal">
+        <div class="modal-content" style="border-top-color: var(--success);">
+            <div class="modal-question-text" style="color: var(--primary-dark); margin-bottom: 0.5rem;">¡Desafío Biogeoquímico Superado!</div>
+            <p style="font-size: 1.2rem; color: #546e7a;">Has resuelto todas las pistas de la cuadrícula interactiva.</p>
+            
+            <div style="font-size: 1.4rem; font-weight: bold; margin-top:1rem;">
+                Puntos Ganados: <span id="final-pts-text" style="color: var(--secondary-dark);">0</span> / 2400
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top:1.5rem;">Tu Calificación Final es:</div>
+            <div class="final-mark" id="final-grade-display">5.0</div>
+            
+            <p style="font-size: 1.1rem; background-color: #e0f2f1; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 2rem; color: #004d40;">
+                <strong>Siguiente Paso:</strong> Cierra esta ventana, lee detenidamente el artículo teórico en la zona inferior y resuelve el taller asignado en tu cuaderno.
+            </p>
+            
+            <button class="continue-btn" style="display: block; box-shadow: 0 4px 0 #1b5e20; background-color: var(--success);" onclick="document.getElementById('results-modal').style.display='none'">Cerrar e ir al Taller</button>
+        </div>
+    </div>
+
+    <script>
+        const gameData = [
+            {
+                category: "Ciclo del Agua",
+                questions: [
+                    { pts: 100, q: "Proceso vital donde las plantas absorben agua por sus raíces y la devuelven al aire en forma de vapor a través de sus hojas.", options: ["Precipitación", "Transpiración", "Condensación"], correctIdx: 1 },
+                    { pts: 200, q: "El vapor de agua sube a la atmósfera, se enfría y cambia al estado líquido formando nubes. Este proceso se llama:", options: ["Condensación", "Evaporación", "Infiltración"], correctIdx: 0 },
+                    { pts: 300, q: "Reservas de agua dulce subterráneas que se forman gracias a la infiltración del agua de lluvia en la tierra.", options: ["Glaciares", "Cuencas hídricas", "Acuíferos"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "Ciclo Carbono",
+                questions: [
+                    { pts: 100, q: "Gas indispensable (CO2) que las plantas extraen del aire para fabricar su alimento mediante la fotosíntesis.", options: ["Oxígeno", "Dióxido de Carbono", "Monóxido de Carbono"], correctIdx: 1 },
+                    { pts: 200, q: "Proceso por el cual los animales y humanos devolvemos el Carbono a la atmósfera al exhalar.", options: ["Respiración Celular", "Fotosíntesis", "Descomposición"], correctIdx: 0 },
+                    { pts: 300, q: "Inmensas reservas de carbono enterrado durante millones de años que la humanidad quema hoy en día como energía.", options: ["Humus orgánico", "Combustibles fósiles", "Rocas ígneas"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "Ciclo Nitrógeno",
+                questions: [
+                    { pts: 100, q: "¿Qué porcentaje aproximado de la atmósfera terrestre está compuesto por gas Nitrógeno?", options: ["21%", "50%", "78%"], correctIdx: 2 },
+                    { pts: 200, q: "Microorganismos fundamentales que 'atrapan' el nitrógeno del aire para que las plantas puedan usarlo.", options: ["Hongos", "Bacterias fijadoras", "Virus del suelo"], correctIdx: 1 },
+                    { pts: 300, q: "Sin el ciclo del nitrógeno, los seres vivos no podrían construir dos compuestos biológicos esenciales. ¿Cuáles son?", options: ["Agua y sal", "Proteínas y ADN", "Azúcares y grasas"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "Fósforo & Impacto",
+                questions: [
+                    { pts: 100, q: "A diferencia del Agua, el Carbono y el Nitrógeno, el ciclo del Fósforo NO tiene esta característica.", options: ["Participación de seres vivos", "Fase gaseosa/atmosférica", "Utilidad biológica"], correctIdx: 1 },
+                    { pts: 200, q: "Fenómeno asfixiante en lagos causado por el exceso de fertilizantes artificiales agrícolas (N y P).", options: ["Eutrofización", "Acidificación", "Desertificación"], correctIdx: 0 },
+                    { pts: 300, q: "Es la consecuencia principal a nivel global de la liberación excesiva de CO2 al quemar combustibles fósiles.", options: ["Adelgazamiento capa de ozono", "Lluvia ácida masiva", "Calentamiento Global"], correctIdx: 2 }
+                ]
+            }
+        ];
+
+        let currentScore = 0;
+        let answeredQuestions = 0;
+        const totalQuestions = 12;
+        const maxScore = 2400; // 4 columnas * (100+200+300) = 2400
+        
+        let activeColIdx = -1;
+        let activeRowIdx = -1;
+        let activeBtnElement = null;
+
+        const gridContainer = document.getElementById("jeopardy-grid");
+        const scoreDisplay = document.getElementById("score-counter");
+        const progressDisplay = document.getElementById("progress-counter");
+        
+        const qModal = document.getElementById("question-modal");
+        const mCatPts = document.getElementById("modal-cat-pts");
+        const mQuestion = document.getElementById("modal-q-text");
+        const optionsArea = document.getElementById("options-area");
+        const feedbackAlert = document.getElementById("feedback-alert");
+        const btnNext = document.getElementById("btn-next");
+
+        function buildGame() {
+            // Cabeceras de Categoría
+            gameData.forEach(col => {
+                const header = document.createElement("div");
+                header.className = "category-title";
+                header.textContent = col.category;
+                gridContainer.appendChild(header);
+            });
+
+            // Botones de cuadrícula (100, 200, 300)
+            for (let row = 0; row < 3; row++) {
+                gameData.forEach((col, colIdx) => {
+                    const btn = document.createElement("button");
+                    btn.className = "pts-btn";
+                    const points = col.questions[row].pts;
+                    btn.textContent = points;
+                    
+                    btn.addEventListener("click", () => openModal(colIdx, row, btn));
+                    gridContainer.appendChild(btn);
+                });
+            }
+        }
+
+        function openModal(colIdx, rowIdx, btnElement) {
+            activeColIdx = colIdx;
+            activeRowIdx = rowIdx;
+            activeBtnElement = btnElement;
+
+            const qData = gameData[colIdx].questions[rowIdx];
+            
+            mCatPts.textContent = `${gameData[colIdx].category} | ${qData.pts} Pts`;
+            mQuestion.textContent = qData.q;
+            
+            optionsArea.innerHTML = "";
+            feedbackAlert.style.display = "none";
+            btnNext.style.display = "none";
+
+            qData.options.forEach((optText, optIdx) => {
+                const optBtn = document.createElement("button");
+                optBtn.className = "opt-btn";
+                optBtn.textContent = optText;
+                optBtn.addEventListener("click", () => handleAnswer(optIdx, optBtn));
+                optionsArea.appendChild(optBtn);
+            });
+
+            qModal.style.display = "flex";
+        }
+
+        function handleAnswer(selectedIdx, clickedElement) {
+            const allOpts = optionsArea.querySelectorAll(".opt-btn");
+            allOpts.forEach(b => b.disabled = true);
+
+            const qData = gameData[activeColIdx].questions[activeRowIdx];
+            const isCorrect = (selectedIdx === qData.correctIdx);
+
+            feedbackAlert.style.display = "block";
+            
+            if (isCorrect) {
+                clickedElement.classList.add("correct");
+                currentScore += qData.pts;
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackAlert.textContent = `¡Respuesta correcta! Excelente análisis. +${qData.pts} puntos.`;
+                feedbackAlert.style.backgroundColor = "#e8f5e9";
+                feedbackAlert.style.color = "var(--success)";
+                feedbackAlert.style.border = "2px solid #a5d6a7";
+            } else {
+                clickedElement.classList.add("incorrect");
+                allOpts[qData.correctIdx].classList.add("correct"); 
+                
+                feedbackAlert.textContent = `Incorrecto. La materia correcta se marca en verde. 0 puntos.`;
+                feedbackAlert.style.backgroundColor = "#ffebee";
+                feedbackAlert.style.color = "var(--danger)";
+                feedbackAlert.style.border = "2px solid #ef9a9a";
+            }
+
+            answeredQuestions++;
+            progressDisplay.textContent = answeredQuestions;
+            activeBtnElement.disabled = true;
+            activeBtnElement.textContent = "—";
+
+            btnNext.style.display = "block";
+        }
+
+        btnNext.addEventListener("click", () => {
+            qModal.style.display = "none";
+            
+            if (answeredQuestions === totalQuestions) {
+                setTimeout(showFinalGrade, 600);
+            }
+        });
+
+        function showFinalGrade() {
+            const resultsModal = document.getElementById("results-modal");
+            document.getElementById("final-pts-text").textContent = currentScore;
+
+            // Escala de calificación lineal 1.0 a 5.0
+            const percentage = currentScore / maxScore;
+            const computedGrade = (percentage * 4.0) + 1.0;
+            const finalGradeStr = computedGrade.toFixed(1);
+
+            const gradeDisplay = document.getElementById("final-grade-display");
+            gradeDisplay.textContent = finalGradeStr;
+            
+            if (computedGrade >= 4.0) {
+                gradeDisplay.style.color = "var(--success)";
+            } else if (computedGrade >= 3.0) {
+                gradeDisplay.style.color = "var(--secondary-dark)";
+            } else {
+                gradeDisplay.style.color = "var(--danger)";
+            }
+
+            resultsModal.style.display = "flex";
+        }
+
+        // Inicializar el interactivo
+        window.addEventListener("DOMContentLoaded", buildGame);
+    </script>
+</body>
+</html>

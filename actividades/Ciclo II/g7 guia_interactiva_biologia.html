@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Flujo de Energía Cyber-Cafetero</title>
+    
+    <style>
+        :root {
+            --cyber-bg: #0b0c10;
+            --cyber-panel: #1f2833;
+            --neon-cyan: #66fcf1;
+            --neon-teal: #45a29e;
+            --neon-red: #ff003c;
+            --neon-green: #39ff14;
+            --neon-yellow: #fcee0a;
+            
+            --read-bg: #f8f9fa;
+            --read-text: #2c3e50;
+            --read-heading: #1a252f;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cyber-bg);
+            color: #ffffff;
+            scroll-behavior: smooth;
+        }
+
+        #zona-juego {
+            width: 100%;
+            background-image: 
+                linear-gradient(rgba(11, 12, 16, 0.9), rgba(11, 12, 16, 0.9)),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(102, 252, 241, 0.1) 2px, rgba(102, 252, 241, 0.1) 4px);
+            padding: 20px 10px;
+            box-sizing: border-box;
+            border-bottom: 4px solid var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .cyber-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: rgba(31, 40, 51, 0.85);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: clamp(15px, 4vw, 30px);
+            box-shadow: inset 0 0 15px rgba(102, 252, 241, 0.2);
+            /* CRÍTICO: Prevención de bugs táctiles */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed var(--neon-teal);
+            padding-bottom: 10px;
+        }
+
+        .game-title {
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            color: var(--neon-yellow);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(252, 238, 10, 0.5);
+        }
+
+        .room-indicator {
+            color: var(--neon-cyan);
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
+            margin-top: 5px;
+        }
+
+        .riddle-box {
+            background: rgba(0, 0, 0, 0.5);
+            border-left: 4px solid var(--neon-yellow);
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: clamp(1rem, 3.5vw, 1.1rem);
+            line-height: 1.5;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+        }
+
+        .display-container {
+            background-color: #000;
+            border: 2px solid var(--neon-teal);
+            border-radius: 5px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 10px rgba(69, 162, 158, 0.5);
+        }
+
+        .display-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: clamp(2rem, 8vw, 3rem);
+            color: var(--neon-cyan);
+            letter-spacing: 15px;
+            text-shadow: 0 0 8px var(--neon-cyan);
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(10px, 3vw, 15px);
+        }
+
+        .key {
+            background-color: transparent;
+            border: 2px solid var(--neon-teal);
+            color: var(--neon-cyan);
+            font-size: clamp(1.5rem, 6vw, 2rem);
+            padding: clamp(15px, 4vw, 20px) 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.1s;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+        }
+
+        .key:active {
+            background-color: var(--neon-teal);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        .key.action-del {
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+        }
+        .key.action-del:active { background-color: var(--neon-red); color: #000; }
+
+        .key.action-enter {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            grid-column: span 3;
+        }
+        .key.action-enter:active { background-color: var(--neon-green); color: #000; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        @keyframes flashRed {
+            0%, 100% { border-color: var(--neon-teal); box-shadow: none; }
+            50% { border-color: var(--neon-red); box-shadow: inset 0 0 20px var(--neon-red); color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); }
+        }
+
+        @keyframes flashGreen {
+            0%, 100% { border-color: var(--neon-teal); box-shadow: none; }
+            50% { border-color: var(--neon-green); box-shadow: inset 0 0 30px var(--neon-green), 0 0 20px var(--neon-green); }
+        }
+
+        .error-shake {
+            animation: shake 0.5s, flashRed 0.5s;
+        }
+
+        .success-flash {
+            animation: flashGreen 0.8s;
+        }
+
+        #final-screen {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .score-display {
+            font-size: clamp(3rem, 10vw, 5rem);
+            color: var(--neon-green);
+            text-shadow: 0 0 20px var(--neon-green);
+            margin: 20px 0;
+        }
+
+        .grade-message {
+            font-size: 1.2rem;
+            color: var(--neon-yellow);
+            margin-bottom: 20px;
+        }
+        
+        .scroll-down-btn {
+            background-color: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(30px, 6vw, 60px) clamp(15px, 4vw, 30px);
+            width: 100%;
+            box-sizing: border-box;
+            user-select: text; /* Restaurar selección para lectura */
+            -webkit-user-select: text;
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .article-title {
+            color: var(--read-heading);
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            border-bottom: 3px solid #27ae60;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .article-container h2 {
+            color: #2980b9;
+            margin-top: 30px;
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+        }
+
+        .article-container h3 {
+            color: #16a085;
+            font-size: clamp(1.2rem, 3vw, 1.4rem);
+        }
+
+        .article-container p, .article-container li {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .workshop-section {
+            margin-top: 50px;
+            background-color: #f0f3f4;
+            padding: clamp(20px, 4vw, 30px);
+            border-radius: 10px;
+            border-left: 5px solid #e67e22;
+        }
+
+        .workshop-header {
+            color: #d35400;
+            text-align: center;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin-bottom: 5px;
+        }
+
+        .workshop-instruction {
+            text-align: center;
+            font-weight: bold;
+            color: #c0392b;
+            background-color: #fadbd8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+        }
+
+        .activity-card {
+            background: #ffffff;
+            border: 1px solid #d5dbdb;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .activity-type {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #fff;
+            background: #34495e;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .type-responde { background-color: #3498db; }
+        .type-dibuja { background-color: #9b59b6; }
+        .type-analiza { background-color: #e67e22; }
+        .type-mapa { background-color: #2ecc71; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="cyber-container" id="game-ui">
+                <div class="game-header">
+                    <h1 class="game-title">Terminal Trófica</h1>
+                    <div class="room-indicator" id="room-indicator">Hackeando Nodo 1 de 4</div>
+                </div>
+
+                <div class="riddle-box" id="riddle-text">
+                    Iniciando sistema...
+                </div>
+
+                <div class="display-container" id="display-box">
+                    <div class="display-text" id="display">____</div>
+                </div>
+
+                <div class="keypad" id="keypad">
+                    <button class="key" onclick="inputDigit('1')">1</button>
+                    <button class="key" onclick="inputDigit('2')">2</button>
+                    <button class="key" onclick="inputDigit('3')">3</button>
+                    <button class="key" onclick="inputDigit('4')">4</button>
+                    <button class="key" onclick="inputDigit('5')">5</button>
+                    <button class="key" onclick="inputDigit('6')">6</button>
+                    <button class="key" onclick="inputDigit('7')">7</button>
+                    <button class="key" onclick="inputDigit('8')">8</button>
+                    <button class="key" onclick="inputDigit('9')">9</button>
+                    <button class="key action-del" onclick="deleteDigit()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                    </button>
+                    <button class="key" onclick="inputDigit('0')">0</button>
+                    <button class="key action-enter" onclick="checkCode()">INICIAR HACKEO [ENTER]</button>
+                </div>
+            </div>
+
+            <div class="cyber-container" id="final-screen">
+                <h2 class="game-title">Sistema Restaurado</h2>
+                <p class="grade-message">Evaluación de Biología completada. Tu calificación es:</p>
+                <div class="score-display" id="final-score">5.0</div>
+                <p class="grade-message" id="feedback-message">¡Excelente trabajo restaurando el flujo de energía!</p>
+                <button class="scroll-down-btn" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">
+                    Desbloquear Base de Datos (Leer Teoría) ↓
+                </button>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h1 class="article-title">El Flujo de Energía en los Ecosistemas de la Región Cafetera</h1>
+                
+                <h2>1. Introducción al Flujo de Energía</h2>
+                <p>Bienvenido al Eje Cafetero, una de las regiones más biodiversas del mundo. En nuestras fincas, montañas y bosques, la vida está en constante movimiento. Pero, ¿qué impulsa toda esta actividad? La respuesta está a millones de kilómetros de distancia: <strong>El Sol</strong>.</p>
+                <p>El Sol es el gran motor de la naturaleza. Toda la energía que permite a un ave volar, a un insecto saltar y a una planta crecer, proviene originalmente de la luz solar. Sin embargo, los animales no podemos comer luz. Es aquí donde comienza el maravilloso proceso llamado <strong>flujo de energía</strong>, que es la forma en que la energía solar se transforma en alimento y pasa de un ser vivo a otro dentro de un ecosistema.</p>
+
+                <h2>2. Niveles Tróficos en la Finca Cafetera</h2>
+                <p>Para entender cómo viaja la energía, los científicos han agrupado a los seres vivos en "escalones" o categorías según cómo obtienen su alimento. A estos escalones se les llama <strong>Niveles Tróficos</strong>.</p>
+                
+                <h3>Nivel 1: Los Productores (La Base de la Vida)</h3>
+                <p>Los productores son el primer nivel. Son los únicos seres vivos capaces de fabricar su propio alimento atrapando la luz del sol mediante un proceso llamado <strong>fotosíntesis</strong>. Al hacerlo, introducen la energía al ecosistema.</p>
+                <ul>
+                    <li><strong>Ejemplos en la región:</strong> El árbol de cafeto, los altos árboles de guamo (que dan sombra al café), las matas de plátano y los pastos.</li>
+                    <li><strong>Función:</strong> Son la base absoluta de la red. Sin ellos, no habría energía para ningún otro ser vivo.</li>
+                </ul>
+
+                <h3>Nivel 2: Consumidores Primarios (Los Herbívoros)</h3>
+                <p>En el segundo nivel encontramos a los animales que se alimentan directamente de los productores (plantas). Se les llama consumidores primarios.</p>
+                <ul>
+                    <li><strong>Ejemplos en la región:</strong> La "broca del café" (un pequeño escarabajo que come las semillas del café), el loro orejiamarillo (que come frutos y semillas) y las orugas.</li>
+                    <li><strong>Función:</strong> Transfieren la energía almacenada en las plantas hacia el mundo animal.</li>
+                </ul>
+
+                <h3>Niveles 3 y 4: Consumidores Secundarios y Terciarios (Los Carnívoros)</h3>
+                <p>Los consumidores secundarios son carnívoros que se comen a los herbívoros. Los consumidores terciarios (o superdepredadores) se comen a los carnívoros más pequeños.</p>
+                <ul>
+                    <li><strong>Ejemplos de Consumidores Secundarios:</strong> El Barranquero (un ave hermosa que come insectos y arañas), las pequeñas ranas de cristal y las lagartijas.</li>
+                    <li><strong>Ejemplos de Consumidores Terciarios:</strong> La serpiente cazadora (que come ranas y aves), aves rapaces como el gavilán, y mamíferos grandes como el puma o el zorro perruno.</li>
+                    <li><strong>Función:</strong> Controlan las poblaciones de otros animales, evitando plagas (como el exceso de roedores o insectos) que podrían destruir la vegetación.</li>
+                </ul>
+
+                <h3>El Nivel Final: Los Descomponedores (Los Recicladores)</h3>
+                <p>Cuando cualquier planta o animal muere, o cuando producen desechos, entran en acción los descomponedores. Ellos no cazan; simplemente descomponen la materia muerta.</p>
+                <ul>
+                    <li><strong>Ejemplos en la región:</strong> Lombrices de tierra, hongos microscópicos y bacterias en el suelo del cafetal.</li>
+                    <li><strong>Función:</strong> Son vitales porque devuelunt los nutrientes a la tierra para que sirvan de abono a los Productores (las plantas). ¡Cierran el ciclo de la vida!</li>
+                </ul>
+
+                <h2>3. La Regla del 10% (Pérdida de Energía)</h2>
+                <p>Aquí hay un dato fascinante: la energía se va perdiendo a medida que sube de nivel. Imagina que un árbol de guamo atrapa 10,000 unidades de energía solar. Cuando un insecto se come las hojas del guamo, no obtiene las 10,000 unidades. El árbol ya gastó gran parte de esa energía en crecer, respirar y generar calor.</p>
+                <p>Existe una ley natural llamada la <strong>Regla del 10%</strong>. Esto significa que un ser vivo solo logra transferir aproximadamente el 10% de su energía al animal que se lo come. El otro 90% se pierde, principalmente en forma de calor. Por esta razón, las cadenas alimenticias rara vez tienen más de 4 o 5 niveles; ¡al final simplemente no queda suficiente energía para sostener a otro animal!</p>
+
+                <h2>4. Cadenas Alimenticias vs. Redes Alimenticias</h2>
+                <p>Una <strong>cadena alimenticia</strong> es una línea recta. Por ejemplo: <em>Cafeto → Broca → Araña → Barranquero</em>. Muestra un solo camino de la energía.</p>
+                <p>Sin embargo, en la naturaleza las cosas son más complejas. La araña no solo come broca, también come moscas. El Barranquero come arañas, pero también come frutos. Esta enorme conexión de muchas cadenas alimenticias cruzadas se llama <strong>Red Alimenticia</strong> o Red Trófica. Las redes son maravillosas porque hacen que el ecosistema sea resistente. Si una especie disminuye, los depredadores pueden buscar otro tipo de alimento dentro de la red.</p>
+                <p>Cuidar nuestros cafetales y bosques implica proteger a todos los miembros de esta red, desde la planta más pequeña hasta el depredador más grande, para asegurar que la energía siga fluyendo y la vida prospere.</p>
+
+                <div class="workshop-section">
+                    <h2 class="workshop-header">Taller de Repaso</h2>
+                    <p class="workshop-instruction">⚠️ INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno de Ciencias Naturales.</p>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">1. RESPONDE</span>
+                        <p>Según el texto, ¿cuál es el "gran motor de la naturaleza" y por qué los animales dependemos de él si no podemos consumirlo directamente?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">2. DIBUJA</span>
+                        <p>Dibuja una cadena alimenticia simple de cuatro (4) niveles basada en los animales y plantas de la finca cafetera mencionados en la lectura. Identifica claramente cada nivel.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">3. ANALIZA</span>
+                        <p>Imagina que por el uso de químicos, desaparecen todas las lombrices y hongos del suelo del cafetal. ¿Qué ocurriría con los nutrientes del suelo y cómo afectaría esto a los productores a largo plazo? Argumenta tu respuesta.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">4. MAPA CONCEPTUAL</span>
+                        <p>Elabora un mapa conceptual que conecte lógicamente los siguientes términos: <em>Energía Solar, Productores, Consumidores Primarios, Consumidores Secundarios, y Descomponedores.</em></p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">5. RESPONDE</span>
+                        <p>Explica con tus propias palabras qué es la "Regla del 10%". ¿Por qué la mayoría de la energía no pasa al siguiente nivel trófico? ¿En qué se pierde?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-ilustra">6. ILUSTRA (DIBUJA)</span>
+                        <p>Haz un dibujo o esquema que represente cómo los "Descomponedores" cierran el ciclo de la vida, conectando a un animal sin vida con una planta nueva.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">7. ANALIZA</span>
+                        <p>¿Cuál es la diferencia principal entre una "Cadena alimenticia" y una "Red alimenticia"? ¿Por qué se dice en el texto que las redes hacen al ecosistema más resistente?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">8. MAPA MENTAL</span>
+                        <p>Construye un mapa mental centrado en la palabra "Descomponedores". Alrededor, escribe su función principal y los ejemplos típicos que encontramos en la región cafetera.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">9. RESPONDE</span>
+                        <p>Extrae del texto y haz una lista nombrando tres (3) ejemplos de Productores, tres (3) de Consumidores Primarios y tres (3) de Consumidores Terciarios/Secundarios.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">10. DIBUJA Y ANALIZA</span>
+                        <p>Dibuja una pirámide de energía. Coloca a los organismos correspondientes en cada nivel. Si en el nivel 1 (Productores) el sistema inicia con 10,000 unidades de energía, calcula usando la Regla del 10% cuánta energía llegará al Consumidor Primario, cuánta al Secundario y cuánta al Terciario. Escribe los números al lado de cada nivel.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Datos del juego (Secuencia de Acertijos)
+        const gameData = [
+            {
+                room: 1,
+                title: "Nivel 1: Productores",
+                riddle: "Año 2145. Corporación 'Pesticida-X' bloqueó el ecosistema. <br><br> Inicia por la base: <b>Los Productores</b> (Nivel Trófico 1). Atrapan la luz del sol. <br>Si un gran árbol de Guamo genera 800 unidades de energía, y un arbusto de Cafeto produce 120... <br><br>¿Cuánta energía bio-digital producen en total? Digita la suma de 3 cifras.",
+                code: "920",
+                digits: 3
+            },
+            {
+                room: 2,
+                title: "Nivel 2: Consumidores Primarios",
+                riddle: "Bien hecho. Ahora pasamos a los <b>Consumidores Primarios</b> (Herbívoros) en el Nivel 2. <br><br>La 'Regla del 10%' dicta que solo obtienen el 10% de la energía de las plantas. <br>Si los escáneres detectan 5600 unidades de energía almacenadas en los cafetos... <br><br>¿Cuántas unidades pasarán exactamente al loro que come sus semillas? Digita la clave de 3 cifras.",
+                code: "560",
+                digits: 3
+            },
+            {
+                room: 3,
+                title: "Nivel 3: Consumidores Secundarios",
+                riddle: "Acceso concedido. Nivel 3: <b>Consumidores Secundarios</b>. Carnívoros que controlan plagas.<br><br>En este sector, 5 serpientes cazadoras necesitan comer 15 roedores al mes cada una. <br>Multiplica las serpientes por los roedores para saber el total eliminado. <br>Luego, multiplica ese resultado por los niveles tróficos estudiados hasta AHORA (3). <br><br>Ingresa el código de 3 cifras.",
+                code: "225", // 5 * 15 = 75. 75 * 3 = 225
+                digits: 3
+            },
+            {
+                room: 4,
+                title: "Nivel 4: Descomponedores",
+                riddle: "¡Última barrera! <b>Los Descomponedores</b>. Hongos y bacterias que reciclan la vida.<br><br>Para reiniciar y sanar el ecosistema por completo, debes enlazar la cadena de energía en orden numérico.<br>Une el número del nivel de los Productores, seguido de los Primarios, luego Secundarios y finalmente Terciarios. <br><br>Ingresa la secuencia secuencial de 4 dígitos para escapar.",
+                code: "1234",
+                digits: 4
+            }
+        ];
+
+        // Estado del juego
+        let currentRoomIndex = 0;
+        let currentInput = "";
+        let mistakes = 0;
+
+        // Elementos del DOM
+        const displayEl = document.getElementById('display');
+        const riddleTextEl = document.getElementById('riddle-text');
+        const roomIndicatorEl = document.getElementById('room-indicator');
+        const gameUiEl = document.getElementById('game-ui');
+        const finalScreenEl = document.getElementById('final-screen');
+        const finalScoreEl = document.getElementById('final-score');
+        const feedbackMessageEl = document.getElementById('feedback-message');
+
+        function initGame() {
+            currentRoomIndex = 0;
+            currentInput = "";
+            mistakes = 0;
+            loadRoom();
+        }
+
+        function loadRoom() {
+            const room = gameData[currentRoomIndex];
+            roomIndicatorEl.innerText = `Hackeando Nodo ${room.room} de ${gameData.length}: ${room.title}`;
+            riddleTextEl.innerHTML = room.riddle;
+            currentInput = "";
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const room = gameData[currentRoomIndex];
+            let displayText = currentInput;
+            
+            // Rellenar con guiones bajos según la cantidad de dígitos requerida
+            while (displayText.length < room.digits) {
+                displayText += "_";
+            }
+            displayEl.innerText = displayText;
+        }
+
+        function inputDigit(digit) {
+            const room = gameData[currentRoomIndex];
+            if (currentInput.length < room.digits) {
+                currentInput += digit;
+                updateDisplay();
+            }
+        }
+
+        function deleteDigit() {
+            if (currentInput.length > 0) {
+                currentInput = currentInput.slice(0, -1);
+                updateDisplay();
+            }
+        }
+
+        function checkCode() {
+            const room = gameData[currentRoomIndex];
+            
+            // Validar si ingresó todos los dígitos
+            if (currentInput.length !== room.digits) {
+                triggerError();
+                return;
+            }
+
+            // Comprobar respuesta
+            if (currentInput === room.code) {
+                triggerSuccess();
+            } else {
+                triggerError();
+            }
+        }
+
+        function triggerError() {
+            mistakes++;
+            currentInput = ""; // Limpiar input
+            updateDisplay();
+            
+            const displayContainer = document.getElementById('display-box');
+            displayContainer.classList.remove('error-shake');
+            void displayContainer.offsetWidth; // Trigger reflow
+            displayContainer.classList.add('error-shake');
+            
+            // Vibración en móviles si está soportado
+            if ("vibrate" in navigator) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        }
+
+        function triggerSuccess() {
+            const displayContainer = document.getElementById('display-box');
+            displayContainer.classList.remove('success-flash');
+            void displayContainer.offsetWidth;
+            displayContainer.classList.add('success-flash');
+
+            // Pequeña pausa para ver la animación antes de avanzar
+            setTimeout(() => {
+                currentRoomIndex++;
+                if (currentRoomIndex < gameData.length) {
+                    loadRoom();
+                } else {
+                    endGame();
+                }
+            }, 800);
+        }
+
+        function endGame() {
+            gameUiEl.style.display = 'none';
+            finalScreenEl.style.display = 'block';
+
+            // Sistema de calificación de 1.0 a 5.0
+            // Comienza en 5.0, pierde 0.4 por cada error. Mínimo 1.0.
+            let grade = 5.0 - (mistakes * 0.4);
+            if (grade < 1.0) grade = 1.0;
+            
+            finalScoreEl.innerText = grade.toFixed(1);
+
+            if (grade >= 4.0) {
+                finalScoreEl.style.color = 'var(--neon-green)';
+                finalScoreEl.style.textShadow = '0 0 20px var(--neon-green)';
+                feedbackMessageEl.innerText = "¡Excelente! Has demostrado gran dominio del flujo de energía. El ecosistema está a salvo.";
+            } else if (grade >= 3.0) {
+                finalScoreEl.style.color = 'var(--neon-yellow)';
+                finalScoreEl.style.textShadow = '0 0 20px var(--neon-yellow)';
+                feedbackMessageEl.innerText = "Buen intento. Lograste reiniciar el sistema, pero hubo fallas. Te recomendamos repasar la teoría abajo.";
+            } else {
+                finalScoreEl.style.color = 'var(--neon-red)';
+                finalScoreEl.style.textShadow = '0 0 20px var(--neon-red)';
+                feedbackMessageEl.innerText = "Alerta crítica. El ecosistema está inestable. Es obligatorio que leas la base de datos teórica y resuelvas el taller.";
+            }
+        }
+
+        // Iniciar el juego al cargar
+        window.onload = function() {
+            initGame();
+        };
+    </script>
+</body>
+</html>

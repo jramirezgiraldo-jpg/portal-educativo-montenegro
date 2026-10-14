@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Proteínas y Ácidos Nucleicos</title>
+    <style>
+        :root {
+            --primary: #4527a0; /* Púrpura profundo biotech */
+            --primary-dark: #311b92;
+            --secondary: #00838f; /* Cyan oscuro */
+            --secondary-dark: #006064;
+            --accent: #d84315; /* Naranja tierra (café) */
+            --bg-page: #f3f5f9;
+            --bg-card: #ffffff;
+            --text-main: #263238;
+            --text-light: #ffffff;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --border-radius: 12px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1.2rem, 3vw, 2rem) 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border-bottom: 5px solid var(--accent);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            letter-spacing: 0.5px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: rgba(255,255,255,0.15);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: clamp(1rem, 4vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        /* --- ZONA DE JUEGO --- */
+        #zona-juego {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            /* CRÍTICO: Prevención de bugs táctiles (scroll/zoom accidental) */
+            touch-action: none;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ede7f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            color: var(--primary-dark);
+            border: 2px solid #d1c4e9;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.3rem, 1.5vw, 1rem);
+        }
+
+        .category-title {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            font-weight: 900;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.2rem;
+            border-radius: 8px;
+            font-size: clamp(0.65rem, 2.5vw, 1.1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+            word-break: break-word;
+        }
+
+        .pts-btn {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
+            font-weight: 900;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pts-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .pts-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        /* --- MODALES --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 8px solid var(--accent);
+        }
+
+        .modal-header-text {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--secondary);
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-question-text {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #eceff1;
+            border-color: #b0bec5;
+        }
+
+        .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); }
+        .opt-btn.incorrect { background-color: var(--danger); color: white; border-color: var(--danger); }
+
+        .feedback-alert {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .continue-btn {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #bf360c;
+        }
+
+        .continue-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #bf360c;
+        }
+
+        .final-mark {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- ZONA DE LECTURA Y TALLER --- */
+        #zona-lectura {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .theory-article h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            border-bottom: 4px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .theory-article h2:first-child { margin-top: 0; }
+
+        .theory-article h3 {
+            color: var(--secondary-dark);
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2rem;
+        }
+
+        .theory-article p, .theory-article li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: #3e2723;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .theory-article ul { padding-left: 1.5rem; }
+
+        .workshop-container {
+            margin-top: 4rem;
+            background-color: #fdfbf7;
+            border: 3px dashed var(--secondary);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .workshop-container h2 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: none;
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+        }
+
+        .instruction-banner {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .workshop-list li {
+            background-color: #ffffff;
+            border-left: 8px solid var(--accent);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tag-format {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--secondary-dark);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            background-color: #e0f7fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .question-text {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Proteínas y Ácidos Nucleicos</h1>
+        <p>Toca una casilla, lee la pista química y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <!-- FASE 2: ZONA DE JUEGO INTERACTIVA -->
+        <section id="zona-juego">
+            /* STREAMING_CHUNK:Inicializando la interfaz del juego (Panel de estadísticas) */
+            <div class="stats-panel">
+                <div>Puntuación: <span id="score-counter">0</span></div>
+                <div>Progreso: <span id="progress-counter">0</span>/12</div>
+            </div>
+            
+            /* STREAMING_CHUNK:Configurando el contenedor de la cuadrícula interactiva */
+            <div class="grid-container" id="jeopardy-grid">
+                <!-- Se inyecta dinámicamente mediante JavaScript -->
+            </div>
+        </section>
+
+        <!-- FASE 3: ZONA DE LECTURA TEÓRICA Y TALLER (Siempre visible) -->
+        <section id="zona-lectura">
+            /* STREAMING_CHUNK:Renderizando el artículo teórico principal */
+            <article class="theory-article">
+                <h2>Biomoléculas de la Vida: Proteínas, Ácidos Nucleicos y la Magia Ecológica del Café</h2>
+                
+                <p>La química de la vida se escribe utilizando un alfabeto muy reducido de elementos, principalmente carbono, hidrógeno, oxígeno, nitrógeno y fósforo. Estos elementos se combinan para formar grandes macromoléculas o <strong>biomoléculas</strong>. Hoy profundizaremos en dos de las más importantes y complejas: las proteínas y los ácidos nucleicos, descubriendo cómo su intrincada estructura dicta sus funciones, desde la herencia genética hasta la fermentación de un grano de café.</p>
+
+                <h2>Proteínas: Las Máquinas Moleculares y el Enlace Peptídico</h2>
+                <p>Si los carbohidratos son el combustible de la célula, las <strong>proteínas</strong> son los obreros y las máquinas. Son responsables de casi todas las tareas dinámicas en un organismo: construyen tejidos (colágeno), transportan oxígeno (hemoglobina), nos defienden (anticuerpos) y catalizan reacciones químicas (enzimas).</p>
+                <p>Las proteínas son polímeros; es decir, cadenas largas formadas por la unión repetitiva de bloques de construcción llamados <strong>aminoácidos</strong>. Un aminoácido tiene una estructura química fascinante centrada en un átomo de carbono, unido a un grupo amino (-NH2), un grupo carboxilo (-COOH), un hidrógeno y una cadena lateral (grupo R) que le da propiedades únicas a cada uno de los 20 aminoácidos distintos que existen en la naturaleza.</p>
+                <p>Para formar una proteína, el grupo amino de un aminoácido reacciona con el grupo carboxilo de otro, liberando una molécula de agua (síntesis por deshidratación) y creando un puente extremadamente fuerte llamado <strong>enlace peptídico</strong>.</p>
+
+                <h3>Niveles de Estructura Proteica</h3>
+                <p>Una proteína no es solo un hilo estirado; su función depende enteramente de su forma tridimensional, la cual se organiza en cuatro niveles:</p>
+                <ul>
+                    <li><strong>Estructura Primaria:</strong> Es la secuencia lineal y específica de los aminoácidos, unidos por enlaces peptídicos. Es como el orden de las letras en una palabra.</li>
+                    <li><strong>Estructura Secundaria:</strong> La cadena comienza a plegarse debido a puentes de hidrógeno, formando espirales (hélice alfa) o láminas plegadas (lámina beta).</li>
+                    <li><strong>Estructura Terciaria:</strong> La proteína se pliega sobre sí misma adquiriendo una forma tridimensional (globular o fibrosa).</li>
+                    <li><strong>Estructura Cuaternaria:</strong> Algunas proteínas complejas se forman uniendo varias cadenas polipeptídicas (ej. la hemoglobina tiene cuatro).</li>
+                </ul>
+                <p>Si una proteína es sometida a calor extremo o cambios bruscos de pH, pierde su forma tridimensional en un proceso llamado <strong>desnaturalización</strong>. Al perder su forma, pierde automáticamente su función, como una llave que se derrite y ya no puede abrir una cerradura.</p>
+
+                <h2>Ácidos Nucleicos: El Manual de Instrucciones</h2>
+                <p>¿Quién le dicta a la célula el orden exacto de los aminoácidos para ensamblar una proteína? Los ácidos nucleicos: el <strong>ADN</strong> (Ácido Desoxirribonucleico) y el <strong>ARN</strong> (Ácido Ribonucleico). Estas macromoléculas almacenan y transmiten la información genética.</p>
+                <p>Están formados por unidades llamadas <strong>nucleótidos</strong>. Cada nucleótido tiene tres partes: un grupo fosfato, un azúcar de cinco carbonos (pentosa) y una base nitrogenada. Las diferencias fundamentales entre ADN y ARN son vitales:</p>
+                <ul>
+                    <li><strong>ADN:</strong> Es una doble hélice. Su azúcar es la desoxirribosa. Sus bases nitrogenadas son Adenina (A), Timina (T), Citosina (C) y Guanina (G). Es el "disco duro" guardado de forma segura en el núcleo de la célula.</li>
+                    <li><strong>ARN:</strong> Generalmente es una cadena simple. Su azúcar es la ribosa. Reemplaza la Timina por el <strong>Uracilo (U)</strong>. Actúa como el mensajero y traductor que lleva las instrucciones del ADN a los ribosomas para fabricar proteínas.</li>
+                </ul>
+
+                <h2>Enzimas y su Aplicación en el Beneficio del Café</h2>
+                <p>Las <strong>enzimas</strong> son un tipo muy especial de proteínas que actúan como catalizadores biológicos; es decir, aceleran las reacciones químicas sin desgastarse. Funcionan bajo el modelo "llave-cerradura": poseen un <em>sitio activo</em> con una forma perfecta para encajar exclusivamente con un <em>sustrato</em> específico, rompiéndolo o uniéndolo a gran velocidad.</p>
+                <p>Este concepto teórico se vive a diario en las fincas de la región cafetera durante el <strong>beneficio del café</strong>. Al despulpar el grano, este queda envuelto en el mucílago, una capa pegajosa rica en azúcares (pectinas) y algunas proteínas. Si no se remueve, el grano se daña.</p>
+                <p>Durante la fermentación en los tanques, millones de microorganismos naturales (levaduras y bacterias) actúan. ¿Cómo? Secretando enzimas específicas. Las <em>pectinasas</em> rompen los carbohidratos, mientras que las <strong>proteasas</strong> (enzimas que degradan proteínas) rompen los enlaces peptídicos de las proteínas presentes en la pulpa y mucílago residual, reduciéndolas a aminoácidos libres. Esta <strong>degradación enzimática</strong> ecológica y natural es lo que permite que el mucílago se desprenda, garantizando un lavado limpio y un café de alta calidad para exportación, demostrando que la bioquímica opera majestuosamente en el campo.</p>
+            </article>
+
+            /* STREAMING_CHUNK:Construyendo la sección del Taller de Repaso */
+            <div class="workshop-container">
+                <h2>Taller de Comprensión y Análisis</h2>
+                
+                <div class="instruction-banner">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>ATENCIÓN: Escribe y resuelve estas 10 actividades obligatoriamente en tu cuaderno.</span>
+                </div>
+
+                <ul class="workshop-list">
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">1. ¿Qué es un enlace peptídico, entre qué grupos químicos específicos ocurre y qué molécula se libera durante su formación?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Dibujar / Ilustrar</span>
+                        <span class="question-text">2. Dibuja en tu cuaderno la estructura general de un aminoácido. Etiqueta claramente el Carbono central, el grupo Amino, el grupo Carboxilo y la Cadena lateral (R).</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">3. Si calientas un huevo en un sartén, la clara transparente se vuelve blanca y sólida. Basándote en el texto, explica este fenómeno usando los conceptos de "desnaturalización" y "estructura tridimensional". ¿Podría el huevo volver a ser transparente si lo enfrías? ¿Por qué?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Conceptual</span>
+                        <span class="question-text">4. Elabora un mapa conceptual titulado "Niveles de Organización Proteica". Conecta de forma lógica las estructuras Primaria, Secundaria, Terciaria y Cuaternaria, describiendo brevemente la característica de cada nivel.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">5. Menciona las tres diferencias químicas y estructurales fundamentales entre una molécula de ADN y una molécula de ARN.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Ilustrar / Metáfora visual</span>
+                        <span class="question-text">6. Dibuja el modelo de "Llave-Cerradura" de las enzimas. Ilustra una enzima (como una cerradura), etiqueta su "sitio activo" y dibuja a un sustrato encajando perfectamente en ella.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico / Explicación</span>
+                        <span class="question-text">7. Durante el proceso de beneficio del café en los tanques de fermentación, ¿qué papel biológico y fundamental juegan las enzimas llamadas "proteasas" y de dónde provienen?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Mental</span>
+                        <span class="question-text">8. Construye un Mapa Mental centralizado en el "Nucleótido" (el bloque de construcción del ADN/ARN). Saca tres ramas principales para dibujar y nombrar las tres sub-partes que componen a todo nucleótido.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">9. ¿Cuál es la base nitrogenada exclusiva del ARN que sustituye a la Timina encontrada en el ADN?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico / Deducción</span>
+                        <span class="question-text">10. Situación problema: Un caficultor decide echar ácido muy fuerte a los tanques de fermentación para "limpiarlos", bajando drásticamente el pH. Teniendo en cuenta lo que aprendiste sobre la desnaturalización, ¿qué pasará con las enzimas (proteasas) que degradan el mucílago? ¿Tendrá éxito la fermentación de su café? Justifica.</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Pregunta -->
+    /* STREAMING_CHUNK:Estructurando el Modal para mostrar las preguntas */
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header-text" id="modal-cat-pts">Categoría - Puntos</div>
+            <div class="modal-question-text" id="modal-q-text">¿Pregunta?</div>
+            <div id="options-area">
+                <!-- Se inyectan opciones vía JS -->
+            </div>
+            <div class="feedback-alert" id="feedback-alert"></div>
+            <button class="continue-btn" id="btn-next">Volver al Tablero</button>
+        </div>
+    </div>
+
+    <!-- Modal Final de Calificación -->
+    /* STREAMING_CHUNK:Estructurando el Modal Final de calificación */
+    <div class="modal-overlay" id="results-modal">
+        <div class="modal-content" style="border-top-color: var(--success);">
+            <div class="modal-question-text" style="color: var(--primary-dark); margin-bottom: 0.5rem;">¡Evaluación Completada!</div>
+            <p style="font-size: 1.2rem; color: #546e7a;">Has resuelto todas las pistas de la cuadrícula molecular.</p>
+            
+            <div style="font-size: 1.4rem; font-weight: bold; margin-top:1rem;">
+                Puntos Ganados: <span id="final-pts-text" style="color: var(--secondary-dark);">0</span> / 2400
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top:1.5rem;">Tu Calificación Final es:</div>
+            <div class="final-mark" id="final-grade-display">5.0</div>
+            
+            <p style="font-size: 1.1rem; background-color: #e8eaf6; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 2rem; color: #1a237e;">
+                <strong>Siguiente Paso:</strong> Cierra esta ventana, lee detenidamente el artículo sobre biomoléculas en la zona inferior y resuelve el taller asignado en tu cuaderno.
+            </p>
+            
+            <button class="continue-btn" style="display: block; box-shadow: 0 4px 0 #1b5e20; background-color: var(--success);" onclick="document.getElementById('results-modal').style.display='none'">Cerrar e ir al Taller</button>
+        </div>
+    </div>
+
+    /* STREAMING_CHUNK:Implementando la lógica de JavaScript para el juego interactivo */
+    <script>
+        // Estructura de Datos de las Preguntas
+        const gameData = [
+            {
+                category: "Proteínas",
+                questions: [
+                    { pts: 100, q: "Es el enlace químico covalente que une el grupo amino de un aminoácido con el grupo carboxilo de otro.", options: ["Enlace Iónico", "Enlace Peptídico", "Puente de Hidrógeno"], correctIdx: 1 },
+                    { pts: 200, q: "Son las unidades fundamentales (monómeros) que al encadenarse construyen a las proteínas.", options: ["Monosacáridos", "Ácidos Grasos", "Aminoácidos"], correctIdx: 2 },
+                    { pts: 300, q: "Es el proceso mediante el cual una proteína pierde su estructura tridimensional debido al calor extremo o cambios de pH.", options: ["Desnaturalización", "Transcripción", "Polimerización"], correctIdx: 0 }
+                ]
+            },
+            {
+                category: "Estructuras",
+                questions: [
+                    { pts: 100, q: "Nivel de estructura proteica que consiste simplemente en el orden lineal o secuencia de los aminoácidos.", options: ["Estructura Primaria", "Estructura Terciaria", "Estructura Cuaternaria"], correctIdx: 0 },
+                    { pts: 200, q: "Nivel de estructura donde aparecen la 'hélice alfa' o 'lámina beta' mantenidas por puentes de hidrógeno.", options: ["Estructura Primaria", "Estructura Secundaria", "Estructura Terciaria"], correctIdx: 1 },
+                    { pts: 300, q: "La hemoglobina en nuestra sangre está formada por cuatro subunidades proteicas unidas. Este es un ejemplo de estructura...", options: ["Primaria simple", "Secundaria helicoidal", "Cuaternaria"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "ADN y ARN",
+                questions: [
+                    { pts: 100, q: "Macromolécula biológica que guarda la información genética en forma de una doble hélice.", options: ["Triglicéridos", "ADN", "Enzima ATP"], correctIdx: 1 },
+                    { pts: 200, q: "Base nitrogenada que se encuentra presente exclusivamente en el ARN, reemplazando a la Timina.", options: ["Adenina (A)", "Guanina (G)", "Uracilo (U)"], correctIdx: 2 },
+                    { pts: 300, q: "Azúcar de cinco carbonos (pentosa) que forma la columna vertebral estructural de la molécula de ADN.", options: ["Ribosa", "Desoxirribosa", "Glucosa"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "Enzimas y Café",
+                questions: [
+                    { pts: 100, q: "Tipo de proteína altamente especializada que actúa como un catalizador, acelerando las reacciones químicas biológicas.", options: ["Enzima", "Anticuerpo", "Queratina"], correctIdx: 0 },
+                    { pts: 200, q: "En el modelo 'llave-cerradura', es la molécula específica sobre la cual la enzima actúa.", options: ["Inhibidor", "Sustrato", "Cofactor metálico"], correctIdx: 1 },
+                    { pts: 300, q: "Durante el beneficio del café, ¿qué papel fundamental cumplen las enzimas proteasas liberadas por bacterias?", options: ["Pintan el grano de color rojo cereza", "Secan el grano usando calor biológico", "Rompen enlaces peptídicos degradando proteínas del mucílago"], correctIdx: 2 }
+                ]
+            }
+        ];
+
+        // Estado del Juego
+        let currentScore = 0;
+        let answeredQuestions = 0;
+        const totalQuestions = 12;
+        const maxScore = 2400; // 4 columnas * (100+200+300) = 2400
+        
+        let activeColIdx = -1;
+        let activeRowIdx = -1;
+        let activeBtnElement = null;
+
+        // Referencias del DOM
+        const gridContainer = document.getElementById("jeopardy-grid");
+        const scoreDisplay = document.getElementById("score-counter");
+        const progressDisplay = document.getElementById("progress-counter");
+        
+        const qModal = document.getElementById("question-modal");
+        const mCatPts = document.getElementById("modal-cat-pts");
+        const mQuestion = document.getElementById("modal-q-text");
+        const optionsArea = document.getElementById("options-area");
+        const feedbackAlert = document.getElementById("feedback-alert");
+        const btnNext = document.getElementById("btn-next");
+
+        // Inicializador del Tablero
+        function buildGame() {
+            // Render Cabeceras de Categoría
+            gameData.forEach(col => {
+                const header = document.createElement("div");
+                header.className = "category-title";
+                header.textContent = col.category;
+                gridContainer.appendChild(header);
+            });
+
+            // Render Botones (Filas de Valores 100, 200, 300)
+            for (let row = 0; row < 3; row++) {
+                gameData.forEach((col, colIdx) => {
+                    const btn = document.createElement("button");
+                    btn.className = "pts-btn";
+                    const points = col.questions[row].pts;
+                    btn.textContent = points;
+                    
+                    // Asignar evento click (funciona bien en touch por el CSS touch-action:none)
+                    btn.addEventListener("click", () => openModal(colIdx, row, btn));
+                    
+                    gridContainer.appendChild(btn);
+                });
+            }
+        }
+
+        // Lógica de Modales de Pregunta
+        function openModal(colIdx, rowIdx, btnElement) {
+            activeColIdx = colIdx;
+            activeRowIdx = rowIdx;
+            activeBtnElement = btnElement;
+
+            const qData = gameData[colIdx].questions[rowIdx];
+            
+            mCatPts.textContent = `${gameData[colIdx].category} | ${qData.pts} Pts`;
+            mQuestion.textContent = qData.q;
+            
+            // Limpiar estado anterior
+            optionsArea.innerHTML = "";
+            feedbackAlert.style.display = "none";
+            btnNext.style.display = "none";
+
+            // Crear botones de opciones
+            qData.options.forEach((optText, optIdx) => {
+                const optBtn = document.createElement("button");
+                optBtn.className = "opt-btn";
+                optBtn.textContent = optText;
+                optBtn.addEventListener("click", () => handleAnswer(optIdx, optBtn));
+                optionsArea.appendChild(optBtn);
+            });
+
+            qModal.style.display = "flex";
+        }
+
+        // Lógica de Validación y Puntuación
+        function handleAnswer(selectedIdx, clickedElement) {
+            // Prevenir múltiples clics bloqueando las opciones
+            const allOpts = optionsArea.querySelectorAll(".opt-btn");
+            allOpts.forEach(b => b.disabled = true);
+
+            const qData = gameData[activeColIdx].questions[activeRowIdx];
+            const isCorrect = (selectedIdx === qData.correctIdx);
+
+            feedbackAlert.style.display = "block";
+            
+            if (isCorrect) {
+                clickedElement.classList.add("correct");
+                currentScore += qData.pts;
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackAlert.textContent = `¡Respuesta Correcta! Análisis bioquímico preciso. +${qData.pts} puntos.`;
+                feedbackAlert.style.backgroundColor = "#e8f5e9";
+                feedbackAlert.style.color = "var(--success)";
+                feedbackAlert.style.border = "2px solid #a5d6a7";
+            } else {
+                clickedElement.classList.add("incorrect");
+                allOpts[qData.correctIdx].classList.add("correct"); // Resaltar la respuesta verdadera
+                
+                feedbackAlert.textContent = `Respuesta Incorrecta. La opción válida está marcada en verde. 0 puntos.`;
+                feedbackAlert.style.backgroundColor = "#ffebee";
+                feedbackAlert.style.color = "var(--danger)";
+                feedbackAlert.style.border = "2px solid #ef9a9a";
+            }
+
+            // Actualizar estado general del tablero
+            answeredQuestions++;
+            progressDisplay.textContent = answeredQuestions;
+            activeBtnElement.disabled = true;
+            activeBtnElement.textContent = "—";
+
+            btnNext.style.display = "block";
+        }
+
+        // Transición de flujos (Continuar)
+        btnNext.addEventListener("click", () => {
+            qModal.style.display = "none";
+            
+            // Revisar si terminó el juego
+            if (answeredQuestions === totalQuestions) {
+                setTimeout(showFinalGrade, 600);
+            }
+        });
+
+        // Cálculo de Calificación Final (Escala colombiana estándar 1.0 a 5.0)
+        function showFinalGrade() {
+            const resultsModal = document.getElementById("results-modal");
+            document.getElementById("final-pts-text").textContent = currentScore;
+
+            // Escala lineal simple: 0 pts = 1.0, 2400 pts = 5.0
+            const percentage = currentScore / maxScore;
+            const computedGrade = (percentage * 4.0) + 1.0;
+            const finalGradeStr = computedGrade.toFixed(1);
+
+            const gradeDisplay = document.getElementById("final-grade-display");
+            gradeDisplay.textContent = finalGradeStr;
+            
+            // Asignar colores según desempeño
+            if (computedGrade >= 4.0) {
+                gradeDisplay.style.color = "var(--success)";
+            } else if (computedGrade >= 3.0) {
+                gradeDisplay.style.color = "var(--secondary-dark)";
+            } else {
+                gradeDisplay.style.color = "var(--danger)";
+            }
+
+            resultsModal.style.display = "flex";
+        }
+
+        // Arrancar juego al cargar el DOM de manera segura
+        window.addEventListener("DOMContentLoaded", buildGame);
+    </script>
+</body>
+</html>

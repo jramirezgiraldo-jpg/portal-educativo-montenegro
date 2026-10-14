@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fotosíntesis: La Magia Biológica</title>
+    
+    <style>
+        :root {
+            --bg-color: #f7f9f6;
+            --text-color: #2c3e50;
+            --primary: #27ae60;
+            --primary-dark: #1e8449;
+            --secondary: #e67e22;
+            --accent: #2980b9;
+            --error: #c0392b;
+            --error-bg: #fadbd8;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* Tipografía segura offline del sistema */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        main {
+            /* Diseño fluido con max-width para pantallas grandes */
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* ==================== ZONA DE JUEGO ==================== */
+        #zona-juego {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .instruccion {
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            color: #444;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            background-color: #eafaf1;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            padding: 0.8rem;
+            background-color: #f4f6f7;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .stat-item span {
+            color: var(--accent);
+        }
+
+        .stat-item .nota {
+            color: var(--primary);
+            font-size: 1.3em;
+        }
+
+        /* REQUISITO CRÍTICO: Prevención de acciones táctiles indeseadas */
+        .game-board {
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            padding: 1rem 0;
+            min-height: 250px;
+        }
+
+        .items-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 2.5rem;
+            min-height: 140px;
+        }
+
+        .item-chip {
+            background-color: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 25px;
+            padding: 0.6rem 1.4rem;
+            font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .item-chip.selected {
+            border-color: var(--accent) !important;
+            background-color: #ebf5fb !important;
+            color: var(--accent);
+            transform: scale(1.12);
+            box-shadow: 0 8px 15px rgba(41, 128, 185, 0.25);
+            z-index: 10;
+        }
+
+        .item-chip.hidden {
+            opacity: 0;
+            transform: scale(0) translateY(-30px);
+            pointer-events: none;
+        }
+
+        .item-chip.shake-error {
+            animation: shake 0.4s ease-in-out;
+            border-color: var(--error) !important;
+            background-color: var(--error-bg) !important;
+            color: var(--error) !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px) rotate(-3deg); }
+            40% { transform: translateX(8px) rotate(3deg); }
+            60% { transform: translateX(-8px) rotate(-3deg); }
+            80% { transform: translateX(8px) rotate(3deg); }
+        }
+
+        .categories-container {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .categories-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .category-btn {
+            background-color: #fff;
+            border: 3px dashed #95a5a6;
+            border-radius: var(--border-radius);
+            padding: 1.5rem 1rem;
+            font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+            font-weight: 700;
+            color: #34495e;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-btn svg {
+            width: 45px;
+            height: 45px;
+            fill: currentColor;
+        }
+
+        .category-btn:hover, .category-btn:active {
+            background-color: #f9fbf9;
+            border-color: var(--primary);
+            color: var(--primary);
+            border-style: solid;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(39, 174, 96, 0.15);
+        }
+
+        .victoria-msg {
+            display: none;
+            background-color: #d4efdf;
+            color: #196f3d;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            margin-top: 1.5rem;
+            border: 2px solid #27ae60;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== ZONA DE LECTURA ==================== */
+        #zona-lectura {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2.5rem clamp(1.2rem, 5vw, 3.5rem);
+        }
+
+        .lectura-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .lectura-header h2 {
+            font-size: clamp(1.7rem, 4.5vw, 2.6rem);
+            color: var(--primary-dark);
+            line-height: 1.3;
+        }
+
+        article h3 {
+            color: var(--secondary);
+            margin-top: 3rem;
+            margin-bottom: 1.2rem;
+            font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+            border-left: 6px solid var(--secondary);
+            padding-left: 15px;
+            background: linear-gradient(to right, rgba(230, 126, 34, 0.1), transparent);
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        article p {
+            margin-bottom: 1.6rem;
+            font-size: clamp(1.05rem, 2.2vw, 1.15rem);
+            text-align: justify;
+            color: #2c3e50;
+        }
+
+        article ul {
+            margin-left: 1.8rem;
+            margin-bottom: 2rem;
+        }
+
+        article li {
+            margin-bottom: 0.8rem;
+            font-size: clamp(1.05rem, 2.2vw, 1.15rem);
+            color: #2c3e50;
+        }
+
+        article strong {
+            color: var(--primary-dark);
+        }
+
+        /* ==================== TALLER DE REPASO ==================== */
+        .taller-container {
+            margin-top: 4rem;
+            background-color: #fdf2e9;
+            padding: 3rem clamp(1.2rem, 4vw, 2.5rem);
+            border-radius: var(--border-radius);
+            border: 1px solid #f5cba7;
+        }
+
+        .taller-container h3 {
+            color: #ba4a00;
+            text-align: center;
+            border: none;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        .taller-instruccion {
+            background: linear-gradient(135deg, #ba4a00, #d35400);
+            color: white;
+            text-align: center;
+            padding: 1.2rem;
+            border-radius: 10px;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            box-shadow: 0 6px 10px rgba(186, 74, 0, 0.2);
+            font-size: clamp(1.05rem, 2.5vw, 1.2rem);
+        }
+
+        .taller-lista {
+            list-style: none;
+            counter-reset: taller-counter;
+        }
+
+        .taller-lista li {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 4rem;
+            font-size: clamp(1.05rem, 2.2vw, 1.15rem);
+            background: #fff;
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+            padding-right: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+            border-left: 5px solid #f0b27a;
+            color: #34495e;
+        }
+
+        .taller-lista li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 15px;
+            top: 22px;
+            background-color: var(--secondary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .tipo-actividad {
+            display: inline-block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            background-color: #eaeded;
+            color: #555;
+            padding: 5px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <h1>Clasificador de Fotosíntesis</h1>
+            <p class="instruccion">
+                👆 <strong>Paso 1:</strong> Toca un concepto (se iluminará en azul).<br>
+                📥 <strong>Paso 2:</strong> Toca la categoría correcta a la que pertenece.
+            </p>
+
+            <div class="stats-bar">
+                <div class="stat-item">Aciertos: <span id="score">0</span><span id="total-items">/15</span></div>
+                <div class="stat-item">Errores: <span id="errors" style="color:var(--error)">0</span></div>
+                <div class="stat-item">Calificación: <span id="grade" class="nota">5.0</span></div>
+            </div>
+
+            <div class="game-board">
+                <div class="items-container" id="items-container">
+                    <!-- Los 15 items se generarán dinámicamente con JS -->
+                </div>
+
+                <div class="categories-container">
+                    <!-- Botón 1: Reactivos (Insumos) -->
+                    <button class="category-btn" onclick="seleccionarCategoria('reactivo')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2A9,9 0 0,0 3,11C3,14.69 5.22,17.86 8.5,19.38L9,15.68C7.57,14.85 6.57,13 6.57,11A5.43,5.43 0 0,1 12,5.57A5.43,5.43 0 0,1 17.43,11A5.43,5.43 0 0,1 12,16.43V20A9,9 0 0,0 21,11A9,9 0 0,0 12,2Z"/>
+                            <path d="M11,15H13V22H11V15Z" />
+                        </svg>
+                        Reactivos / Insumos
+                    </button>
+                    
+                    <!-- Botón 2: Componentes (Estructuras) -->
+                    <button class="category-btn" onclick="seleccionarCategoria('estructura')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 7,11.5 7,11.5C7,11.5 10.5,5 17,8Z"/>
+                        </svg>
+                        Estructuras
+                    </button>
+
+                    <!-- Botón 3: Productos (Salidas) -->
+                    <button class="category-btn" onclick="seleccionarCategoria('producto')">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,22A9,9 0 0,0 21,13C21,9.31 18.78,6.14 15.5,4.62L15,8.32C16.43,9.15 17.43,11 17.43,13A5.43,5.43 0 0,1 12,18.43A5.43,5.43 0 0,1 6.57,13A5.43,5.43 0 0,1 12,7.57V4A9,9 0 0,0 3,13A9,9 0 0,0 12,22Z"/>
+                            <path d="M11,2H13V9H11V2Z" />
+                        </svg>
+                        Productos / Salidas
+                    </button>
+                </div>
+            </div>
+
+            <div id="victoria" class="victoria-msg">
+                <h2>¡Laboratorio Completado! 🔬🌿</h2>
+                <p>Has clasificado correctamente todos los componentes del proceso fotosintético.</p>
+                <p style="margin-top: 15px; font-size: 1.3em;">Tu calificación final es: <strong id="nota-final">5.0</strong></p>
+                <p style="margin-top: 20px; font-size: 1.1em; color: #145a32; font-weight: bold;">
+                    👇 Desplázate hacia abajo para repasar la teoría y realizar tu taller en el cuaderno.
+                </p>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="lectura-header">
+                <h2>La Magia Biológica de la Fotosíntesis: Transformando Luz en Vida</h2>
+            </div>
+            
+            <article>
+                <h3>Introducción a la Fábrica Viva</h3>
+                <p>
+                    Cuando miramos a nuestro alrededor y observamos un inmenso bosque, un campo de pasto o los cultivos de nuestra región, estamos viendo la tecnología más avanzada y antigua del planeta Tierra en pleno funcionamiento. Las plantas, algas y algunas bacterias poseen una capacidad asombrosa que parece sacada de la ciencia ficción: son capaces de atrapar la energía del Sol que viaja millones de kilómetros a través del espacio y transformarla físicamente en alimento material. Este milagroso proceso de construcción de materia orgánica se conoce como <strong>Fotosíntesis</strong>.
+                </p>
+                <p>
+                    Para entender la fotosíntesis en un nivel secundario, debemos imaginar que cada hoja de una planta no es simplemente un adorno verde, sino una fábrica química microscópica altamente eficiente. En esta fábrica entran materias primas simples, ocurre una cadena de reacciones bioquímicas impulsadas por la luz, y salen productos energéticos de los cuales depende casi el 100% de la vida en nuestro planeta.
+                </p>
+
+                <h3>Las Estructuras: Los Motores Celulares</h3>
+                <p>
+                    Toda la magia ocurre dentro de las células vegetales, específicamente en unos diminutos orgánulos llamados <strong>cloroplastos</strong>. Si pudiéramos mirar dentro de un cloroplasto con un microscopio electrónico, veríamos estructuras apiladas en forma de monedas llamadas <strong>tilacoides</strong>. Es en la membrana de estos tilacoides donde reside la <strong>clorofila</strong>, el pigmento verde que actúa como una verdadera antena parabólica celular, diseñada evolutivamente para atrapar los fotones (partículas de luz solar).
+                </p>
+                <p>
+                    Para que la fábrica funcione, las materias primas deben ingresar a la planta. El agua (H2O) es absorbida del suelo a través de las raíces y transportada hacia las hojas. Por otro lado, el Dióxido de Carbono (CO2) ingresa desde el aire a la hoja a través de minúsculos poros llamados <strong>estomas</strong>, los cuales se abren y cierran según las necesidades de la planta, funcionando como válvulas de respiración.
+                </p>
+
+                <h3>Los Reactivos y El Proceso: De lo Inorgánico a lo Orgánico</h3>
+                <p>
+                    La fotosíntesis, en términos químicos, utiliza tres <strong>reactivos o insumos principales</strong>:
+                </p>
+                <ul>
+                    <li><strong>Luz Solar (Energía Fotónica):</strong> El motor que enciende la maquinaria.</li>
+                    <li><strong>Agua (H2O):</strong> Obtenida de la tierra, proporciona los electrones necesarios para la reacción.</li>
+                    <li><strong>Dióxido de Carbono (CO2):</strong> Un gas inorgánico presente en la atmósfera que aporta el elemento vital para construir vida: el carbono.</li>
+                </ul>
+                <p>
+                    El proceso se divide fundamentalmente en dos grandes etapas. En la <strong>Fase Luminosa</strong>, que solo ocurre cuando hay sol, la clorofila captura la luz y utiliza esa energía para romper las moléculas de agua. Este rompimiento libera oxígeno al ambiente y genera energía en forma de moléculas de ATP (la moneda energética de la célula).
+                </p>
+                <p>
+                    Luego, en la <strong>Fase Oscura (o Ciclo de Calvin)</strong>, que no necesita luz directa pero usa la energía producida en la fase anterior, la planta toma el CO2 del aire y, pieza por pieza, lo ensambla para formar moléculas complejas de azúcares. Aquí es donde literalmente se construye la materia orgánica a partir de un gas.
+                </p>
+
+                <h3>Los Productos y su Impacto Global</h3>
+                <p>
+                    Como resultado de este increíble complejo industrial celular, se obtienen dos <strong>productos fundamentales</strong>:
+                </p>
+                <ul>
+                    <li><strong>Glucosa (C6H12O6) / Savia Elaborada:</strong> Un azúcar rico en energía. Es el alimento de la planta. Con la glucosa, las plantas construyen sus hojas, ramas, flores, frutos y semillas (almidón). Toda la energía que tú obtienes al comer una manzana o un plato de arroz, es energía solar empaquetada inicialmente en glucosa vegetal.</li>
+                    <li><strong>Oxígeno (O2):</strong> Irónicamente, este es un "desecho" de la fotosíntesis celular. Al romper el agua, la planta expulsa oxígeno a la atmósfera a través de los estomas. Este "residuo" botánico es exactamente el gas que necesitamos los humanos y casi todos los animales para respirar y mantenernos vivos cada segundo de nuestra existencia.</li>
+                </ul>
+                <p>
+                    Comprender la fotosíntesis es comprender que somos seres dependientes. Las plantas actúan como el gran sumidero de carbono del mundo, absorbiendo enormes cantidades del CO2 que causa el calentamiento global, y devolviéndonos aire puro y alimento. Proteger los ecosistemas vegetales no es solo cuidar el paisaje; es proteger la máquina biológica que nos mantiene vivos a todos.
+                </p>
+            </article>
+
+            <div class="taller-container">
+                <h3>Taller de Repaso y Aplicación</h3>
+                <div class="taller-instruccion">
+                    ✍️ ATENCIÓN ESTUDIANTE: Lee atentamente, escribe y resuelve las siguientes 10 actividades de forma clara y ordenada en tu cuaderno de Biología.
+                </div>
+                
+                <ul class="taller-lista">
+                    <li>
+                        <span class="tipo-actividad">Respuesta Directa</span>
+                        Según la lectura, ¿cómo se define la fotosíntesis y cuál es su principal logro biológico en nuestro planeta?
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Análisis Crítico</span>
+                        Si debido a una densa nube de ceniza volcánica el Sol se oscureciera globalmente por varios años, ¿qué sucedería con la "fábrica celular" de las plantas y cómo afectaría esto en cadena a los animales carnívoros? Justifica.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Dibujo / Ilustración</span>
+                        Dibuja en tu cuaderno una gran hoja de planta. Usando flechas de colores, ilustra e indica exactamente qué elementos entran (Reactivos) a la hoja y qué elementos salen (Productos) durante la fotosíntesis.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Mapa Conceptual</span>
+                        Elabora un mapa conceptual que conecte lógicamente los siguientes conceptos: <em>Cloroplastos, Clorofila, Fase Luminosa, Fase Oscura, Luz Solar, Agua, Dióxido de Carbono, Glucosa y ATP</em>.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Respuesta Directa</span>
+                        Explica brevemente cuál es la función específica de los "Estomas" y compáralos con alguna estructura de nuestro cuerpo humano.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Análisis Crítico</span>
+                        En la actualidad se habla mucho del Cambio Climático debido al exceso de CO2 emitido por fábricas y carros. Argumenta por qué la reforestación (sembrar millones de árboles) es una solución biológica directa a este problema basándote en la química de la fotosíntesis.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Dibujo / Ilustración</span>
+                        Dibuja un "cloroplasto" visto por dentro. Asegúrate de señalar dónde se encuentran los "tilacoides" y escribe una nota al lado explicando qué pigmento importante contienen.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Mapa Mental</span>
+                        Crea un mapa mental creativo sobre los "Productos de la Fotosíntesis". Una rama debe enfocarse en la Glucosa (ejemplificando en qué se convierte: frutos, madera, energía) y otra rama en el Oxígeno y su viaje en la atmósfera.
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Respuesta Directa</span>
+                        ¿Por qué el texto menciona que el Oxígeno (O2) que respiramos es, irónicamente, un "desecho" o residuo del proceso botánico? ¿De qué molécula proviene exactamente ese oxígeno que se libera?
+                    </li>
+                    <li>
+                        <span class="tipo-actividad">Análisis Crítico (Solución de problemas)</span>
+                        Las plantas del desierto (como los cactus) viven en lugares con temperaturas extremas. Si abren sus estomas de día perderían toda su agua por evaporación. Deduce y explica: ¿Cómo crees que han adaptado su fotosíntesis para no morir de sed pero a la vez obtener el CO2 necesario?
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Definición de los 15 conceptos obligatorios divididos en 3 categorías
+        // cat: reactivo (insumos), producto (salidas), estructura (componentes)
+        const conceptos = [
+            // Reactivos / Insumos (5)
+            { id: 1, name: 'Luz Solar (Fotones)', cat: 'reactivo' },
+            { id: 2, name: 'Agua (H2O)', cat: 'reactivo' },
+            { id: 3, name: 'Dióxido de Carbono (CO2)', cat: 'reactivo' },
+            { id: 4, name: 'Minerales del Suelo', cat: 'reactivo' },
+            { id: 5, name: 'Energía Lumínica', cat: 'reactivo' },
+            // Productos / Salidas (5)
+            { id: 6, name: 'Glucosa (C6H12O6)', cat: 'producto' },
+            { id: 7, name: 'Oxígeno (O2)', cat: 'producto' },
+            { id: 8, name: 'Savia Elaborada', cat: 'producto' },
+            { id: 9, name: 'Moléculas de ATP', cat: 'producto' },
+            { id: 10, name: 'Almidón de Reserva', cat: 'producto' },
+            // Estructuras / Componentes (5)
+            { id: 11, name: 'Cloroplastos', cat: 'estructura' },
+            { id: 12, name: 'Clorofila', cat: 'estructura' },
+            { id: 13, name: 'Estomas', cat: 'estructura' },
+            { id: 14, name: 'Tilacoides', cat: 'estructura' },
+            { id: 15, name: 'Hoja Verde', cat: 'estructura' }
+        ];
+
+        // Variables de estado del juego
+        let selectedElementId = null;
+        let aciertos = 0;
+        let errores = 0;
+        const totalItems = conceptos.length;
+
+        // Referencias al DOM para actualización rápida
+        const itemsContainer = document.getElementById('items-container');
+        const scoreUI = document.getElementById('score');
+        const totalUI = document.getElementById('total-items');
+        const errorsUI = document.getElementById('errors');
+        const gradeUI = document.getElementById('grade');
+
+        // Función auxiliar: Algoritmo de Fisher-Yates para barajar el array
+        function barajarArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function inicializarJuego() {
+            barajarArray(conceptos);
+            
+            conceptos.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-chip';
+                div.id = 'chip-' + item.id;
+                div.textContent = item.name;
+                
+                // Agregamos el evento click, que en móviles se traduce en un Tap perfecto
+                div.addEventListener('click', () => seleccionarItem(item.id, div));
+                
+                itemsContainer.appendChild(div);
+            });
+            
+            // Reflejar la cantidad total de items dinámicamente
+            totalUI.textContent = '/' + totalItems;
+        }
+
+        function seleccionarItem(id, elementoHtml) {
+            // Remover la clase 'selected' de todos los chips previamente seleccionados
+            document.querySelectorAll('.item-chip').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Asignar el nuevo chip seleccionado visual y lógicamente
+            selectedElementId = id;
+            elementoHtml.classList.add('selected');
+        }
+
+        function seleccionarCategoria(categoriaSeleccionada) {
+            // Regla: No hacer nada si el usuario tocó una categoría sin haber seleccionado un chip primero
+            if (!selectedElementId) return;
+
+            const itemData = conceptos.find(c => c.id === selectedElementId);
+            const chipHtml = document.getElementById('chip-' + selectedElementId);
+
+            if (itemData.cat === categoriaSeleccionada) {
+                // ==========================================
+                // LÓGICA DE ACIERTO
+                // ==========================================
+                aciertos++;
+                actualizarMarcadores();
+                
+                // Efecto visual: Encoger y desvanecer para dar sensación de "clasificado"
+                chipHtml.classList.add('hidden');
+                
+                // Limpieza del DOM tras la animación (250ms aprox en el CSS)
+                setTimeout(() => {
+                    chipHtml.style.display = 'none';
+                    verificarVictoria();
+                }, 300);
+
+                // Resetear estado
+                selectedElementId = null;
+            } else {
+                // ==========================================
+                // LÓGICA DE ERROR
+                // ==========================================
+                errores++;
+                actualizarMarcadores();
+
+                // Efecto visual: Temblor rojo (shake) y pérdida del estado 'selected'
+                chipHtml.classList.remove('selected');
+                chipHtml.classList.add('shake-error');
+                
+                // Remover clase de error después de que acabe la animación (400ms en CSS)
+                setTimeout(() => {
+                    chipHtml.classList.remove('shake-error');
+                }, 400);
+
+                // Obliga al estudiante a pensar e intentar tocar de nuevo
+                selectedElementId = null;
+            }
+        }
+
+        function actualizarMarcadores() {
+            scoreUI.textContent = aciertos;
+            errorsUI.textContent = errores;
+
+            // Sistema de calificación estándar de secundaria (Base 5.0)
+            // Se resta 0.25 puntos por cada error cometido
+            let nota = 5.0 - (errores * 0.25);
+            if (nota < 1.0) nota = 1.0; // Piso de nota
+            
+            gradeUI.textContent = nota.toFixed(1);
+            
+            // Feedback de color semáforo en tiempo real para la nota
+            if(nota < 3.0) {
+                gradeUI.style.color = 'var(--error)'; // Rojo - Desempeño Bajo
+            } else if(nota < 4.0) {
+                gradeUI.style.color = 'var(--secondary)'; // Naranja - Desempeño Básico
+            } else {
+                gradeUI.style.color = 'var(--primary)'; // Verde - Desempeño Alto/Superior
+            }
+        }
+
+        function verificarVictoria() {
+            // Si el usuario clasificó correctamente los 15 elementos...
+            if (aciertos === totalItems) {
+                // Ocultar tablero de fichas y botonera de categorías de forma limpia
+                itemsContainer.style.display = 'none';
+                document.querySelector('.categories-container').style.display = 'none';
+                
+                // Configurar modal embebido estático de victoria
+                const winDiv = document.getElementById('victoria');
+                const notaFinalSpan = document.getElementById('nota-final');
+                
+                notaFinalSpan.textContent = gradeUI.textContent;
+                notaFinalSpan.style.color = gradeUI.style.color; // Heredar color según la nota final
+                
+                winDiv.style.display = 'block';
+                
+                // Scroll automático muy sutil para asegurar que el estudiante lea su logro
+                winDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Iniciar todo el sistema interactivo únicamente cuando el HTML esté cargado completamente
+        window.onload = function() {
+            inicializarJuego();
+        };
+    </script>
+</body>
+</html>

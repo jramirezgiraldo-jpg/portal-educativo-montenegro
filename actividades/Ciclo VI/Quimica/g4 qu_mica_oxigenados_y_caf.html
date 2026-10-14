@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Oxigenados y Café</title>
+    <style>
+        :root {
+            --primary: #4e342e; /* Marrón café oscuro */
+            --primary-dark: #3e2723;
+            --secondary: #00838f; /* Cian oscuro químico */
+            --secondary-dark: #006064;
+            --accent: #d84315; /* Naranja rojizo cereza de café */
+            --bg-page: #efebe9;
+            --bg-card: #ffffff;
+            --text-main: #263238;
+            --text-light: #ffffff;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --border-radius: 10px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1.2rem, 3vw, 2rem) 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-bottom: 5px solid var(--accent);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.6rem, 5vw, 2.5rem);
+            letter-spacing: 0.5px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: rgba(255,255,255,0.15);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: clamp(1rem, 4vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        #zona-juego {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            /* CRÍTICO: Prevención de bugs táctiles (scroll/zoom accidental) */
+            touch-action: none;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e0f7fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            color: var(--secondary-dark);
+            border: 2px solid #b2ebf2;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.3rem, 1.5vw, 1rem);
+        }
+
+        .category-title {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            font-weight: 900;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.2rem;
+            border-radius: 8px;
+            font-size: clamp(0.7rem, 2.5vw, 1.1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+            word-break: break-word;
+        }
+
+        .pts-btn {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
+            font-weight: 900;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pts-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .pts-btn:disabled {
+            background-color: #d7ccc8;
+            color: #8d6e63;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 8px solid var(--accent);
+        }
+
+        .modal-header-text {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--secondary);
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-question-text {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #eeeeee;
+            border-color: #bdbdbd;
+        }
+
+        .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); }
+        .opt-btn.incorrect { background-color: var(--danger); color: white; border-color: var(--danger); }
+
+        .feedback-alert {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .continue-btn {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #bf360c;
+        }
+
+        .continue-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #bf360c;
+        }
+
+        .final-mark {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #zona-lectura {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .theory-article h2 {
+            color: var(--primary);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            border-bottom: 4px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .theory-article h2:first-child { margin-top: 0; }
+
+        .theory-article h3 {
+            color: var(--secondary-dark);
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2rem;
+        }
+
+        .theory-article p, .theory-article li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: #3e2723;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .theory-article ul { padding-left: 1.5rem; }
+
+        .workshop-container {
+            margin-top: 4rem;
+            background-color: #f9fbe7; /* Fondo verdoso suave */
+            border: 3px dashed var(--secondary);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .workshop-container h2 {
+            margin-top: 0;
+            color: var(--secondary-dark);
+            border-bottom: none;
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+        }
+
+        .instruction-banner {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .workshop-list li {
+            background-color: #ffffff;
+            border-left: 8px solid var(--accent);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tag-format {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--secondary-dark);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            background-color: #e0f7fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .question-text {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Oxigenados I y Fermentación del Café</h1>
+        <p>Toca una casilla, lee la pista química y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <!-- FASE 2: ZONA DE JUEGO INTERACTIVA -->
+        <section id="zona-juego">
+            <div class="stats-panel">
+                <div>Puntuación: <span id="score-counter">0</span></div>
+                <div>Progreso: <span id="progress-counter">0</span>/12</div>
+            </div>
+            <div class="grid-container" id="jeopardy-grid">
+                <!-- Se inyecta dinámicamente mediante JavaScript -->
+            </div>
+        </section>
+
+        <!-- FASE 3: ZONA DE LECTURA TEÓRICA Y TALLER (Siempre visible) -->
+        <section id="zona-lectura">
+            <article class="theory-article">
+                <h2>Química de los Compuestos Oxigenados: Alcoholes, Fenoles, Éteres y su impacto en el Beneficio del Café</h2>
+                
+                <p>La química orgánica no solo ocurre en tubos de ensayo dentro de laboratorios estériles; está presente a nuestro alrededor y es la responsable directa de la economía de nuestra región. Los compuestos oxigenados son aquellos que, además de tener Carbono e Hidrógeno, incorporan átomos de Oxígeno en su estructura. Hoy exploraremos tres de los grupos más importantes: <strong>Alcoholes, Fenoles y Éteres</strong>, y descubriremos cómo su reactividad está ligada al proceso de fermentación del café.</p>
+
+                <h2>El Grupo Hidroxilo (-OH): Alcoholes y Fenoles</h2>
+                <p>El grupo funcional característico de los alcoholes y los fenoles es el <strong>grupo hidroxilo (-OH)</strong>. Aunque comparten este mismo grupo, su comportamiento químico varía enormemente dependiendo de a qué estén unidos.</p>
+                <ul>
+                    <li><strong>Alcoholes (R-OH):</strong> El grupo -OH está unido a una cadena de carbono alifática (como un metilo o etilo). Un ejemplo clásico es el etanol (alcohol etílico) presente en bebidas fermentadas. Debido a que pueden formar "puentes de hidrógeno" con el agua, los alcoholes de bajo peso molecular son líquidos altamente solubles.</li>
+                    <li><strong>Fenoles (Ar-OH):</strong> El grupo -OH está unido directamente a un anillo aromático (un anillo de benceno). Esta pequeña diferencia estructural hace que los fenoles sean sustancias mucho más ácidas que los alcoholes, ya que el anillo aromático ayuda a estabilizar la carga cuando el fenol pierde su hidrógeno. Son excelentes antisépticos y antioxidantes.</li>
+                </ul>
+
+                <h3>Reactividad y Oxidación de los Alcoholes</h3>
+                <p>Una de las reacciones más importantes de los alcoholes es la oxidación. Los <strong>alcoholes primarios</strong> (donde el -OH está en un carbono en el extremo de la cadena) se oxidan primero formando <strong>aldehídos</strong> y, si la oxidación continúa, se convierten en ácidos carboxílicos (como el ácido acético del vinagre). Los <strong>alcoholes secundarios</strong> se oxidan para formar <strong>cetonas</strong>, mientras que los alcoholes terciarios son resistentes a la oxidación bajo condiciones normales.</p>
+
+                <h2>Éteres: Los parientes inertes (R-O-R')</h2>
+                <p>En los éteres, el átomo de oxígeno actúa como un puente uniendo dos cadenas de carbono (radicales alquilo o arilo). A diferencia de los alcoholes, los éteres <strong>no tienen</strong> un hidrógeno unido al oxígeno, lo que significa que no pueden formar puentes de hidrógeno entre sí. Esto los hace muy volátiles, con puntos de ebullición bajos, y químicamente muy poco reactivos (inertes). Históricamente, el éter dietílico fue revolucionario al usarse como uno de los primeros anestésicos generales en la medicina.</p>
+
+                <h2>Aplicación Regional: El Beneficio del Café y la Fermentación Alcohólica</h2>
+                <p>En el Eje Cafetero y en las fincas de todo el país, el proceso de transformar la cereza roja del café en un grano listo para tostar se conoce como "beneficio". Después de despulpar el café, el grano queda cubierto por una sustancia gelatinosa, rica en azúcares y pectinas, conocida como <strong>mucílago</strong>. Si este mucílago no se remueve, el café se pudre.</p>
+
+                <p>Para remover el mucílago, los caficultores depositan los granos en tanques donde ocurre un proceso biológico y químico fascinante: la <strong>fermentación</strong>. Aquí, microorganismos naturales, principalmente levaduras (como las del género <em>Saccharomyces</em>) y bacterias, comienzan a devorar los azúcares del mucílago.</p>
+                <p>Químicamente, las levaduras realizan una <strong>fermentación alcohólica</strong>. Toman los azúcares (como la glucosa) en ausencia de oxígeno y los transforman principalmente en dióxido de carbono (CO2) y <strong>Etanol (un alcohol primario)</strong>. El etanol ayuda a degradar el mucílago para que luego pueda ser lavado fácilmente con agua.</p>
+
+                <h3>El peligro de la sobre-fermentación</h3>
+                <p>El control del tiempo es crucial. Si el agricultor deja fermentar el café por demasiado tiempo, el <strong>etanol</strong> (alcohol primario) producido por las levaduras comienza a sufrir un proceso de <strong>oxidación</strong> impulsado por bacterias acéticas, transformándose en un ácido carboxílico: el <strong>ácido acético</strong> (el componente principal del vinagre). Cuando esto ocurre, el grano absorbe estas moléculas, arruinando completamente el perfil de la taza de café con sabores conocidos en catación como "avinagrados" o "sobre-fermentos". ¡La química orgánica dicta la calidad del café que exportamos al mundo!</p>
+            </article>
+
+            <div class="workshop-container">
+                <h2>Taller de Comprensión y Análisis</h2>
+                
+                <div class="instruction-banner">
+                    <!-- Icono SVG en línea -->
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>ATENCIÓN: Escribe y resuelve estas 10 actividades obligatoriamente en tu cuaderno de química.</span>
+                </div>
+
+                <ul class="workshop-list">
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">1. ¿Cuál es el grupo funcional característico que comparten los alcoholes y los fenoles, y cómo se escribe su fórmula química?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Dibujar / Ilustrar</span>
+                        <span class="question-text">2. Dibuja en tu cuaderno la estructura química general de un alcohol (R-OH), un fenol (Ar-OH con anillo de benceno) y un éter (R-O-R'). Subraya con rojo el átomo de oxígeno en cada uno.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">3. Según el texto, ¿por qué los alcoholes de bajo peso molecular (como el etanol) son muy solubles en agua, mientras que los éteres son volátiles y hierven a temperaturas mucho más bajas?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Conceptual</span>
+                        <span class="question-text">4. Elabora un mapa conceptual titulado "Compuestos Oxigenados Simples". Utiliza tres ramas principales: Alcoholes, Fenoles y Éteres. A cada rama añádele su estructura general y una propiedad principal extraída de la lectura.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">5. Según la química de la reactividad, ¿qué producto se obtiene al oxidar suavemente un alcohol primario y qué se obtiene al oxidar un alcohol secundario?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Ilustrar Secuencia</span>
+                        <span class="question-text">6. Dibuja el proceso de la "Fermentación Alcohólica del Café" en tres viñetas (cómic): Viñeta 1 (Grano cubierto de mucílago azucarado), Viñeta 2 (Acción de las levaduras), Viñeta 3 (Productos finales: Etanol y Gas CO2).</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico / Explicación</span>
+                        <span class="question-text">7. Utilizando el concepto de "Oxidación de alcoholes primarios", explica químicamente qué es la sobre-fermentación y por qué un café dejado mucho tiempo en el tanque termina sabiendo a vinagre (ácido acético).</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Mental</span>
+                        <span class="question-text">8. Construye un Mapa Mental titulado "El Beneficio del Café". En el centro dibuja un grano, y saca ramificaciones explicando qué es el mucílago, qué microorganismos actúan y qué moléculas químicas se producen.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">9. ¿Cuál fue el uso histórico revolucionario que se le dio al éter dietílico en el campo de la medicina, aprovechando su volatilidad y naturaleza química?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico / Deducción</span>
+                        <span class="question-text">10. Teniendo en cuenta que el anillo aromático estabiliza las cargas eléctricas, ¿cuál de los dos compuestos esperarías que tenga un comportamiento más ácido al soltar en agua su protón (H+): el fenol o el etanol? Explica basándote en la lectura.</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Pregunta -->
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header-text" id="modal-cat-pts">Categoría - Puntos</div>
+            <div class="modal-question-text" id="modal-q-text">¿Pregunta?</div>
+            <div id="options-area">
+                <!-- Se inyectan opciones vía JS -->
+            </div>
+            <div class="feedback-alert" id="feedback-alert"></div>
+            <button class="continue-btn" id="btn-next">Volver al Tablero</button>
+        </div>
+    </div>
+
+    <!-- Modal Final de Calificación -->
+    <div class="modal-overlay" id="results-modal">
+        <div class="modal-content" style="border-top-color: var(--success);">
+            <div class="modal-question-text" style="color: var(--primary-dark); margin-bottom: 0.5rem;">¡Evaluación Completada!</div>
+            <p style="font-size: 1.2rem; color: #546e7a;">Has resuelto todas las pistas de la cuadrícula química.</p>
+            
+            <div style="font-size: 1.4rem; font-weight: bold; margin-top:1rem;">
+                Puntos Ganados: <span id="final-pts-text" style="color: var(--accent);">0</span> / 2400
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top:1.5rem;">Tu Calificación Final es:</div>
+            <div class="final-mark" id="final-grade-display">5.0</div>
+            
+            <p style="font-size: 1.1rem; background-color: #e0f2f1; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--secondary); margin-bottom: 2rem; color: #004d40;">
+                <strong>Siguiente Paso:</strong> Cierra esta ventana, lee detenidamente el artículo teórico en la zona inferior y resuelve el taller asignado en tu cuaderno.
+            </p>
+            
+            <button class="continue-btn" style="display: block; box-shadow: 0 4px 0 #1b5e20; background-color: var(--success);" onclick="document.getElementById('results-modal').style.display='none'">Cerrar e ir al Taller</button>
+        </div>
+    </div>
+
+    <script>
+        // Estructura de Datos de las Preguntas
+        const gameData = [
+            {
+                category: "Funcionales",
+                questions: [
+                    { pts: 100, q: "Grupo funcional característico presente en la estructura química de los alcoholes y fenoles.", options: ["Grupo Carboxilo (-COOH)", "Grupo Hidroxilo (-OH)", "Grupo Carbonilo (-C=O)"], correctIdx: 1 },
+                    { pts: 200, q: "Diferencia estructural principal entre un alcohol (ej. etanol) y un fenol.", options: ["El fenol tiene dos oxígenos", "El fenol tiene el -OH unido a un anillo aromático (benceno)", "El alcohol siempre es un compuesto gaseoso"], correctIdx: 1 },
+                    { pts: 300, q: "Estructura general que representa el grupo funcional de los éteres.", options: ["Un oxígeno uniendo dos carbonos (R-O-R')", "Un carbono unido a nitrógeno (R-CN)", "Un doble enlace de oxígeno (R=O)"], correctIdx: 0 }
+                ]
+            },
+            {
+                category: "Reactividad",
+                questions: [
+                    { pts: 100, q: "Propiedad física destacada de los alcoholes de bajo peso molecular (como el metanol o etanol).", options: ["Son altamente solubles en agua por los puentes de H", "Son metales a temperatura ambiente", "Son gases nobles insolubles"], correctIdx: 0 },
+                    { pts: 200, q: "¿Qué compuesto químico se forma cuando un ALCOHOL PRIMARIO se oxida suavemente en el laboratorio?", options: ["Un alcano", "Un éter cíclico", "Un aldehído"], correctIdx: 2 },
+                    { pts: 300, q: "En términos de reactividad química general, los éteres se caracterizan por ser...", options: ["Sustancias altamente inertes y poco reactivas", "Ácidos extremadamente corrosivos", "Bases fuertes para fabricar jabón"], correctIdx: 0 }
+                ]
+            },
+            {
+                category: "Oxigenados",
+                questions: [
+                    { pts: 100, q: "Uso histórico más famoso del éter dietílico en el campo de la medicina humana.", options: ["Antibiótico", "Anestésico general", "Vitamina de crecimiento"], correctIdx: 1 },
+                    { pts: 200, q: "Regla básica de nomenclatura IUPAC para nombrar la cadena principal de los alcoholes.", options: ["Terminación -ona", "Terminación -ol", "Terminación -ico"], correctIdx: 1 },
+                    { pts: 300, q: "¿Qué producto químico se forma al oxidar un ALCOHOL SECUNDARIO?", options: ["Una Cetona", "Un Fenol", "Un Éster"], correctIdx: 0 }
+                ]
+            },
+            {
+                category: "Química Café",
+                questions: [
+                    { pts: 100, q: "Nombre del recubrimiento gelatinoso del grano de café, rico en azúcares y pectinas, que debe removerse.", options: ["Pergamino", "Mucílago", "Cisco"], correctIdx: 1 },
+                    { pts: 200, q: "Microorganismos naturales encargados de realizar la fermentación del café en los tanques de beneficio.", options: ["Virus y parásitos", "Algas microscópicas", "Levaduras y bacterias"], correctIdx: 2 },
+                    { pts: 300, q: "Durante la fermentación, las levaduras transforman los azúcares del mucílago del café principalmente en...", options: ["Etanol y Gas CO2", "Éter y gas Metano", "Plástico y Oxígeno"], correctIdx: 0 }
+                ]
+            }
+        ];
+
+        // Estado del Juego
+        let currentScore = 0;
+        let answeredQuestions = 0;
+        const totalQuestions = 12;
+        const maxScore = 2400; // 4 columnas * (100+200+300)
+        
+        let activeColIdx = -1;
+        let activeRowIdx = -1;
+        let activeBtnElement = null;
+
+        // Referencias del DOM
+        const gridContainer = document.getElementById("jeopardy-grid");
+        const scoreDisplay = document.getElementById("score-counter");
+        const progressDisplay = document.getElementById("progress-counter");
+        
+        const qModal = document.getElementById("question-modal");
+        const mCatPts = document.getElementById("modal-cat-pts");
+        const mQuestion = document.getElementById("modal-q-text");
+        const optionsArea = document.getElementById("options-area");
+        const feedbackAlert = document.getElementById("feedback-alert");
+        const btnNext = document.getElementById("btn-next");
+
+        function buildGame() {
+            // Render Cabeceras
+            gameData.forEach(col => {
+                const header = document.createElement("div");
+                header.className = "category-title";
+                header.textContent = col.category;
+                gridContainer.appendChild(header);
+            });
+
+            // Render Botones
+            for (let row = 0; row < 3; row++) {
+                gameData.forEach((col, colIdx) => {
+                    const btn = document.createElement("button");
+                    btn.className = "pts-btn";
+                    const points = col.questions[row].pts;
+                    btn.textContent = points;
+                    
+                    // Asignar evento click (Funciona en touch por el CSS touch-action:none)
+                    btn.addEventListener("click", () => openModal(colIdx, row, btn));
+                    
+                    gridContainer.appendChild(btn);
+                });
+            }
+        }
+
+        function openModal(colIdx, rowIdx, btnElement) {
+            activeColIdx = colIdx;
+            activeRowIdx = rowIdx;
+            activeBtnElement = btnElement;
+
+            const qData = gameData[colIdx].questions[rowIdx];
+            
+            mCatPts.textContent = `${gameData[colIdx].category} | ${qData.pts} Pts`;
+            mQuestion.textContent = qData.q;
+            
+            optionsArea.innerHTML = "";
+            feedbackAlert.style.display = "none";
+            btnNext.style.display = "none";
+
+            qData.options.forEach((optText, optIdx) => {
+                const optBtn = document.createElement("button");
+                optBtn.className = "opt-btn";
+                optBtn.textContent = optText;
+                optBtn.addEventListener("click", () => handleAnswer(optIdx, optBtn));
+                optionsArea.appendChild(optBtn);
+            });
+
+            qModal.style.display = "flex";
+        }
+
+        function handleAnswer(selectedIdx, clickedElement) {
+            // Prevenir múltiples clics
+            const allOpts = optionsArea.querySelectorAll(".opt-btn");
+            allOpts.forEach(b => b.disabled = true);
+
+            const qData = gameData[activeColIdx].questions[activeRowIdx];
+            const isCorrect = (selectedIdx === qData.correctIdx);
+
+            feedbackAlert.style.display = "block";
+            
+            if (isCorrect) {
+                clickedElement.classList.add("correct");
+                currentScore += qData.pts;
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackAlert.textContent = `¡Respuesta correcta! Análisis químico preciso. +${qData.pts} puntos.`;
+                feedbackAlert.style.backgroundColor = "#e8f5e9";
+                feedbackAlert.style.color = "var(--success)";
+                feedbackAlert.style.border = "2px solid #a5d6a7";
+            } else {
+                clickedElement.classList.add("incorrect");
+                allOpts[qData.correctIdx].classList.add("correct"); 
+                
+                feedbackAlert.textContent = `Respuesta incorrecta. La opción correcta está en verde. 0 puntos.`;
+                feedbackAlert.style.backgroundColor = "#ffebee";
+                feedbackAlert.style.color = "var(--danger)";
+                feedbackAlert.style.border = "2px solid #ef9a9a";
+            }
+
+            answeredQuestions++;
+            progressDisplay.textContent = answeredQuestions;
+            activeBtnElement.disabled = true;
+            activeBtnElement.textContent = "—";
+
+            btnNext.style.display = "block";
+        }
+
+        btnNext.addEventListener("click", () => {
+            qModal.style.display = "none";
+            
+            if (answeredQuestions === totalQuestions) {
+                setTimeout(showFinalGrade, 600);
+            }
+        });
+
+        function showFinalGrade() {
+            const resultsModal = document.getElementById("results-modal");
+            document.getElementById("final-pts-text").textContent = currentScore;
+
+            // Escala de calificación 1.0 a 5.0
+            const percentage = currentScore / maxScore;
+            const computedGrade = (percentage * 4.0) + 1.0;
+            const finalGradeStr = computedGrade.toFixed(1);
+
+            const gradeDisplay = document.getElementById("final-grade-display");
+            gradeDisplay.textContent = finalGradeStr;
+            
+            if (computedGrade >= 4.0) {
+                gradeDisplay.style.color = "var(--success)";
+            } else if (computedGrade >= 3.0) {
+                gradeDisplay.style.color = "var(--accent)";
+            } else {
+                gradeDisplay.style.color = "var(--danger)";
+            }
+
+            resultsModal.style.display = "flex";
+        }
+
+        // Arrancar juego al cargar DOM
+        window.addEventListener("DOMContentLoaded", buildGame);
+    </script>
+</body>
+</html>

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Niveles de Organización Biológica</title>
+    <style>
+        /* */
+        :root {
+            --bg-main: #f0f7f4;
+            --text-dark: #2c3e50;
+            --text-light: #546e7a;
+            --primary: #27ae60;
+            --primary-dark: #1e8449;
+            --secondary: #f39c12;
+            --danger: #e74c3c;
+            --danger-dark: #c0392b;
+            --white: #ffffff;
+            --board-bg: #d5f5e3;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        /* */
+        header {
+            background: var(--white);
+            padding: clamp(1rem, 3vw, 2rem);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        header h1 {
+            color: var(--primary-dark);
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        header p {
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+            color: var(--text-light);
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: bold;
+            background: rgba(39, 174, 96, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* */
+        #zona-juego {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #game-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--primary);
+            color: var(--white);
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .lives-container {
+            display: flex;
+            gap: 5px;
+        }
+
+        .heart-icon {
+            width: clamp(24px, 5vw, 32px);
+            height: clamp(24px, 5vw, 32px);
+            fill: var(--danger);
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+            transition: all 0.3s ease;
+        }
+
+        .heart-icon.lost {
+            fill: #95a5a6;
+            opacity: 0.5;
+            transform: scale(0.8);
+            filter: none;
+        }
+
+        #game-canvas {
+            position: relative;
+            height: 70vh;
+            min-height: 400px;
+            background: linear-gradient(to bottom, #a8e6cf 0%, #dcedc1 100%);
+            overflow: hidden;
+            /* CRÍTICO PARA MÓVILES */
+            touch-action: none;
+            user-select: none;
+        }
+
+        /* */
+        .word-bubble {
+            position: absolute;
+            padding: clamp(10px, 2.5vw, 15px) clamp(15px, 4vw, 25px);
+            background: var(--white);
+            border: 3px solid var(--primary);
+            border-radius: 40px;
+            font-weight: 800;
+            font-size: clamp(14px, 4vw, 22px);
+            color: var(--primary-dark);
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transform-origin: center;
+            will-change: transform, top;
+            /* Prevenir selecciones */
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        /* */
+        @keyframes popSuccess {
+            0% { transform: scale(1); opacity: 1; }
+            40% { transform: scale(1.3); background: var(--primary); color: white; border-color: white; box-shadow: 0 0 20px var(--primary); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        @keyframes shakeError {
+            0% { transform: translateX(0); background: var(--danger); color: white; border-color: var(--danger-dark); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+            100% { transform: translateX(0) scale(0); opacity: 0; }
+        }
+
+        .anim-pop {
+            animation: popSuccess 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: none;
+        }
+
+        .anim-shake {
+            animation: shakeError 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        /* */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .overlay-title {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .rules-list {
+            text-align: left;
+            margin: 1.5rem 0;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            color: var(--text-dark);
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-radius: 10px;
+            border-left: 5px solid var(--secondary);
+        }
+
+        .rules-list li {
+            margin-bottom: 8px;
+            list-style-type: none;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .grade-display {
+            font-size: clamp(4rem, 10vw, 6rem);
+            font-weight: 900;
+            color: var(--secondary);
+            line-height: 1;
+            margin: 10px 0;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+        }
+
+        /* */
+        #zona-lectura {
+            background: var(--white);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-header h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+        }
+
+        article.teoria {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        article.teoria h3 {
+            color: var(--primary-dark);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            border-left: 5px solid var(--primary);
+            padding-left: 12px;
+            background: linear-gradient(90deg, rgba(39,174,96,0.1) 0%, rgba(255,255,255,0) 100%);
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        article.teoria p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        article.teoria ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        article.teoria li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* */
+        .taller-repaso {
+            margin-top: 4rem;
+            background: #fafaf9;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: clamp(1rem, 4vw, 2.5rem);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .taller-repaso h3 {
+            color: var(--primary-dark);
+            text-align: center;
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            margin-bottom: 1.5rem;
+        }
+
+        .instruccion-cuaderno {
+            background: #fff3cd;
+            border-left: 6px solid #ffc107;
+            padding: 1.2rem;
+            margin-bottom: 2.5rem;
+            font-weight: bold;
+            color: #856404;
+            text-align: center;
+            border-radius: 0 8px 8px 0;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .actividad {
+            margin-bottom: 1.8rem;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        
+        .actividad:hover {
+            transform: translateY(-2px);
+        }
+
+        .badge-tipo {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--white);
+            display: inline-block;
+            margin-bottom: 1rem;
+            background: var(--secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .actividad p {
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        .actividad strong.num {
+            color: var(--primary-dark);
+            font-size: 1.3rem;
+            margin-right: 8px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>La Organización de la Vida</h1>
+            <p>Categoría: <span class="highlight">Niveles de Organización Biológica y Ejemplos</span></p>
+        </header>
+
+        <main>
+            <section id="zona-juego">
+                <div id="game-hud">
+                    <div>Puntos: <span id="score-display">0</span></div>
+                    <div class="lives-container" id="lives-display">
+                        <!-- Corazones SVG se inyectan aquí -->
+                    </div>
+                </div>
+
+                <div id="game-canvas">
+                    <!-- Las palabras caen aquí -->
+                </div>
+
+                <!-- Pantalla de Inicio -->
+                <div id="start-screen" class="overlay">
+                    <h2 class="overlay-title">¡Atrapa la Biología!</h2>
+                    <p style="font-size: 1.2rem; max-width: 600px;">
+                        Toca <strong>SOLO</strong> las palabras relacionadas con la jerarquía biológica (Célula, Tejido, Órgano, etc.) o ejemplos de seres vivos.
+                    </p>
+                    <ul class="rules-list">
+                        <li>🎯 <strong>Tocar Correcta:</strong> +1 Punto.</li>
+                        <li>❌ <strong>Tocar Incorrecta:</strong> Pierdes 1 vida.</li>
+                        <li>⚠️ <strong>Dejar caer Correcta:</strong> Pierdes 1 vida.</li>
+                        <li>💨 <strong>Dejar caer Incorrecta:</strong> No pasa nada.</li>
+                    </ul>
+                    <button class="btn" id="btn-start">Comenzar Juego</button>
+                </div>
+
+                <!-- Pantalla Fin de Juego -->
+                <div id="end-screen" class="overlay hidden">
+                    <h2 class="overlay-title">Juego Terminado</h2>
+                    <p style="font-size: 1.3rem;">Tu puntuación: <strong id="final-score" style="color: var(--primary); font-size: 1.8rem;">0</strong></p>
+                    
+                    <div style="margin: 20px 0;">
+                        <p style="font-size: 1.2rem;">Calificación Obtenida:</p>
+                        <div class="grade-display" id="final-grade">0.0</div>
+                        <p id="grade-message" style="font-weight: bold; color: var(--text-light); font-size: 1.2rem;"></p>
+                    </div>
+
+                    <button class="btn" id="btn-restart">Volver a Jugar</button>
+                    <p style="margin-top: 20px; font-size: 0.95rem; color: #7f8c8d;">
+                        Desliza hacia abajo para leer la teoría y hacer el taller. 👇
+                    </p>
+                </div>
+            </section>
+
+            <section id="zona-lectura">
+                <div class="section-header">
+                    <h2>Arquitectura de la Vida: De lo Invisible al Organismo</h2>
+                    <p>Lee detenidamente el siguiente texto para consolidar tu aprendizaje y realizar el taller.</p>
+                </div>
+                
+                <article class="teoria">
+                    <p>Cuando observamos un inmenso roble, un oso de anteojos corriendo por el páramo o incluso a nosotros mismos frente a un espejo, estamos viendo el resultado final de una obra de ingeniería biológica asombrosa. La naturaleza no construye seres vivos complejos al azar; los organiza meticulosamente en niveles, como si estuviera apilando bloques de construcción, donde cada bloque es más complejo que el anterior. A esta estructura jerárquica la llamamos <strong>Niveles de Organización Biológica</strong>.</p>
+
+                    <h3>1. Nivel Celular: La Unidad Fundamental</h3>
+                    <p>Todo viaje biológico comienza en lo diminuto: la <strong>célula</strong>. Es la unidad estructural y funcional básica de todos los seres vivos. Piensa en ella como el ladrillo fundamental de una casa; sin ladrillos, no hay estructura. Existen seres vivos formados por una sola célula (unicelulares), como las bacterias, que realizan todas las funciones vitales por sí mismas. Sin embargo, en organismos complejos, las células se especializan.</p>
+                    <p>Por ejemplo, en nuestro cuerpo tenemos células musculares diseñadas para contraerse, y neuronas (células nerviosas) diseñadas para transmitir impulsos eléctricos. En nuestra región cafetera, una majestuosa Palma de Cera está formada por billones de células vegetales, cada una con estructuras especiales como los cloroplastos para realizar la fotosíntesis.</p>
+
+                    <h3>2. Nivel Tisular: El Trabajo en Equipo (Tejidos)</h3>
+                    <p>Cuando un grupo de células del mismo tipo se unen para realizar una función específica en conjunto, forman un <strong>tejido</strong>. Volviendo a nuestra analogía, si la célula es el ladrillo, el tejido es una pared completa construida con esos ladrillos. </p>
+                    <ul>
+                        <li><strong>Tejido Epitelial:</strong> Funciona como cobertura y protección. Un ejemplo es nuestra piel, o la corteza protectora de un árbol.</li>
+                        <li><strong>Tejido Muscular:</strong> Agrupa células musculares para generar movimiento.</li>
+                        <li><strong>Tejido Nervioso:</strong> Una red de neuronas que procesa y transmite información.</li>
+                    </ul>
+
+                    <h3>3. Nivel Orgánico: Estructuras con Propósito (Órganos)</h3>
+                    <p>La complejidad aumenta. Un <strong>órgano</strong> es una estructura formada por dos o más tejidos diferentes que se agrupan para realizar funciones mucho más complejas. La pared se une a otras paredes, ventanas y puertas para formar una habitación.</p>
+                    <p>El <strong>corazón</strong> es un órgano fascinante: está compuesto de tejido muscular (para bombear), tejido epitelial (que lo recubre) y tejido nervioso (que controla el ritmo de los latidos). Otros ejemplos de órganos son los <strong>pulmones</strong> (para el intercambio de gases), el <strong>cerebro</strong>, o en las plantas, una hoja (el órgano principal de la fotosíntesis).</p>
+
+                    <h3>4. Nivel Sistémico: La Gran Maquinaria (Sistemas)</h3>
+                    <p>Ningún órgano trabaja solo. Cuando varios órganos se asocian e interactúan para llevar a cabo una función biológica global y vital, constituyen un <strong>sistema</strong> (o aparato). Las habitaciones se conectan con pasillos, tuberías y cables para formar una casa funcional.</p>
+                    <p>Si tomas tu desayuno, el alimento viaja por el <strong>Sistema Digestivo</strong>, que involucra órganos como el estómago, los intestinos y el hígado, trabajando en secuencia para extraer nutrientes. Otros sistemas cruciales son el respiratorio, el circulatorio y el nervioso. Si uno de estos sistemas falla, toda la maquinaria se ve amenazada.</p>
+
+                    <h3>5. Nivel de Organismo: El Individuo Completo</h3>
+                    <p>Finalmente, llegamos al <strong>organismo</strong>. Es el ser vivo individual e independiente, resultado de la integración y el funcionamiento coordinado y perfecto de todos sus sistemas. Es la casa terminada y habitada.</p>
+                    <p>Un <strong>Oso de Anteojos</strong> (nuestro oso andino), el colorido pájaro <strong>Barranquero</strong>, un cafeto, o tú mismo, son organismos. La supervivencia de un organismo depende directamente de que sus células formen tejidos sanos, que estos construyan órganos funcionales, y que los sistemas se comuniquen entre sí de manera equilibrada.</p>
+                    
+                    <p>Comprender esta jerarquía nos ayuda a entender que en la biología, y en la vida misma, todo está conectado. Cuidar de nuestro entorno y de nuestra salud empieza por entender cómo está construida la asombrosa arquitectura de la vida.</p>
+                </article>
+
+                <aside class="taller-repaso">
+                    <h3>Taller de Consolidación</h3>
+                    <div class="instruccion-cuaderno">
+                        ✏️ INSTRUCCIÓN OBLIGATORIA: Escribe el título del tema, numera y resuelve todas estas actividades de forma ordenada en tu cuaderno de apuntes.
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Responder Directamente</span>
+                        <p><strong class="num">1.</strong> Según la lectura, define qué es una "célula" y explica brevemente la analogía de construcción que usa el texto para describirla.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Ilustrar Conceptos</span>
+                        <p><strong class="num">2.</strong> Dibuja en tu cuaderno una escalera de 5 peldaños. En cada peldaño, de abajo hacia arriba, escribe el nombre de un Nivel de Organización Biológica mencionado en el texto, comenzando por el más simple en la base.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Análisis Crítico</span>
+                        <p><strong class="num">3.</strong> Un médico afirma que un problema en el "tejido muscular" de una persona puede afectar su "Sistema Digestivo". Basándote en la lectura, explica y justifica por qué esta afirmación es correcta o incorrecta.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Mapa Conceptual</span>
+                        <p><strong class="num">4.</strong> Elabora un mapa conceptual que tenga como concepto central la palabra "ÓRGANO". De él deben salir líneas hacia su definición, los elementos de los que está compuesto (nivel inferior) y las estructuras más grandes que ayuda a formar (nivel superior). Incluye al menos dos ejemplos de órganos.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Responder Directamente</span>
+                        <p><strong class="num">5.</strong> ¿Cuál es la diferencia fundamental entre un "órgano" y un "sistema"? Explícalo usando el corazón y el sistema circulatorio como ejemplos.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Ilustrar Conceptos</span>
+                        <p><strong class="num">6.</strong> Dibuja un "Oso de Anteojos" o una "Palma de Cera" (elige uno). Señala con flechas y escribe el nombre de al menos un órgano y un sistema (real o supuesto) que puedas identificar en tu dibujo.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Análisis Crítico</span>
+                        <p><strong class="num">7.</strong> Si todas las células nerviosas (neuronas) de un ser vivo dejaran de funcionar, ¿qué pasaría con el Nivel Tisular (Tejido Nervioso) y cómo afectaría esto al nivel de Organismo? Redacta un párrafo argumentativo.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Mapa Mental</span>
+                        <p><strong class="num">8.</strong> Construye un mapa mental creativo sobre los seres vivos de nuestra región mencionados en el texto (Oso de anteojos, Barranquero, Palma de cera). Alrededor de cada uno, dibuja ramas que indiquen que están formados por sistemas, órganos, tejidos y células.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Responder Directamente</span>
+                        <p><strong class="num">9.</strong> Según el texto, ¿qué tejidos componen el corazón humano y qué función cumple cada uno de ellos dentro de ese órgano?</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="badge-tipo">Ilustrar Conceptos</span>
+                        <p><strong class="num">10.</strong> Crea una tira cómica (historieta) de 3 viñetas. En la primera, dibuja células sueltas. En la segunda, dibuja cómo se agrupan formando un tejido. En la tercera, muestra cómo varios tejidos forman un órgano feliz (ej. un pulmón o un estómago).</p>
+                    </div>
+                </aside>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURACIÓN Y DATOS ---
+        const correctWords = [
+            "Célula", "Tejido", "Órgano", "Sistema", "Organismo", 
+            "Neurona", "Músculo", "Corazón", "Digestivo", "Barranquero", 
+            "Epitelial", "Pulmón", "Respiratorio", "Palma de Cera", "Cloroplasto"
+        ];
+        
+        const distractors = [
+            "Roca", "Agua", "Nube", "Tractor", "Plástico", 
+            "Montaña", "Viento", "Celular", "Ladrillo", "Relámpago", 
+            "Vidrio", "Fuego", "Planeta", "Metal", "Arena"
+        ];
+
+        // Icono SVG para las vidas
+        const heartSVG = `<svg class="heart-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+
+        // Referencias al DOM
+        const canvas = document.getElementById('game-canvas');
+        const scoreEl = document.getElementById('score-display');
+        const livesEl = document.getElementById('lives-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const btnStart = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+
+        // Estado del juego
+        let state = {
+            score: 0,
+            lives: 3,
+            isPlaying: false,
+            words: [],
+            baseSpeed: 1.5,
+            spawnRate: 1500,
+            animFrameId: null,
+            spawnIntervalId: null,
+            wordIdCounter: 0
+        };
+
+        // --- 2. FUNCIONES DE ACTUALIZACIÓN VISUAL (HUD) ---
+        function updateHUD() {
+            scoreEl.textContent = state.score;
+            livesEl.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                let heartContainer = document.createElement('div');
+                heartContainer.innerHTML = heartSVG;
+                if (i >= state.lives) {
+                    heartContainer.querySelector('svg').classList.add('lost');
+                }
+                livesEl.appendChild(heartContainer);
+            }
+        }
+
+        // Efecto visual cuando se pierde vida
+        function flashDamage() {
+            canvas.style.backgroundColor = 'rgba(231, 76, 60, 0.4)';
+            setTimeout(() => {
+                if(state.isPlaying) canvas.style.backgroundColor = '';
+            }, 150);
+        }
+
+        // --- 3. LÓGICA DE SPAWN (GENERACIÓN) ---
+        function spawnWord() {
+            if (!state.isPlaying) return;
+
+            // 60% chance de correcta, 40% distractor
+            const isCorrect = Math.random() < 0.6;
+            const list = isCorrect ? correctWords : distractors;
+            const text = list[Math.floor(Math.random() * list.length)];
+            
+            // Crear elemento DOM
+            const el = document.createElement('div');
+            el.className = 'word-bubble';
+            el.textContent = text;
+            el.dataset.type = isCorrect ? 'correct' : 'distractor';
+            
+            // Posición inicial (fuera de pantalla arriba, X aleatoria entre 5% y 75%)
+            const randomX = Math.floor(Math.random() * 70) + 5;
+            el.style.left = `${randomX}%`;
+            el.style.top = `-100px`;
+            
+            canvas.appendChild(el);
+            
+            // Velocidad individual ligeramente variable
+            const speed = state.baseSpeed + (Math.random() * 1.5);
+            
+            state.words.push({
+                id: state.wordIdCounter++,
+                el: el,
+                y: -100,
+                speed: speed,
+                type: el.dataset.type,
+                handled: false // Bandera para saber si ya se interactuó con ella
+            });
+        }
+
+        // --- 4. BUCLE PRINCIPAL (FÍSICA DE CAÍDA) ---
+        function gameLoop() {
+            if (!state.isPlaying) return;
+
+            const containerHeight = canvas.clientHeight;
+
+            // Iterar de atrás hacia adelante para eliminar elementos sin romper el índice
+            for (let i = state.words.length - 1; i >= 0; i--) {
+                let wordObj = state.words[i];
+                
+                if(wordObj.handled) continue; // Ignorar si ya fue tocada
+
+                // Aplicar gravedad
+                wordObj.y += wordObj.speed;
+                wordObj.el.style.top = `${wordObj.y}px`;
+
+                // Detectar si salió de la pantalla por debajo
+                if (wordObj.y > containerHeight) {
+                    if (wordObj.type === 'correct') {
+                        // Dejar caer una correcta castiga
+                        loseLife();
+                    }
+                    // Distractor cae -> no pasa nada
+
+                    // Limpieza
+                    wordObj.el.remove();
+                    state.words.splice(i, 1);
+                }
+            }
+
+            state.animFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- 5. INTERACCIONES (MECÁNICA TÁCTIL) ---
+        canvas.addEventListener('pointerdown', (e) => {
+            if (!state.isPlaying) return;
+            
+            // Buscar si se tocó una burbuja
+            const target = e.target.closest('.word-bubble');
+            if (!target) return;
+            
+            e.preventDefault(); // Prevenir comportamientos por defecto móviles
+
+            // Encontrar el objeto lógico en el array
+            const index = state.words.findIndex(w => w.el === target);
+            if (index === -1) return;
+            
+            const wordObj = state.words[index];
+            
+            // Evitar doble toque
+            if (wordObj.handled) return; 
+            wordObj.handled = true;
+
+            if (wordObj.type === 'correct') {
+                // Acierto
+                target.classList.add('anim-pop');
+                state.score++;
+                
+                // Aumentar dificultad
+                if(state.score % 5 === 0) {
+                    state.baseSpeed += 0.3;
+                    state.spawnRate = Math.max(700, state.spawnRate - 150);
+                    clearInterval(state.spawnIntervalId);
+                    state.spawnIntervalId = setInterval(spawnWord, state.spawnRate);
+                }
+            } else {
+                // Error (tocó distractor)
+                target.classList.add('anim-shake');
+                loseLife();
+            }
+
+            updateHUD();
+
+            // Eliminar del array lógico para que deje de caer
+            state.words.splice(index, 1);
+            
+            // Eliminar del DOM después de que termine la animación
+            setTimeout(() => {
+                if(target.parentNode) target.remove();
+            }, 500);
+        });
+
+        function loseLife() {
+            if(!state.isPlaying) return;
+            state.lives--;
+            updateHUD();
+            flashDamage();
+
+            if (state.lives <= 0) {
+                gameOver();
+            }
+        }
+
+        // --- 6. CONTROL DE FLUJO DEL JUEGO ---
+        function startGame() {
+            // Reset variables
+            state.score = 0;
+            state.lives = 3;
+            state.baseSpeed = 1.5;
+            state.spawnRate = 1500;
+            state.isPlaying = true;
+            state.words = [];
+            
+            // Limpiar canvas visualmente
+            const bubbles = document.querySelectorAll('.word-bubble');
+            bubbles.forEach(b => b.remove());
+            canvas.style.backgroundColor = ''; // Reset flash color
+
+            // UI
+            updateHUD();
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+
+            // Iniciar motores
+            state.spawnIntervalId = setInterval(spawnWord, state.spawnRate);
+            gameLoop();
+        }
+
+        function gameOver() {
+            state.isPlaying = false;
+            cancelAnimationFrame(state.animFrameId);
+            clearInterval(state.spawnIntervalId);
+            
+            // Cálculo de Calificación (Escala 1.0 a 5.0)
+            // Asumimos ~20 puntos como nota excelente (5.0)
+            const maxScoreEst = 20;
+            let ratio = state.score / maxScoreEst;
+            ratio = Math.min(1, ratio); // tope en 100%
+            
+            let grade = 1.0 + (ratio * 4.0);
+            grade = grade.toFixed(1);
+            
+            // Mostrar info
+            document.getElementById('final-score').textContent = state.score;
+            const gradeEl = document.getElementById('final-grade');
+            const msgEl = document.getElementById('grade-message');
+            
+            gradeEl.textContent = grade;
+            
+            // Colores y mensajes según nota
+            if (grade >= 4.5) {
+                gradeEl.style.color = "var(--primary)";
+                msgEl.textContent = "¡Excelente nivel biológico! 🧬";
+            } else if (grade >= 3.5) {
+                gradeEl.style.color = "var(--secondary)";
+                msgEl.textContent = "Buen trabajo, casi eres un organismo completo. 🌱";
+            } else {
+                gradeEl.style.color = "var(--danger)";
+                msgEl.textContent = "Tus sistemas fallaron. ¡Repasa la lectura abajo! 🦠";
+            }
+
+            endScreen.classList.remove('hidden');
+        }
+
+        // Listeners de botones
+        btnStart.addEventListener('click', startGame);
+        btnRestart.addEventListener('click', startGame);
+
+        // Inicializar HUD vacío
+        updateHUD();
+
+    </script>
+</body>
+</html>

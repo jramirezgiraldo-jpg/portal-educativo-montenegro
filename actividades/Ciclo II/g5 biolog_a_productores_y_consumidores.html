@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Productores y Consumidores</title>
+    <style>
+        /* CSS Reset & Variables */
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #c8e6c9;
+            --secondary: #f57f17;
+            --text-dark: #263238;
+            --text-light: #eceff1;
+            --bg-color: #f1f8e9;
+            --card-bg: #ffffff;
+            --success: #388e3c;
+            --error: #d32f2f;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Layout & Containers */
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: clamp(10px, 2vw, 20px);
+        }
+
+        /* UI Header */
+        header {
+            background-color: var(--primary);
+            color: var(--text-light);
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        /* Dashboard (Stats) */
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            gap: 10px;
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            font-weight: bold;
+        }
+
+        .stat-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .stars {
+            color: #ffd54f;
+            letter-spacing: 2px;
+        }
+
+        #zona-juego {
+            background: var(--card-bg);
+            padding: clamp(10px, 3vw, 20px);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Words List */
+        .words-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(5px, 1vw, 10px);
+            margin-bottom: 20px;
+        }
+
+        .word-item {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .word-item.found {
+            background: var(--primary);
+            color: var(--text-light);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        /* Grid */
+        .grid-wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: clamp(1px, 0.5vw, 3px);
+            /* CRITICAL FOR TOUCH: Prevent scroll/zoom while dragging */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            background: #e0e0e0;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: clamp(2px, 1vw, 5px);
+        }
+
+        .cell {
+            background: #fff;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(10px, 3.5vw, 22px);
+            font-weight: bold;
+            color: var(--text-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        /* Selection States */
+        .cell.selecting {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .cell.found {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Winning Modal */
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-restart {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        #zona-lectura {
+            background: var(--card-bg);
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .article-content {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            color: #333;
+        }
+
+        .article-content h2 {
+            color: var(--primary);
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        .article-content h3 {
+            color: var(--secondary);
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            margin: 25px 0 15px 0;
+        }
+
+        .article-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .article-content ul {
+            margin: 15px 0 15px 30px;
+        }
+
+        .article-content li {
+            margin-bottom: 8px;
+        }
+
+        .workshop-section {
+            margin-top: 40px;
+            background: #fff8e1;
+            padding: clamp(20px, 4vw, 30px);
+            border-radius: 12px;
+            border: 2px dashed #ffb300;
+        }
+
+        .workshop-section h2 {
+            color: #ff8f00;
+            border-bottom: none;
+            margin-bottom: 10px;
+        }
+
+        .workshop-instruction {
+            background: #ffe082;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 25px;
+            color: #b00020;
+            font-size: 1.1rem;
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-list li {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 15px;
+        }
+
+        .activity-type {
+            background: var(--primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            white-space: nowrap;
+            height: fit-content;
+        }
+
+        .activity-type.analysis { background: #1976d2; }
+        .activity-type.drawing { background: #9c27b0; }
+        .activity-type.map { background: #e64a19; }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Productores y Consumidores</h1>
+        <p class="instruction">Instrucción: Encuentra las 10 palabras sobre el tema deslizando tu dedo o ratón.</p>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat-box">
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span id="counter">0 / 10</span>
+            </div>
+            <div class="stat-box">
+                <span id="rating" class="stars">★★★★★</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="words-list" class="words-container">
+                <!-- Words injected by JS -->
+            </div>
+            
+            <div class="grid-wrapper">
+                <div id="grid" class="letter-grid">
+                    <!-- Grid injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>El Flujo de la Vida: Niveles Tróficos en los Ecosistemas</h2>
+                
+                <p>En la naturaleza, ningún organismo vive completamente aislado. Todos forman parte de una inmensa red de relaciones donde el intercambio de materia y energía es constante y vital. Para entender cómo funciona la vida en nuestro planeta, los biólogos agrupan a los seres vivos en diferentes categorías llamadas <strong>niveles tróficos</strong>. Estos niveles nos indican cómo un organismo obtiene su alimento, es decir, de dónde saca la energía necesaria para sobrevivir, crecer y reproducirse.</p>
+
+                <p>El motor de casi todos los ecosistemas de la Tierra es el Sol. La energía solar llega a nuestro planeta, pero no todos los seres vivos pueden utilizarla directamente. Aquí es donde comienza la increíble cadena de la vida, estructurada en tres grupos fundamentales: productores, consumidores y descomponedores.</p>
+
+                <h3>1. Los Productores: La base de todo (Organismos Autótrofos)</h3>
+                <p>Los <strong>productores</strong> son el primer nivel trófico y el más indispensable. Se les llama organismos <strong>autótrofos</strong>, una palabra que proviene del griego y significa "que se alimentan por sí mismos". Estos seres vivos tienen una habilidad asombrosa: pueden captar la <strong>energía</strong> luminosa del sol y transformarla en energía química mediante un proceso conocido como <strong>fotosíntesis</strong>.</p>
+                <p>Durante la fotosíntesis, los productores absorben dióxido de carbono del aire, agua y minerales del suelo, y utilizando la luz solar, fabrican sus propios nutrientes (azúcares). Las <strong>plantas</strong> en los ecosistemas terrestres, y las algas y ciertas bacterias en los ecosistemas acuáticos, son los productores por excelencia. Sin ellos, la energía solar nunca entraría a la cadena alimentaria y la vida, tal como la conocemos, no existiría.</p>
+
+                <h3>2. Los Consumidores: Sobreviviendo a través de otros (Organismos Heterótrofos)</h3>
+                <p>Como su nombre lo indica, los <strong>consumidores</strong> no pueden fabricar su propio alimento. Por lo tanto, deben conseguir su energía comiéndose a otros seres vivos. A este tipo de organismos se les llama <strong>heterótrofos</strong> ("que se alimentan de otros"). Los <strong>animales</strong>, incluidos los seres humanos, somos el mejor ejemplo de consumidores. Para estudiar mejor este grupo, los científicos los dividen en diferentes subniveles dependiendo de su dieta:</p>
+                <ul>
+                    <li><strong>Consumidores Primarios (Herbívoros):</strong> Son aquellos que se alimentan directamente de los productores. Ejemplos clásicos son las vacas, los conejos, las orugas o los venados. Ellos transforman la energía vegetal en energía animal.</li>
+                    <li><strong>Consumidores Secundarios (Carnívoros menores):</strong> Son animales que se alimentan de los herbívoros. Por ejemplo, una rana que se come un insecto, o un zorro que caza un conejo.</li>
+                    <li><strong>Consumidores Terciarios y Cuaternarios (Grandes depredadores):</strong> Se encuentran en la cima de la cadena alimentaria. Comen a otros carnívoros. Aquí encontramos a los leones, los tiburones, las águilas y las orcas.</li>
+                </ul>
+
+                <h3>3. Los Descomponedores: El equipo de limpieza (El reciclaje natural)</h3>
+                <p>¿Qué ocurre con las hojas secas que caen de los árboles, con los restos de frutos o con el cuerpo de un animal cuando muere? Si nada los eliminara, el mundo se llenaría de materia inerte. Afortunadamente, existe un tercer grupo silencioso pero vital: los <strong>descomponedores</strong>.</p>
+                <p>Los <strong>hongos</strong> y una inmensa variedad de bacterias microscópicas pertenecen a este nivel. Su trabajo consiste en degradar (descomponer) la materia orgánica muerta o los desechos de otros seres vivos. Al hacerlo, extraen la última gota de energía disponible y, lo más importante, devuelven al suelo y al agua nutrientes esenciales como nitrógeno, fósforo y potasio.</p>
+
+                <h3>El Equilibrio Perfecto</h3>
+                <p>La relación entre estos tres grupos crea un ciclo perfecto. Los productores usan el sol y los nutrientes del suelo para crecer; los consumidores se comen a los productores y a otros consumidores; y cuando ambos mueren, los descomponedores transforman sus restos en nutrientes que vuelven al suelo... listos para ser absorbidos nuevamente por las plantas. Cada nivel es críticamente importante; si elimináramos a uno solo de ellos, todo el ecosistema colapsaría.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h2>Taller de Repaso</h2>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Escribe y resuelve estas 10 actividades en tu cuaderno de apuntes.
+                </div>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-type">Responder</span>
+                        <div><strong>1.</strong> ¿Qué diferencia fundamental existe en la forma de obtener energía entre un organismo autótrofo y uno heterótrofo?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div><strong>2.</strong> Si una enfermedad desconocida extinguiera de repente a todos los hongos y bacterias de un bosque, ¿qué consecuencias exactas tendría esto para las plantas (productores) a largo plazo? Argumenta tu respuesta.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Dibujar</span>
+                        <div><strong>3.</strong> Dibuja en tu cuaderno una red trófica simple que incluya al menos: un productor, un consumidor primario, un consumidor secundario y un descomponedor. Etiqueta cada uno de tus dibujos.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Conceptual</span>
+                        <div><strong>4.</strong> Elabora un mapa conceptual sobre los "Niveles Tróficos". Asegúrate de incluir los tres grupos principales, sus nombres científicos (autótrofos/heterótrofos) y su función principal.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type">Responder</span>
+                        <div><strong>5.</strong> Explica con tus propias palabras brevemente el proceso de la fotosíntesis y por qué el texto afirma que "es la base de casi todas las cadenas alimentarias".</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div><strong>6.</strong> Lee la lista de consumidores en el texto. ¿Por qué crees que los grandes depredadores (consumidores terciarios) son siempre menos numerosos en cantidad que los herbívoros (consumidores primarios) en un ecosistema salvaje?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Ilustrar</span>
+                        <div><strong>7.</strong> Ilustra en un ciclo cerrado (como un círculo) cómo viajan los nutrientes de la tierra hacia los productores, luego a los consumidores, y cómo regresan a la tierra gracias a los descomponedores.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Mental</span>
+                        <div><strong>8.</strong> Diseña un mapa mental exclusivo para clasificar a los consumidores (primarios, secundarios, terciarios). Añade a tu mapa dos ejemplos de animales para cada categoría que <strong>NO</strong> estén mencionados en la lectura.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type">Responder</span>
+                        <div><strong>9.</strong> ¿Cuál es el papel específico de los descomponedores, como los hongos, en el proceso de reciclaje natural de la materia?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div><strong>10.</strong> Argumenta sólidamente por qué ningún nivel trófico es más "importante" que otro. Basa tu argumento en el concepto de interdependencia ecológica mencionado en el último párrafo del texto.</div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Modal Win -->
+<div id="win-modal">
+    <div class="modal-content">
+        <h2 style="color: var(--primary); font-size: 2rem; margin-bottom: 10px;">¡Excelente Trabajo!</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 20px;">Has encontrado todas las palabras.</p>
+        <p><strong>Tiempo:</strong> <span id="final-time"></span></p>
+        <p><strong>Calificación:</strong> <span id="final-stars" class="stars"></span></p>
+        <button class="btn-restart" onclick="initGame()">Jugar de Nuevo</button>
+    </div>
+</div>
+
+<script>
+    // Configuration
+    const RAW_WORDS = ["PRODUCTORES", "CONSUMIDORES", "DESCOMPONEDORES", "PLANTAS", "ANIMALES", "HONGOS", "AUTOTROFOS", "HETEROTROFOS", "FOTOSINTESIS", "ENERGIA"];
+    const GRID_SIZE = 15; // 15x15
+    const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+    
+    // State
+    let wordsToFind = [];
+    let foundWords = [];
+    let grid = [];
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    
+    // Interaction State
+    let isDragging = false;
+    let startRow = -1;
+    let startCol = -1;
+    let currentPath = []; // Array of DOM elements
+    let touchActionActive = false; // Flag to prevent multiple touches
+
+    // Initialization
+    function normalizeWords(words) {
+        return words.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    }
+
+    function initGame() {
+        wordsToFind = normalizeWords(RAW_WORDS);
+        foundWords = [];
+        secondsElapsed = 0;
+        clearInterval(timerInterval);
+        
+        document.getElementById("win-modal").style.display = "none";
+        document.getElementById("timer").textContent = "00:00";
+        document.getElementById("counter").textContent = `0 / ${wordsToFind.length}`;
+        updateRating();
+
+        renderWordsList();
+        generateBoard();
+        
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById("timer").textContent = `${m}:${s}`;
+            updateRating();
+        }, 1000);
+    }
+
+    // Exhaustive Algorithm to guarantee 10 words
+    function generateBoard() {
+        let boardPlaced = false;
+        
+        while (!boardPlaced) {
+            // Reset grid logically
+            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
+            boardPlaced = true;
+
+            // Sort words by length descending for easier placement
+            const sortedWords = [...wordsToFind].sort((a, b) => b.length - a.length);
+
+            for (const word of sortedWords) {
+                let placed = false;
+                let attempts = 0;
+                const maxAttempts = 300; // High limit for exhaustive search
+
+                while (!placed && attempts < maxAttempts) {
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * GRID_SIZE);
+                    const col = Math.floor(Math.random() * GRID_SIZE);
+
+                    if (canPlaceWord(word, row, col, direction)) {
+                        placeWord(word, row, col, direction);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+
+                if (!placed) {
+                    // Algorithm failed to place a word. Break and restart entire board.
+                    boardPlaced = false;
+                    break; 
+                }
+            }
+        }
+
+        // Fill empty spaces
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+                }
+            }
+        }
+
+        renderGrid();
+    }
+
+    function canPlaceWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            const nr = r + i * dr[dir];
+            const nc = c + i * dc[dir];
+
+            // Bounds check
+            if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+            // Conflict check
+            if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+        }
+        return true;
+    }
+
+    function placeWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            grid[r + i * dr[dir]][c + i * dc[dir]] = word[i];
+        }
+    }
+
+    function renderWordsList() {
+        const container = document.getElementById("words-list");
+        container.innerHTML = "";
+        wordsToFind.forEach(word => {
+            const div = document.createElement("div");
+            div.className = "word-item";
+            div.id = `word-${word}`;
+            div.textContent = word;
+            container.appendChild(div);
+        });
+    }
+
+    function renderGrid() {
+        const container = document.getElementById("grid");
+        container.innerHTML = "";
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.textContent = grid[r][c];
+                container.appendChild(cell);
+            }
+        }
+        
+        setupInteraction();
+    }
+
+    function updateRating() {
+        let stars = 5;
+        if (secondsElapsed > 300) stars = 1;      // > 5 mins
+        else if (secondsElapsed > 240) stars = 2; // > 4 mins
+        else if (secondsElapsed > 180) stars = 3; // > 3 mins
+        else if (secondsElapsed > 120) stars = 4; // > 2 mins
+
+        const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+        document.getElementById("rating").textContent = starStr;
+    }
+
+    function setupInteraction() {
+        const gridEl = document.getElementById("grid");
+        
+        // Prevent default touch behaviors (scrolling) over the grid
+        gridEl.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+
+        gridEl.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("pointermove", handlePointerMove);
+        document.addEventListener("pointerup", handlePointerUp);
+    }
+
+    function handlePointerDown(e) {
+        if (e.target.classList.contains('cell')) {
+            isDragging = true;
+            startRow = parseInt(e.target.dataset.row);
+            startCol = parseInt(e.target.dataset.col);
+            
+            clearSelection();
+            e.target.classList.add('selecting');
+            currentPath = [e.target];
+        }
+    }
+
+    function handlePointerMove(e) {
+        if (!isDragging) return;
+        
+        // Use elementFromPoint for continuous touch dragging
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        
+        if (target && target.classList.contains('cell')) {
+            const currentRow = parseInt(target.dataset.row);
+            const currentCol = parseInt(target.dataset.col);
+            
+            updateSelection(startRow, startCol, currentRow, currentCol);
+        }
+    }
+
+    function handlePointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        validateSelection();
+        clearSelection();
+    }
+
+    // Core validation: Only straight lines (horizontal, vertical, diagonal)
+    function updateSelection(r1, c1, r2, c2) {
+        const dr = r2 - r1;
+        const dc = c2 - c1;
+        
+        // Check if it's a valid straight line
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+            return; // Not a valid line
+        }
+
+        clearSelection();
+        currentPath = [];
+
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+        for (let i = 0; i <= steps; i++) {
+            const currR = r1 + i * stepR;
+            const currC = c1 + i * stepC;
+            const cell = document.querySelector(`.cell[data-row="${currR}"][data-col="${currC}"]`);
+            if (cell) {
+                cell.classList.add('selecting');
+                currentPath.push(cell);
+            }
+        }
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.selecting').forEach(el => el.classList.remove('selecting'));
+    }
+
+    function validateSelection() {
+        if (currentPath.length < 2) return;
+
+        let selectedWord = currentPath.map(cell => cell.textContent).join('');
+        let selectedWordReverse = currentPath.map(cell => cell.textContent).reverse().join('');
+        
+        let found = false;
+        let wordMatched = "";
+
+        if (wordsToFind.includes(selectedWord) && !foundWords.includes(selectedWord)) {
+            found = true;
+            wordMatched = selectedWord;
+        } else if (wordsToFind.includes(selectedWordReverse) && !foundWords.includes(selectedWordReverse)) {
+            found = true;
+            wordMatched = selectedWordReverse;
+        }
+
+        if (found) {
+            foundWords.push(wordMatched);
+            
+            // Visually mark grid
+            currentPath.forEach(cell => {
+                cell.classList.add('found');
+                // Small pop animation
+                cell.style.transform = 'scale(1.2)';
+                setTimeout(() => cell.style.transform = 'scale(1)', 150);
+            });
+
+            // Update UI
+            document.getElementById(`word-${wordMatched}`).classList.add('found');
+            document.getElementById("counter").textContent = `${foundWords.length} / ${wordsToFind.length}`;
+
+            // Check Win Condition
+            if (foundWords.length === wordsToFind.length) {
+                clearInterval(timerInterval);
+                setTimeout(showWinModal, 500);
+            }
+        }
+    }
+
+    function showWinModal() {
+        document.getElementById("final-time").textContent = document.getElementById("timer").textContent;
+        document.getElementById("final-stars").textContent = document.getElementById("rating").textContent;
+        document.getElementById("win-modal").style.display = "flex";
+    }
+
+    // Start everything on load
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>

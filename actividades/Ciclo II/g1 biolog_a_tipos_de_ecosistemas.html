@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Ecosistemas Terrestres y Acuáticos</title>
+    <style>
+        :root {
+            --primary-color: #0277bd; /* Agua / Blue */
+            --primary-light: #58a5f0;
+            --primary-dark: #004c8c;
+            --secondary-color: #2e7d32; /* Tierra / Green */
+            --secondary-light: #60ad5e;
+            --bg-color: #f1f8e9; /* Light green-ish background */
+            --text-color: #212121;
+            --grid-bg: #ffffff;
+            --cell-border: #bbdefb;
+            --cell-text: #01579b;
+            --highlight-color: rgba(96, 173, 94, 0.4);
+            --found-color: rgba(2, 119, 189, 0.85);
+            --error-color: #d32f2f;
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--secondary-color));
+            color: white;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 180px;
+            height: 180px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 22 22 2M22 22 2 2' opacity='0.1'/%3E%3Ccircle cx='12' cy='12' r='8' opacity='0.2'/%3E%3Cpath d='M12 2v20' opacity='0.2'/%3E%3Cpath d='M2 12h20' opacity='0.2'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: contain;
+            transform: rotate(45deg);
+        }
+
+        header h1 {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        header p {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        #zona-juego {
+            background: white;
+            border-radius: 16px;
+            padding: clamp(1rem, 3vw, 2rem);
+            margin-top: -2rem;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-top: 6px solid var(--secondary-color);
+        }
+
+        .game-header {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: #e3f2fd;
+            padding: 1.2rem;
+            border-radius: 12px;
+            border-left: 6px solid var(--primary-color);
+        }
+
+        @media (min-width: 650px) {
+            .game-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .instruction {
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            flex: 1;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            justify-content: center;
+        }
+
+        .board-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            background-color: var(--cell-border);
+            border: 2px solid var(--cell-border);
+            border-radius: 8px;
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .cell {
+            background-color: var(--grid-bg);
+            aspect-ratio: 1; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(14px, 4vw, 24px);
+            font-weight: 800;
+            color: var(--cell-text);
+            cursor: pointer;
+            transition: background-color 0.1s, color 0.1s;
+        }
+
+        .cell.highlight {
+            background-color: var(--highlight-color);
+            color: var(--primary-dark);
+        }
+
+        .cell.found {
+            background-color: var(--found-color);
+            color: white;
+            animation: popIn 0.3s ease-out;
+            border-radius: 4px;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background-color: var(--secondary-light); }
+            100% { transform: scale(1); }
+        }
+
+        .words-container {
+            margin-top: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .word-pill {
+            background: #e1f5fe;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            font-size: clamp(0.85rem, 2.5vw, 1.05rem);
+            font-weight: 700;
+            color: var(--primary-dark);
+            transition: all 0.3s ease;
+            border: 1px solid #bbdefb;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .word-pill.found {
+            background: var(--found-color);
+            color: white;
+            text-decoration: line-through;
+            border-color: var(--primary-dark);
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 76, 140, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            transform: translateY(0);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .grade-display {
+            font-size: 5rem;
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary-color);
+        }
+
+        .btn-restart {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 1.2rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 10px rgba(2, 119, 189, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(2, 119, 189, 0.4);
+        }
+
+        #zona-lectura {
+            background: white;
+            margin-top: 3rem;
+            border-top: 8px solid var(--secondary-color);
+            padding: 4rem 1rem;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.03);
+        }
+
+        .article-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .article-content h2 {
+            color: var(--primary-dark);
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #e1f5fe;
+            padding-bottom: 1rem;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .article-content h3 {
+            color: var(--secondary-color);
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            margin: 2.5rem 0 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .article-content h3::before {
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232e7d32' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z'/%3E%3C/svg%3E");
+            background-size: cover;
+        }
+
+        .article-content p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #333;
+            line-height: 1.7;
+        }
+
+        .article-content ul {
+            margin-bottom: 2rem;
+            padding-left: 1.5rem;
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #333;
+        }
+
+        .article-content li {
+            margin-bottom: 1rem;
+            position: relative;
+            list-style-type: none;
+        }
+
+        .article-content li::before {
+            content: "🌿";
+            position: absolute;
+            left: -1.8rem;
+        }
+
+        .info-box {
+            background: #e8f5e9;
+            border-left: 6px solid var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 2.5rem 0;
+            font-style: italic;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            font-size: 1.1rem;
+            color: #2e7d32;
+        }
+
+        .workshop {
+            background: #f8fdff;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            border-radius: 20px;
+            margin-top: 4rem;
+            border: 2px solid #b3e5fc;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        }
+
+        .workshop h2 {
+            color: var(--primary-dark);
+            text-align: center;
+            border: none;
+            margin-bottom: 1.5rem;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+        }
+
+        .notebook-alert {
+            background: white;
+            border: 2px dashed var(--primary-light);
+            padding: 1.2rem;
+            text-align: center;
+            font-weight: 800;
+            color: var(--primary-dark);
+            border-radius: 12px;
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(2, 119, 189, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-item {
+            background: white;
+            padding: 1.5rem 1.5rem 1.5rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+            border-left: 8px solid;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .activity-item:hover {
+            transform: translateX(5px);
+        }
+
+        .act-resp { border-color: #4caf50; }
+        .act-dib { border-color: #9c27b0; }
+        .act-anal { border-color: #ff9800; }
+        .act-map { border-color: #2196f3; }
+
+        .act-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .act-resp .act-tag { background: #4caf50; }
+        .act-dib .act-tag { background: #9c27b0; }
+        .act-anal .act-tag { background: #ff9800; }
+        .act-map .act-tag { background: #2196f3; }
+
+        .activity-item p {
+            margin: 0;
+            color: #333;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .activity-item strong {
+            color: var(--primary-dark);
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Tipos de Ecosistemas</h1>
+        <p>Ciclo II - Explora la biodiversidad terrestre y acuática</p>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div class="container">
+                <div class="game-header">
+                    <div class="instruction">
+                        👆 Encuentra las 10 palabras clave ocultas trazando una línea sobre ellas.
+                    </div>
+                    <div class="stats">
+                        <div>⏱️ <span id="timer">00:00</span></div>
+                        <div style="color: var(--error-color)">❌ <span id="errors">0</span></div>
+                        <div style="color: var(--primary-dark)">🎯 <span id="found-count">0</span>/10</div>
+                    </div>
+                </div>
+
+                <div class="board-container">
+                    <div id="board">
+                        <!-- Generado vía JS -->
+                    </div>
+                </div>
+
+                <div class="words-container" id="words-list">
+                    <!-- Generado vía JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-content">
+                <h2>Ecosistemas: La Danza de la Vida en Diferentes Escenarios</h2>
+                
+                <p>Nuestro planeta es un lugar asombroso, compuesto por múltiples piezas de un inmenso rompecabezas vital. A cada una de estas piezas, donde la vida se desarrolla y se relaciona con su entorno, la llamamos <strong>ecosistema</strong>. Un ecosistema no es más que el conjunto formado por los seres vivos (elementos bióticos como la fauna y la flora) y el medio físico donde habitan (elementos abióticos como el clima, el suelo, la luz y el agua).</p>
+
+                <h3>Ecosistemas Terrestres: La Vida sobre el Suelo</h3>
+                <p>Los ecosistemas terrestres son aquellos donde las plantas y los animales viven en el suelo y en el aire. Dependiendo del <strong>clima</strong> (temperatura y lluvia), estos ecosistemas pueden ser selvas húmedas, desiertos áridos, páramos fríos o bosques. En ellos, la vida se ha adaptado a condiciones específicas de humedad y altitud.</p>
+                <p>En nuestra región, es muy común encontrar un tipo especial de ecosistema terrestre modificado por el humano: el <strong>cultivo</strong>. Fincas cafeteras, plataneras o sembrados de maíz son ecosistemas agrícolas. Sin embargo, suelen caracterizarse por tener una menor <strong>diversidad</strong> natural. En un cultivo tradicional, predominan una o dos especies de plantas, lo que significa que solo ciertos insectos y animales encuentran allí alimento o refugio.</p>
+
+                <h3>Ecosistemas Acuáticos: El Origen de Todo</h3>
+                <p>Los ecosistemas acuáticos son aquellos que tienen por <strong>hábitat</strong> algún cuerpo de agua. Pueden ser marinos (agua salada, como los océanos) o de agua dulce (como los ríos, lagos y lagunas). El agua es el soporte principal y las especies que allí viven están perfectamente diseñadas para nadar, respirar bajo el agua o flotar.</p>
+
+                <div class="info-box">
+                    <strong>Reflexión:</strong> El agua no solo sostiene a los peces; un cuerpo de agua vivo da vida a las orillas y a todo el terreno que cruza. ¡El agua es el imán más grande para la biodiversidad!
+                </div>
+
+                <h3>La Riqueza de la Cañada vs. El Cultivo</h3>
+                <p>Si comparamos un área extensa de cultivo limpio con las <strong>cañadas</strong> y ríos locales, notaremos una diferencia inmensa en la cantidad de vida. Mientras que el cultivo es un hábitat simplificado y controlado por el agricultor, una cañada (especialmente si conserva su bosque ribereño) es un paraíso de biodiversidad.</p>
+                <ul>
+                    <li><strong>En la Cañada o Río Local:</strong> El agua constante permite que crezcan múltiples especies de árboles nativos, arbustos, helechos y musgos. Esta rica <strong>flora</strong> atrae a una variedad asombrosa de <strong>fauna</strong>: aves de múltiples colores, mariposas, ranas, reptiles, mamíferos pequeños y una infinidad de insectos acuáticos y terrestres. Es una red de vida compleja y estable.</li>
+                    <li><strong>En el Cultivo Tradicional:</strong> Al eliminar la vegetación nativa para sembrar un solo producto, se pierde el hogar natural de muchas especies, disminuyendo drásticamente la fauna silvestre en ese parche de tierra.</li>
+                </ul>
+                <p>Por esta razón, la conservación de nuestras fuentes hídricas locales (ríos, cañadas, nacimientos) y la protección de la vegetación que crece a sus orillas no es un capricho; es una necesidad urgente para mantener vivos los corredores biológicos que sostienen el equilibrio natural de nuestro territorio.</p>
+
+                <div class="workshop">
+                    <h2>Taller de Comprensión Lectora</h2>
+                    <div class="notebook-alert">
+                        ✍️ Instrucción: Escribe y resuelve de forma ordenada las siguientes actividades en tu cuaderno.
+                    </div>
+
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>1.</strong> Con base en la lectura, define con tus propias palabras qué es un ecosistema e identifica cuáles son los elementos bióticos y abióticos.</p>
+                    </div>
+
+                    <div class="activity-item act-dib">
+                        <span class="act-tag">Dibujar</span>
+                        <p><strong>2.</strong> Dibuja un ecosistema acuático (como una cañada local). Etiqueta en tu dibujo al menos 3 elementos bióticos (ej. peces, árboles ribereños) y 3 elementos abióticos (ej. agua, piedras, luz solar).</p>
+                    </div>
+
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Analizar</span>
+                        <p><strong>3.</strong> Reflexiona sobre esta situación: Si un bosque natural inmenso es talado para sembrar únicamente una especie de pasto para ganado (monocultivo), ¿qué sucederá con la fauna que dependía de la diversidad de árboles de ese bosque?</p>
+                    </div>
+
+                    <div class="activity-item act-map">
+                        <span class="act-tag">Mapa Conceptual</span>
+                        <p><strong>4.</strong> Elabora un mapa conceptual cuyo título central sea "Ecosistemas". De este título deben salir dos grandes ramas: "Terrestres" y "Acuáticos". Añade características y ejemplos locales de cada uno basándote en la lectura.</p>
+                    </div>
+
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>5.</strong> Según el artículo, ¿por qué los cultivos tradicionales o áreas agrícolas suelen tener menor biodiversidad natural que una cañada salvaje?</p>
+                    </div>
+
+                    <div class="activity-item act-dib">
+                        <span class="act-tag">Ilustrar</span>
+                        <p><strong>6.</strong> Divide una página de tu cuaderno en dos mitades. En una mitad ilustra un "Cultivo de una sola planta sin árboles", y en la otra mitad ilustra una "Cañada protegida por bosque ribereño". Muestra visualmente dónde hay mayor cantidad de animales.</p>
+                    </div>
+
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Analizar</span>
+                        <p><strong>7.</strong> Imagina que debido a la deforestación de sus orillas (tala de árboles), un río local se seca durante el verano. ¿De qué manera directa afectaría este daño ambiental a las fincas agrícolas y cultivos cercanos que dependen del agua?</p>
+                    </div>
+
+                    <div class="activity-item act-map">
+                        <span class="act-tag">Mapa Mental</span>
+                        <p><strong>8.</strong> Construye un mapa mental ubicando la palabra "Biodiversidad de la Cañada" en el centro. Saca ramas para diferentes grupos (Aves, Insectos, Anfibios, Mamíferos, Plantas) y escribe o dibuja ejemplos de lo que podrías encontrar cerca al agua.</p>
+                    </div>
+
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>9.</strong> Explica qué función vital cumplen las plantas nativas (árboles, helechos, musgos) que crecen específicamente a las orillas de los ríos y cañadas.</p>
+                    </div>
+
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Análisis Crítico</span>
+                        <p><strong>10.</strong> Piensa en tu comunidad y entorno. Escribe dos acciones concretas y realistas que podrías realizar junto con tus compañeros de clase para proteger las cañadas cercanas y promover su biodiversidad.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="modal" id="result-modal">
+            <div class="modal-content">
+                <h2 style="color: var(--primary-color); font-size: 2.2rem; margin-bottom: 0.5rem;">¡Búsqueda Completada!</h2>
+                <p style="font-size: 1.1rem; color: #555;">Tu calificación final es:</p>
+                <div class="grade-display" id="final-grade">5.0</div>
+                <p id="feedback-msg" style="font-size: 1.05rem; line-height: 1.4; color: #424242; margin-bottom: 1.5rem;"></p>
+                <button class="btn-restart" id="btn-restart">Jugar de Nuevo</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. Configuración de Palabras
+        const WORDS = [
+            "ECOSISTEMA", "TERRESTRE", "ACUATICO", "CAÑADA", "CULTIVO", 
+            "DIVERSIDAD", "HABITAT", "CLIMA", "FLORA", "FAUNA"
+        ];
+        
+        const GRID_SIZE = 15;
+        let grid = [];
+        let wordStatus = {};
+        
+        let isSelecting = false;
+        let startCell = null;
+        let currentPath = []; 
+        
+        let timer = 0;
+        let timerInterval = null;
+        let errors = 0;
+        let foundCount = 0;
+
+        const boardEl = document.getElementById('board');
+        const wordsListEl = document.getElementById('words-list');
+        const timerEl = document.getElementById('timer');
+        const errorsEl = document.getElementById('errors');
+        const foundCountEl = document.getElementById('found-count');
+        const modal = document.getElementById('result-modal');
+
+        // Función principal de inicialización
+        function initGame() {
+            clearInterval(timerInterval);
+            timer = 0;
+            errors = 0;
+            foundCount = 0;
+            updateStats();
+            wordStatus = {};
+            WORDS.forEach(w => wordStatus[w] = false);
+            modal.classList.remove('active');
+
+            // Bucle exhaustivo para garantizar la generación
+            let success = false;
+            let attempts = 0;
+            while (!success) {
+                success = tryGenerateBoard();
+                attempts++;
+                if (attempts > 1000) {
+                    console.warn("Forzando reinicio de algoritmo tras múltiples fallos lógicos");
+                    attempts = 0; 
+                }
+            }
+
+            fillRandomLetters();
+            renderBoard();
+            renderWordsList();
+            
+            timerInterval = setInterval(() => {
+                timer++;
+                updateStats();
+            }, 1000);
+        }
+
+        function createEmptyGrid() {
+            return Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+        }
+
+        function tryGenerateBoard() {
+            grid = createEmptyGrid();
+            let shuffledWords = [...WORDS].sort(() => Math.random() - 0.5);
+            
+            for (let word of shuffledWords) {
+                if (!placeWord(word)) {
+                    return false; // Falla colocar una palabra, reintenta todo el tablero
+                }
+            }
+            return true; 
+        }
+
+        function placeWord(word) {
+            const directions = [
+                [0, 1],   // Este
+                [1, 0],   // Sur
+                [1, 1],   // Sureste
+                [-1, 1],  // Noreste
+                [0, -1],  // Oeste
+                [-1, 0],  // Norte
+                [-1, -1], // Noroeste
+                [1, -1]   // Suroeste
+            ];
+
+            let shuffledDirs = [...directions].sort(() => Math.random() - 0.5);
+            
+            let positions = [];
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    positions.push({r, c});
+                }
+            }
+            positions.sort(() => Math.random() - 0.5);
+
+            for (let pos of positions) {
+                for (let dir of shuffledDirs) {
+                    if (canPlaceWord(word, pos.r, pos.c, dir[0], dir[1])) {
+                        for (let i = 0; i < word.length; i++) {
+                            grid[pos.r + i * dir[0]][pos.c + i * dir[1]] = word[i];
+                        }
+                        return true; 
+                    }
+                }
+            }
+            return false;
+        }
+
+        function canPlaceWord(word, r, c, dr, dc) {
+            let endR = r + (word.length - 1) * dr;
+            let endC = c + (word.length - 1) * dc;
+
+            if (endR < 0 || endR >= GRID_SIZE || endC < 0 || endC >= GRID_SIZE) return false;
+
+            for (let i = 0; i < word.length; i++) {
+                let currentR = r + i * dr;
+                let currentC = c + i * dc;
+                let cellChar = grid[currentR][currentC];
+                
+                if (cellChar !== '' && cellChar !== word[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function fillRandomLetters() {
+            const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    }
+                }
+            }
+        }
+
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    cell.textContent = grid[r][c];
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function renderWordsList() {
+            wordsListEl.innerHTML = '';
+            WORDS.forEach(word => {
+                const pill = document.createElement('div');
+                pill.className = `word-pill ${wordStatus[word] ? 'found' : ''}`;
+                pill.id = `pill-${word}`;
+                pill.textContent = word;
+                wordsListEl.appendChild(pill);
+            });
+        }
+
+        function updateStats() {
+            const mins = Math.floor(timer / 60).toString().padStart(2, '0');
+            const secs = (timer % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${mins}:${secs}`;
+            errorsEl.textContent = errors;
+            foundCountEl.textContent = foundCount;
+        }
+
+        boardEl.addEventListener('pointerdown', (e) => {
+            const cell = getCellFromEvent(e);
+            if (!cell) return;
+            
+            isSelecting = true;
+            startCell = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
+            clearHighlight();
+            highlightPath(startCell, startCell);
+            
+            if(e.cancelable) e.preventDefault();
+        });
+
+        document.addEventListener('pointermove', (e) => {
+            if (!isSelecting) return;
+            const cell = getCellFromEvent(e);
+            if (!cell) return;
+            
+            const currentCell = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
+            
+            if (isValidLine(startCell, currentCell)) {
+                clearHighlight();
+                highlightPath(startCell, currentCell);
+            }
+        });
+
+        document.addEventListener('pointerup', (e) => {
+            if (!isSelecting) return;
+            isSelecting = false;
+            
+            if (currentPath.length > 1) {
+                checkSelection();
+            } else {
+                clearHighlight(); 
+            }
+        });
+
+        function getCellFromEvent(e) {
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            const target = document.elementFromPoint(clientX, clientY);
+            if (target && target.classList.contains('cell')) {
+                return target;
+            }
+            return null;
+        }
+
+        function isValidLine(start, end) {
+            const dr = Math.abs(end.r - start.r);
+            const dc = Math.abs(end.c - start.c);
+            return dr === 0 || dc === 0 || dr === dc;
+        }
+
+        function highlightPath(start, end) {
+            currentPath = [];
+            const rDiff = end.r - start.r;
+            const cDiff = end.c - start.c;
+            
+            const steps = Math.max(Math.abs(rDiff), Math.abs(cDiff));
+            
+            const rStep = steps === 0 ? 0 : rDiff / steps;
+            const cStep = steps === 0 ? 0 : cDiff / steps;
+
+            for (let i = 0; i <= steps; i++) {
+                const r = start.r + i * rStep;
+                const c = start.c + i * cStep;
+                currentPath.push({r, c});
+                
+                const cellEl = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                if (cellEl && !cellEl.classList.contains('found')) {
+                    cellEl.classList.add('highlight');
+                }
+            }
+        }
+
+        function clearHighlight() {
+            const highlighted = document.querySelectorAll('.cell.highlight');
+            highlighted.forEach(el => el.classList.remove('highlight'));
+            currentPath = [];
+        }
+
+        function checkSelection() {
+            let selectedWord = "";
+            let domCells = [];
+            
+            currentPath.forEach(pos => {
+                selectedWord += grid[pos.r][pos.c];
+                domCells.push(document.querySelector(`.cell[data-r="${pos.r}"][data-c="${pos.c}"]`));
+            });
+            
+            const reversedWord = selectedWord.split('').reverse().join('');
+            let matchedWord = null;
+            
+            if (WORDS.includes(selectedWord) && !wordStatus[selectedWord]) {
+                matchedWord = selectedWord;
+            } else if (WORDS.includes(reversedWord) && !wordStatus[reversedWord]) {
+                matchedWord = reversedWord;
+            }
+
+            if (matchedWord) {
+                wordStatus[matchedWord] = true;
+                foundCount++;
+                
+                domCells.forEach(el => {
+                    el.classList.remove('highlight');
+                    el.classList.add('found');
+                });
+                
+                document.getElementById(`pill-${matchedWord}`).classList.add('found');
+                updateStats();
+                
+                if (foundCount === WORDS.length) {
+                    endGame();
+                }
+            } else {
+                errors++;
+                updateStats();
+                clearHighlight();
+                // Visual error feedback setup
+                boardEl.style.transform = "translateX(5px)";
+                setTimeout(() => boardEl.style.transform = "translateX(-5px)", 50);
+                setTimeout(() => boardEl.style.transform = "translateX(5px)", 100);
+                setTimeout(() => boardEl.style.transform = "translateX(0)", 150);
+            }
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            
+            let timePenalty = timer > 120 ? Math.floor((timer - 120) / 30) * 0.1 : 0;
+            let errorPenalty = errors * 0.2;
+            
+            let finalGrade = 5.0 - errorPenalty - timePenalty;
+            
+            if (finalGrade < 1.0) finalGrade = 1.0;
+            if (finalGrade > 5.0) finalGrade = 5.0; 
+            
+            const gradeDisplay = document.getElementById('final-grade');
+            gradeDisplay.textContent = finalGrade.toFixed(1);
+            
+            let feedback = "";
+            if (finalGrade >= 4.5) {
+                feedback = "¡Excelente observación! Comprendes los conceptos básicos de los ecosistemas muy bien.";
+                gradeDisplay.style.color = "#0277bd"; 
+            } else if (finalGrade >= 3.5) {
+                feedback = "¡Buen trabajo! Encontraste las palabras, pero presta más atención para no cometer tantos errores.";
+                gradeDisplay.style.color = "#2e7d32"; 
+            } else {
+                feedback = "Completado. Te sugiero leer detenidamente el artículo inferior para repasar los conceptos.";
+                gradeDisplay.style.color = "#d32f2f"; 
+            }
+            
+            document.getElementById('feedback-msg').textContent = feedback;
+            modal.classList.add('active');
+        }
+
+        document.getElementById('btn-restart').addEventListener('click', initGame);
+
+        window.onload = initGame;
+
+        document.getElementById('zona-juego').addEventListener('touchmove', function(e) {
+            if(e.target.closest('#board')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+    </script>
+</body>
+</html>

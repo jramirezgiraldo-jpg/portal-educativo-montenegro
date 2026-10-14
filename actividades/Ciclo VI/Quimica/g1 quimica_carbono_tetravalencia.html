@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Carbono y Tetravalencia</title>
+    <style>
+        :root {
+            /* Theme: Carbon (Dark Grey) & Life (Emerald Green) */
+            --primary: #10b981;      /* Emerald 500 */
+            --primary-dark: #047857; /* Emerald 700 */
+            --primary-light: #d1fae5;/* Emerald 100 */
+            --secondary: #374151;    /* Gray 700 */
+            --secondary-dark: #1f2937;/* Gray 800 */
+            --text-main: #111827;    /* Gray 900 */
+            --text-light: #f9fafb;   /* Gray 50 */
+            --bg-body: #f3f4f6;      /* Gray 100 */
+            --bg-card: #ffffff;      /* White */
+            --accent: #f59e0b;       /* Amber 500 */
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: clamp(10px, 3vw, 20px);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--secondary-dark), var(--secondary));
+            color: var(--text-light);
+            padding: clamp(15px, 4vw, 30px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Hexagon decorative pattern mimicking carbon rings */
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 250px;
+            height: 250px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(16, 185, 129, 0.15)' stroke-width='1'%3E%3Cpolygon points='12 2 22 7.7 22 19.3 12 25 2 19.3 2 7.7'/%3E%3C/svg%3E");
+            background-size: 80px 80px;
+            pointer-events: none;
+            transform: rotate(15deg);
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 5vw, 2.8rem);
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: #d1d5db;
+            margin-bottom: 25px;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: clamp(10px, 2vw, 20px);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-weight: 700;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .stat-icon {
+            width: 22px;
+            height: 22px;
+            fill: var(--primary);
+        }
+
+        .stars {
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+        }
+
+        #zona-juego {
+            background: var(--bg-card);
+            padding: clamp(15px, 4vw, 30px);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 12px);
+            margin-bottom: 25px;
+        }
+
+        .word-item {
+            background: var(--bg-body);
+            color: var(--secondary-dark);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: 700;
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .word-item.found {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-color: var(--primary);
+            text-decoration: line-through;
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        .grid-wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: clamp(1px, 0.5vw, 4px);
+            /* CRÍTICO PARA MÓVILES: Evita que la pantalla haga scroll al arrastrar el dedo */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            background: var(--secondary-dark);
+            border: 6px solid var(--secondary-dark);
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .cell {
+            background: var(--bg-card);
+            aspect-ratio: 1; /* Mantiene celdas cuadradas siempre */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(12px, 3.5vw, 24px);
+            font-weight: 800;
+            color: var(--secondary-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s, transform 0.1s;
+        }
+
+        /* Estados de las celdas durante la interacción */
+        .cell.selecting {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .cell.found {
+            background: var(--primary);
+            color: white;
+        }
+
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 24, 39, 0.95);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: clamp(30px, 6vw, 50px);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-restart {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-weight: 800;
+            width: 100%;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-restart:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        #zona-lectura {
+            background: var(--bg-card);
+            padding: clamp(25px, 5vw, 50px);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .article-content {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #374151;
+        }
+
+        .article-content h2 {
+            color: var(--secondary-dark);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid var(--primary);
+            line-height: 1.2;
+        }
+
+        .article-content h3 {
+            color: var(--primary-dark);
+            font-size: clamp(1.4rem, 3vw, 1.7rem);
+            margin: 35px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .article-content h3::before {
+            content: "";
+            display: block;
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'%3E%3Cpolygon points='12 2 22 7.7 22 19.3 12 25 2 19.3 2 7.7'/%3E%3C/svg%3E");
+            background-size: cover;
+        }
+
+        .article-content p {
+            margin-bottom: 18px;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        .article-content ul {
+            margin: 20px 0 25px 35px;
+            background: var(--bg-body);
+            padding: 20px 20px 20px 40px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .article-content li {
+            margin-bottom: 12px;
+        }
+
+        .highlight-box {
+            background: var(--primary-light);
+            border-left: 6px solid var(--primary);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-style: italic;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        /* Sección Taller */
+        .workshop-section {
+            margin-top: 60px;
+            background: #f8fafc;
+            padding: clamp(25px, 5vw, 45px);
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .workshop-section h2 {
+            color: var(--secondary-dark);
+            border-bottom: none;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+        }
+
+        .workshop-instruction {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 35px;
+            color: #b45309;
+            border: 2px dashed #fbbf24;
+            font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-list li {
+            margin-bottom: 25px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border-left: 5px solid var(--secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+        
+        .activity-list li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        }
+
+        @media (min-width: 700px) {
+            .activity-list li {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .activity-type {
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            white-space: nowrap;
+            text-align: center;
+            width: fit-content;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Colores por tipo de actividad */
+        .activity-type.respond { background: #2563eb; } /* Blue */
+        .activity-type.analysis { background: #dc2626; } /* Red */
+        .activity-type.drawing { background: #9333ea; } /* Purple */
+        .activity-type.map { background: #059669; }     /* Green */
+
+        .activity-text {
+            font-size: clamp(1.05rem, 2vw, 1.15rem);
+            color: #475569;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Química del Carbono</h1>
+        <p class="instruction">Encuentra las 10 palabras sobre los enlaces y la estructura atómica deslizando tu dedo o ratón.</p>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <!-- SVG Reloj -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat-box">
+                <!-- SVG Contador -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                <span id="counter">0 / 10</span>
+            </div>
+            <div class="stat-box">
+                <span id="rating" class="stars">★★★★★</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="words-list" class="words-container">
+                <!-- Palabras inyectadas dinámicamente -->
+            </div>
+            
+            <div class="grid-wrapper">
+                <div id="grid" class="letter-grid">
+                    <!-- Cuadrícula inyectada dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>El Carbono: El Arquitecto de la Vida y la Naturaleza</h2>
+                
+                <p>Al observar el exuberante paisaje del Eje Cafetero, con sus infinitas hileras de plantas de café, o al mirar tus propias manos, estás presenciando un verdadero milagro de la química. Toda la materia viva, desde el microorganismo más simple hasta los granos de café que impulsan la economía local, comparte un secreto arquitectónico fundamental: están construidos a partir de un elemento asombroso llamado <strong>carbono</strong>. Pero, ¿por qué la naturaleza eligió precisamente este elemento como la base estructural para la vida?</p>
+
+                <h3>El Átomo de Carbono y sus Electrones</h3>
+                <p>Para entender este misterio, debemos mirar en lo más profundo de la materia: el <strong>átomo</strong>. El carbono (cuyo símbolo es C) tiene un número atómico de 6. Esto significa que posee 6 protones en su núcleo y 6 <strong>electrones</strong> orbitando a su alrededor. Sin embargo, en la química, no todos los electrones son iguales. Los que determinan cómo interactúa un elemento con el resto del universo son los que se encuentran en su capa más externa, conocidos como electrones de valencia.</p>
+                <p>El carbono posee exactamente 4 electrones en su nivel más externo. Este número "4" es la llave maestra de la química orgánica.</p>
+
+                <h3>La Magia de la Tetravalencia</h3>
+                <p>En el mundo subatómico, existe una regla general llamada "la regla del octeto". Los átomos buscan desesperadamente tener 8 electrones en su última capa para alcanzar la estabilidad perfecta, similar a la de los gases nobles. Como el carbono tiene 4 electrones de valencia, le faltan exactamente 4 más para completar su octeto.</p>
+
+                <div class="highlight-box">
+                    Dado que ganar o perder 4 electrones de golpe requiere demasiada energía, el carbono toma una decisión más inteligente: compartir. La capacidad única del átomo de carbono para formar exactamente 4 enlaces covalentes compartiendo electrones con otros átomos se denomina <strong>tetravalencia</strong>.
+                </div>
+
+                <p>Gracias a la tetravalencia, el carbono no se limita a unirse con átomos simples como el hidrógeno o el oxígeno; puede unirse fuertemente a otros átomos de carbono, formando largas cadenas lineales, cadenas ramificadas e incluso anillos cerrados. Ningún otro elemento de la tabla periódica tiene esta asombrosa versatilidad para crear esqueletos moleculares tan grandes y estables.</p>
+
+                <h3>Hibridación: Reorganizando el Espacio</h3>
+                <p>Si miramos de cerca cómo el carbono forma estos <strong>enlaces</strong>, descubrimos otro fenómeno brillante: la <strong>hibridación</strong>. Para poder formar 4 enlaces idénticos y orientarlos simétricamente en el espacio, el átomo de carbono "mezcla" sus orbitales internos (un orbital s y tres orbitales p). Al mezclarlos, crea nuevos orbitales híbridos. Dependiendo de cómo los mezcle, el carbono puede formar enlaces simples, enlaces dobles o enlaces triples. Esta flexibilidad geométrica es lo que permite que existan millones de compuestos orgánicos diferentes.</p>
+
+                <h3>Química Orgánica en tu Entorno Local</h3>
+                <p>La rama de la ciencia que estudia todos estos compuestos basados en el carbono se llama <strong>química orgánica</strong>. Regresemos al ejemplo de una finca cafetera. El tronco del cafeto está hecho de celulosa, las hojas contienen clorofila para captar el sol, y el grano es rico en cafeína (una molécula estimulante) y en azúcares. Absolutamente todas estas sustancias son complejas estructuras <strong>moleculares</strong> donde el carbono actúa como la columna vertebral.</p>
+                
+                <p>En conclusión, comprender la <strong>estructura</strong> subatómica del carbono y su capacidad para formar enlaces covalentes múltiples nos revela que no estamos hechos de magia, sino de química. El carbono es el verdadero "Lego" del universo, permitiendo que la materia inerte se organice en el asombroso fenómeno que llamamos vida.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h2>Taller Práctico de Repaso</h2>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Lee atentamente el texto científico superior. Luego, escribe y resuelve las siguientes 10 actividades en tu cuaderno de química.
+                </div>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>1.</strong> Explica con tus propias palabras qué significa el término "tetravalencia" y por qué es la clave principal para la formación de compuestos orgánicos.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Dibujar</span>
+                        <div class="activity-text"><strong>2.</strong> Basado en el texto, realiza un dibujo del átomo de carbono. Dibuja su núcleo y asegúrate de ilustrar claramente los 4 electrones de valencia en su capa más externa.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>3.</strong> Argumenta científicamente: ¿Por qué el átomo de carbono prefiere formar enlaces covalentes (compartiendo electrones) en lugar de enlaces iónicos (donde tendría que regalar o robar electrones)? Apóyate en la regla del octeto.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Conceptual</span>
+                        <div class="activity-text"><strong>4.</strong> Elabora un mapa conceptual que conecte lógicamente los siguientes términos: Átomo de Carbono, Electrones de Valencia, Tetravalencia, Enlaces Covalentes y Cadenas Moleculares.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>5.</strong> Según la lectura, ¿qué es la "hibridación" y para qué necesita el átomo de carbono realizar este proceso de "mezclar" sus orbitales?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Ilustrar</span>
+                        <div class="activity-text"><strong>6.</strong> La lectura menciona que el carbono puede formar diferentes esqueletos moleculares. Dibuja de manera esquemática cómo te imaginas: a) Una cadena lineal de carbonos, y b) Un anillo cerrado de carbonos.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>7.</strong> Piensa en el ecosistema de tu región (como una planta de café o un árbol frutal local). Menciona al menos dos compuestos químicos específicos mencionados en el texto que estén dentro de las plantas y explica qué elemento forma su estructura base.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Mental</span>
+                        <div class="activity-text"><strong>8.</strong> Diseña un mapa mental vibrante sobre las capacidades de enlace del carbono. Incluye ramas que muestren que puede unirse a otros átomos, formar enlaces simples, dobles y triples.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>9.</strong> ¿Qué nombre recibe la rama de la química que se dedica exclusivamente a estudiar todas las moléculas y compuestos basados en el esqueleto de carbono?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>10.</strong> Piensa críticamente: Si por algún motivo físico el carbono solo pudiera formar 2 enlaces en lugar de 4, ¿cómo afectaría esto a la diversidad de moléculas y a la existencia de la vida en la Tierra tal como la conocemos?</div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="win-modal">
+    <div class="modal-content">
+        <!-- SVG Hexágono / Trofeo Químico -->
+        <svg style="width: 100px; height: 100px; margin: 0 auto 20px auto; display: block; fill: var(--primary);" viewBox="0 0 24 24">
+            <path d="M12 2L2 7.7V16.3L12 22L22 16.3V7.7L12 2ZM12 4.3L19.9 8.8V15.1L12 19.7L4.1 15.1V8.8L12 4.3ZM12 8C9.8 8 8 9.8 8 12C8 14.2 9.8 16 12 16C14.2 16 16 14.2 16 12C16 9.8 14.2 8 12 8ZM12 14C10.9 14 10 13.1 10 12C10 10.9 10.9 10 12 10C13.1 10 14 10.9 14 12C14 13.1 13.1 14 12 14Z"/>
+        </svg>
+        <h2 style="color: var(--secondary-dark); font-size: 2.2rem; margin-bottom: 15px; font-weight: 800;">¡Síntesis Completada!</h2>
+        <p style="font-size: 1.25rem; margin-bottom: 25px; color: #4b5563;">Has descubierto todos los conceptos sobre la química del carbono.</p>
+        <div style="background: var(--bg-body); padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: left; border-left: 5px solid var(--primary);">
+            <p style="font-size: 1.2rem; margin-bottom: 10px;"><strong>Tiempo:</strong> <span id="final-time" style="color: var(--primary-dark); font-weight: 800; float: right;"></span></p>
+            <p style="font-size: 1.2rem;"><strong>Calificación:</strong> <span id="final-stars" class="stars" style="float: right;"></span></p>
+        </div>
+        <button class="btn-restart" onclick="initGame()">Realizar Nuevo Experimento</button>
+    </div>
+</div>
+
+<script>
+    /* Configuración: Exactamente 10 palabras normalizadas sin tildes */
+    const RAW_WORDS = [
+        "CARBONO", 
+        "TETRAVALENCIA", 
+        "HIBRIDACION", 
+        "COVALENTE", 
+        "ORGANICA", 
+        "ATOMO", 
+        "ENLACES", 
+        "ELECTRONES", 
+        "MOLECULA", 
+        "ESTRUCTURA"
+    ];
+    
+    const GRID_SIZE = 15; // Grid amplio requerido
+    const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+    
+    // Variables de Estado Global
+    let wordsToFind = [];
+    let foundWords = [];
+    let grid = [];
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    
+    // Variables para interacción táctil/ratón
+    let isDragging = false;
+    let startRow = -1;
+    let startCol = -1;
+    let currentPath = []; // DOM elements seleccionados
+
+    // Normaliza textos por seguridad
+    function normalizeWords(words) {
+        return words.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    }
+
+    // Inicializa la Aplicación
+    function initGame() {
+        wordsToFind = normalizeWords(RAW_WORDS);
+        foundWords = [];
+        secondsElapsed = 0;
+        
+        if(timerInterval) clearInterval(timerInterval);
+        
+        document.getElementById("win-modal").style.display = "none";
+        document.getElementById("timer").textContent = "00:00";
+        document.getElementById("counter").textContent = `0 / ${wordsToFind.length}`;
+        updateRating();
+
+        renderWordsList();
+        generateBoard();
+        
+        // Cronómetro
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById("timer").textContent = `${m}:${s}`;
+            updateRating();
+        }, 1000);
+    }
+
+    /* REQUISITO CRÍTICO: Ciclo exhaustivo para garantizar posición de TODAS las 10 palabras */
+    function generateBoard() {
+        let boardPlaced = false;
+        
+        while (!boardPlaced) {
+            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
+            boardPlaced = true;
+
+            // Ordenar por longitud descendente ayuda a la tasa de éxito matemático al empaquetar
+            const sortedWords = [...wordsToFind].sort((a, b) => b.length - a.length);
+
+            for (const word of sortedWords) {
+                let placed = false;
+                let attempts = 0;
+                const maxAttempts = 600; // Límite profundo por palabra
+
+                while (!placed && attempts < maxAttempts) {
+                    // Direcciones: 0: N, 1: NE, 2: E, 3: SE, 4: S, 5: SW, 6: W, 7: NW
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * GRID_SIZE);
+                    const col = Math.floor(Math.random() * GRID_SIZE);
+
+                    if (canPlaceWord(word, row, col, direction)) {
+                        placeWord(word, row, col, direction);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+
+                if (!placed) {
+                    // Falló una palabra. Rompe el ciclo for, el while se reinicia por completo
+                    boardPlaced = false;
+                    break; 
+                }
+            }
+        }
+
+        // Rellenar vacíos con letras aleatorias
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+                }
+            }
+        }
+
+        renderGrid();
+    }
+
+    function canPlaceWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            const nr = r + i * dr[dir];
+            const nc = c + i * dc[dir];
+
+            // Limites de tablero
+            if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+            // Choques
+            if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+        }
+        return true;
+    }
+
+    function placeWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            grid[r + i * dr[dir]][c + i * dc[dir]] = word[i];
+        }
+    }
+
+    // Renderiza la lista de estado de palabras
+    function renderWordsList() {
+        const container = document.getElementById("words-list");
+        container.innerHTML = "";
+        wordsToFind.forEach(word => {
+            const div = document.createElement("div");
+            div.className = "word-item";
+            div.id = `word-${word}`;
+            div.textContent = word;
+            container.appendChild(div);
+        });
+    }
+
+    // Renderiza celdas del DOM
+    function renderGrid() {
+        const container = document.getElementById("grid");
+        container.innerHTML = "";
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.textContent = grid[r][c];
+                container.appendChild(cell);
+            }
+        }
+        
+        setupPointerInteractions();
+    }
+
+    // Sistema de estrellas según tiempo
+    function updateRating() {
+        let stars = 5;
+        if (secondsElapsed > 300) stars = 1;      // > 5 mins
+        else if (secondsElapsed > 240) stars = 2; // > 4 mins
+        else if (secondsElapsed > 180) stars = 3; // > 3 mins
+        else if (secondsElapsed > 120) stars = 4; // > 2 mins
+
+        const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+        document.getElementById("rating").textContent = starStr;
+    }
+
+    /* Manejadores Pointer Event (Universal para Ratón y Touch) */
+    function setupPointerInteractions() {
+        const gridEl = document.getElementById("grid");
+        
+        // Prevenir scroll en móviles al tocar la cuadrícula
+        gridEl.addEventListener('touchstart', (e) => {
+            if(e.target.classList.contains('cell')) {
+                e.preventDefault(); 
+            }
+        }, { passive: false });
+
+        gridEl.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("pointermove", handlePointerMove); // A nivel de document para atrapar arrastre exterior
+        document.addEventListener("pointerup", handlePointerUp);
+    }
+
+    function handlePointerDown(e) {
+        if (e.target.classList.contains('cell')) {
+            isDragging = true;
+            startRow = parseInt(e.target.dataset.row);
+            startCol = parseInt(e.target.dataset.col);
+            
+            clearSelection();
+            e.target.classList.add('selecting');
+            currentPath = [e.target];
+        }
+    }
+
+    function handlePointerMove(e) {
+        if (!isDragging) return;
+        
+        // 'elementFromPoint' detecta sobre qué celda está pasando el dedo en movimiento real
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        
+        if (target && target.classList.contains('cell')) {
+            const currentRow = parseInt(target.dataset.row);
+            const currentCol = parseInt(target.dataset.col);
+            
+            updateSelectionLine(startRow, startCol, currentRow, currentCol);
+        }
+    }
+
+    function handlePointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        validateFoundWord();
+        clearSelection();
+    }
+
+    // Validar línea recta y seleccionar las celdas intermedias
+    function updateSelectionLine(r1, c1, r2, c2) {
+        const dr = r2 - r1;
+        const dc = c2 - c1;
+        
+        // Geometría: Sólo líneas horizontales, verticales o perfectamente diagonales
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+            return; // No es recta
+        }
+
+        clearSelection();
+        currentPath = [];
+
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+        for (let i = 0; i <= steps; i++) {
+            const currR = r1 + i * stepR;
+            const currC = c1 + i * stepC;
+            const cell = document.querySelector(`.cell[data-row="${currR}"][data-col="${currC}"]`);
+            if (cell) {
+                cell.classList.add('selecting');
+                currentPath.push(cell);
+            }
+        }
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.selecting').forEach(el => el.classList.remove('selecting'));
+    }
+
+    function validateFoundWord() {
+        if (currentPath.length < 2) return;
+
+        let selectedWord = currentPath.map(cell => cell.textContent).join('');
+        let selectedWordReverse = currentPath.map(cell => cell.textContent).reverse().join('');
+        
+        let found = false;
+        let wordMatched = "";
+
+        // Revisar izquierda-derecha o derecha-izquierda
+        if (wordsToFind.includes(selectedWord) && !foundWords.includes(selectedWord)) {
+            found = true;
+            wordMatched = selectedWord;
+        } else if (wordsToFind.includes(selectedWordReverse) && !foundWords.includes(selectedWordReverse)) {
+            found = true;
+            wordMatched = selectedWordReverse;
+        }
+
+        if (found) {
+            foundWords.push(wordMatched);
+            
+            // Efecto visual
+            currentPath.forEach(cell => {
+                cell.classList.add('found');
+                cell.style.transform = 'scale(1.15)';
+                setTimeout(() => cell.style.transform = 'scale(1)', 150);
+            });
+
+            // Actualizar interfaz
+            document.getElementById(`word-${wordMatched}`).classList.add('found');
+            document.getElementById("counter").textContent = `${foundWords.length} / ${wordsToFind.length}`;
+
+            // Validar si el juego terminó
+            if (foundWords.length === wordsToFind.length) {
+                clearInterval(timerInterval);
+                setTimeout(showWinModal, 600);
+            }
+        }
+    }
+
+    function showWinModal() {
+        document.getElementById("final-time").textContent = document.getElementById("timer").textContent;
+        document.getElementById("final-stars").textContent = document.getElementById("rating").textContent;
+        document.getElementById("win-modal").style.display = "flex";
+    }
+
+    // Iniciar
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>

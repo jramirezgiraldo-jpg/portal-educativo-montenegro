@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Configuración de viewport para móviles y prevención de zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Nitrogenados (Aminas, Amidas y Nitrilos)</title>
+    
+    <style>
+        :root {
+            /* Paleta de colores - Tema Química/Alcaloides */
+            --bg-game: #171717;
+            --text-game: #f3f4f6;
+            --primary: #8b5cf6; /* Violeta nitrogenado */
+            --primary-dark: #6d28d9;
+            --secondary: #14b8a6; /* Turquesa */
+            --success: #10b981;
+            --danger: #ef4444;
+            --chip-bg: #262626;
+            --chip-border: #404040;
+            
+            /* Colores de Lectura */
+            --bg-reading: #ffffff;
+            --bg-reading-alt: #f9fafb;
+            --text-reading: #1f2937;
+            --text-heading: #111827;
+            --accent-reading: #7c3aed;
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-game);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: clamp(15px, 4vw, 30px);
+            background-color: var(--bg-game);
+            color: var(--text-game);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* CRÍTICO: Evitar scroll o pull-to-refresh accidental en el área del juego */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.4rem, 5vw, 2.2rem);
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+        }
+
+        .instructions {
+            font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+            color: #d1d5db;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--chip-bg);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            border: 1px solid var(--chip-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        #score-display { color: var(--secondary); }
+        #errors-display { color: var(--danger); }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(8px, 2vw, 12px);
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+            align-content: flex-start;
+        }
+
+        .chip {
+            background-color: var(--chip-bg);
+            border: 2px solid var(--chip-border);
+            border-radius: var(--radius-md);
+            padding: clamp(10px, 3.5vw, 15px);
+            font-size: clamp(0.85rem, 3.2vw, 1.05rem);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            flex: 1 1 calc(33% - 12px);
+            min-width: 130px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            border-color: var(--primary);
+            background-color: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+            transform: translateY(-3px);
+            color: #fff;
+        }
+
+        .chip.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .category-btn {
+            background-color: var(--chip-bg);
+            border: 2px dashed #52525b;
+            border-radius: var(--radius-lg);
+            padding: clamp(10px, 3vw, 15px);
+            flex: 1 1 30%;
+            min-width: 100px;
+            color: var(--text-game);
+            font-weight: bold;
+            font-size: clamp(0.85rem, 3vw, 1rem);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn svg {
+            width: clamp(30px, 7vw, 45px);
+            height: clamp(30px, 7vw, 45px);
+            color: var(--secondary);
+        }
+
+        .category-btn:active {
+            background-color: #3f3f46;
+            transform: scale(0.98);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        
+        @keyframes flashRed {
+            0% { background-color: var(--danger); border-color: white; color: white;}
+            100% { background-color: var(--chip-bg); border-color: var(--chip-border); }
+        }
+
+        @keyframes flashGreenBtn {
+            0% { background-color: var(--success); border-color: white; color: white; transform: scale(1.05); }
+            100% { background-color: var(--chip-bg); border-color: #52525b; }
+        }
+
+        .error-anim {
+            animation: shake 0.4s ease, flashRed 0.5s ease;
+        }
+
+        .success-btn-anim {
+            animation: flashGreenBtn 0.5s ease;
+        }
+
+        .end-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(23, 23, 23, 0.96);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .end-screen.visible { display: flex; }
+
+        .end-screen h2 {
+            font-size: clamp(1.8rem, 6vw, 3rem);
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .end-screen p { margin-bottom: 20px; font-size: clamp(1.1rem, 4vw, 1.3rem); color: #e5e7eb; }
+
+        .final-grade {
+            font-size: clamp(4.5rem, 12vw, 7rem);
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+            margin: 20px 0;
+        }
+
+        .scroll-down-hint {
+            margin-top: 40px;
+            color: #9ca3af;
+            animation: bounce 2s infinite;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: var(--bg-reading);
+            color: var(--text-reading);
+            /* Importante: Reestablecer comportamientos táctiles naturales aquí */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+            border-top: 6px solid var(--accent-reading);
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .article-container h2 {
+            color: var(--text-heading);
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border-bottom: 4px solid var(--accent-reading);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-container h3 {
+            color: var(--accent-reading);
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .article-container p {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-left: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-container li {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.7;
+            margin-bottom: 0.8rem;
+        }
+
+        .highlight-box {
+            background-color: var(--bg-reading-alt);
+            border-left: 5px solid var(--secondary);
+            padding: 1.5rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 2.5rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        }
+
+        .highlight-box strong { color: var(--accent-reading); }
+
+        .taller-section {
+            background-color: var(--bg-reading-alt);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: var(--radius-lg);
+            margin-top: 4rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border-top: 5px solid var(--accent-reading);
+        }
+
+        .taller-section h3 {
+            color: var(--text-heading);
+            text-align: center;
+            margin-top: 0;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+        }
+
+        .instruction-alert {
+            background-color: #fff;
+            border: 2px dashed var(--accent-reading);
+            color: var(--text-heading);
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 2.5rem;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            box-shadow: 0 4px 6px rgba(124, 58, 237, 0.1);
+        }
+
+        .taller-list {
+            list-style: none;
+            counter-reset: taller-counter;
+        }
+
+        .taller-list li {
+            position: relative;
+            background: #fff;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem 1.5rem 1.5rem 4.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 4px solid var(--secondary);
+            font-size: clamp(1rem, 3.5vw, 1.1rem);
+            line-height: 1.6;
+        }
+
+        .taller-list li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 15px;
+            top: 1.5rem;
+            background-color: var(--secondary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            background-color: #f3f4f6;
+            color: #4b5563;
+            padding: 5px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            border: 1px solid #d1d5db;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Clasificador Nitrogenado</h1>
+                <div class="instructions">
+                    💡 <strong>Misión:</strong> Toca un concepto químico (se marcará en violeta) y luego clasifícalo tocando el grupo nitrogenado correspondiente abajo.
+                </div>
+            </div>
+
+            <div class="hud">
+                <div id="score-display">Puntuación: 0 / 15</div>
+                <div id="errors-display">Errores: 0</div>
+            </div>
+
+            <div class="chips-container" id="chips-container">
+                <!-- Los chips se generarán dinámicamente mediante JavaScript -->
+            </div>
+
+            <div class="categories-container">
+                <!-- Botón AMINAS -->
+                <div class="category-btn" onclick="checkCategory('AMINAS')" id="btn-AMINAS">
+                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                        <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="30" font-family="sans-serif" font-weight="bold" fill="currentColor" stroke="none">-NH₂</text>
+                        <circle cx="50" cy="50" r="40" stroke-dasharray="10 5" />
+                    </svg>
+                    AMINAS
+                </div>
+                <!-- Botón AMIDAS -->
+                <div class="category-btn" onclick="checkCategory('AMIDAS')" id="btn-AMIDAS">
+                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                        <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="26" font-family="sans-serif" font-weight="bold" fill="currentColor" stroke="none">-CONH₂</text>
+                        <rect x="10" y="20" width="80" height="60" rx="10" />
+                    </svg>
+                    AMIDAS
+                </div>
+                <!-- Botón NITRILOS -->
+                <div class="category-btn" onclick="checkCategory('NITRILOS')" id="btn-NITRILOS">
+                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                        <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="30" font-family="sans-serif" font-weight="bold" fill="currentColor" stroke="none">-C≡N</text>
+                        <polygon points="50,10 90,80 10,80" stroke-linejoin="miter"/>
+                    </svg>
+                    NITRILOS
+                </div>
+            </div>
+
+            <!-- Pantalla Final del Juego -->
+            <div class="end-screen" id="end-screen">
+                <h2>¡Análisis Completado!</h2>
+                <p>Has clasificado correctamente las propiedades nitrogenadas.</p>
+                <p>Tu calificación final (basada en errores) es:</p>
+                <div class="final-grade" id="final-grade">5.0</div>
+                <div class="scroll-down-hint">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <p>Desliza para leer la teoría y realizar el taller</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Compuestos Nitrogenados: La Química de la Vida, la Energía y los Materiales</h2>
+                
+                <p>Cuando pensamos en química orgánica, solemos imaginar cadenas interminables de carbono e hidrógeno. Sin embargo, cuando introducimos un átomo de <strong>nitrógeno</strong> en estas estructuras, la química se transforma drásticamente. El nitrógeno aporta propiedades únicas que permiten la existencia del ADN, las proteínas, los medicamentos que tomamos y materiales sintéticos indispensables. A estos compuestos orgánicos que contienen nitrógeno los dividimos en varias familias, siendo las más destacadas las <strong>aminas, amidas y nitrilos</strong>.</p>
+
+                <h3>1. Aminas: Las Bases Orgánicas y los Alcaloides</h3>
+                <p>Las aminas se consideran derivados orgánicos del <strong>amoníaco (NH<sub>3</sub>)</strong>. Si sustituimos uno, dos o los tres hidrógenos del amoníaco por cadenas de carbono, obtenemos aminas primarias, secundarias y terciarias, respectivamente. Su grupo funcional principal es el grupo amino (-NH<sub>2</sub>).</p>
+                
+                <ul>
+                    <li><strong>Carácter Químico:</strong> Al igual que el amoníaco, las aminas son <em>bases químicas</em>. Esto significa que tienen un par de electrones libres en el átomo de nitrógeno que pueden "atrapar" protones (H<sup>+</sup>) del medio que las rodea.</li>
+                    <li><strong>Alcaloides:</strong> En la naturaleza, las plantas producen unas aminas complejas llamadas alcaloides, diseñadas generalmente como mecanismo de defensa contra los herbívoros debido a su sabor amargo y sus potentes efectos biológicos. Ejemplos famosos incluyen la nicotina, la morfina y la quinina.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>☕ El Caso de la Cafeína:</strong> La cafeína es un alcaloide (una amina compleja) presente en el café, el té y el cacao. Su estructura química es asombrosamente similar a la <em>adenosina</em>, una molécula producida por nuestro cerebro. Durante el día, la adenosina se acumula y se une a sus receptores, causando la sensación de sueño y cansancio. <strong>La cafeína bloquea estos receptores</strong>. Al ocupar el lugar de la adenosina sin activar la señal de cansancio, nuestro cerebro se mantiene alerta, se estimula el sistema nervioso central y se libera adrenalina y dopamina.
+                </div>
+
+                <h3>2. Amidas: El Enlace de la Vida</h3>
+                <p>Las amidas se forman cuando un nitrógeno se une directamente a un <strong>grupo carbonilo</strong> (un carbono con un doble enlace a un oxígeno: C=O). Su grupo funcional es -CONH<sub>2</sub>.</p>
+                
+                <p>A diferencia de las aminas, la cercanía del oxígeno (que es muy electronegativo) "tira" de los electrones del nitrógeno. Esto hace que las amidas pierdan el par de electrones libres que les daría carácter básico, por lo que <strong>las amidas son compuestos neutros</strong>. Biológicamente son, quizás, la familia funcional más importante que existe:</p>
+
+                <ul>
+                    <li><strong>El Enlace Peptídico:</strong> Las proteínas, que forman nuestros músculos, enzimas y anticuerpos, no son más que largas cadenas de aminoácidos unidos entre sí mediante enlaces de amida (conocidos en biología como enlaces peptídicos).</li>
+                    <li><strong>La Urea:</strong> Es una diamida natural. Es el producto de desecho primario mediante el cual los mamíferos excretamos el nitrógeno sobrante de nuestro metabolismo a través de la orina.</li>
+                </ul>
+
+                <h3>3. Nitrilos: Enlaces Triples y Síntesis Industrial</h3>
+                <p>Los nitrilos son compuestos que contienen el <strong>grupo ciano (-C≡N)</strong>, en el cual un átomo de carbono está unido a un átomo de nitrógeno mediante un fuerte enlace triple.</p>
+
+                <p>Los nitrilos inorgánicos se conocen como cianuros y son altamente tóxicos. Sin embargo, los nitrilos orgánicos son muy versátiles e indispensables en la industria moderna. Se utilizan como solventes y como materia prima para fabricar plásticos y fibras sintéticas. Un ejemplo cotidiano es el caucho de nitrilo, un polímero que ofrece muchísima más resistencia química y a las perforaciones que el látex natural. Por esta razón, los <strong>guantes de nitrilo</strong> (generalmente azules o morados) se han convertido en el estándar de seguridad en hospitales, laboratorios químicos y la industria alimentaria, además de ser seguros para personas alérgicas al látex.</p>
+
+                <div class="taller-section">
+                    <h3>Taller de Repaso y Consolidación</h3>
+                    
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN OBLIGATORIA: Escribe y resuelve de forma ordenada las siguientes 10 actividades en tu cuaderno de Química.
+                    </div>
+
+                    <ul class="taller-list">
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Define qué son las aminas y menciona de qué compuesto inorgánico simple se consideran derivadas.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Analiza la diferencia de reactividad (pH): Explica por qué las aminas tienen un carácter básico fuerte, mientras que las amidas se consideran compuestos químicamente neutros.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Dibuja la estructura de los grupos funcionales representativos de las tres familias estudiadas: un grupo amino (-NH2), un grupo amido (-CONH2) y un grupo ciano (-C≡N).
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual sobre los "Compuestos Nitrogenados" estudiados. Ramifica en Aminas, Amidas y Nitrilos, anotando una característica principal y un ejemplo de uso cotidiano o biológico para cada uno.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            ¿A qué grupo de sustancias orgánicas vegetales pertenece la cafeína y cuál era su propósito evolutivo original en las plantas?
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Con base en la lectura, argumenta el mecanismo biológico mediante el cual una taza de café nos quita el sueño. (Usa los conceptos de adenosina y receptores en tu respuesta).
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Imagina que eres un diseñador gráfico científico. Crea una ilustración que muestre la competencia entre una molécula de "Adenosina" y una molécula de "Cafeína" intentando encajar en el mismo receptor del cerebro.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Mental</span><br>
+                            Diseña un mapa mental con el concepto central "Importancia de las Amidas". Debes incluir ramas que expliquen su rol en las proteínas (enlace peptídico) y en el proceso de excreción humana.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Menciona por qué el caucho de nitrilo ha reemplazado al látex en la fabricación de guantes para hospitales y laboratorios.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Si en el laboratorio te entregan una muestra química que contiene compuestos nitrogenados y desprende un fuerte olor a amoníaco, ¿a qué familia orgánica (Amina, Amida o Nitrilo) deduces que pertenece la sustancia? Justifica tu respuesta basada en la teoría química de su origen.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        
+        // 1. Datos del Juego (15 conceptos, 5 por categoría nitrogenada)
+        const concepts = [
+            // AMINAS
+            { id: 1, text: "Derivadas del Amoníaco", category: "AMINAS" },
+            { id: 2, text: "Carácter Básico Fuerte", category: "AMINAS" },
+            { id: 3, text: "Cafeína y Alcaloides", category: "AMINAS" },
+            { id: 4, text: "Grupo funcional -NH₂", category: "AMINAS" },
+            { id: 5, text: "Bloquean receptores de adenosina", category: "AMINAS" },
+            
+            // AMIDAS
+            { id: 6, text: "Grupo Carbonilo + Nitrógeno", category: "AMIDAS" },
+            { id: 7, text: "Enlace Peptídico (Proteínas)", category: "AMIDAS" },
+            { id: 8, text: "Urea (Excreción de mamíferos)", category: "AMIDAS" },
+            { id: 9, text: "Carácter Neutro (No básicas)", category: "AMIDAS" },
+            { id: 10, text: "Grupo funcional -CONH₂", category: "AMIDAS" },
+            
+            // NITRILOS
+            { id: 11, text: "Grupo Ciano (-C≡N)", category: "NITRILOS" },
+            { id: 12, text: "Enlace triple Carbono-Nitrógeno", category: "NITRILOS" },
+            { id: 13, text: "Guantes de laboratorio y hospital", category: "NITRILOS" },
+            { id: 14, text: "Polímeros muy resistentes", category: "NITRILOS" },
+            { id: 15, text: "Los inorgánicos son cianuros", category: "NITRILOS" }
+        ];
+
+        // 2. Variables de Estado del Juego
+        let state = {
+            score: 0,
+            errors: 0,
+            total: concepts.length,
+            selectedChipId: null,
+            shuffledConcepts: []
+        };
+
+        // Función auxiliar para barajar aleatoriamente
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            state.shuffledConcepts = shuffleArray([...concepts]);
+            renderChips();
+            updateHUD();
+        }
+
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = '';
+
+            state.shuffledConcepts.forEach(concept => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${concept.id}`;
+                chip.textContent = concept.text;
+                
+                // Evento click para selección (Tap)
+                chip.addEventListener('click', () => selectChip(concept.id));
+                
+                container.appendChild(chip);
+            });
+        }
+
+        function selectChip(id) {
+            // Limpiar selección visual previa
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            
+            // Seleccionar el tocado si no está oculto/resuelto
+            const chip = document.getElementById(`chip-${id}`);
+            if (chip && !chip.classList.contains('hidden')) {
+                chip.classList.add('selected');
+                state.selectedChipId = id;
+            }
+        }
+
+        function checkCategory(categoryName) {
+            // No hacer nada si no hay una ficha seleccionada previamente
+            if (!state.selectedChipId) return;
+
+            const concept = state.shuffledConcepts.find(c => c.id === state.selectedChipId);
+            const chipElement = document.getElementById(`chip-${state.selectedChipId}`);
+            const btnElement = document.getElementById(`btn-${categoryName}`);
+
+            if (concept.category === categoryName) {
+                // ACIERTO
+                state.score++;
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('hidden'); // Desaparece suavemente
+                state.selectedChipId = null;
+                
+                // Animación de éxito en el botón contenedor
+                btnElement.classList.add('success-btn-anim');
+                setTimeout(() => btnElement.classList.remove('success-btn-anim'), 500);
+
+                updateHUD();
+                checkWinCondition();
+
+            } else {
+                // ERROR
+                state.errors++;
+                updateHUD();
+                
+                // Animación de error en la ficha (Shake + Rojo)
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('error-anim');
+                state.selectedChipId = null;
+                
+                // Remover clase de error para permitir repetirlo en el futuro
+                setTimeout(() => {
+                    chipElement.classList.remove('error-anim');
+                }, 500);
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').textContent = `Puntuación: ${state.score} / ${state.total}`;
+            document.getElementById('errors-display').textContent = `Errores: ${state.errors}`;
+        }
+
+        function checkWinCondition() {
+            if (state.score === state.total) {
+                setTimeout(showEndScreen, 600); // Retardo para ver la última animación
+            }
+        }
+
+        function showEndScreen() {
+            const endScreen = document.getElementById('end-screen');
+            const gradeDisplay = document.getElementById('final-grade');
+            
+            // Calcular nota (Base 5.0, penaliza 0.2 por cada error, mínimo 1.0)
+            let grade = 5.0 - (state.errors * 0.2);
+            if (grade < 1.0) grade = 1.0;
+            
+            gradeDisplay.textContent = grade.toFixed(1);
+            
+            // Asignar color según rendimiento
+            if (grade >= 4.0) {
+                gradeDisplay.style.color = 'var(--success)';
+            } else if (grade >= 3.0) {
+                gradeDisplay.style.color = '#f59e0b'; // Naranja/Amarillo alerta
+            } else {
+                gradeDisplay.style.color = 'var(--danger)'; // Rojo
+            }
+
+            endScreen.classList.add('visible');
+        }
+
+        // 9. Arranque del interactivo al cargar la ventana
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

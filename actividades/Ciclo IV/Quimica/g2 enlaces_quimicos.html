@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Configuración de viewport para móviles y prevención de zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Enlaces Químicos</title>
+    
+    <style>
+        :root {
+            /* Paleta de colores - Tema Química (Oscuro para el juego) */
+            --bg-game: #111827; /* Gris muy oscuro */
+            --text-game: #f3f4f6;
+            --primary: #8b5cf6; /* Púrpura químico */
+            --primary-dark: #7c3aed;
+            --secondary: #06b6d4; /* Cian/Azul cristal */
+            --success: #10b981; /* Esmeralda */
+            --danger: #ef4444; /* Rojo */
+            --chip-bg: #1f2937;
+            --chip-border: #374151;
+            
+            /* Colores de Lectura (Claro) */
+            --bg-reading: #ffffff;
+            --bg-reading-alt: #f8fafc;
+            --text-reading: #1e293b;
+            --text-heading: #0f172a;
+            --accent-reading: #6d28d9;
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-game);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: clamp(15px, 4vw, 30px);
+            background-color: var(--bg-game);
+            color: var(--text-game);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* CRÍTICO: Evitar scroll o pull-to-refresh accidental en el área del juego */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.4rem, 5vw, 2.2rem);
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+        }
+
+        .instructions {
+            font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+            color: #d1d5db;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--chip-bg);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            border: 1px solid var(--chip-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        #score-display { color: var(--secondary); }
+        #errors-display { color: var(--danger); }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(8px, 2vw, 12px);
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+            align-content: flex-start;
+        }
+
+        .chip {
+            background-color: var(--chip-bg);
+            border: 2px solid var(--chip-border);
+            border-radius: var(--radius-md);
+            padding: clamp(10px, 3.5vw, 15px);
+            font-size: clamp(0.85rem, 3.2vw, 1.05rem);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            flex: 1 1 calc(33% - 12px);
+            min-width: 140px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            border-color: var(--primary);
+            background-color: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+            transform: translateY(-3px);
+            color: #fff;
+        }
+
+        .chip.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .category-btn {
+            background-color: var(--chip-bg);
+            border: 2px dashed #4b5563;
+            border-radius: var(--radius-lg);
+            padding: clamp(10px, 3vw, 15px);
+            flex: 1 1 30%;
+            min-width: 100px;
+            color: var(--text-game);
+            font-weight: bold;
+            font-size: clamp(0.8rem, 2.8vw, 1rem);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn svg {
+            width: clamp(30px, 7vw, 45px);
+            height: clamp(30px, 7vw, 45px);
+            color: var(--secondary);
+        }
+
+        .category-btn:active {
+            background-color: #374151;
+            transform: scale(0.98);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        
+        @keyframes flashRed {
+            0% { background-color: var(--danger); border-color: white; color: white;}
+            100% { background-color: var(--chip-bg); border-color: var(--chip-border); }
+        }
+
+        @keyframes flashGreenBtn {
+            0% { background-color: var(--success); border-color: white; color: white; transform: scale(1.05); }
+            100% { background-color: var(--chip-bg); border-color: #4b5563; }
+        }
+
+        .error-anim {
+            animation: shake 0.4s ease, flashRed 0.5s ease;
+        }
+
+        .success-btn-anim {
+            animation: flashGreenBtn 0.5s ease;
+        }
+
+        .end-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 24, 39, 0.96);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .end-screen.visible { display: flex; }
+
+        .end-screen h2 {
+            font-size: clamp(1.8rem, 6vw, 3rem);
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .end-screen p { margin-bottom: 20px; font-size: clamp(1.1rem, 4vw, 1.3rem); color: #f3f4f6; }
+
+        .final-grade {
+            font-size: clamp(4.5rem, 12vw, 7rem);
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+            margin: 20px 0;
+        }
+
+        .scroll-down-hint {
+            margin-top: 40px;
+            color: #9ca3af;
+            animation: bounce 2s infinite;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: var(--bg-reading);
+            color: var(--text-reading);
+            /* CRÍTICO: Reestablecer comportamientos táctiles naturales aquí */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+            border-top: 6px solid var(--accent-reading);
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .article-container h2 {
+            color: var(--text-heading);
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border-bottom: 4px solid var(--accent-reading);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-container h3 {
+            color: var(--accent-reading);
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .article-container p {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-left: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-container li {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.7;
+            margin-bottom: 0.8rem;
+        }
+
+        .highlight-box {
+            background-color: var(--bg-reading-alt);
+            border-left: 5px solid var(--secondary);
+            padding: 1.5rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 2.5rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        }
+
+        .highlight-box strong { color: var(--accent-reading); }
+
+        .taller-section {
+            background-color: var(--bg-reading-alt);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: var(--radius-lg);
+            margin-top: 4rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border-top: 5px solid var(--accent-reading);
+        }
+
+        .taller-section h3 {
+            color: var(--text-heading);
+            text-align: center;
+            margin-top: 0;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+        }
+
+        .instruction-alert {
+            background-color: #fff;
+            border: 2px dashed var(--accent-reading);
+            color: var(--text-heading);
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 2.5rem;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            box-shadow: 0 4px 6px rgba(109, 40, 217, 0.1);
+        }
+
+        .taller-list {
+            list-style: none;
+            counter-reset: taller-counter;
+        }
+
+        .taller-list li {
+            position: relative;
+            background: #fff;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem 1.5rem 1.5rem 4.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 4px solid var(--secondary);
+            font-size: clamp(1rem, 3.5vw, 1.1rem);
+            line-height: 1.6;
+        }
+
+        .taller-list li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 15px;
+            top: 1.5rem;
+            background-color: var(--secondary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 5px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            border: 1px solid #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- ZONA INTERACTIVA (Juego) -->
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Clasificador de Enlaces</h1>
+                <div class="instructions">
+                    💡 <strong>Guía:</strong> Toca un concepto de la lista (se resaltará) y luego toca el contenedor correcto al que pertenece abajo.
+                </div>
+            </div>
+
+            <div class="hud">
+                <div id="score-display">Puntuación: 0 / 12</div>
+                <div id="errors-display">Errores: 0</div>
+            </div>
+
+            <div class="chips-container" id="chips-container">
+                <!-- Los chips se generarán dinámicamente mediante JavaScript -->
+            </div>
+
+            <div class="categories-container">
+                <!-- Botón ENLACE IÓNICO -->
+                <div class="category-btn" onclick="checkCategory('IONICO')" id="btn-IONICO">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Icono Iones (+/-) -->
+                        <circle cx="7" cy="12" r="5"/>
+                        <path d="M7 10v4M5 12h4"/>
+                        <circle cx="17" cy="12" r="5"/>
+                        <path d="M15 12h4"/>
+                    </svg>
+                    ENLACE IÓNICO
+                </div>
+                <!-- Botón ENLACE COVALENTE -->
+                <div class="category-btn" onclick="checkCategory('COVALENTE')" id="btn-COVALENTE">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Icono Compartir (Intersección) -->
+                        <circle cx="9" cy="12" r="6"/>
+                        <circle cx="15" cy="12" r="6"/>
+                    </svg>
+                    ENLACE COVALENTE
+                </div>
+                <!-- Botón ENLACE METÁLICO -->
+                <div class="category-btn" onclick="checkCategory('METALICO')" id="btn-METALICO">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Icono Red Metálica / Mar de electrones -->
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                        <circle cx="16" cy="8" r="1.5" fill="currentColor"/>
+                        <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
+                        <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+                        <path d="M8 8h8v8H8z" stroke-dasharray="2 2"/>
+                    </svg>
+                    ENLACE METÁLICO
+                </div>
+            </div>
+
+            <!-- Pantalla Final del Juego -->
+            <div class="end-screen" id="end-screen">
+                <h2>¡Análisis Químico Completo!</h2>
+                <p>Has clasificado correctamente los conceptos de Enlaces Químicos.</p>
+                <p>Tu calificación final (basada en errores) es:</p>
+                <div class="final-grade" id="final-grade">5.0</div>
+                <div class="scroll-down-hint">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <p>Desliza hacia abajo para leer la teoría y realizar el taller</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ZONA DE LECTURA (Siempre visible) -->
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Enlaces Químicos: El Pegamento del Universo</h2>
+                
+                <p>Si miras a tu alrededor, verás una infinidad de materiales diferentes: el agua que bebes, la sal que le pones a la comida, los cables de cobre en tus dispositivos electrónicos y el plástico de tu botella. Sin embargo, en el universo solo existen unos 118 elementos químicos fundamentales. Entonces, ¿cómo es posible tanta diversidad? La respuesta está en los <strong>enlaces químicos</strong>, las fuerzas invisibles que unen a los átomos para formar moléculas, compuestos y sustancias puras en nuestra vida cotidiana.</p>
+
+                <p>Para entender por qué dos átomos deciden unirse, primero debemos comprender un concepto clave: la <strong>electronegatividad</strong>. Imagina que la electronegatividad es el "nivel de hambre" que tiene un átomo por los electrones. Algunos átomos tienen mucha hambre (alta electronegatividad, como el Flúor o el Oxígeno), mientras que otros tienen muy poca (baja electronegatividad, como el Sodio o el Potasio). La diferencia de "hambre" entre dos átomos que se encuentran determinará el tipo de relación (o enlace) que formarán.</p>
+
+                <h3>1. Enlace Iónico: Robo y Atracción Atrayente</h3>
+                <p>Ocurre cuando se encuentran un átomo con mucha hambre (un <strong>No Metal</strong>) y un átomo con muy poca hambre (un <strong>Metal</strong>). La diferencia de electronegatividad es tan grande que el no metal literalmente "roba" uno o más electrones del metal.</p>
+                <ul>
+                    <li><strong>Formación de Iones:</strong> El átomo que pierde electrones se vuelve positivo (<strong>Catión</strong>), y el que gana electrones se vuelve negativo (<strong>Anión</strong>).</li>
+                    <li><strong>Atracción:</strong> Como las cargas opuestas se atraen intensamente, estos iones se pegan formando redes cristalinas sólidas.</li>
+                    <li><strong>Propiedades y Ejemplos:</strong> A temperatura ambiente, siempre son sólidos duros pero quebradizos y tienen altos puntos de fusión. Un ejemplo clásico es la sal de mesa (Cloruro de Sodio, NaCl). Si disuelves esta sal en agua, los iones se separan y la solución <em>conduce muy bien la electricidad</em>.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <strong>⚡ Regla de Oro:</strong> Los compuestos iónicos NO conducen electricidad en estado sólido porque sus iones están atrapados en el cristal, pero SÍ conducen cuando están fundidos o disueltos en agua.
+                </div>
+
+                <h3>2. Enlace Covalente: Compartir es Vivir</h3>
+                <p>Cuando dos átomos tienen una electronegatividad similar y alta (generalmente dos <strong>No Metales</strong>), ninguno es lo suficientemente fuerte para robarle electrones al otro. Por lo tanto, deciden llegar a un acuerdo: <strong>comparten</strong> uno o más pares de electrones para que ambos puedan completar su último nivel de energía (regla del octeto).</p>
+                <ul>
+                    <li><strong>Polaridad:</strong> Si comparten por igual, el enlace es <em>covalente apolar</em> (ej. el gas oxígeno, O2). Si uno es ligeramente más fuerte, atrae los electrones más hacia sí, creando un enlace <em>covalente polar</em> (ej. el agua, H2O).</li>
+                    <li><strong>Propiedades y Ejemplos:</strong> Dependiendo de las moléculas, pueden ser gases, líquidos o sólidos blandos a temperatura ambiente. Tienen puntos de fusión más bajos que los iónicos y, por regla general, <em>no son buenos conductores de electricidad ni de calor</em>. Otros ejemplos cotidianos incluyen el azúcar, el dióxido de carbono (CO2) que exhalamos y los plásticos.</li>
+                </ul>
+
+                <h3>3. Enlace Metálico: El Mar de Electrones</h3>
+                <p>¿Qué pasa cuando se unen átomos con muy baja electronegatividad, como un grupo de puros <strong>Metales</strong> (ej. átomos de oro, cobre o hierro)? Como ninguno tiene fuerza para retener fuertemente a sus electrones externos, todos los átomos los sueltan, formando un <strong>"mar de electrones"</strong> deslocalizados.</p>
+                <p>En este modelo, los núcleos positivos de los metales flotan en un mar de electrones negativos que se mueven libremente por toda la estructura. Este flujo constante explica maravillosamente por qué los metales son excelentes conductores de la electricidad y del calor en estado sólido.</p>
+                <p>Además, esta estructura flexible explica sus propiedades mecánicas: los metales son <strong>maleables</strong> (pueden ser golpeados para formar láminas delgadas, como el papel aluminio) y <strong>dúctiles</strong> (pueden estirarse para formar hilos o cables, como los de cobre), sin que la estructura se rompa, ya que el "mar de electrones" actúa como un lubricante que mantiene los núcleos unidos aunque se desplacen.</p>
+
+                <div class="taller-section">
+                    <h3>Taller de Repaso y Consolidación</h3>
+                    
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN OBLIGATORIA: Escribe y resuelve de forma ordenada las siguientes 10 actividades en tu cuaderno de Química.
+                    </div>
+
+                    <ul class="taller-list">
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Define con tus propias palabras qué es la "electronegatividad" y explica brevemente cómo influye en la formación de un tipo de enlace químico.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Si preparas una jarra de agua con mucha sal de mesa (compuesto iónico) y otra jarra con agua y mucha azúcar (compuesto covalente), ¿cuál de las dos mezclas conduciría mejor la electricidad? Justifica tu respuesta basándote en la lectura.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Ilustra el modelo del "mar de electrones" que ocurre en el enlace metálico. Asegúrate de señalar los núcleos positivos y el flujo de electrones negativos a su alrededor.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual cuyo tema central sea "Tipos de Enlaces Químicos". Debe ramificarse en Iónico, Covalente y Metálico, incluyendo los tipos de elementos que los forman (Metal/No metal) y un ejemplo de cada uno.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            ¿Cuál es la diferencia fundamental sobre lo que ocurre con los electrones en un enlace Iónico frente a un enlace Covalente?
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Los cables eléctricos de tu casa están hechos de cobre. Utilizando el concepto de "mar de electrones", explica científicamente por qué no usamos cristales de sal (iones) para hacer cables, a pesar de que los iones tienen carga eléctrica.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Dibuja cómo imaginas que se forma el Cloruro de Sodio (NaCl). Ilustra un átomo de Sodio "regalándole" su electrón a un átomo de Cloro, y muestra cómo se transforman en Catión (+) y Anión (-).
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Mental</span><br>
+                            Diseña un mapa mental enfocado exclusivamente en las "Propiedades Físicas" de los enlaces. Incluye ramas para el estado físico a temperatura ambiente, los puntos de fusión (altos o bajos) y la conductividad eléctrica de cada tipo.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Menciona tres ejemplos de compuestos o sustancias presentes en tu vida cotidiana e identifica qué tipo de enlace predomina en cada uno de ellos según lo aprendido en el texto.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Un geólogo encuentra un mineral desconocido. Al investigarlo, nota que es sólido a temperatura ambiente, tiene un punto de fusión altísimo, se quiebra fácilmente al golpearlo con un martillo y, al fundirlo al calor extremo, logra conducir la corriente eléctrica. ¿Qué tipo de enlace químico predomina en este mineral? Explica por qué.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Datos del Juego (12 conceptos distribuidos equitativamente)
+        const concepts = [
+            // CATEGORÍA 1: ENLACE IÓNICO
+            { id: 1, text: "Transferencia completa de electrones (formación de iones)", category: "IONICO" },
+            { id: 2, text: "Unión por gran diferencia de electronegatividad (Metal + No Metal)", category: "IONICO" },
+            { id: 3, text: "Sal de mesa (NaCl) disuelta en agua conduce electricidad", category: "IONICO" },
+            { id: 4, text: "Forma redes cristalinas sólidas quebradizas con alto punto de fusión", category: "IONICO" },
+            
+            // CATEGORÍA 2: ENLACE COVALENTE
+            { id: 5, text: "Compartición de pares de electrones entre átomos", category: "COVALENTE" },
+            { id: 6, text: "Baja diferencia de electronegatividad (No Metal + No Metal)", category: "COVALENTE" },
+            { id: 7, text: "Forman moléculas como el agua (H2O) o el gas oxígeno (O2)", category: "COVALENTE" },
+            { id: 8, text: "No son buenos conductores de calor ni electricidad", category: "COVALENTE" },
+            
+            // CATEGORÍA 3: ENLACE METÁLICO
+            { id: 9, text: "Presencia de un 'mar de electrones' deslocalizados", category: "METALICO" },
+            { id: 10, text: "Unión entre átomos de baja electronegatividad (Metales)", category: "METALICO" },
+            { id: 11, text: "Explica la excelente conductividad en estado sólido", category: "METALICO" },
+            { id: 12, text: "Confiere propiedades de maleabilidad (láminas) y ductilidad (hilos)", category: "METALICO" }
+        ];
+
+        // 2. Variables de Estado del Juego
+        let state = {
+            score: 0,
+            errors: 0,
+            total: concepts.length,
+            selectedChipId: null,
+            shuffledConcepts: []
+        };
+
+        // 3. Función auxiliar para barajar aleatoriamente el arreglo
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // 4. Inicialización del juego
+        function initGame() {
+            state.shuffledConcepts = shuffleArray([...concepts]);
+            renderChips();
+            updateHUD();
+        }
+
+        // 5. Renderizado de los chips interactivos
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = '';
+
+            state.shuffledConcepts.forEach(concept => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${concept.id}`;
+                chip.textContent = concept.text;
+                
+                // Evento click (Tap) para selección
+                chip.addEventListener('click', () => selectChip(concept.id));
+                
+                container.appendChild(chip);
+            });
+        }
+
+        // 6. Lógica de selección visual
+        function selectChip(id) {
+            // Limpiar selección visual previa
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            
+            // Seleccionar el tocado si no está oculto/resuelto
+            const chip = document.getElementById(`chip-${id}`);
+            if (chip && !chip.classList.contains('hidden')) {
+                chip.classList.add('selected');
+                state.selectedChipId = id;
+            }
+        }
+
+        // 7. Validación al presionar el contenedor (Categoría)
+        function checkCategory(categoryName) {
+            // No hacer nada si no hay un elemento previamente seleccionado
+            if (!state.selectedChipId) return;
+
+            const concept = state.shuffledConcepts.find(c => c.id === state.selectedChipId);
+            const chipElement = document.getElementById(`chip-${state.selectedChipId}`);
+            const btnElement = document.getElementById(`btn-${categoryName}`);
+
+            if (concept.category === categoryName) {
+                // ACIERTO
+                state.score++;
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('hidden'); // Desaparece suavemente
+                state.selectedChipId = null;
+                
+                // Animación de éxito en el botón contenedor
+                btnElement.classList.add('success-btn-anim');
+                setTimeout(() => btnElement.classList.remove('success-btn-anim'), 500);
+
+                updateHUD();
+                checkWinCondition();
+
+            } else {
+                // ERROR
+                state.errors++;
+                updateHUD();
+                
+                // Animación de error en la ficha (Shake + Rojo)
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('error-anim');
+                state.selectedChipId = null;
+                
+                // Remover clase de error para permitir seleccionarlo en el futuro
+                setTimeout(() => {
+                    chipElement.classList.remove('error-anim');
+                }, 500);
+            }
+        }
+
+        // 8. Actualización de Puntuaciones
+        function updateHUD() {
+            document.getElementById('score-display').textContent = `Puntuación: ${state.score} / ${state.total}`;
+            document.getElementById('errors-display').textContent = `Errores: ${state.errors}`;
+        }
+
+        // 9. Condición de Victoria y Calificación
+        function checkWinCondition() {
+            if (state.score === state.total) {
+                setTimeout(showEndScreen, 600); // Retardo visual
+            }
+        }
+
+        function showEndScreen() {
+            const endScreen = document.getElementById('end-screen');
+            const gradeDisplay = document.getElementById('final-grade');
+            
+            // Calcular nota (Base 5.0, penaliza 0.2 por cada error, nota mínima de 1.0)
+            let grade = 5.0 - (state.errors * 0.2);
+            if (grade < 1.0) grade = 1.0;
+            
+            gradeDisplay.textContent = grade.toFixed(1);
+            
+            // Asignar color a la nota según rendimiento
+            if (grade >= 4.0) {
+                gradeDisplay.style.color = 'var(--success)';
+            } else if (grade >= 3.0) {
+                gradeDisplay.style.color = '#eab308'; // Amarillo
+            } else {
+                gradeDisplay.style.color = 'var(--danger)'; // Rojo
+            }
+
+            endScreen.classList.add('visible');
+        }
+
+        // 10. Arranque automático del interactivo al cargar la ventana
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

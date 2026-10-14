@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Reacciones y Ecuaciones</title>
+    <style>
+        :root {
+            --primary: #c62828; /* Rojo reacción/combustión */
+            --primary-dark: #8e0000;
+            --secondary: #37474f; /* Gris metálico/oxidación */
+            --secondary-dark: #263238;
+            --accent: #ff8f00; /* Naranja fuego */
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-main: #212121;
+            --text-light: #ffffff;
+            --correct: #2e7d32;
+            --incorrect: #d32f2f;
+            --border-radius: 12px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header {
+            background-color: var(--primary);
+            background-image: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1.2rem, 4vw, 2rem) 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-bottom: 5px solid var(--accent);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            letter-spacing: 0.5px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: rgba(255,255,255,0.15);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: clamp(1rem, 4vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        /* --- FASE 2: ZONA DE JUEGO --- */
+        #zona-juego {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            /* REQUISITO CRÍTICO: Prevenir scroll/zoom táctil accidental en el juego */
+            touch-action: none;
+            user-select: none;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #eceff1;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            color: var(--secondary-dark);
+            border: 2px solid #cfd8dc;
+        }
+
+        .jeopardy-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.3rem, 1.5vw, 1rem);
+        }
+
+        .cat-header {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            font-weight: 800;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.2rem;
+            border-radius: 8px;
+            font-size: clamp(0.65rem, 2.5vw, 1.1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+            word-break: break-word;
+        }
+
+        .pts-btn {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
+            font-weight: 900;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pts-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .pts-btn:disabled {
+            background-color: #e0e0e0;
+            color: #9e9e9e;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        /* --- MODALES --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 8px solid var(--accent);
+        }
+
+        .modal-subtitle {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--primary);
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-q-text {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f8f9fa;
+            border: 2px solid #cfd8dc;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #eceff1;
+            border-color: #90a4ae;
+        }
+
+        .opt-btn.correct { background-color: var(--correct); color: white; border-color: var(--correct); }
+        .opt-btn.incorrect { background-color: var(--incorrect); color: white; border-color: var(--incorrect); }
+
+        .feedback-box {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .action-btn {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #c66900;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .action-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #c66900;
+        }
+
+        .final-grade {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- FASE 3: ZONA DE LECTURA Y TALLER --- */
+        #zona-lectura {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+        }
+
+        .article-body h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            border-bottom: 4px solid var(--accent);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .article-body h2:first-child { margin-top: 0; }
+
+        .article-body h3 {
+            color: var(--secondary);
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2rem;
+        }
+
+        .article-body p, .article-body li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: #37474f;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .article-body ul { padding-left: 1.5rem; }
+
+        .taller-container {
+            margin-top: 4rem;
+            background-color: #fff8e1;
+            border: 3px dashed var(--accent);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .taller-container h2 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: none;
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+        }
+
+        .alert-instruction {
+            background-color: var(--secondary);
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .taller-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .taller-list li {
+            background-color: #ffffff;
+            border-left: 8px solid var(--primary);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .act-badge {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--secondary-dark);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            background-color: #cfd8dc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .act-text {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Reacciones Químicas y Ecuaciones</h1>
+        <p>Toca una casilla de la cuadrícula, lee la pista y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <!-- FASE 2: ZONA DE JUEGO -->
+        <section id="zona-juego">
+            <div class="stats-bar">
+                <div>Puntuación: <span id="score-counter">0</span></div>
+                <div>Progreso: <span id="progress-counter">0</span>/12</div>
+            </div>
+            <div class="jeopardy-grid" id="board-grid">
+                <!-- Se genera dinámicamente vía JavaScript -->
+            </div>
+        </section>
+
+        <!-- FASE 3: LECTURA TEÓRICA Y TALLER (Siempre visible) -->
+        <section id="zona-lectura">
+            <article class="article-body">
+                <h2>Reacciones Químicas: La Transformación de la Materia</h2>
+                
+                <p>Si observas a tu alrededor, notarás que el mundo está en constante cambio. Un trozo de hierro dejado a la intemperie se vuelve rojizo, la madera de una fogata se convierte en cenizas y gases, y los alimentos que consumes te dan energía. Todos estos son ejemplos de <strong>reacciones químicas</strong>. Una reacción química es un proceso mediante el cual una o más sustancias (llamadas <strong>reactivos</strong>) se transforman para formar sustancias completamente nuevas (llamadas <strong>productos</strong>), con propiedades físicas y químicas diferentes.</p>
+
+                <h2>La Ley de Conservación de la Masa y las Ecuaciones Químicas</h2>
+                <p>En el siglo XVIII, el científico Antoine Lavoisier descubrió un principio fundamental: <em>"La materia no se crea ni se destruye, solo se transforma"</em>. Esto significa que en cualquier reacción química, la masa total de los reactivos debe ser exactamente igual a la masa total de los productos. Los átomos no desaparecen, simplemente se reorganizan.</p>
+                <p>Para representar esto en papel, los químicos inventaron las <strong>ecuaciones químicas</strong>. En una ecuación, los reactivos se escriben a la izquierda, una flecha (→) indica "produce" o "se transforma en", y los productos se escriben a la derecha.</p>
+                <p>Para cumplir con la ley de Lavoisier, las ecuaciones deben estar <strong>balanceadas</strong>. Esto se logra usando números grandes llamados <strong>coeficientes</strong>, que se colocan delante de las fórmulas para indicar la cantidad de moléculas. ¡Atención! Nunca se deben alterar los números pequeños (<strong>subíndices</strong>) dentro de las fórmulas químicas, ya que esto cambiaría la identidad de la sustancia.</p>
+
+                <h2>Clasificación de las Reacciones Químicas</h2>
+                <p>Las reacciones se pueden clasificar según cómo se reorganizan los átomos:</p>
+                <ul>
+                    <li><strong>Reacciones de Síntesis (o Combinación):</strong> Dos o más sustancias simples se unen para formar un producto más complejo. Su forma general es: <em>A + B → AB</em>. Ejemplo: la formación de agua (2H2 + O2 → 2H2O).</li>
+                    <li><strong>Reacciones de Descomposición:</strong> Ocurre lo inverso a la síntesis. Un compuesto complejo se rompe en sustancias más simples, generalmente requiriendo energía (calor o electricidad). Forma general: <em>AB → A + B</em>.</li>
+                    <li><strong>Sustitución Simple:</strong> Un elemento más reactivo reemplaza a otro elemento dentro de un compuesto. Forma: <em>A + BC → AC + B</em>.</li>
+                    <li><strong>Sustitución Doble:</strong> Dos compuestos intercambian 'parejas' (iones) para formar dos compuestos nuevos. Ocurre comúnmente en líquidos y forma precipitados. Forma: <em>AB + CD → AD + CB</em>.</li>
+                </ul>
+
+                <h2>Combustión y Oxidación: Reacciones de la Vida Diaria</h2>
+                <p>Dos de las reacciones más comunes en nuestro entorno involucran al oxígeno. La <strong>oxidación</strong> ocurre cuando un elemento reacciona lentamente con el oxígeno del aire o el agua. Un ejemplo clásico es la formación de herrumbre en un clavo de hierro. Aunque lenta, esta reacción libera energía a lo largo del tiempo. Sorprendentemente, la respiración celular en tu cuerpo es también una forma controlada de oxidación.</p>
+                <p>Por otro lado, la <strong>combustión</strong> es una reacción de oxidación extremadamente rápida y violenta. Requiere un combustible (como madera, gasolina o gas natural), calor inicial (chispa) y, obligatoriamente, <strong>oxígeno</strong>. En una combustión completa, los combustibles basados en carbono reaccionan con el oxígeno para producir <strong>Dióxido de Carbono (CO2), vapor de agua (H2O) y grandes cantidades de energía</strong> en forma de luz y calor (fuego).</p>
+            </article>
+
+            <div class="taller-container">
+                <h2>Taller de Aplicación y Repaso</h2>
+                
+                <div class="alert-instruction">
+                    <!-- Icono SVG en línea -->
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>ATENCIÓN: Escribe y resuelve TODAS estas actividades obligatoriamente en tu cuaderno.</span>
+                </div>
+
+                <ul class="taller-list">
+                    <li>
+                        <span class="act-badge">Respuesta Directa</span>
+                        <span class="act-text">1. ¿Qué afirma textualmente la "Ley de Conservación de la Masa" propuesta por Antoine Lavoisier?</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Ilustrar Conceptos</span>
+                        <span class="act-text">2. Dibuja en tu cuaderno una ecuación química inventada (ej. 2A + B2 → 2AB). Usa colores para señalar y etiquetar: Reactivos, Productos, la Flecha de reacción, los Coeficientes y los Subíndices.</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Análisis Crítico</span>
+                        <span class="act-text">3. Si la materia no se destruye, ¿por qué un leño de madera enorme termina convertido en un puñado muy pequeño de cenizas después de quemarse? ¿A dónde fue a parar el resto de la masa?</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Mapa Conceptual</span>
+                        <span class="act-text">4. Elabora un mapa conceptual sobre la "Clasificación de las Reacciones". Incluye las 4 principales (Síntesis, Descomposición, Sustitución Simple y Doble) agregando la fórmula general (ej. A+B→AB) de cada una.</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Respuesta Directa</span>
+                        <span class="act-text">5. Al momento de balancear una ecuación química, ¿cuál es la diferencia crucial entre modificar un coeficiente numérico y modificar un subíndice?</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Ilustrar / Secuencia</span>
+                        <span class="act-text">6. Dibuja una historieta (cómic) de 3 viñetas mostrando una reacción de combustión. Viñeta 1: Los reactivos listos. Viñeta 2: La reacción ocurriendo (chispa/fuego). Viñeta 3: Los productos resultantes escapando.</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Análisis Crítico</span>
+                        <span class="act-text">7. Explica con tus propias palabras: ¿Por qué es físicamente incorrecto y un error químico grave intentar balancear una ecuación cambiando los números pequeños (subíndices) de las moléculas?</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Mapa Mental</span>
+                        <span class="act-text">8. Construye un Mapa Mental titulado "El Oxígeno en las Reacciones". Saca ramificaciones comparando la Combustión y la Oxidación (velocidad, liberación de energía, ejemplos del texto).</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Respuesta Directa</span>
+                        <span class="act-text">9. Según la lectura, ¿cuáles son los tres elementos absolutamente necesarios para que ocurra una reacción de combustión?</span>
+                    </li>
+                    <li>
+                        <span class="act-badge">Análisis y Deducción</span>
+                        <span class="act-text">10. Situación: Encuentras una bicicleta vieja oxidada en el patio de tu casa. Basado en el texto, explica químicamente qué reacción ocurrió allí y qué elementos del ambiente (aire/agua) fueron los "reactivos" invisibles.</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Pregunta -->
+    <div class="modal-overlay" id="quiz-modal">
+        <div class="modal-card">
+            <div class="modal-subtitle" id="modal-category-text">Categoría - Puntos</div>
+            <div class="modal-q-text" id="modal-question-str">¿Aquí se carga la pregunta?</div>
+            <div id="options-area">
+                <!-- Opciones inyectadas vía JS -->
+            </div>
+            <div class="feedback-box" id="feedback-alert"></div>
+            <button class="action-btn" id="btn-next-turn">Volver al Tablero</button>
+        </div>
+    </div>
+
+    <!-- Modal Final de Resultados -->
+    <div class="modal-overlay" id="results-modal">
+        <div class="modal-card" style="border-top-color: var(--correct);">
+            <div class="modal-q-text" style="color: var(--primary-dark);">¡Evaluación Completada!</div>
+            <p style="font-size: 1.2rem; color: #546e7a;">Has resuelto todas las pistas de la cuadrícula química.</p>
+            
+            <div style="font-size: 1.4rem; font-weight: bold; margin-top:1rem;">
+                Puntos Ganados: <span id="final-pts" style="color: var(--primary);">0</span> / 2400
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top:1.5rem;">Tu Calificación Final es:</div>
+            <div class="final-grade" id="final-mark-display">5.0</div>
+            
+            <p style="font-size: 1.1rem; background-color: #eceff1; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 2rem;">
+                <strong>Misión final:</strong> Cierra esta ventana, lee el artículo sobre Reacciones Químicas y resuelve el taller en tu cuaderno.
+            </p>
+            
+            <button class="action-btn" style="display: block; box-shadow: 0 4px 0 #1b5e20; background-color: var(--correct);" onclick="document.getElementById('results-modal').style.display='none'">Cerrar e Ir al Taller</button>
+        </div>
+    </div>
+
+    <script>
+        // Data del Juego
+        const jeopardyData = [
+            {
+                category: "Conceptos Básicos",
+                questions: [
+                    { pts: 100, text: "Son las sustancias iniciales que reaccionan y se transforman en una reacción química.", options: ["Los Productos", "Los Reactivos", "Los Catalizadores"], correctIdx: 1 },
+                    { pts: 200, text: "Ley de la química que afirma que 'La materia no se crea ni se destruye, solo se transforma'.", options: ["Ley de Newton", "Ley de Conservación de la Masa", "Ley de la Termodinámica"], correctIdx: 1 },
+                    { pts: 300, text: "Números grandes que se colocan DELANTE de las fórmulas químicas para balancear una ecuación.", options: ["Coeficientes", "Subíndices", "Exponentes"], correctIdx: 0 }
+                ]
+            },
+            {
+                category: "Tipos de Reacciones",
+                questions: [
+                    { pts: 100, text: "Reacción donde dos o más sustancias se unen para formar un solo producto (A + B → AB).", options: ["Síntesis (Combinación)", "Sustitución Doble", "Combustión"], correctIdx: 0 },
+                    { pts: 200, text: "Reacción en la que un compuesto complejo se rompe en sustancias más simples (AB → A + B).", options: ["Síntesis", "Sustitución Simple", "Descomposición"], correctIdx: 2 },
+                    { pts: 300, text: "Reacción donde dos compuestos intercambian parejas de iones (AB + CD → AD + CB).", options: ["Oxidación", "Sustitución Doble", "Descomposición Térmica"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "Ecuaciones Químicas",
+                questions: [
+                    { pts: 100, text: "Símbolo matemático utilizado en una ecuación química que significa 'produce' o 'se transforma en'.", options: ["Signo Igual (=)", "Flecha (→)", "Signo Más (+)"], correctIdx: 1 },
+                    { pts: 200, text: "Es un error MUY grave cambiar estos números pequeños en una fórmula al intentar balancear la ecuación.", options: ["Los Subíndices", "Los Coeficientes", "La masa molar"], correctIdx: 0 },
+                    { pts: 300, text: "El proceso de igualar la cantidad de átomos en los reactivos con los productos se conoce como...", options: ["Titulación", "Balanceo de ecuaciones", "Neutralización"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "Combustión y Oxidación",
+                questions: [
+                    { pts: 100, text: "Elemento gaseoso absolutamente necesario para que ocurra una reacción de combustión (fuego).", options: ["Oxígeno", "Nitrógeno", "Helio"], correctIdx: 0 },
+                    { pts: 200, text: "En una combustión completa, los combustibles a base de carbono producen vapor de agua y...", options: ["Amoníaco (NH3)", "Dióxido de Carbono (CO2)", "Ácido Sulfúrico"], correctIdx: 1 },
+                    { pts: 300, text: "Reacción lenta que libera energía a lo largo del tiempo, como la formación de herrumbre en los metales.", options: ["Fusión", "Sublimación", "Oxidación"], correctIdx: 2 }
+                ]
+            }
+        ];
+
+        let currentScore = 0;
+        let answeredQuestionsCount = 0;
+        const totalQuestionsRequired = 12;
+        const maxPossibleScore = 2400; // 4 columnas * (100+200+300)
+        
+        let activeCategoryIndex = -1;
+        let activeQuestionIndex = -1;
+        let activeGridButton = null;
+
+        const gridBoard = document.getElementById("board-grid");
+        const scoreCounter = document.getElementById("score-counter");
+        const progressCounter = document.getElementById("progress-counter");
+        
+        const qModal = document.getElementById("quiz-modal");
+        const modalCatText = document.getElementById("modal-category-text");
+        const modalQText = document.getElementById("modal-question-str");
+        const optionsArea = document.getElementById("options-area");
+        const feedbackAlert = document.getElementById("feedback-alert");
+        const btnNextTurn = document.getElementById("btn-next-turn");
+
+        function buildGameGrid() {
+            // Fila de encabezados
+            jeopardyData.forEach(column => {
+                const headDiv = document.createElement("div");
+                headDiv.className = "cat-header";
+                headDiv.textContent = column.category;
+                gridBoard.appendChild(headDiv);
+            });
+
+            // Filas de botones por puntaje
+            for (let rowIndex = 0; rowIndex < 3; rowIndex++) {
+                jeopardyData.forEach((columnData, colIndex) => {
+                    const cellBtn = document.createElement("button");
+                    cellBtn.className = "pts-btn";
+                    const points = columnData.questions[rowIndex].pts;
+                    cellBtn.textContent = points;
+                    
+                    cellBtn.addEventListener("click", () => triggerQuestionModal(colIndex, rowIndex, cellBtn));
+                    
+                    gridBoard.appendChild(cellBtn);
+                });
+            }
+        }
+
+        function triggerQuestionModal(colId, rowId, clickedBtn) {
+            activeCategoryIndex = colId;
+            activeQuestionIndex = rowId;
+            activeGridButton = clickedBtn;
+
+            const qData = jeopardyData[colId].questions[rowId];
+            
+            modalCatText.textContent = `${jeopardyData[colId].category} | Valor: ${qData.pts} Pts`;
+            modalQText.textContent = qData.text;
+            
+            optionsArea.innerHTML = "";
+            feedbackAlert.style.display = "none";
+            btnNextTurn.style.display = "none";
+
+            qData.options.forEach((optText, i) => {
+                const optBtn = document.createElement("button");
+                optBtn.className = "opt-btn";
+                optBtn.textContent = optText;
+                optBtn.addEventListener("click", () => evaluateChoice(i, optBtn));
+                optionsArea.appendChild(optBtn);
+            });
+
+            qModal.style.display = "flex";
+        }
+
+        function evaluateChoice(selectedIdx, clickedElement) {
+            // Desactivar botones para prevenir multiples clics
+            const allOptionBtns = optionsArea.querySelectorAll(".opt-btn");
+            allOptionBtns.forEach(b => b.disabled = true);
+
+            const qData = jeopardyData[activeCategoryIndex].questions[activeQuestionIndex];
+            const isAnswerCorrect = (selectedIdx === qData.correctIdx);
+
+            feedbackAlert.style.display = "block";
+            
+            if (isAnswerCorrect) {
+                clickedElement.classList.add("correct");
+                currentScore += qData.pts;
+                scoreCounter.textContent = currentScore;
+                
+                feedbackAlert.textContent = `¡Respuesta Correcta! Sumas ${qData.pts} puntos a tu cuenta.`;
+                feedbackAlert.style.backgroundColor = "#e8f5e9";
+                feedbackAlert.style.color = "var(--correct)";
+                feedbackAlert.style.border = "2px solid #a5d6a7";
+            } else {
+                clickedElement.classList.add("incorrect");
+                allOptionBtns[qData.correctIdx].classList.add("correct"); 
+                
+                feedbackAlert.textContent = `Respuesta Incorrecta. La opción adecuada está marcada en verde. 0 Puntos.`;
+                feedbackAlert.style.backgroundColor = "#ffebee";
+                feedbackAlert.style.color = "var(--incorrect)";
+                feedbackAlert.style.border = "2px solid #ef9a9a";
+            }
+
+            // Actualizar grid
+            answeredQuestionsCount++;
+            progressCounter.textContent = answeredQuestionsCount;
+            activeGridButton.disabled = true;
+            activeGridButton.textContent = "—";
+
+            btnNextTurn.style.display = "block";
+        }
+
+        btnNextTurn.addEventListener("click", () => {
+            qModal.style.display = "none";
+            
+            // Verificar fin de juego
+            if (answeredQuestionsCount === totalQuestionsRequired) {
+                setTimeout(computeAndShowFinalResults, 600);
+            }
+        });
+
+        function computeAndShowFinalResults() {
+            const resultsModal = document.getElementById("results-modal");
+            document.getElementById("final-pts").textContent = currentScore;
+
+            // Escala de calificación 1.0 a 5.0 lineal
+            const percentageScored = currentScore / maxPossibleScore;
+            const computedGrade = (percentageScored * 4.0) + 1.0;
+            const finalGradeStr = computedGrade.toFixed(1);
+
+            const gradeDisplay = document.getElementById("final-mark-display");
+            gradeDisplay.textContent = finalGradeStr;
+            
+            if (computedGrade >= 4.0) {
+                gradeDisplay.style.color = "var(--correct)";
+            } else if (computedGrade >= 3.0) {
+                gradeDisplay.style.color = "var(--accent)";
+            } else {
+                gradeDisplay.style.color = "var(--incorrect)";
+            }
+
+            resultsModal.style.display = "flex";
+        }
+
+        // Arrancar juego seguro
+        window.addEventListener("DOMContentLoaded", buildGameGrid);
+    </script>
+</body>
+</html>

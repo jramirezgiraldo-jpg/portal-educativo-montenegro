@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Entropía y Desorden</title>
+    <style>
+        :root {
+            /* Paleta térmica: Frío (orden) a Caliente (desorden) */
+            --primary: #1565c0; /* Azul oscuro */
+            --primary-dark: #0d47a1;
+            --secondary: #ff8f00; /* Naranja fuego */
+            --secondary-dark: #e65100;
+            --danger: #c62828;
+            --success: #2e7d32;
+            --bg-page: #f5f7fa;
+            --bg-card: #ffffff;
+            --text-main: #263238;
+            --text-light: #ffffff;
+            --border-radius: 8px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1.2rem, 3vw, 2rem) 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border-bottom: 5px solid var(--secondary);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            letter-spacing: 0.5px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: rgba(0,0,0,0.2);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: clamp(1rem, 4vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        #zona-juego {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            /* CRÍTICO: Prevención de bugs táctiles */
+            touch-action: none;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e3f2fd;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            color: var(--primary-dark);
+            border: 2px solid #bbdefb;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.3rem, 1.5vw, 1rem);
+        }
+
+        .category-title {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            font-weight: 900;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.2rem;
+            border-radius: var(--border-radius);
+            font-size: clamp(0.75rem, 2.5vw, 1.1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+            word-break: break-word;
+        }
+
+        .pts-btn {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
+            font-weight: 900;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pts-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .pts-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 8px solid var(--secondary);
+        }
+
+        .modal-header-text {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--secondary-dark);
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-question-text {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f8f9fa;
+            border: 2px solid #cfd8dc;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #eceff1;
+            border-color: #90a4ae;
+        }
+
+        .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); }
+        .opt-btn.incorrect { background-color: var(--danger); color: white; border-color: var(--danger); }
+
+        .feedback-alert {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .continue-btn {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 var(--primary-dark);
+        }
+
+        .continue-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .final-mark {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--secondary-dark);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #zona-lectura {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .theory-article h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            border-bottom: 4px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .theory-article h2:first-child { margin-top: 0; }
+
+        .theory-article h3 {
+            color: var(--secondary-dark);
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2rem;
+        }
+
+        .theory-article p, .theory-article li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: #37474f;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .theory-article ul { padding-left: 1.5rem; }
+
+        .workshop-container {
+            margin-top: 4rem;
+            background-color: #fff8e1;
+            border: 3px dashed var(--secondary);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .workshop-container h2 {
+            margin-top: 0;
+            color: var(--secondary-dark);
+            border-bottom: none;
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+        }
+
+        .instruction-banner {
+            background-color: var(--secondary);
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .workshop-list li {
+            background-color: #ffffff;
+            border-left: 8px solid var(--primary);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tag-format {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            background-color: #e3f2fd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .question-text {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Física: Entropía y Desorden</h1>
+        <p>Toca una casilla, lee la pista y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <!-- FASE 2: ZONA DE JUEGO INTERACTIVA -->
+        <section id="zona-juego">
+            <div class="stats-panel">
+                <div>Puntuación: <span id="score-counter">0</span></div>
+                <div>Progreso: <span id="progress-counter">0</span>/12</div>
+            </div>
+            <div class="grid-container" id="jeopardy-grid">
+                <!-- Se inyecta dinámicamente mediante JavaScript -->
+            </div>
+        </section>
+
+        <!-- FASE 3: ZONA DE LECTURA TEÓRICA Y TALLER (Siempre visible) -->
+        <section id="zona-lectura">
+            <article class="theory-article">
+                <h2>La Segunda Ley de la Termodinámica: ¿Por qué todo tiende al desorden?</h2>
+                
+                <p>Si dejas tu habitación sola durante un mes, es muy poco probable que la encuentres más ordenada de lo que la dejaste. Por el contrario, el polvo se acumulará, las cosas parecerán desorganizarse solas y el desorden reinará. Si dejas caer un vaso de vidrio, este se romperá en mil pedazos. Jamás verás que mil pedazos de vidrio salten espontáneamente del suelo para formar un vaso perfecto en tu mano. ¿Por qué ocurre esto? La respuesta se encuentra en uno de los conceptos más fascinantes y universales de la física: <strong>la Entropía</strong>.</p>
+
+                <h2>¿Qué es la Entropía?</h2>
+                <p>En términos sencillos, la entropía es una <strong>medida del desorden o caos</strong> dentro de un sistema físico. A nivel molecular, mide de cuántas formas diferentes pueden organizarse las partículas de un sistema. Entre más opciones de organización desordenada existan, mayor será la entropía.</p>
+                <p>Este concepto es el pilar de la <strong>Segunda Ley de la Termodinámica</strong>, la cual establece una regla de oro e inquebrantable para nuestro universo: <em>"En cualquier sistema aislado, la entropía total nunca disminuye; siempre tiende a aumentar con el tiempo"</em>. Es decir, el universo natural tiene una tendencia inherente a avanzar desde estados de orden (baja entropía) hacia estados de máximo desorden (alta entropía).</p>
+
+                <h2>Procesos Reversibles e Irreversibles</h2>
+                <p>Imagina que grabas en video una bola de billar golpeando a otra. Si reproduces el video al revés, la escena se verá completamente lógica; no sabrías si estás viendo la grabación hacia adelante o hacia atrás. Esto parecería un proceso reversible. Sin embargo, en el mundo real, la mayoría de los procesos son <strong>irreversibles</strong> a nivel macroscópico.</p>
+                <p>Un cubo de hielo derritiéndose en un vaso de agua caliente es un proceso irreversible. El calor viaja naturalmente del agua caliente al hielo frío, pero nunca viaja al revés (del hielo al agua) sin que algo externo, como un refrigerador que gasta mucha energía, intervenga. Cada vez que ocurre un proceso irreversible, la entropía total del universo aumenta irreversiblemente.</p>
+
+                <h2>La Degradación de la Energía y el Calor</h2>
+                <p>La Primera Ley de la Termodinámica nos dice que la energía no se crea ni se destruye, solo se transforma. Si esto es cierto, ¿por qué nos preocupa tanto "quedarnos sin energía"? El secreto está en la <em>calidad</em> de esa energía, y aquí es donde ataca la entropía.</p>
+                <ul>
+                    <li><strong>Energía Útil (Baja entropía):</strong> Es la energía concentrada que podemos usar para realizar un trabajo, como la gasolina en el tanque de un auto o la electricidad en una batería.</li>
+                    <li><strong>Energía Degradada (Alta entropía):</strong> Cuando el auto quema gasolina, produce movimiento (trabajo útil), pero también produce gases de escape y <strong>calor que se disipa</strong> en el ambiente. Ese calor disperso en el aire sigue siendo energía, pero es energía "degradada" o de baja calidad. Es imposible recoger todo ese calor esparcido en la calle y usarlo para mover otro auto.</li>
+                </ul>
+                <p>Debido a la entropía, en CADA transformación energética, una parte de la energía siempre se pierde en forma de calor no aprovechable hacia el entorno. Ninguna máquina puede ser 100% eficiente.</p>
+
+                <h2>La Flecha del Tiempo y el Fin del Universo</h2>
+                <p>La entropía es la única ley de la física que le da una dirección al tiempo. Le llamamos <strong>"La Flecha del Tiempo"</strong>. Podemos distinguir el pasado del futuro observando el aumento del desorden. El pasado estaba más ordenado (menor entropía); el futuro será más desordenado (mayor entropía).</p>
+                <p>Si la entropía del universo siempre aumenta y la energía útil siempre se degrada a calor disperso, los científicos predicen un destino final para todo lo que existe llamado la <strong>Muerte Térmica del Universo</strong>. Esto ocurrirá dentro de billones de años, cuando toda la energía se haya dispersado uniformemente, todo el universo tenga la misma temperatura fría, y ya no quede energía "útil" para encender una estrella, mover un planeta o sustentar la vida. El universo alcanzará su máxima entropía y el tiempo, tal como lo conocemos, perderá su sentido.</p>
+            </article>
+
+            <div class="workshop-container">
+                <h2>Taller de Aplicación y Análisis</h2>
+                
+                <div class="instruction-banner">
+                    <!-- Icono SVG en línea para respetar offline -->
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno de física.</span>
+                </div>
+
+                <ul class="workshop-list">
+                    <li>
+                        <span class="tag-format">Responder Directamente</span>
+                        <span class="question-text">1. Según el artículo y la Segunda Ley de la Termodinámica, define con tus propias palabras qué es la "entropía".</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Dibujar e Ilustrar</span>
+                        <span class="question-text">2. Dibuja dos escenarios contrastantes: a la izquierda, un sistema con "Baja Entropía" (ordenado); a la derecha, el mismo sistema después de sufrir un proceso irreversible mostrando "Alta Entropía" (desordenado). Puedes usar partículas o un objeto cotidiano.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">3. Si un refrigerador enfría los alimentos en su interior (creando orden y disminuyendo la entropía localmente), ¿por qué afirmamos que globalmente el refrigerador aumenta la entropía del universo? (Pista: Piensa en el calor de la rejilla trasera).</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Conceptual</span>
+                        <span class="question-text">4. Elabora un mapa conceptual interconectando los siguientes conceptos: Segunda Ley de la Termodinámica, Entropía, Procesos Irreversibles, Energía Útil, y Calor Degradado.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Responder Directamente</span>
+                        <span class="question-text">5. ¿Cuál es la diferencia entre la "Energía Útil" (baja entropía) y la "Energía Degradada"? Da un ejemplo de cada una basándote en la lectura.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Ilustrar Conceptos</span>
+                        <span class="question-text">6. Dibuja la "Flecha del Tiempo". Ilustra cómo un cubo de hielo dentro de una taza de café caliente pasa, de forma natural, de un estado de orden a uno de desorden térmico a medida que avanza el tiempo.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">7. Analiza y argumenta: ¿Por qué la existencia de la entropía hace que sea físicamente imposible construir un motor o máquina que sea 100% eficiente (es decir, que no desperdicie energía)?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Mental</span>
+                        <span class="question-text">8. Construye un Mapa Mental centralizado en el concepto "Aumento de Entropía Cotidiana". Saca al menos 4 ramificaciones con ejemplos de tu vida diaria donde evidencies que las cosas tienden al desorden.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Responder Directamente</span>
+                        <span class="question-text">9. ¿En qué consiste la teoría sobre el destino final llamada "La Muerte Térmica del Universo" y qué papel juega la temperatura en este escenario?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Reflexión Filosófica y Física</span>
+                        <span class="question-text">10. Escribe un párrafo de reflexión (mínimo 6 líneas): Sabiendo que el universo exige que la entropía aumente, y considerando que tu propio cuerpo vivo es un sistema muy "ordenado" (baja entropía), ¿qué debes hacer constantemente (comer, respirar) para mantener ese orden interno y no ceder ante la entropía?</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Pregunta -->
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header-text" id="modal-cat-pts">Categoría - Puntos</div>
+            <div class="modal-question-text" id="modal-q-text">¿Pregunta?</div>
+            <div id="options-area">
+                <!-- Se inyectan opciones vía JS -->
+            </div>
+            <div class="feedback-alert" id="feedback-alert"></div>
+            <button class="continue-btn" id="btn-next">Volver al Tablero</button>
+        </div>
+    </div>
+
+    <!-- Modal Final de Calificación -->
+    <div class="modal-overlay" id="results-modal">
+        <div class="modal-content" style="border-top-color: var(--success);">
+            <div class="modal-question-text" style="color: var(--primary-dark); margin-bottom: 0.5rem;">¡Desafío Entrópico Superado!</div>
+            <p style="font-size: 1.2rem; color: #546e7a;">Has resuelto todas las pistas de la cuadrícula interactiva.</p>
+            
+            <div style="font-size: 1.4rem; font-weight: bold; margin-top:1rem;">
+                Puntos Ganados: <span id="final-pts-text" style="color: var(--secondary-dark);">0</span> / 2400
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top:1.5rem;">Tu Calificación Final es:</div>
+            <div class="final-mark" id="final-grade-display">5.0</div>
+            
+            <p style="font-size: 1.1rem; background-color: #e3f2fd; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 2rem; color: #0d47a1;">
+                <strong>Siguiente Paso:</strong> Cierra esta ventana, lee detenidamente el artículo sobre Termodinámica en la zona inferior y resuelve el taller en tu cuaderno.
+            </p>
+            
+            <button class="continue-btn" style="display: block; box-shadow: 0 4px 0 #1b5e20; background-color: var(--success);" onclick="document.getElementById('results-modal').style.display='none'">Cerrar e ir al Taller</button>
+        </div>
+    </div>
+
+    <script>
+        // Estructura de Datos de las Preguntas
+        const gameData = [
+            {
+                category: "Conceptos",
+                questions: [
+                    { pts: 100, q: "¿Qué mide fundamentalmente la entropía en un sistema físico?", options: ["El grado de desorden o caos", "La cantidad de luz visible", "La velocidad de la masa"], correctIdx: 0 },
+                    { pts: 200, q: "¿Qué ley de la termodinámica establece que la entropía del universo siempre aumenta?", options: ["Primera Ley", "Segunda Ley", "Tercera Ley"], correctIdx: 1 },
+                    { pts: 300, q: "Si un proceso físico aumenta la entropía del universo y no puede deshacerse por sí solo, se denomina...", options: ["Proceso Reversible", "Proceso Irreversible", "Proceso Isotérmico"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "Energía",
+                questions: [
+                    { pts: 100, q: "En casi todas las transformaciones de energía del mundo, una gran porción se pierde hacia el ambiente en forma de...", options: ["Electricidad estática", "Movimiento perpetuo", "Calor no aprovechable"], correctIdx: 2 },
+                    { pts: 200, q: "A medida que la entropía de un sistema cerrado aumenta, la cantidad de energía 'útil' capaz de realizar trabajo...", options: ["Aumenta exponencialmente", "Disminuye", "Se mantiene exactamente igual"], correctIdx: 1 },
+                    { pts: 300, q: "Término que describe la 'calidad' del calor disperso que ya no sirve para mover un motor:", options: ["Energía concentrada", "Energía degradada", "Energía cinética"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "Ejemplos",
+                questions: [
+                    { pts: 100, q: "Si dejas caer un vaso de vidrio al piso y se rompe en mil pedazos, la entropía del sistema...", options: ["Disminuye (hay más orden)", "Aumenta (hay más desorden)", "Se congela en cero"], correctIdx: 1 },
+                    { pts: 200, q: "¿Cuál de estos es un ejemplo de disminuir LOCALMENTE la entropía, a costa de usar mucha energía externa?", options: ["Humo dispersándose en el aire", "Un cubo de hielo derritiéndose", "Ordenar y limpiar tu habitación"], correctIdx: 2 },
+                    { pts: 300, q: "En un auto, el movimiento es útil. Pero el gas caliente que sale por el escape es un claro ejemplo de...", options: ["Entropía disminuyendo al entorno", "Energía degradada disipada al entorno", "Energía térmica de altísima calidad"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "El Universo",
+                questions: [
+                    { pts: 100, q: "El estado final y natural hacia el cual tiende cualquier sistema completamente aislado (como el universo) es...", options: ["El orden perfecto de la materia", "El caos y desorden máximo", "La inmovilidad térmica instantánea"], correctIdx: 1 },
+                    { pts: 200, q: "La entropía nos da una dirección unidireccional en el tiempo. El universo avanza desde un pasado...", options: ["Desordenado a un futuro ordenado", "Aleatorio a un futuro cíclico", "Ordenado a un futuro desordenado"], correctIdx: 2 },
+                    { pts: 300, q: "Teoría que sugiere que el universo alcanzará la entropía máxima, sin energía útil y temperatura fría uniforme:", options: ["El Big Bang", "La Teoría de Cuerdas", "La Muerte Térmica del Universo"], correctIdx: 2 }
+                ]
+            }
+        ];
+
+        // Estado del Juego
+        let currentScore = 0;
+        let answeredQuestions = 0;
+        const totalQuestions = 12;
+        const maxScore = 2400; // 4 cols * (100+200+300)
+        
+        let activeColIdx = -1;
+        let activeRowIdx = -1;
+        let activeBtnElement = null;
+
+        // Referencias del DOM
+        const gridContainer = document.getElementById("jeopardy-grid");
+        const scoreDisplay = document.getElementById("score-counter");
+        const progressDisplay = document.getElementById("progress-counter");
+        
+        const qModal = document.getElementById("question-modal");
+        const mCatPts = document.getElementById("modal-cat-pts");
+        const mQuestion = document.getElementById("modal-q-text");
+        const optionsArea = document.getElementById("options-area");
+        const feedbackAlert = document.getElementById("feedback-alert");
+        const btnNext = document.getElementById("btn-next");
+
+        // Inicializador del Tablero
+        function buildGame() {
+            // Render Cabeceras
+            gameData.forEach(col => {
+                const header = document.createElement("div");
+                header.className = "category-title";
+                header.textContent = col.category;
+                gridContainer.appendChild(header);
+            });
+
+            // Render Botones (Filas 100, 200, 300)
+            for (let row = 0; row < 3; row++) {
+                gameData.forEach((col, colIdx) => {
+                    const btn = document.createElement("button");
+                    btn.className = "pts-btn";
+                    const points = col.questions[row].pts;
+                    btn.textContent = points;
+                    
+                    // Asignar evento click (compatible con touch debido a touch-action:none en CSS)
+                    btn.addEventListener("click", () => openModal(colIdx, row, btn));
+                    
+                    gridContainer.appendChild(btn);
+                });
+            }
+        }
+
+        // Lógica de Modales
+        function openModal(colIdx, rowIdx, btnElement) {
+            activeColIdx = colIdx;
+            activeRowIdx = rowIdx;
+            activeBtnElement = btnElement;
+
+            const qData = gameData[colIdx].questions[rowIdx];
+            
+            mCatPts.textContent = `${gameData[colIdx].category} | ${qData.pts} Pts`;
+            mQuestion.textContent = qData.q;
+            
+            // Reset modal state
+            optionsArea.innerHTML = "";
+            feedbackAlert.style.display = "none";
+            btnNext.style.display = "none";
+
+            // Crear botones de opciones
+            qData.options.forEach((optText, optIdx) => {
+                const optBtn = document.createElement("button");
+                optBtn.className = "opt-btn";
+                optBtn.textContent = optText;
+                optBtn.addEventListener("click", () => handleAnswer(optIdx, optBtn));
+                optionsArea.appendChild(optBtn);
+            });
+
+            qModal.style.display = "flex";
+        }
+
+        // Lógica de Validación y Puntuación
+        function handleAnswer(selectedIdx, clickedElement) {
+            // Prevenir múltiples clics
+            const allOpts = optionsArea.querySelectorAll(".opt-btn");
+            allOpts.forEach(b => b.disabled = true);
+
+            const qData = gameData[activeColIdx].questions[activeRowIdx];
+            const isCorrect = (selectedIdx === qData.correctIdx);
+
+            feedbackAlert.style.display = "block";
+            
+            if (isCorrect) {
+                clickedElement.classList.add("correct");
+                currentScore += qData.pts;
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackAlert.textContent = `¡Correcto! Entendiste el concepto. +${qData.pts} puntos.`;
+                feedbackAlert.style.backgroundColor = "#e8f5e9";
+                feedbackAlert.style.color = "var(--success)";
+                feedbackAlert.style.border = "2px solid #a5d6a7";
+            } else {
+                clickedElement.classList.add("incorrect");
+                allOpts[qData.correctIdx].classList.add("correct"); // Mostrar la correcta
+                
+                feedbackAlert.textContent = `Incorrecto. La energía se disipó y no ganaste puntos.`;
+                feedbackAlert.style.backgroundColor = "#ffebee";
+                feedbackAlert.style.color = "var(--danger)";
+                feedbackAlert.style.border = "2px solid #ef9a9a";
+            }
+
+            // Actualizar tablero principal
+            answeredQuestions++;
+            progressDisplay.textContent = answeredQuestions;
+            activeBtnElement.disabled = true;
+            activeBtnElement.textContent = "—";
+
+            btnNext.style.display = "block";
+        }
+
+        // Transición de flujos
+        btnNext.addEventListener("click", () => {
+            qModal.style.display = "none";
+            
+            if (answeredQuestions === totalQuestions) {
+                setTimeout(showFinalGrade, 600);
+            }
+        });
+
+        // Cálculo de Calificación Final (1.0 a 5.0)
+        function showFinalGrade() {
+            const resultsModal = document.getElementById("results-modal");
+            document.getElementById("final-pts-text").textContent = currentScore;
+
+            // Escala lineal simple
+            const percentage = currentScore / maxScore;
+            const computedGrade = (percentage * 4.0) + 1.0;
+            const finalGradeStr = computedGrade.toFixed(1);
+
+            const gradeDisplay = document.getElementById("final-grade-display");
+            gradeDisplay.textContent = finalGradeStr;
+            
+            if (computedGrade >= 4.0) {
+                gradeDisplay.style.color = "var(--success)";
+            } else if (computedGrade >= 3.0) {
+                gradeDisplay.style.color = "var(--secondary-dark)";
+            } else {
+                gradeDisplay.style.color = "var(--danger)";
+            }
+
+            resultsModal.style.display = "flex";
+        }
+
+        // Arrancar juego al cargar
+        window.addEventListener("DOMContentLoaded", buildGame);
+    </script>
+</body>
+</html>

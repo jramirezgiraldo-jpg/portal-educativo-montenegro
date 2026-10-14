@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Trabajo Mecánico</title>
+    <style>
+        :root {
+            /* Physics Theme Palette */
+            --primary: #1565c0; /* Blue 800 */
+            --primary-light: #e3f2fd; /* Blue 50 */
+            --secondary: #d84315; /* Deep Orange 800 */
+            --secondary-light: #fbe9e7;
+            --text-dark: #263238;
+            --text-light: #f8fafc;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --success: #2e7d32;
+            --error: #c62828;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: clamp(10px, 2vw, 20px);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), #1976d2);
+            color: white;
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(21, 101, 192, 0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative Physics Icon Background */
+        header::before {
+            content: "";
+            position: absolute;
+            top: -20%;
+            right: -5%;
+            width: 160px;
+            height: 160px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.1)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 2 7 12 12 22 7 12 2'/%3E%3Cpolyline points='2 17 12 22 22 17'/%3E%3Cpolyline points='2 12 12 17 22 12'/%3E%3C/svg%3E");
+            background-size: cover;
+            pointer-events: none;
+            transform: rotate(15deg);
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.8rem);
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.15);
+            padding: 12px;
+            border-radius: 8px;
+            gap: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(1.1rem, 2vw, 1.3rem);
+            font-weight: bold;
+        }
+
+        .stat-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .stars {
+            color: #ffd54f;
+            letter-spacing: 2px;
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            text-shadow: 0 0 5px rgba(255, 213, 79, 0.3);
+        }
+
+        #zona-juego {
+            background: var(--card-bg);
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .words-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 12px);
+            margin-bottom: 25px;
+        }
+
+        .word-item {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: 700;
+            transition: var(--transition);
+            border: 1px solid rgba(21, 101, 192, 0.15);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .word-item.found {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+            text-decoration: line-through;
+            opacity: 0.85;
+            transform: scale(0.95);
+        }
+
+        .grid-wrapper {
+            width: 100%;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: clamp(1px, 0.5vw, 3px);
+            /* CRÍTICO: Previene comportamiento nativo táctil (scroll/zoom) durante el juego */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            background: #cbd5e1; /* Grid gap color */
+            border: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: clamp(2px, 1vw, 6px);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            background: #fff;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(12px, 3.5vw, 22px);
+            font-weight: 800;
+            color: var(--text-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s, transform 0.1s;
+        }
+
+        .cell.selecting {
+            background: var(--secondary);
+            color: white;
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .cell.found {
+            background: var(--success);
+            color: white;
+        }
+
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: clamp(25px, 5vw, 45px);
+            border-radius: 16px;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .btn-restart {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-restart:hover {
+            background: #bf360c;
+            transform: translateY(-2px);
+        }
+
+        #zona-lectura {
+            background: var(--card-bg);
+            padding: clamp(25px, 6vw, 45px);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        }
+
+        .article-content {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #334155;
+        }
+
+        .article-content h2 {
+            color: var(--primary);
+            font-size: clamp(1.8rem, 4vw, 2.4rem);
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--primary-light);
+            line-height: 1.2;
+        }
+
+        .article-content h3 {
+            color: var(--secondary);
+            font-size: clamp(1.3rem, 3vw, 1.7rem);
+            margin: 35px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .article-content h3::before {
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: var(--secondary-light);
+            border-radius: 4px;
+            border: 4px solid var(--secondary);
+        }
+
+        .article-content p {
+            margin-bottom: 18px;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        .article-content ul {
+            margin: 20px 0 25px 35px;
+            background: var(--bg-color);
+            padding: 20px 20px 20px 40px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .article-content li {
+            margin-bottom: 12px;
+        }
+
+        .highlight-box {
+            background: var(--secondary-light);
+            border-left: 6px solid var(--secondary);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-weight: 500;
+            color: #b93815;
+            font-style: italic;
+        }
+
+        .workshop-section {
+            margin-top: 60px;
+            background: #f8fbff;
+            padding: clamp(25px, 5vw, 40px);
+            border-radius: 16px;
+            border: 2px solid var(--primary-light);
+            position: relative;
+        }
+
+        .workshop-section h2 {
+            color: var(--primary);
+            border-bottom: none;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+        }
+
+        .workshop-instruction {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 35px;
+            color: #d84315;
+            border: 2px dashed #ffb74d;
+            font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-list li {
+            margin-bottom: 25px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 0.2s;
+        }
+        
+        .activity-list li:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (min-width: 700px) {
+            .activity-list li {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .activity-type {
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            white-space: nowrap;
+            text-align: center;
+            width: fit-content;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-type.respond { background: #0288d1; }
+        .activity-type.analysis { background: #e53935; }
+        .activity-type.drawing { background: #8e24aa; }
+        .activity-type.map { background: #00897b; }
+
+        .activity-text {
+            font-size: clamp(1.05rem, 2vw, 1.15rem);
+            color: #475569;
+            line-height: 1.6;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Trabajo Mecánico</h1>
+        <p class="instruction">Encuentra las 10 palabras clave de física deslizando tu dedo o ratón por la cuadrícula.</p>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <!-- Inline SVG for Clock -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat-box">
+                <!-- Inline SVG for Counter -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span id="counter">0 / 10</span>
+            </div>
+            <div class="stat-box">
+                <span id="rating" class="stars">★★★★★</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="words-list" class="words-container">
+                <!-- Words injected by JS -->
+            </div>
+            
+            <div class="grid-wrapper">
+                <div id="grid" class="letter-grid">
+                    <!-- Grid dynamically generated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>La Física del Esfuerzo: Comprendiendo el Trabajo Mecánico</h2>
+                
+                <p>En nuestra vida cotidiana, solemos usar la palabra "trabajo" para referirnos a cualquier actividad que nos cueste esfuerzo, ya sea estudiar para un examen de matemáticas, estar sentados frente a un computador o pensar en cómo resolver un problema. Sin embargo, para los físicos, la definición de <strong>Trabajo Mecánico</strong> es mucho más precisa y estricta. En la física, no basta con esforzarse o sudar; para que exista trabajo, un objeto tiene que moverse.</p>
+
+                <p>Imagina a un campesino empujando con todas sus fuerzas un tractor que se ha quedado sin gasolina, o levantando pesados bultos de café o abono. Estas labores cotidianas en el campo son laboratorios perfectos para entender cómo interactúan la fuerza y el movimiento en el universo.</p>
+
+                <h3>La Fórmula Fundamental del Trabajo</h3>
+                <p>El trabajo mecánico se define como la cantidad de energía transferida por una <strong>fuerza</strong> cuando esta actúa sobre un cuerpo, provocando un <strong>desplazamiento</strong> en la misma dirección. En términos matemáticos, si la fuerza se aplica en la misma dirección del movimiento, el trabajo ($W$, por la palabra en inglés <em>Work</em>) se calcula multiplicando la magnitud de la fuerza aplicada ($F$) por la <strong>distancia</strong> o desplazamiento logrado ($d$).</p>
+                
+                <div class="highlight-box">
+                    <strong>Fórmula Básica: W = F × d</strong><br>
+                    Donde <strong>W</strong> es el Trabajo, <strong>F</strong> es la Fuerza y <strong>d</strong> es la Distancia o Desplazamiento.
+                </div>
+
+                <p>Es indispensable conocer las unidades de medida en el Sistema Internacional (SI):</p>
+                <ul>
+                    <li>La Fuerza se mide en <strong>Newtons</strong> (N).</li>
+                    <li>La Distancia se mide en <strong>Metros</strong> (m).</li>
+                    <li>El Trabajo se mide en <strong>Julios</strong> (J). (Un Julio equivale a un Newton multiplicado por un metro: 1 J = 1 N·m).</li>
+                </ul>
+
+                <h3>El Papel del Ángulo y los Vectores</h3>
+                <p>La fuerza y el desplazamiento no son simples números, son <strong>vectores</strong>; es decir, tienen una dirección y un sentido. ¿Qué pasa si jalas una carreta de carga usando una cuerda inclinada hacia arriba? En este caso, no toda tu fuerza se usa para mover la carreta hacia adelante; una parte de la fuerza intenta levantarla.</p>
+                
+                <p>Para calcular el trabajo exacto en estos casos, debemos tener en cuenta el <strong>ángulo</strong> ($\theta$) que se forma entre la dirección de la fuerza y la dirección del desplazamiento. La fórmula completa es:</p>
+                
+                <div class="highlight-box" style="text-align: center; font-size: 1.2rem;">
+                    <strong>W = F × d × cos(θ)</strong>
+                </div>
+
+                <p>Esta fórmula nos revela realidades fascinantes y a veces contraintuitivas de la física:</p>
+                <ul>
+                    <li><strong>Trabajo Positivo:</strong> Ocurre cuando la fuerza y el movimiento van en la misma dirección (el ángulo es $0^\circ$). Ejemplo: un caballo tirando de un arado hacia adelante.</li>
+                    <li><strong>Trabajo Cero (Nulo):</strong> Ocurre cuando la fuerza se aplica en un ángulo de $90^\circ$ (perpendicular) respecto al movimiento. Ejemplo: si caminas en línea recta horizontal cargando un bulto en tus hombros, haces mucha fuerza hacia arriba para sostenerlo, pero como te mueves hacia adelante, el trabajo mecánico sobre el bulto es ¡Cero!</li>
+                    <li><strong>Trabajo Negativo:</strong> Ocurre cuando la fuerza se opone al movimiento (el ángulo es $180^\circ$). El mejor ejemplo es la <strong>fricción</strong>. La fricción roba <strong>energía</strong> al sistema, frenando los objetos.</li>
+                </ul>
+
+                <h3>Trabajo, Energía y Gravedad</h3>
+                <p>El trabajo es, en esencia, una forma de transferir energía. Cuando realizas trabajo sobre un objeto, le cambias su estado de energía. Por ejemplo, al levantar un bulto de 50 kg desde el suelo hasta la plataforma de un camión, estás realizando trabajo en contra de la <strong>gravedad</strong>. La energía que gastaste no desaparece; se transfiere al bulto en forma de "Energía Potencial Gravitacional". Si dejaras caer el bulto, esa energía potencial se transformaría en energía cinética (de movimiento) a medida que cae.</p>
+                
+                <p>Comprender el Trabajo Mecánico no solo es un ejercicio académico, es la base para diseñar poleas, tractores, rampas y palancas; herramientas vitales que nos permiten multiplicar nuestra fuerza y hacer las tareas pesadas del mundo de manera eficiente.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h2>Taller de Repaso y Aplicación</h2>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Lee atentamente el texto superior. Luego, escribe y resuelve las siguientes 10 actividades en tu cuaderno de física.
+                </div>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>1.</strong> Explica con tus propias palabras la diferencia fundamental entre la definición cotidiana de "trabajo" (ej. hacer la tarea) y la definición de "Trabajo Mecánico" en física.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>2.</strong> Imagina que empujas un camión averiado con una fuerza enorme durante 15 minutos. Sudas y te cansas, pero el camión es tan pesado que no se mueve ni un centímetro. Físicamente hablando, ¿cuánto Trabajo Mecánico realizaste? Justifica usando la fórmula.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Dibujar</span>
+                        <div class="activity-text"><strong>3.</strong> Dibuja a un campesino arrastrando un tronco pesado atado con una cuerda. La cuerda está inclinada. Usa flechas (vectores) de color rojo para señalar la dirección de la <strong>fuerza</strong> aplicada por la cuerda y la dirección del <strong>desplazamiento</strong> del tronco. Señala el ángulo.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Conceptual</span>
+                        <div class="activity-text"><strong>4.</strong> Elabora un mapa conceptual sobre el "Trabajo Mecánico". Debe incluir la fórmula ($W = F \times d$), las tres variables principales (Fuerza, Distancia, Trabajo) y la unidad de medida correspondiente (SI) para cada una.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>5.</strong> Según el texto, ¿qué sucede con el Trabajo Mecánico si la fuerza se aplica en un ángulo de $90^\circ$ (perpendicular) respecto al desplazamiento? Da el ejemplo del bulto mencionado en la lectura.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>6.</strong> La <strong>fricción</strong> es una fuerza presente en el campo y en la ciudad. Si arrastramos una caja sobre asfalto rugoso, ¿qué tipo de trabajo (positivo, nulo o negativo) realiza la fuerza de fricción sobre la caja y por qué?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Ilustrar</span>
+                        <div class="activity-text"><strong>7.</strong> Realiza un dibujo ilustrando un ejemplo claro de "Trabajo Positivo". Dibuja a un caballo o un tractor tirando de un arado horizontalmente, asegurándote de que la fuerza y el movimiento vayan en la misma dirección.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Mental</span>
+                        <div class="activity-text"><strong>8.</strong> Diseña un mapa mental titulado "Transferencia de Energía al Levantar Peso". Muestra cómo la energía química de tu cuerpo se convierte en trabajo mecánico, y cómo este trabajo se almacena en el objeto levantado en forma de Energía Potencial (luchando contra la gravedad).</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>9.</strong> ¿De dónde proviene la letra $W$ que se utiliza internacionalmente para representar el Trabajo Mecánico en las fórmulas de física?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>10.</strong> Dos trabajadores deben subir cajas idénticas a un camión de 2 metros de altura. El trabajador 'A' levanta la caja directamente en línea recta vertical. El trabajador 'B' usa una rampa inclinada de 6 metros para empujar la caja. Ambos elevan la carga a la misma altura, realizando el mismo trabajo contra la gravedad. ¿Por qué crees que el trabajador 'B' usa la rampa aunque la distancia sea mayor?</div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="win-modal">
+    <div class="modal-content">
+        <!-- SVG Trophy -->
+        <svg style="width: 90px; height: 90px; margin: 0 auto 15px auto; display: block; fill: var(--secondary);" viewBox="0 0 24 24">
+            <path d="M20.2 2H19.5H18C17.1 2 16 3 16 4V4.5H8V4C8 3 6.9 2 6 2H4.5H3.8C2.8 2 2 2.8 2 3.8V7.5C2 9.5 3.3 11.2 5.1 11.8C5.7 13.9 7.7 15.4 10 15.8V19H7V21H17V19H14V15.8C16.3 15.4 18.3 13.9 18.9 11.8C20.7 11.2 22 9.5 22 7.5V3.8C22 2.8 21.2 2 20.2 2ZM4 7.5V4H6V9.8C4.8 9.2 4 8.4 4 7.5ZM20 7.5C20 8.4 19.2 9.2 18 9.8V4H20V7.5Z"/>
+        </svg>
+        <h2 style="color: var(--primary); font-size: 2.2rem; margin-bottom: 15px;">¡Labor Completada!</h2>
+        <p style="font-size: 1.25rem; margin-bottom: 25px; color: #64748b;">Has descifrado todas las fuerzas del tablero.</p>
+        <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="font-size: 1.15rem; margin-bottom: 8px;"><strong>Tiempo:</strong> <span id="final-time" style="color: var(--secondary); font-weight: 800;"></span></p>
+            <p style="font-size: 1.15rem;"><strong>Calificación:</strong> <span id="final-stars" class="stars"></span></p>
+        </div>
+        <button class="btn-restart" onclick="initGame()">Analizar Otro Sistema</button>
+    </div>
+</div>
+
+<script>
+    /* Configuration: EXACTLY 10 Keywords */
+    const RAW_WORDS = [
+        "TRABAJO", 
+        "FUERZA", 
+        "DISTANCIA", 
+        "JULIOS", 
+        "ENERGIA", 
+        "DESPLAZAMIENTO", 
+        "VECTORES", 
+        "ANGULO", 
+        "FRICCION", 
+        "NEWTONS"
+    ];
+    
+    const GRID_SIZE = 15; // 15x15 requirement
+    const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+    
+    // Global State
+    let wordsToFind = [];
+    let foundWords = [];
+    let grid = [];
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    
+    // Drag Interaction State
+    let isDragging = false;
+    let startRow = -1;
+    let startCol = -1;
+    let currentPath = []; // DOM elements path
+
+    function normalizeWords(words) {
+        return words.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    }
+
+    function initGame() {
+        wordsToFind = normalizeWords(RAW_WORDS);
+        foundWords = [];
+        secondsElapsed = 0;
+        
+        if(timerInterval) clearInterval(timerInterval);
+        
+        document.getElementById("win-modal").style.display = "none";
+        document.getElementById("timer").textContent = "00:00";
+        document.getElementById("counter").textContent = `0 / ${wordsToFind.length}`;
+        updateRating();
+
+        renderWordsList();
+        generateBoard();
+        
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById("timer").textContent = `${m}:${s}`;
+            updateRating();
+        }, 1000);
+    }
+
+    // CRITICAL: Exhaustive algorithm ensures NO words are left behind.
+    function generateBoard() {
+        let boardPlaced = false;
+        
+        while (!boardPlaced) {
+            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
+            boardPlaced = true;
+
+            // Sorting by length descending drastically improves placement success probability
+            const sortedWords = [...wordsToFind].sort((a, b) => b.length - a.length);
+
+            for (const word of sortedWords) {
+                let placed = false;
+                let attempts = 0;
+                const maxAttempts = 600; // Deep exhaustive search per word
+
+                while (!placed && attempts < maxAttempts) {
+                    // Directions: 0: N, 1: NE, 2: E, 3: SE, 4: S, 5: SW, 6: W, 7: NW
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * GRID_SIZE);
+                    const col = Math.floor(Math.random() * GRID_SIZE);
+
+                    if (canPlaceWord(word, row, col, direction)) {
+                        placeWord(word, row, col, direction);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+
+                if (!placed) {
+                    // A single word failed to place after 600 attempts. 
+                    // To guarantee all 10 words exist, wipe the board and start everything again.
+                    boardPlaced = false;
+                    break; 
+                }
+            }
+        }
+
+        // Fill remaining empty cells with random letters
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+                }
+            }
+        }
+
+        renderGrid();
+    }
+
+    function canPlaceWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            const nr = r + i * dr[dir];
+            const nc = c + i * dc[dir];
+
+            if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+            // Space must be empty or match the letter
+            if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+        }
+        return true;
+    }
+
+    function placeWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            grid[r + i * dr[dir]][c + i * dc[dir]] = word[i];
+        }
+    }
+
+    function renderWordsList() {
+        const container = document.getElementById("words-list");
+        container.innerHTML = "";
+        wordsToFind.forEach(word => {
+            const div = document.createElement("div");
+            div.className = "word-item";
+            div.id = `word-${word}`;
+            div.textContent = word;
+            container.appendChild(div);
+        });
+    }
+
+    function renderGrid() {
+        const container = document.getElementById("grid");
+        container.innerHTML = "";
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.textContent = grid[r][c];
+                container.appendChild(cell);
+            }
+        }
+        
+        setupPointerInteractions();
+    }
+
+    function updateRating() {
+        let stars = 5;
+        if (secondsElapsed > 300) stars = 1;      // > 5 mins
+        else if (secondsElapsed > 240) stars = 2; // > 4 mins
+        else if (secondsElapsed > 180) stars = 3; // > 3 mins
+        else if (secondsElapsed > 120) stars = 4; // > 2 mins
+
+        const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+        document.getElementById("rating").textContent = starStr;
+    }
+
+    function setupPointerInteractions() {
+        const gridEl = document.getElementById("grid");
+        
+        // Critical block for mobile: stops accidental scroll while drawing lines
+        gridEl.addEventListener('touchstart', (e) => {
+            if(e.target.classList.contains('cell')) {
+                e.preventDefault(); 
+            }
+        }, { passive: false });
+
+        gridEl.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("pointermove", handlePointerMove);
+        document.addEventListener("pointerup", handlePointerUp);
+    }
+
+    function handlePointerDown(e) {
+        if (e.target.classList.contains('cell')) {
+            isDragging = true;
+            startRow = parseInt(e.target.dataset.row);
+            startCol = parseInt(e.target.dataset.col);
+            
+            clearSelection();
+            e.target.classList.add('selecting');
+            currentPath = [e.target];
+        }
+    }
+
+    function handlePointerMove(e) {
+        if (!isDragging) return;
+        
+        // 'elementFromPoint' correctly gets the element underneath the pointer 
+        // as the user drags across the screen, regardless of touchstart origin.
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        
+        if (target && target.classList.contains('cell')) {
+            const currentRow = parseInt(target.dataset.row);
+            const currentCol = parseInt(target.dataset.col);
+            
+            updateSelectionLine(startRow, startCol, currentRow, currentCol);
+        }
+    }
+
+    function handlePointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        validateFoundWord();
+        clearSelection();
+    }
+
+    function updateSelectionLine(r1, c1, r2, c2) {
+        const dr = r2 - r1;
+        const dc = c2 - c1;
+        
+        // Validation: Ensure the line is strictly horizontal, vertical, or perfectly diagonal (45deg)
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+            return; // Not a straight physics vector path
+        }
+
+        clearSelection();
+        currentPath = [];
+
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+        for (let i = 0; i <= steps; i++) {
+            const currR = r1 + i * stepR;
+            const currC = c1 + i * stepC;
+            const cell = document.querySelector(`.cell[data-row="${currR}"][data-col="${currC}"]`);
+            if (cell) {
+                cell.classList.add('selecting');
+                currentPath.push(cell);
+            }
+        }
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.selecting').forEach(el => el.classList.remove('selecting'));
+    }
+
+    function validateFoundWord() {
+        if (currentPath.length < 2) return;
+
+        let selectedWord = currentPath.map(cell => cell.textContent).join('');
+        let selectedWordReverse = currentPath.map(cell => cell.textContent).reverse().join('');
+        
+        let found = false;
+        let wordMatched = "";
+
+        // Check both forward and backward readings
+        if (wordsToFind.includes(selectedWord) && !foundWords.includes(selectedWord)) {
+            found = true;
+            wordMatched = selectedWord;
+        } else if (wordsToFind.includes(selectedWordReverse) && !foundWords.includes(selectedWordReverse)) {
+            found = true;
+            wordMatched = selectedWordReverse;
+        }
+
+        if (found) {
+            foundWords.push(wordMatched);
+            
+            // Mark cells found and trigger CSS scale pop
+            currentPath.forEach(cell => {
+                cell.classList.add('found');
+                cell.style.transform = 'scale(1.15)';
+                setTimeout(() => cell.style.transform = 'scale(1)', 150);
+            });
+
+            // Update UI
+            document.getElementById(`word-${wordMatched}`).classList.add('found');
+            document.getElementById("counter").textContent = `${foundWords.length} / ${wordsToFind.length}`;
+
+            // Win Condition Check
+            if (foundWords.length === wordsToFind.length) {
+                clearInterval(timerInterval);
+                setTimeout(showWinModal, 600);
+            }
+        }
+    }
+
+    function showWinModal() {
+        document.getElementById("final-time").textContent = document.getElementById("timer").textContent;
+        document.getElementById("final-stars").textContent = document.getElementById("rating").textContent;
+        document.getElementById("win-modal").style.display = "flex";
+    }
+
+    // Start application when DOM loads
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>

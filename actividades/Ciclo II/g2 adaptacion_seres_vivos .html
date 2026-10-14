@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Adaptaciones de los Seres Vivos</title>
+    <style>
+        /* STREAMING_CHUNK:Configurando variables y estilos base... */
+        :root {
+            /* Tema del Juego (Naturaleza / Bosque) */
+            --game-bg: #14532d;
+            --game-text: #f0fdf4;
+            --game-card-bg: #166534;
+            --game-card-border: #22c55e;
+            --primary: #4ade80;
+            --primary-light: rgba(74, 222, 128, 0.25);
+            --success: #86efac;
+            --success-light: rgba(134, 239, 172, 0.3);
+            --error: #fca5a5;
+            --error-light: rgba(252, 165, 165, 0.3);
+            
+            /* Tema de Lectura (Claro) */
+            --read-bg: #f8fafc;
+            --read-text: #334155;
+            --read-heading: #1e293b;
+            --read-accent: #15803d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        /* STREAMING_CHUNK:Estilizando la zona de juego interactivo... */
+        #zona-juego {
+            background-color: var(--game-bg);
+            background-image: radial-gradient(circle at center, #166534 0%, #14532d 100%);
+            color: var(--game-text);
+            padding: clamp(15px, 3vw, 30px);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .game-header {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .instructions {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: #dcfce7;
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.25);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-weight: bold;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            margin-bottom: 20px;
+        }
+
+        .stat-value { color: var(--primary); }
+        .score-value { color: #fde047; transition: color 0.3s; }
+
+        .game-board {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(10px, 2vw, 20px);
+            flex-grow: 1;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .column-title {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #bbf7d0;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        /* STREAMING_CHUNK:Definiendo tarjetas interactivas y sus estados... */
+        .card {
+            background: var(--game-card-bg);
+            border: 2px solid var(--game-card-border);
+            border-radius: 10px;
+            padding: clamp(12px, 3vw, 18px);
+            font-size: clamp(13px, 3.5vw, 16px);
+            cursor: pointer;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            min-height: 85px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .card-concept {
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 17px);
+        }
+
+        .card-definition {
+            justify-content: flex-start;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .card:hover {
+            border-color: #86efac;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.4);
+            transform: scale(1.02);
+            color: #fff;
+        }
+
+        .card.matched {
+            border-color: var(--success);
+            background: rgba(255,255,255,0.05);
+            color: #86efac;
+            opacity: 0.5;
+            pointer-events: none;
+            transform: scale(1);
+            box-shadow: none;
+        }
+
+        .card.error {
+            border-color: var(--error);
+            background: var(--error-light);
+            color: #fee2e2;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        /* STREAMING_CHUNK:Componentes de UI superpuestos... */
+        #victory-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            color: #166534;
+            padding: 40px;
+            border-radius: 16px;
+            border: 4px solid var(--success);
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            z-index: 10;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        #victory-screen h2 {
+            color: #15803d;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .scroll-indicator {
+            margin-top: 30px;
+            padding: 10px;
+            color: #bbf7d0;
+            font-size: 1rem;
+            text-align: center;
+            animation: bounce 2s infinite;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* STREAMING_CHUNK:Maquetación de la Zona de Lectura... */
+        #zona-lectura {
+            padding: clamp(30px, 5vw, 60px) clamp(15px, 4vw, 30px);
+            background: var(--read-bg);
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: clamp(25px, 5vw, 50px);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .article-container h2 {
+            color: var(--read-accent);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--read-accent);
+            line-height: 1.2;
+        }
+
+        .article-container h3 {
+            color: var(--read-heading);
+            font-size: 1.5rem;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .article-container p {
+            margin-bottom: 20px;
+            font-size: 1.15rem;
+            text-align: justify;
+            color: #475569;
+        }
+
+        .article-container ul {
+            margin-bottom: 20px;
+            padding-left: 30px;
+            font-size: 1.15rem;
+            color: #475569;
+        }
+
+        .article-container li {
+            margin-bottom: 10px;
+        }
+
+        /* STREAMING_CHUNK:Estilos del Taller y Tarjetas de Actividad... */
+        .workshop-section {
+            margin-top: 60px;
+            border-top: 3px dashed #cbd5e1;
+            padding-top: 40px;
+        }
+
+        .workshop-header {
+            background: var(--read-accent);
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .instruction-alert {
+            background: #fef2f2;
+            color: #b91c1c;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            border: 2px solid #fecaca;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .activity-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+            transition: box-shadow 0.3s;
+        }
+
+        .activity-card:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        }
+
+        .activity-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+        }
+
+        /* Colores por tipo de actividad */
+        .type-responder::before { background-color: #3b82f6; }
+        .type-analizar::before { background-color: #f59e0b; }
+        .type-dibujar::before { background-color: #8b5cf6; }
+        .type-mapa::before { background-color: #10b981; }
+
+        .type-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .type-responder .type-label { color: #3b82f6; }
+        .type-analizar .type-label { color: #f59e0b; }
+        .type-dibujar .type-label { color: #8b5cf6; }
+        .type-mapa .type-label { color: #10b981; }
+
+        .activity-text {
+            font-size: 1.15rem;
+            color: var(--read-text);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- STREAMING_CHUNK:Estructura HTML de la zona de juego... -->
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Adaptaciones de los Seres Vivos</h1>
+                <div class="instructions">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <strong>Misión:</strong> Toca un concepto en la columna izquierda y luego toca su definición correspondiente en la derecha para emparejarlos.
+                </div>
+                <div class="stats-bar">
+                    <span>Tiempo: <span id="timer" class="stat-value">00:00</span></span>
+                    <span>Pares: <span id="counter" class="stat-value">0/8</span></span>
+                    <span>Nota: <span id="grade" class="score-value">5.0</span></span>
+                </div>
+            </div>
+
+            <div class="game-board">
+                <div class="column" id="col-concepts">
+                    <div class="column-title">Concepto Adaptativo</div>
+                    <!-- JS generará tarjetas aquí -->
+                </div>
+                <div class="column" id="col-definitions">
+                    <div class="column-title">Definición / Función</div>
+                    <!-- JS generará tarjetas aquí -->
+                </div>
+            </div>
+
+            <div id="victory-screen">
+                <h2>¡Misión Biológica Completada!</h2>
+                <p>Has emparejado correctamente todas las adaptaciones.</p>
+                <div style="font-size: 5rem; margin: 15px 0;">🌍</div>
+                <p style="font-size: 1.3rem; margin-bottom: 20px;">Tu calificación es: <strong id="final-grade" style="font-size: 2rem;">5.0</strong></p>
+                <button onclick="location.reload()" style="background: #15803d; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1.1rem; cursor: pointer;">Jugar de Nuevo</button>
+            </div>
+
+            <div class="scroll-indicator">
+                ▼ Desliza hacia abajo para leer la teoría y hacer el taller ▼
+            </div>
+        </section>
+
+        <!-- STREAMING_CHUNK:Artículo teórico y pedagógico... -->
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Sobrevivir en la Naturaleza: El Arte de la Adaptación</h2>
+                
+                <p>Imagina que de repente te encuentras en el Polo Norte vistiendo solo un traje de baño, o en el desierto más caluroso usando un abrigo de lana gruesa. Sería casi imposible sobrevivir, ¿verdad? Para los seres vivos, la naturaleza presenta retos extremos todos los días: frío intenso, calor abrasador, escasez de agua, o la amenaza constante de depredadores hambrientos.</p>
+
+                <p>Para enfrentar estos retos, las plantas y los animales han desarrollado soluciones asombrosas a lo largo de miles o millones de años. A estas soluciones las llamamos <strong>adaptaciones</strong>. Una adaptación es cualquier característica física, funcionamiento del cuerpo o comportamiento que ayuda a un ser vivo a sobrevivir y reproducirse en su ecosistema específico. Si una especie no logra adaptarse a los cambios de su entorno, lamentablemente se extingue.</p>
+
+                <h3>1. Adaptaciones Morfológicas (El aspecto físico)</h3>
+                <p>Estas son las adaptaciones que podemos ver fácilmente, pues tienen que ver con la forma del cuerpo, los colores o las estructuras físicas (alas, picos, garras, hojas).</p>
+                <ul>
+                    <li><strong>Camuflaje:</strong> Es la habilidad de un animal para confundirse con los colores y formas de su hábitat. Por ejemplo, los osos polares tienen pelaje blanco para mezclarse con la nieve y acercarse a sus presas sin ser vistos. El insecto palo o el insecto hoja son expertos en parecer parte de una planta.</li>
+                    <li><strong>Mimetismo:</strong> Ocurre cuando una especie inofensiva se "disfraza" y copia la apariencia de una especie venenosa o peligrosa. Así, los depredadores se asustan y no se la comen. Un ejemplo clásico es la falsa serpiente coral, que copia los anillos rojos, negros y blancos de la coral verdadera y venenosa.</li>
+                    <li><strong>Espinas en lugar de hojas:</strong> En el desierto, plantas como los cactus han transformado sus hojas en espinas afiladas. Esto tiene un doble propósito: evita que la planta pierda agua por el calor del sol y la protege de animales sedientos que quieran comérsela.</li>
+                </ul>
+
+                <h3>2. Adaptaciones Fisiológicas (El funcionamiento interno)</h3>
+                <p>Estas adaptaciones ocurren en el interior del cuerpo del organismo. Son cambios en el metabolismo o en el funcionamiento de sus órganos para sobrevivir a condiciones difíciles.</p>
+                <ul>
+                    <li><strong>Hibernación:</strong> Durante el crudo invierno, la comida escasea y hace mucho frío. Animales como los osos, marmotas o murciélagos entran en un estado de sueño profundo. Su ritmo cardíaco y su respiración disminuyen drásticamente para gastar la mínima energía posible, sobreviviendo gracias a la grasa corporal acumulada en verano.</li>
+                    <li><strong>Producción de Veneno:</strong> Muchos animales, como ciertas ranas de la selva (ranas dardo), serpientes o arañas, tienen glándulas especiales que producen toxinas mortales. Esta es una adaptación química interna que usan tanto para cazar como para defenderse.</li>
+                    <li><strong>Respiración bajo el agua:</strong> Los peces han desarrollado órganos especiales llamados <strong>branquias</strong>, que funcionan como filtros mágicos capaces de atrapar el gas oxígeno que está disuelto en el agua de los ríos y océanos, permitiéndoles respirar sin salir a la superficie.</li>
+                </ul>
+
+                <h3>3. Adaptaciones Etológicas (El comportamiento)</h3>
+                <p>Estas son las acciones o conductas que los animales aprenden o realizan por instinto para sobrevivir mejor.</p>
+                <ul>
+                    <li><strong>Migración:</strong> Cuando las estaciones cambian y el clima se vuelve muy hostil, muchos animales emprenden viajes de miles de kilómetros. Las aves migratorias viajan hacia el sur antes del invierno buscando calor y alimento, y regresan en primavera.</li>
+                    <li><strong>Vivir en manada:</strong> Los lobos, elefantes o pingüinos emperador saben que "la unión hace la fuerza". Vivir en grupo es una adaptación de comportamiento vital: les ayuda a cazar presas más grandes, proteger a sus crías de depredadores, e incluso darse calor unos a otros.</li>
+                </ul>
+
+                <h3>4. Nuestro Ecosistema Local: El Páramo</h3>
+                <p>En las altas montañas de Colombia, en ecosistemas fríos y húmedos como el páramo, habita una planta majestuosa: el <strong>frailejón</strong>. Si lo tocas, notarás que sus hojas parecen orejas de conejo, gruesas y cubiertas de "pelitos". ¡Esa es su gran adaptación! Ese pelaje blanco atrapa la humedad de la neblina para obtener agua, actúa como un suéter térmico que la protege del frío extremo nocturno, y funciona como un escudo contra los fuertes rayos solares de la altura.</p>
+
+                <p>Como ves, la naturaleza es un laboratorio de ingeniería y diseño perfecto, donde cada detalle tiene un propósito: asegurar el triunfo de la vida.</p>
+
+                <!-- STREAMING_CHUNK:Taller de repaso estructurado... -->
+                <div class="workshop-section">
+                    <div class="workshop-header">
+                        TALLER DE REPASO Y APLICACIÓN
+                    </div>
+                    
+                    <div class="instruction-alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        INSTRUCCIÓN: Escribe, desarrolla y resuelve de forma completa cada una de las siguientes 10 actividades en tu cuaderno de biología.
+                    </div>
+
+                    <!-- Act 1 -->
+                    <div class="activity-card type-responder">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            1. Responder Directamente
+                        </div>
+                        <div class="activity-text">Basándote en el texto, define con tus propias palabras qué es una <strong>adaptación</strong> biológica y cuál es su objetivo principal.</div>
+                    </div>
+
+                    <!-- Act 2 -->
+                    <div class="activity-card type-analizar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            2. Analizar Críticamente
+                        </div>
+                        <div class="activity-text">Imagina que un oso polar adulto es trasladado a la cálida selva del Amazonas. Analiza y explica: ¿Por qué sus adaptaciones (pelaje grueso y color blanco) se convertirían en una desventaja mortal en ese nuevo ecosistema?</div>
+                    </div>
+
+                    <!-- Act 3 -->
+                    <div class="activity-card type-dibujar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+                            3. Dibujar / Ilustrar
+                        </div>
+                        <div class="activity-text">Dibuja un cactus en el desierto. Señala claramente sus espinas e incluye un pequeño texto al lado del dibujo explicando las dos funciones fundamentales de estas hojas modificadas.</div>
+                    </div>
+
+                    <!-- Act 4 -->
+                    <div class="activity-card type-mapa">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                            4. Mapa Conceptual
+                        </div>
+                        <div class="activity-text">Elabora un mapa conceptual sobre los "Tipos de Adaptaciones". El título central debe conectarse con tres ramas: Morfológicas, Fisiológicas y Etológicas. Debajo de cada rama, escribe un ejemplo del texto.</div>
+                    </div>
+
+                    <!-- Act 5 -->
+                    <div class="activity-card type-responder">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            5. Responder Directamente
+                        </div>
+                        <div class="activity-text">¿Cuál es la diferencia exacta entre el camuflaje y el mimetismo? Explica cómo usa cada estrategia un animal diferente para engañar a los depredadores.</div>
+                    </div>
+
+                    <!-- Act 6 -->
+                    <div class="activity-card type-analizar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            6. Analizar Críticamente
+                        </div>
+                        <div class="activity-text">Si las aves migratorias viajan miles de kilómetros gastando muchísima energía cada año, ¿por qué simplemente no se quedan e hibernan en invierno como los osos? Piensa en cómo consiguen alimento las aves frente a los osos y argumenta.</div>
+                    </div>
+
+                    <!-- Act 7 -->
+                    <div class="activity-card type-dibujar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+                            7. Dibujar / Ilustrar
+                        </div>
+                        <div class="activity-text">Dibuja un ecosistema de páramo e ilustra un Frailejón. Colorea y señala con flechas sus "pelitos", escribiendo las tres funciones vitales que cumplen estos pelos según la lectura.</div>
+                    </div>
+
+                    <!-- Act 8 -->
+                    <div class="activity-card type-mapa">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                            8. Cuadro Comparativo
+                        </div>
+                        <div class="activity-text">Dibuja una tabla con dos columnas. En una columna pon "Adaptaciones que ocurren dentro del cuerpo (Fisiológicas)" y en la otra "Adaptaciones de comportamiento (Etológicas)". Ubica allí: Hibernación, Migración, Producción de veneno, Vivir en manada.</div>
+                    </div>
+
+                    <!-- Act 9 -->
+                    <div class="activity-card type-responder">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            9. Responder Directamente
+                        </div>
+                        <div class="activity-text">¿Qué órgano desarrollaron los peces para poder respirar bajo el agua y cómo funciona este "filtro mágico"?</div>
+                    </div>
+
+                    <!-- Act 10 -->
+                    <div class="activity-card type-analizar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            10. Analizar Críticamente
+                        </div>
+                        <div class="activity-text">Debido al cambio climático, algunos desiertos se están volviendo aún más calientes y secos año tras año. Si una especie de planta no logra cambiar y adaptar sus características a esta nueva temperatura en los próximos siglos, ¿qué le sucederá inevitablemente y por qué?</div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- STREAMING_CHUNK:Lógica JavaScript completa y funcional... -->
+    <script>
+        // Datos del juego (8 conceptos vitales de la lectura)
+        const gameData = [
+            { id: 1, concept: "Adaptación", definition: "Característica que ayuda a un ser vivo a sobrevivir y reproducirse en su entorno." },
+            { id: 2, concept: "Camuflaje", definition: "Habilidad física para confundirse con los colores y formas del paisaje." },
+            { id: 3, concept: "Mimetismo", definition: "Capacidad de una especie inofensiva para parecerse a otra peligrosa." },
+            { id: 4, concept: "Hibernación", definition: "Sueño profundo en invierno donde disminuye la respiración para ahorrar energía." },
+            { id: 5, concept: "Migración", definition: "Viaje largo que realizan animales buscando mejor clima y alimento." },
+            { id: 6, concept: "Espinas", definition: "Hojas modificadas de plantas del desierto para evitar perder agua." },
+            { id: 7, concept: "Branquias", definition: "Órganos especiales que permiten a los peces extraer oxígeno del agua." },
+            { id: 8, concept: "Pelaje de Frailejón", definition: "Capa que atrapa humedad y protege del frío y el sol en el páramo." }
+        ];
+
+        const totalPairs = gameData.length;
+        
+        // Estado del juego
+        let selectedConcept = null;
+        let selectedDefinition = null;
+        let matchedCount = 0;
+        let currentGrade = 5.0;
+        
+        // Tiempo
+        let seconds = 0;
+        let timerInterval = null;
+        let timerStarted = false;
+
+        // Referencias DOM
+        const colConcepts = document.getElementById('col-concepts');
+        const colDefinitions = document.getElementById('col-definitions');
+        const uiCounter = document.getElementById('counter');
+        const uiGrade = document.getElementById('grade');
+        const uiTimer = document.getElementById('timer');
+        const victoryScreen = document.getElementById('victory-screen');
+        const finalGrade = document.getElementById('final-grade');
+
+        // Utilidad para desordenar arreglos
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Inicializar el juego
+        function initGame() {
+            // Mezclar independientemente conceptos y definiciones
+            const conceptsShuffled = shuffleArray(gameData);
+            const definitionsShuffled = shuffleArray(gameData);
+
+            // Renderizar Columna Conceptos
+            conceptsShuffled.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card card-concept';
+                card.textContent = item.concept;
+                card.dataset.id = item.id;
+                card.dataset.type = 'concept';
+                card.addEventListener('click', () => handleCardClick(card));
+                colConcepts.appendChild(card);
+            });
+
+            // Renderizar Columna Definiciones
+            definitionsShuffled.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card card-definition';
+                card.textContent = item.definition;
+                card.dataset.id = item.id;
+                card.dataset.type = 'definition';
+                card.addEventListener('click', () => handleCardClick(card));
+                colDefinitions.appendChild(card);
+            });
+        }
+
+        // Lógica al tocar una carta
+        function handleCardClick(cardElement) {
+            // No hacer nada si ya está resuelta
+            if (cardElement.classList.contains('matched')) return;
+
+            // Iniciar tiempo al primer toque
+            if (!timerStarted) {
+                startTimer();
+                timerStarted = true;
+            }
+
+            const type = cardElement.dataset.type;
+
+            if (type === 'concept') {
+                if (selectedConcept === cardElement) {
+                    cardElement.classList.remove('selected');
+                    selectedConcept = null;
+                } else {
+                    if (selectedConcept) selectedConcept.classList.remove('selected');
+                    selectedConcept = cardElement;
+                    selectedConcept.classList.add('selected');
+                }
+            } else if (type === 'definition') {
+                if (selectedDefinition === cardElement) {
+                    cardElement.classList.remove('selected');
+                    selectedDefinition = null;
+                } else {
+                    if (selectedDefinition) selectedDefinition.classList.remove('selected');
+                    selectedDefinition = cardElement;
+                    selectedDefinition.classList.add('selected');
+                }
+            }
+
+            // Validar si hay dos seleccionados
+            if (selectedConcept && selectedDefinition) {
+                validateMatch();
+            }
+        }
+
+        // Validación de aciertos o errores
+        function validateMatch() {
+            const idConcept = selectedConcept.dataset.id;
+            const idDef = selectedDefinition.dataset.id;
+            
+            const card1 = selectedConcept;
+            const card2 = selectedDefinition;
+
+            if (idConcept === idDef) {
+                // MATCH CORRECTO
+                card1.classList.remove('selected');
+                card2.classList.remove('selected');
+                
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                
+                matchedCount++;
+                updateUI();
+                
+                if (matchedCount === totalPairs) {
+                    endGame();
+                }
+            } else {
+                // ERROR
+                currentGrade = Math.max(1.0, currentGrade - 0.25); // Resta 0.25 por fallo
+                updateUI();
+
+                card1.classList.remove('selected');
+                card2.classList.remove('selected');
+                
+                card1.classList.add('error', 'shake');
+                card2.classList.add('error', 'shake');
+
+                // Limpiar clases después de animación
+                setTimeout(() => {
+                    card1.classList.remove('error', 'shake');
+                    card2.classList.remove('error', 'shake');
+                }, 500);
+            }
+
+            // Resetear selecciones
+            selectedConcept = null;
+            selectedDefinition = null;
+        }
+
+        // Actualizar marcadores
+        function updateUI() {
+            uiCounter.textContent = `${matchedCount}/${totalPairs}`;
+            uiGrade.textContent = currentGrade.toFixed(1);
+            
+            if (currentGrade < 3.0) {
+                uiGrade.style.color = "#fca5a5"; // Rojo pastel
+            } else if (currentGrade < 4.0) {
+                uiGrade.style.color = "#fdba74"; // Naranja
+            } else {
+                uiGrade.style.color = "#fde047"; // Amarillo
+            }
+        }
+
+        // Sistema de Cronómetro
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                uiTimer.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Fin de la partida
+        function endGame() {
+            clearInterval(timerInterval);
+            
+            setTimeout(() => {
+                victoryScreen.style.display = 'block';
+                finalGrade.textContent = currentGrade.toFixed(1);
+                
+                if (currentGrade < 3.0) {
+                    finalGrade.style.color = "#b91c1c"; // Rojo oscuro
+                } else if (currentGrade < 4.0) {
+                    finalGrade.style.color = "#c2410c"; // Naranja oscuro
+                } else {
+                    finalGrade.style.color = "#15803d"; // Verde
+                }
+            }, 500);
+        }
+
+        // Lanzar
+        window.onload = initGame;
+    </script>
+</body>
+</html>
+```eof

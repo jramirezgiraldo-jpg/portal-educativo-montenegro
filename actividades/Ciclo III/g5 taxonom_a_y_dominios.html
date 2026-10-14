@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Taxonomía y Dominios</title>
+    <style>
+        :root {
+            --primary: #0277bd;
+            --primary-light: #e1f5fe;
+            --secondary: #009688;
+            --secondary-light: #e0f2f1;
+            --text-dark: #263238;
+            --text-light: #eceff1;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --success: #388e3c;
+            --error: #d32f2f;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: clamp(10px, 2vw, 20px);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), #01579b);
+            color: white;
+            padding: clamp(15px, 3vw, 25px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.15);
+            padding: 12px;
+            border-radius: 8px;
+            gap: 10px;
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            font-weight: bold;
+        }
+
+        .stat-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .stars {
+            color: #ffd54f;
+            letter-spacing: 2px;
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+        }
+
+        #zona-juego {
+            background: var(--card-bg);
+            padding: clamp(10px, 3vw, 20px);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .words-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(5px, 1vw, 10px);
+            margin-bottom: 20px;
+        }
+
+        .word-item {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            font-weight: 600;
+            transition: var(--transition);
+            border: 1px solid rgba(2, 119, 189, 0.2);
+        }
+
+        .word-item.found {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .grid-wrapper {
+            width: 100%;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: clamp(1px, 0.5vw, 3px);
+            /* CRITICAL FOR TOUCH: Prevent scroll/zoom while dragging */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            background: #cfd8dc;
+            border: 3px solid var(--primary);
+            border-radius: 8px;
+            padding: clamp(2px, 1vw, 5px);
+        }
+
+        .cell {
+            background: #fff;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(11px, 3.5vw, 20px);
+            font-weight: 700;
+            color: var(--text-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s;
+        }
+
+        .cell.selecting {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .cell.found {
+            background: var(--success);
+            color: white;
+        }
+
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(38, 50, 56, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-restart {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .btn-restart:hover {
+            background: #00796b;
+        }
+
+        #zona-lectura {
+            background: var(--card-bg);
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .article-content {
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+            color: #374151;
+        }
+
+        .article-content h2 {
+            color: var(--primary);
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .article-content h3 {
+            color: var(--secondary);
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            margin: 25px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .article-content h3::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 24px;
+            background-color: var(--secondary);
+            border-radius: 4px;
+        }
+
+        .article-content p {
+            margin-bottom: 15px;
+            text-align: justify;
+            line-height: 1.7;
+        }
+
+        .article-content ul {
+            margin: 15px 0 20px 30px;
+            background: var(--secondary-light);
+            padding: 15px 15px 15px 35px;
+            border-radius: 8px;
+        }
+
+        .article-content li {
+            margin-bottom: 10px;
+        }
+
+        .highlight-box {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+
+        .workshop-section {
+            margin-top: 50px;
+            background: #f8fdff;
+            padding: clamp(20px, 4vw, 30px);
+            border-radius: 12px;
+            border: 2px solid var(--primary-light);
+        }
+
+        .workshop-section h2 {
+            color: #0277bd;
+            border-bottom: none;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: clamp(1.6rem, 3.5vw, 2rem);
+        }
+
+        .workshop-instruction {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #c62828;
+            border: 1px dashed #ef9a9a;
+            font-size: clamp(1rem, 2.5vw, 1.15rem);
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-list li {
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        @media (min-width: 600px) {
+            .activity-list li {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .activity-type {
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+            text-align: center;
+            width: fit-content;
+        }
+
+        .activity-type.respond { background: #0288d1; }
+        .activity-type.analysis { background: #f57c00; }
+        .activity-type.drawing { background: #7b1fa2; }
+        .activity-type.map { background: #388e3c; }
+
+        .activity-text {
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            color: #424242;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Taxonomía y Dominios</h1>
+        <p class="instruction">Instrucción: Encuentra las 10 palabras clave del tema deslizando tu dedo o ratón.</p>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <!-- Inline SVG for Clock -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat-box">
+                <!-- Inline SVG for Checkmark -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span id="counter">0 / 10</span>
+            </div>
+            <div class="stat-box">
+                <span id="rating" class="stars">★★★★★</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="words-list" class="words-container">
+                <!-- Words injected by JS -->
+            </div>
+            
+            <div class="grid-wrapper">
+                <div id="grid" class="letter-grid">
+                    <!-- Grid injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>El Árbol de la Vida: Taxonomía y los Dominios Biológicos</h2>
+                
+                <p>Nuestro planeta alberga una cantidad asombrosa de seres vivos. Desde las gigantescas ballenas azules y las imponentes secuoyas, hasta millones de microorganismos invisibles a simple vista. Ante tanta diversidad, los científicos se enfrentaron a un problema monumental: ¿cómo podemos organizar, nombrar y estudiar a todos estos seres sin confundirnos? La respuesta a este desafío científico se llama <strong>Taxonomía</strong>.</p>
+
+                <p>La Taxonomía es la rama de la biología responsable de clasificar y dar nombre a todos los organismos vivos. Funciona de manera similar a cómo organizamos un supermercado: agrupamos los productos lácteos en un pasillo, las frutas en otro, y las carnes en otro distinto. Esta organización sistemática es fundamental para comprender las relaciones evolutivas, conservar la biodiversidad y facilitar la comunicación científica a nivel mundial.</p>
+
+                <h3>Un poco de historia: La Nomenclatura Binomial</h3>
+                <p>En el siglo XVIII, el naturalista sueco Carlos Linneo revolucionó la biología al crear un sistema estandarizado para nombrar a las especies, conocido como nomenclatura binomial. Antes de Linneo, un mismo animal podía tener decenas de nombres distintos dependiendo del idioma o la región.</p>
+                <p>El sistema binomial asigna a cada organismo un nombre científico compuesto por dos partes (en latín): el <strong>Género</strong> (con mayúscula inicial) y la <strong>Especie</strong> (en minúscula). Por ejemplo, el nombre científico del perro doméstico es <em>Canis lupus</em>, y el del ser humano es <em>Homo sapiens</em>. Este método asegura que cualquier científico en el mundo sepa exactamente de qué organismo se está hablando.</p>
+
+                <h3>La Revolución Microscópica y los Tres Dominios</h3>
+                <p>Durante mucho tiempo, los organismos se dividieron simplemente en plantas y animales. Sin embargo, a medida que avanzó la tecnología y se inventaron microscopios más potentes, los científicos descubrieron que la diferencia más crucial entre los seres vivos no era su apariencia externa, sino la estructura interna de su <strong>célula</strong>.</p>
+                
+                <div class="highlight-box">
+                    Existen dos tipos básicos de células: las <strong>Procariotas</strong>, que son más primitivas, pequeñas y no tienen un núcleo definido que proteja su ADN; y las <strong>Eucariotas</strong>, que son más complejas y poseen un núcleo verdadero donde guardan su información genética.
+                </div>
+
+                <p>Basado en la genética y en estos tipos de células, el microbiólogo Carl Woese propuso en 1990 la clasificación de mayor nivel jerárquico conocida en la actualidad: El <strong>Dominio</strong>. Todos los seres vivos del planeta se agrupan en tres grandes dominios:</p>
+                <ul>
+                    <li><strong>Dominio Bacteria:</strong> Está formado por organismos unicelulares con células procariotas. Las bacterias están en todas partes: en el suelo, en el agua, e incluso dentro de nuestro cuerpo ayudándonos en la digestión o causándonos enfermedades.</li>
+                    <li><strong>Dominio Archaea (Arqueas):</strong> También son organismos unicelulares procariotas, pero su composición química es muy distinta a la de las bacterias. Las arqueas son conocidas como extremófilas, ya que prosperan en ambientes extremos donde casi nada más puede sobrevivir, como géiseres hirvientes, lagos hipersalinos o las oscuras profundidades oceánicas.</li>
+                    <li><strong>Dominio Eukarya (Eucariontes):</strong> Este dominio agrupa a TODOS los organismos que poseen células eucariotas (con núcleo). Esto incluye a seres unicelulares como los protozoos, y a todos los organismos multicelulares: los hongos, las plantas y los animales (incluyéndonos a nosotros).</li>
+                </ul>
+
+                <h3>La Jerarquía Taxonómica Completa</h3>
+                <p>Una vez que un organismo es asignado a un Dominio, se va clasificando en grupos cada vez más pequeños y específicos, basándose en sus características físicas, genéticas y evolutivas. Estas son las categorías taxonómicas principales de mayor a menor amplitud:</p>
+                <ol>
+                    <li><strong>Dominio</strong> (El nivel más amplio)</li>
+                    <li><strong>Reino</strong> (Ej. Animal, Vegetal, Fungi)</li>
+                    <li><strong>Filo o División</strong> (Agrupa clases con características fundamentales comunes)</li>
+                    <li><strong>Clase</strong></li>
+                    <li><strong>Orden</strong></li>
+                    <li><strong>Familia</strong></li>
+                    <li><strong>Género</strong></li>
+                    <li><strong>Especie</strong> (El nivel más específico, individuos que pueden reproducirse entre sí y tener descendencia fértil)</li>
+                </ol>
+
+                <p>Para identificar la flora y fauna local, los biólogos suelen utilizar "claves dicotómicas". Estas son guías o mapas de toma de decisiones que presentan dos opciones contradictorias (ej. "tiene plumas" vs "no tiene plumas"). Siguiendo la clave paso a paso, los científicos pueden llegar a identificar exactamente la especie, el género y la familia de un organismo desconocido, demostrando que la ciencia utiliza métodos precisos y organizados para revelar los misterios de la naturaleza.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h2>Taller de Repaso y Aplicación</h2>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Lee cuidadosamente el texto anterior. Luego, escribe y resuelve las siguientes 10 actividades en tu cuaderno de biología.
+                </div>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>1.</strong> Define con tus propias palabras qué es la Taxonomía y redacta una razón que explique por qué es fundamental para el estudio de la biología.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Conceptual</span>
+                        <div class="activity-text"><strong>2.</strong> Elabora un mapa conceptual que ilustre los tres Dominios de la vida propuestos por Carl Woese. Asegúrate de incluir debajo de cada Dominio el tipo de célula que lo conforma (procariota o eucariota).</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>3.</strong> Si una expedición científica descubriera un nuevo organismo microscópico unicelular que sobrevive en los cráteres hirvientes de un volcán, ¿a qué Dominio crees que pertenecería y por qué? Argumenta tu respuesta.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Dibujar</span>
+                        <div class="activity-text"><strong>4.</strong> Realiza un dibujo comparativo entre una célula procariota y una célula eucariota. Señala con una flecha roja la principal diferencia estructural mencionada en la lectura (el núcleo).</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>5.</strong> Explica en qué consiste el sistema de "nomenclatura binomial" inventado por Carlos Linneo. Da un ejemplo de un nombre científico mencionado en el texto e identifica cuál palabra corresponde al Género y cuál a la Especie.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Mental</span>
+                        <div class="activity-text"><strong>6.</strong> Diseña un mapa mental visualmente atractivo donde organices las ocho categorías taxonómicas principales, ordenándolas jerárquicamente desde la más general (Dominio) hasta la más específica (Especie).</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>7.</strong> Analiza este caso: Dos plantas pertenecen a la misma "Familia" taxonómica, pero a distinto "Género". ¿Se puede afirmar que tienen un parentesco biológico cercano? Justifica tu respuesta usando la lógica de los niveles de clasificación.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Ilustrar</span>
+                        <div class="activity-text"><strong>8.</strong> Dibuja una pirámide invertida (una pirámide con la base ancha arriba y la punta abajo) para representar la jerarquía taxonómica. Escribe el nombre de cada categoría en un escalón, comenzando por el Dominio en la parte más ancha.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>9.</strong> ¿Qué importancia tuvo la invención de los microscopios modernos y los estudios genéticos para que los científicos dejaran de clasificar a todos los seres vivos solamente en plantas y animales?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Diseñar</span>
+                        <div class="activity-text"><strong>10.</strong> La lectura menciona las "claves dicotómicas". Diseña una clave dicotómica muy sencilla de máximo 3 pasos para clasificar tres objetos de tu cartuchera escolar (por ejemplo: un lápiz, un borrador y unas tijeras). Usa características físicas observables.</div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="win-modal">
+    <div class="modal-content">
+        <!-- SVG Trophy -->
+        <svg style="width: 80px; height: 80px; margin: 0 auto 15px auto; display: block; fill: #fbc02d;" viewBox="0 0 24 24">
+            <path d="M20.2 2H19.5H18C17.1 2 16 3 16 4V4.5H8V4C8 3 6.9 2 6 2H4.5H3.8C2.8 2 2 2.8 2 3.8V7.5C2 9.5 3.3 11.2 5.1 11.8C5.7 13.9 7.7 15.4 10 15.8V19H7V21H17V19H14V15.8C16.3 15.4 18.3 13.9 18.9 11.8C20.7 11.2 22 9.5 22 7.5V3.8C22 2.8 21.2 2 20.2 2ZM4 7.5V4H6V9.8C4.8 9.2 4 8.4 4 7.5ZM20 7.5C20 8.4 19.2 9.2 18 9.8V4H20V7.5Z"/>
+        </svg>
+        <h2 style="color: var(--primary); font-size: 2rem; margin-bottom: 10px;">¡Búsqueda Completada!</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 20px;">Has encontrado todas las palabras taxonómicas.</p>
+        <p style="font-size: 1.1rem; margin-bottom: 5px;"><strong>Tiempo:</strong> <span id="final-time" style="color: var(--secondary); font-weight: bold;"></span></p>
+        <p style="font-size: 1.1rem; margin-bottom: 20px;"><strong>Calificación:</strong> <span id="final-stars" class="stars"></span></p>
+        <button class="btn-restart" onclick="initGame()">Jugar de Nuevo</button>
+    </div>
+</div>
+
+<script>
+    // Configuration: 10 Exact Keywords related to Taxonomy and Domains
+    const RAW_WORDS = [
+        "TAXONOMIA", 
+        "EUKARYA", 
+        "BACTERIA", 
+        "ARCHAEA", 
+        "ESPECIE", 
+        "GENERO", 
+        "CELULA", 
+        "PROCARIOTA", 
+        "EUCARIOTA", 
+        "DOMINIO"
+    ];
+    const GRID_SIZE = 15; // Minimum 15x15 requirement
+    const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+    
+    // State variables
+    let wordsToFind = [];
+    let foundWords = [];
+    let grid = [];
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    
+    // Interaction State
+    let isDragging = false;
+    let startRow = -1;
+    let startCol = -1;
+    let currentPath = []; // Array of DOM cell elements
+
+    function normalizeWords(words) {
+        // Upper case and remove accents (though original list already uppercase)
+        return words.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    }
+
+    function initGame() {
+        wordsToFind = normalizeWords(RAW_WORDS);
+        foundWords = [];
+        secondsElapsed = 0;
+        
+        if(timerInterval) clearInterval(timerInterval);
+        
+        document.getElementById("win-modal").style.display = "none";
+        document.getElementById("timer").textContent = "00:00";
+        document.getElementById("counter").textContent = `0 / ${wordsToFind.length}`;
+        updateRating();
+
+        renderWordsList();
+        generateBoard();
+        
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById("timer").textContent = `${m}:${s}`;
+            updateRating();
+        }, 1000);
+    }
+
+    function generateBoard() {
+        let boardPlaced = false;
+        
+        // Loop guarantees mathematically that all 10 words are placed, 
+        // if it gets stuck, it completely wipes and restarts.
+        while (!boardPlaced) {
+            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
+            boardPlaced = true;
+
+            // Sorting words by length descending makes packing much easier
+            const sortedWords = [...wordsToFind].sort((a, b) => b.length - a.length);
+
+            for (const word of sortedWords) {
+                let placed = false;
+                let attempts = 0;
+                const maxAttempts = 500; // High limit to allow exhaustive search per word
+
+                while (!placed && attempts < maxAttempts) {
+                    // 0: N, 1: NE, 2: E, 3: SE, 4: S, 5: SW, 6: W, 7: NW
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * GRID_SIZE);
+                    const col = Math.floor(Math.random() * GRID_SIZE);
+
+                    if (canPlaceWord(word, row, col, direction)) {
+                        placeWord(word, row, col, direction);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+
+                if (!placed) {
+                    // Algorithm failed to place this specific word. 
+                    // Break and restart the ENTIRE board.
+                    boardPlaced = false;
+                    break; 
+                }
+            }
+        }
+
+        // Fill remaining empty spaces with random alphabet letters
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+                }
+            }
+        }
+
+        renderGrid();
+    }
+
+    function canPlaceWord(word, r, c, dir) {
+        // Delta vectors for directions
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            const nr = r + i * dr[dir];
+            const nc = c + i * dc[dir];
+
+            // Verify bounds
+            if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+            // Verify conflict (space must be empty or share the exact same letter)
+            if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+        }
+        return true;
+    }
+
+    function placeWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            grid[r + i * dr[dir]][c + i * dc[dir]] = word[i];
+        }
+    }
+
+    function renderWordsList() {
+        const container = document.getElementById("words-list");
+        container.innerHTML = "";
+        wordsToFind.forEach(word => {
+            const div = document.createElement("div");
+            div.className = "word-item";
+            div.id = `word-${word}`;
+            div.textContent = word;
+            container.appendChild(div);
+        });
+    }
+
+    function renderGrid() {
+        const container = document.getElementById("grid");
+        container.innerHTML = "";
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.textContent = grid[r][c];
+                container.appendChild(cell);
+            }
+        }
+        
+        setupInteraction();
+    }
+
+    function updateRating() {
+        let stars = 5;
+        if (secondsElapsed > 300) stars = 1;      // > 5 mins
+        else if (secondsElapsed > 240) stars = 2; // > 4 mins
+        else if (secondsElapsed > 180) stars = 3; // > 3 mins
+        else if (secondsElapsed > 120) stars = 4; // > 2 mins
+
+        const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+        document.getElementById("rating").textContent = starStr;
+    }
+
+    function setupInteraction() {
+        const gridEl = document.getElementById("grid");
+        
+        // Critical: Prevent native touch behaviors (scrolling, pinch zoom) over the grid
+        gridEl.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+
+        gridEl.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("pointermove", handlePointerMove);
+        document.addEventListener("pointerup", handlePointerUp);
+    }
+
+    function handlePointerDown(e) {
+        if (e.target.classList.contains('cell')) {
+            isDragging = true;
+            startRow = parseInt(e.target.dataset.row);
+            startCol = parseInt(e.target.dataset.col);
+            
+            clearSelection();
+            e.target.classList.add('selecting');
+            currentPath = [e.target];
+        }
+    }
+
+    function handlePointerMove(e) {
+        if (!isDragging) return;
+        
+        // elementFromPoint allows detecting elements beneath the finger when sliding across mobile screen
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        
+        if (target && target.classList.contains('cell')) {
+            const currentRow = parseInt(target.dataset.row);
+            const currentCol = parseInt(target.dataset.col);
+            
+            updateSelection(startRow, startCol, currentRow, currentCol);
+        }
+    }
+
+    function handlePointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        validateSelection();
+        clearSelection();
+    }
+
+    function updateSelection(r1, c1, r2, c2) {
+        const dr = r2 - r1;
+        const dc = c2 - c1;
+        
+        // Mathematical check for a valid straight line: 
+        // Must be horizontal, vertical, or perfectly diagonal
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+            return; // Invalid path shape
+        }
+
+        clearSelection();
+        currentPath = [];
+
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+        for (let i = 0; i <= steps; i++) {
+            const currR = r1 + i * stepR;
+            const currC = c1 + i * stepC;
+            const cell = document.querySelector(`.cell[data-row="${currR}"][data-col="${currC}"]`);
+            if (cell) {
+                cell.classList.add('selecting');
+                currentPath.push(cell);
+            }
+        }
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.selecting').forEach(el => el.classList.remove('selecting'));
+    }
+
+    function validateSelection() {
+        if (currentPath.length < 2) return;
+
+        let selectedWord = currentPath.map(cell => cell.textContent).join('');
+        let selectedWordReverse = currentPath.map(cell => cell.textContent).reverse().join('');
+        
+        let found = false;
+        let wordMatched = "";
+
+        // Check normal and backwards matching
+        if (wordsToFind.includes(selectedWord) && !foundWords.includes(selectedWord)) {
+            found = true;
+            wordMatched = selectedWord;
+        } else if (wordsToFind.includes(selectedWordReverse) && !foundWords.includes(selectedWordReverse)) {
+            found = true;
+            wordMatched = selectedWordReverse;
+        }
+
+        if (found) {
+            foundWords.push(wordMatched);
+            
+            // Apply permanent visual found state
+            currentPath.forEach(cell => {
+                cell.classList.add('found');
+                // Micro-interaction scaling effect
+                cell.style.transform = 'scale(1.15)';
+                setTimeout(() => cell.style.transform = 'scale(1)', 150);
+            });
+
+            // Update UI list and counter
+            document.getElementById(`word-${wordMatched}`).classList.add('found');
+            document.getElementById("counter").textContent = `${foundWords.length} / ${wordsToFind.length}`;
+
+            // Check Win Condition
+            if (foundWords.length === wordsToFind.length) {
+                clearInterval(timerInterval);
+                setTimeout(showWinModal, 600);
+            }
+        }
+    }
+
+    function showWinModal() {
+        document.getElementById("final-time").textContent = document.getElementById("timer").textContent;
+        document.getElementById("final-stars").textContent = document.getElementById("rating").textContent;
+        document.getElementById("win-modal").style.display = "flex";
+    }
+
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Configuración de viewport para móviles y prevención de zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Ecología y Niveles de Organización - Tap & Sort</title>
+    
+    <style>
+        :root {
+            /* Colores del Juego - Tema Naturaleza/Ecología */
+            --bg-game: #0f172a;
+            --text-game: #f8fafc;
+            --primary: #10b981; /* Verde esmeralda */
+            --primary-dark: #047857;
+            --secondary: #3b82f6; /* Azul agua */
+            --success: #059669;
+            --danger: #ef4444;
+            --chip-bg: #1e293b;
+            --chip-border: #334155;
+            
+            /* Colores de Lectura */
+            --bg-reading: #ffffff;
+            --bg-reading-alt: #f1f5f9;
+            --text-reading: #334155;
+            --text-heading: #0f172a;
+            --accent-reading: #10b981;
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-game);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: clamp(15px, 4vw, 30px);
+            background-color: var(--bg-game);
+            color: var(--text-game);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* CRÍTICO: Evitar scroll o pull-to-refresh accidental en el área del juego */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+        }
+
+        .instructions {
+            font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--chip-bg);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            border: 1px solid var(--chip-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        #score-display { color: var(--primary); }
+        #errors-display { color: var(--danger); }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(10px, 2vw, 15px);
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+            align-content: flex-start;
+        }
+
+        .chip {
+            background-color: var(--chip-bg);
+            border: 2px solid var(--chip-border);
+            border-radius: var(--radius-md);
+            padding: clamp(12px, 3.5vw, 18px);
+            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            flex: 1 1 calc(33% - 15px);
+            min-width: 150px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            border-color: var(--secondary);
+            background-color: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            transform: translateY(-3px);
+            color: #fff;
+        }
+
+        .chip.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .category-btn {
+            background-color: var(--chip-bg);
+            border: 2px dashed #475569;
+            border-radius: var(--radius-lg);
+            padding: clamp(12px, 4vw, 18px);
+            flex: 1 1 30%;
+            min-width: 120px;
+            color: var(--text-game);
+            font-weight: bold;
+            font-size: clamp(0.9rem, 3.2vw, 1.1rem);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn svg {
+            width: clamp(24px, 6vw, 36px);
+            height: clamp(24px, 6vw, 36px);
+            color: var(--primary);
+        }
+
+        .category-btn:active {
+            background-color: #334155;
+            transform: scale(0.98);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        
+        @keyframes flashRed {
+            0% { background-color: var(--danger); border-color: white; }
+            100% { background-color: var(--chip-bg); border-color: var(--chip-border); }
+        }
+
+        @keyframes flashGreenBtn {
+            0% { background-color: var(--success); border-color: white; color: white; transform: scale(1.05); }
+            100% { background-color: var(--chip-bg); border-color: #475569; }
+        }
+
+        .error-anim {
+            animation: shake 0.4s ease, flashRed 0.5s ease;
+        }
+
+        .success-btn-anim {
+            animation: flashGreenBtn 0.5s ease;
+        }
+
+        .end-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .end-screen.visible { display: flex; }
+
+        .end-screen h2 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .end-screen p { margin-bottom: 20px; font-size: clamp(1.1rem, 4vw, 1.3rem); color: #cbd5e1; }
+
+        .final-grade {
+            font-size: clamp(4rem, 12vw, 6rem);
+            font-weight: bold;
+            color: var(--secondary);
+            text-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+            margin: 20px 0;
+        }
+
+        .scroll-down-hint {
+            margin-top: 40px;
+            color: #94a3b8;
+            animation: bounce 2s infinite;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: var(--bg-reading);
+            color: var(--text-reading);
+            /* Importante: Reestablecer comportamientos táctiles naturales aquí */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+            border-top: 6px solid var(--primary);
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .article-container h2 {
+            color: var(--text-heading);
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border-bottom: 4px solid var(--accent-reading);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-container h3 {
+            color: var(--accent-reading);
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .article-container p {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-left: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-container li {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.7;
+            margin-bottom: 0.8rem;
+        }
+
+        .highlight-box {
+            background-color: var(--bg-reading-alt);
+            border-left: 5px solid var(--secondary);
+            padding: 1.5rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 2.5rem 0;
+            font-style: italic;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .taller-section {
+            background-color: var(--bg-reading-alt);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: var(--radius-lg);
+            margin-top: 4rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--accent-reading);
+        }
+
+        .taller-section h3 {
+            color: var(--text-heading);
+            text-align: center;
+            margin-top: 0;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+        }
+
+        .instruction-alert {
+            background-color: #fff;
+            border: 2px dashed var(--accent-reading);
+            color: var(--text-heading);
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 2.5rem;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.1);
+        }
+
+        .taller-list {
+            list-style: none;
+            counter-reset: taller-counter;
+        }
+
+        .taller-list li {
+            position: relative;
+            background: #fff;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem 1.5rem 1.5rem 4.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 4px solid var(--secondary);
+            font-size: clamp(1rem, 3.5vw, 1.1rem);
+            line-height: 1.6;
+        }
+
+        .taller-list li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 15px;
+            top: 1.5rem;
+            background-color: var(--secondary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 5px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Ecología y Ecosistemas</h1>
+                <div class="instructions">
+                    💡 <strong>Misión:</strong> Toca un concepto ecológico (se marcará en azul) y luego toca el contenedor correcto al que pertenece.
+                </div>
+            </div>
+
+            <div class="hud">
+                <div id="score-display">Aciertos: 0 / 15</div>
+                <div id="errors-display">Fallos: 0</div>
+            </div>
+
+            <div class="chips-container" id="chips-container">
+                <!-- Generados vía JavaScript -->
+            </div>
+
+            <div class="categories-container">
+                <div class="category-btn" onclick="checkCategory('ORGANIZACION')" id="btn-ORGANIZACION">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    NIVELES DE ORGANIZACIÓN
+                </div>
+                <div class="category-btn" onclick="checkCategory('FACTORES')" id="btn-FACTORES">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    FACTORES ECOLÓGICOS
+                </div>
+                <div class="category-btn" onclick="checkCategory('RELACIONES')" id="btn-RELACIONES">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8L21 12 17 16"></path><path d="M3 12H21"></path><path d="M7 8L3 12 7 16"></path><path d="M21 12H3"></path></svg>
+                    RELACIONES BIOLÓGICAS
+                </div>
+            </div>
+
+            <div class="end-screen" id="end-screen">
+                <h2>¡Análisis Ecológico Completo!</h2>
+                <p>Has clasificado correctamente los componentes del ecosistema.</p>
+                <p>Tu calificación final (basada en errores) es:</p>
+                <div class="final-grade" id="final-grade">5.0</div>
+                <div class="scroll-down-hint">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <p>Desliza para leer la lección y realizar el taller</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Ecología: La Red de la Vida y sus Interacciones</h2>
+                
+                <p>La naturaleza no es simplemente una colección aleatoria de plantas, animales y rocas. Es un tejido intrincado y dinámico donde cada elemento, vivo o inerte, tiene un papel fundamental. La ciencia que estudia estas complejas interacciones entre los organismos y el ambiente físico que los rodea es la <strong>Ecología</strong>. Comprender la ecología nos permite entender cómo funciona nuestro planeta, desde el jardín de nuestra casa hasta las inmensas selvas tropicales.</p>
+
+                <h3>1. Niveles de Organización Ecológica</h3>
+                <p>Para estudiar la naturaleza de manera ordenada, los ecólogos dividen la vida en diferentes niveles de organización, de menor a mayor complejidad:</p>
+                
+                <ul>
+                    <li><strong>Individuo:</strong> Es un único ser vivo, por ejemplo, un oso de anteojos o una sola planta de café.</li>
+                    <li><strong>Población:</strong> Conjunto de individuos de la <em>misma especie</em> que viven en un área determinada y en un tiempo específico (ej. un rebaño de venados en un páramo).</li>
+                    <li><strong>Comunidad:</strong> Todas las diferentes poblaciones de especies (plantas, animales, bacterias, hongos) que interactúan en un área particular.</li>
+                    <li><strong>Ecosistema:</strong> Es la interacción de la comunidad viva (factores bióticos) con su entorno físico no vivo (factores abióticos), como un lago completo con sus peces, algas, agua, rocas y luz solar.</li>
+                    <li><strong>Biósfera:</strong> El nivel máximo. Abarca todas las partes de la Tierra donde existe vida: tierra, agua y atmósfera.</li>
+                </ul>
+
+                <h3>2. Factores Ecológicos: Bióticos y Abióticos</h3>
+                <p>Todo ecosistema se compone de dos tipos de variables principales que moldean las condiciones de supervivencia:</p>
+                <p>Por un lado, los <strong>Factores Bióticos</strong> incluyen a todos los seres vivos y sus interacciones. Estos se dividen según cómo obtienen su energía: <em>Productores</em> (plantas que hacen fotosíntesis), <em>Consumidores</em> (animales herbívoros y carnívoros) y <em>Descomponedores</em> (bacterias y hongos que reciclan la materia muerta y la devuelven al suelo).</p>
+                <p>Por otro lado, los <strong>Factores Abióticos</strong> son los elementos físicos y químicos sin vida, pero indispensables. Incluyen la luz solar, la temperatura, el clima, el agua, la humedad, los minerales del suelo y el viento. Un cambio brusco en un factor abiótico, como una sequía (falta de agua), alterará inevitablemente toda la cadena de factores bióticos.</p>
+
+                <h3>3. Relaciones Ecológicas: Dinámicas de Convivencia</h3>
+                <p>Dentro de una comunidad, las especies no viven aisladas; se relacionan constantemente. Estas interacciones pueden ser beneficiosas, perjudiciales o neutras:</p>
+
+                <ul>
+                    <li><strong>Depredación (+/-):</strong> Un organismo (depredador) caza, mata y se alimenta de otro (presa). Es crucial para controlar el tamaño de las poblaciones, como el jaguar cazando roedores o venados.</li>
+                    <li><strong>Competencia (-/-):</strong> Ocurre cuando dos o más organismos luchan por el mismo recurso limitado, como agua, alimento, luz solar o territorio. Puede darse entre la misma especie (dos machos peleando) o especies distintas (dos tipos de plantas compitiendo por luz en la selva).</li>
+                    <li><strong>Mutualismo (+/+):</strong> Una interacción donde <em>ambas</em> especies se benefician mutuamente. Un ejemplo clásico es la polinización: las abejas obtienen néctar (alimento) de las flores, y al moverse, ayudan a las flores a reproducirse transportando su polen.</li>
+                    <li><strong>Comensalismo (+/0):</strong> Una especie se beneficia y la otra no resulta ni beneficiada ni perjudicada. Por ejemplo, las orquídeas o bromelias que crecen sobre las ramas altas de los árboles para alcanzar la luz del sol; el árbol no sufre daño, pero tampoco obtiene un beneficio claro.</li>
+                    <li><strong>Parasitismo (+/-):</strong> Un organismo (parásito) vive sobre o dentro de otro (huésped) del cual se alimenta. El parásito se beneficia, pero el huésped se perjudica y enferma gradualmente, como una garrapata en un perro.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    "Ningún organismo existe en un vacío. Cada hoja que cae, cada gota de lluvia y cada depredador cumplen una función vital en el equilibrio del ecosistema local."
+                </div>
+
+                <div class="taller-section">
+                    <h3>Taller de Repaso y Consolidación</h3>
+                    
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN OBLIGATORIA: Escribe y resuelve de forma ordenada las siguientes 10 actividades en tu cuaderno de Biología.
+                    </div>
+
+                    <ul class="taller-list">
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Define con tus propias palabras la diferencia exacta entre una <strong>Población</strong> y una <strong>Comunidad</strong> biológica.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Si en un bosque ocurre una prolongada sequía y la cantidad de agua (factor abiótico) disminuye drásticamente, ¿cómo afectaría esto en cadena a los productores, a los consumidores primarios y finalmente a los depredadores? Argumenta tu respuesta.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Dibuja un paisaje de un <strong>Ecosistema</strong> típico de tu región. Señala e identifica con flechas al menos tres (3) factores bióticos y tres (3) factores abióticos en tu dibujo.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual que ordene jerárquicamente los <strong>Niveles de Organización Ecológica</strong> explicados en la lectura, desde el nivel más simple (Individuo) hasta el más complejo (Biósfera).
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            ¿Por qué los organismos <strong>descomponedores</strong> (como hongos y bacterias) son indispensables para la supervivencia de un ecosistema? ¿Qué pasaría si desaparecieran?
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Una planta trepadora envuelve por completo el tronco y las hojas de un árbol joven, quitándole gran parte de la luz solar para realizar fotosíntesis. ¿Qué tipo de relación ecológica se establece aquí y por qué?
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Ilustra mediante un dibujo comparativo un ejemplo claro de <strong>Mutualismo</strong> y un ejemplo de <strong>Parasitismo</strong>. Escribe una breve leyenda debajo de cada uno explicando quién se beneficia y quién se perjudica.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Mental</span><br>
+                            Crea un mapa mental cuyo concepto central sea <strong>"Relaciones Ecológicas"</strong>. Saca cinco ramas principales (Depredación, Competencia, Mutualismo, Comensalismo, Parasitismo) e incluye una breve definición y un ejemplo en cada rama.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Identifica los siguientes elementos como Factor Biótico o Factor Abiótico: a) Rocas del lecho de un río, b) Musgo en un árbol, c) La temperatura del aire, d) Un hongo en descomposición.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            El comensalismo implica que una especie se beneficia y la otra no es afectada (ni positiva ni negativamente). Si en el ejemplo de las orquídeas creciendo en las ramas de un árbol, estas crecieran tanto que por su gran peso quebraran las ramas del árbol, ¿seguiría siendo comensalismo? Explica cómo cambiaría esta clasificación ecológica.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Datos del Juego (15 conceptos, 5 por categoría)
+        const concepts = [
+            // CATEGORÍA 1: NIVELES DE ORGANIZACIÓN
+            { id: 1, text: "Un solo ser vivo (Individuo)", category: "ORGANIZACION" },
+            { id: 2, text: "Grupo de la misma especie (Población)", category: "ORGANIZACION" },
+            { id: 3, text: "Conjunto de poblaciones (Comunidad)", category: "ORGANIZACION" },
+            { id: 4, text: "Comunidad + Medio físico (Ecosistema)", category: "ORGANIZACION" },
+            { id: 5, text: "Toda la vida en la Tierra (Biósfera)", category: "ORGANIZACION" },
+            
+            // CATEGORÍA 2: FACTORES ECOLÓGICOS
+            { id: 6, text: "Luz solar y temperatura", category: "FACTORES" },
+            { id: 7, text: "Agua, humedad y clima", category: "FACTORES" },
+            { id: 8, text: "Plantas (Productores)", category: "FACTORES" },
+            { id: 9, text: "Animales herbívoros y carnívoros", category: "FACTORES" },
+            { id: 10, text: "Hongos y bacterias (Descomponedores)", category: "FACTORES" },
+            
+            // CATEGORÍA 3: RELACIONES BIOLÓGICAS
+            { id: 11, text: "Cazar para alimentarse (Depredación)", category: "RELACIONES" },
+            { id: 12, text: "Ambos se benefician (Mutualismo)", category: "RELACIONES" },
+            { id: 13, text: "Lucha por recursos (Competencia)", category: "RELACIONES" },
+            { id: 14, text: "Huésped perjudicado (Parasitismo)", category: "RELACIONES" },
+            { id: 15, text: "Uno gana, otro es neutral (Comensalismo)", category: "RELACIONES" }
+        ];
+
+        // 2. Estado de la Aplicación
+        let state = {
+            score: 0,
+            errors: 0,
+            total: concepts.length,
+            selectedChipId: null,
+            shuffledConcepts: []
+        };
+
+        // Algoritmo de mezcla Fisher-Yates
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // 3. Inicialización del juego
+        function initGame() {
+            state.shuffledConcepts = shuffleArray([...concepts]);
+            renderChips();
+            updateHUD();
+        }
+
+        // 4. Renderizar chips interactivos
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = '';
+
+            state.shuffledConcepts.forEach(concept => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${concept.id}`;
+                chip.textContent = concept.text;
+                
+                // Evento táctil/ratón para selección
+                chip.addEventListener('click', () => selectChip(concept.id));
+                
+                container.appendChild(chip);
+            });
+        }
+
+        // 5. Manejo de selección de chip
+        function selectChip(id) {
+            // Limpiar visualmente todos los chips
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            
+            // Seleccionar el tocado si no está oculto
+            const chip = document.getElementById(`chip-${id}`);
+            if (chip && !chip.classList.contains('hidden')) {
+                chip.classList.add('selected');
+                state.selectedChipId = id;
+            }
+        }
+
+        // 6. Lógica de validación al tocar Categoría
+        function checkCategory(categoryName) {
+            // Requerir un chip seleccionado primero
+            if (!state.selectedChipId) return;
+
+            const concept = state.shuffledConcepts.find(c => c.id === state.selectedChipId);
+            const chipElement = document.getElementById(`chip-${state.selectedChipId}`);
+            const btnElement = document.getElementById(`btn-${categoryName}`);
+
+            if (concept.category === categoryName) {
+                // ACIERTO
+                state.score++;
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('hidden'); // Ocultar chip resuelto
+                state.selectedChipId = null;
+                
+                // Feedback visual positivo en el botón
+                btnElement.classList.add('success-btn-anim');
+                setTimeout(() => btnElement.classList.remove('success-btn-anim'), 500);
+
+                updateHUD();
+                checkWinCondition();
+
+            } else {
+                // ERROR
+                state.errors++;
+                updateHUD();
+                
+                // Feedback visual negativo en el chip
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('error-anim');
+                state.selectedChipId = null;
+                
+                setTimeout(() => {
+                    chipElement.classList.remove('error-anim');
+                }, 500);
+            }
+        }
+
+        // 7. Actualización del Panel Frontal (HUD)
+        function updateHUD() {
+            document.getElementById('score-display').textContent = `Aciertos: ${state.score} / ${state.total}`;
+            document.getElementById('errors-display').textContent = `Fallos: ${state.errors}`;
+        }
+
+        // 8. Condición de Victoria y Sistema de Calificación Estricto
+        function checkWinCondition() {
+            if (state.score === state.total) {
+                setTimeout(showEndScreen, 600); // Retardo sutil para la última animación
+            }
+        }
+
+        function showEndScreen() {
+            const endScreen = document.getElementById('end-screen');
+            const gradeDisplay = document.getElementById('final-grade');
+            
+            // Calcular nota (Base 5.0, pierde 0.2 por error, mínimo 1.0)
+            let grade = 5.0 - (state.errors * 0.2);
+            if (grade < 1.0) grade = 1.0;
+            
+            gradeDisplay.textContent = grade.toFixed(1);
+            
+            // Colores basados en rendimiento escolar estándar
+            if (grade >= 4.0) {
+                gradeDisplay.style.color = 'var(--primary)';
+            } else if (grade >= 3.0) {
+                gradeDisplay.style.color = '#eab308'; // Amarillo
+            } else {
+                gradeDisplay.style.color = 'var(--danger)';
+            }
+
+            endScreen.classList.add('visible');
+        }
+
+        // Arrancar el motor del juego cuando el DOM esté listo
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

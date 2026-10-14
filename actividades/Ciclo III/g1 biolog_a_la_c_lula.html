@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sopa de Letras: La Célula</title>
+    <style>
+        :root {
+            --primary-color: #2e7d32; /* Green for Biology */
+            --primary-light: #60ad5e;
+            --primary-dark: #005005;
+            --secondary-color: #ffb300; /* Amber for highlights */
+            --bg-color: #f1f8e9;
+            --text-color: #212121;
+            --grid-bg: #ffffff;
+            --cell-border: #c8e6c9;
+            --cell-text: #33691e;
+            --highlight-color: rgba(255, 179, 0, 0.4);
+            --found-color: rgba(46, 125, 50, 0.8);
+            --error-color: #d32f2f;
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* SVG decorativo incrustado como data-uri por requisitos offline */
+        header::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: 150px;
+            height: 150px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10' opacity='0.1'/%3E%3Ccircle cx='12' cy='12' r='4' opacity='0.2'/%3E%3Cpath d='M12 2v2m0 16v2m10-10h-2M4 12H2' opacity='0.2'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: contain;
+            transform: rotate(15deg);
+        }
+
+        header h1 {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        header p {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        #zona-juego {
+            background: white;
+            border-radius: 16px;
+            padding: clamp(1rem, 3vw, 2rem);
+            margin-top: -1.5rem;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-top: 6px solid var(--secondary-color);
+        }
+
+        .game-header {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: #fff8e1;
+            padding: 1.2rem;
+            border-radius: 12px;
+            border-left: 6px solid var(--secondary-color);
+        }
+
+        @media (min-width: 650px) {
+            .game-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .instruction {
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            flex: 1;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            justify-content: center;
+        }
+
+        .board-container {
+            width: 100%;
+            max-width: 600px; /* Tamaño máximo para que no se deforme en PC */
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            background-color: var(--cell-border);
+            border: 2px solid var(--cell-border);
+            border-radius: 8px;
+            /* CRÍTICO: Previene comportamientos táctiles por defecto en móviles (scroll, zoom) */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .cell {
+            background-color: var(--grid-bg);
+            /* CRÍTICO: Celdas siempre cuadradas */
+            aspect-ratio: 1; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Tipografía elástica */
+            font-size: clamp(14px, 4vw, 24px);
+            font-weight: 800;
+            color: var(--cell-text);
+            cursor: pointer;
+            transition: background-color 0.1s, color 0.1s;
+        }
+
+        .cell.highlight {
+            background-color: var(--highlight-color);
+            color: var(--primary-dark);
+        }
+
+        .cell.found {
+            background-color: var(--found-color);
+            color: white;
+            animation: popIn 0.3s ease-out;
+            border-radius: 4px;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background-color: var(--secondary-color); }
+            100% { transform: scale(1); }
+        }
+
+        .words-container {
+            margin-top: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .word-pill {
+            background: #e8f5e9;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            font-size: clamp(0.85rem, 2.5vw, 1.05rem);
+            font-weight: 700;
+            color: var(--primary-dark);
+            transition: all 0.3s ease;
+            border: 1px solid #c8e6c9;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .word-pill.found {
+            background: var(--found-color);
+            color: white;
+            text-decoration: line-through;
+            border-color: var(--primary-dark);
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 80, 5, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            transform: translateY(0);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .grade-display {
+            font-size: 5rem;
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary-color);
+        }
+
+        .btn-restart {
+            background: linear-gradient(to right, var(--primary-color), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 1.2rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(46, 125, 50, 0.4);
+        }
+
+        #zona-lectura {
+            background: white;
+            margin-top: 3rem;
+            border-top: 8px solid var(--primary-color);
+            padding: 4rem 1rem;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.03);
+        }
+
+        .article-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .article-content h2 {
+            color: var(--primary-dark);
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #e8f5e9;
+            padding-bottom: 1rem;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .article-content h3 {
+            color: var(--primary-color);
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            margin: 2.5rem 0 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        /* Viñeta decorada para subtítulos mediante SVG incrustado */
+        .article-content h3::before {
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232e7d32' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/%3E%3C/svg%3E");
+            background-size: cover;
+        }
+
+        .article-content p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #333;
+            line-height: 1.7;
+        }
+
+        .article-content ul {
+            margin-bottom: 2rem;
+            padding-left: 1.5rem;
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #333;
+        }
+
+        .article-content li {
+            margin-bottom: 1rem;
+            position: relative;
+            list-style-type: none;
+        }
+
+        .article-content li::before {
+            content: "➔";
+            color: var(--secondary-color);
+            position: absolute;
+            left: -1.5rem;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: #fff8e1;
+            border-left: 6px solid var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 2.5rem 0;
+            font-style: italic;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            font-size: 1.1rem;
+            color: #424242;
+        }
+
+        .workshop {
+            background: #f9fbe7;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            border-radius: 20px;
+            margin-top: 4rem;
+            border: 2px solid #e6ee9c;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        }
+
+        .workshop h2 {
+            color: #827717;
+            text-align: center;
+            border: none;
+            margin-bottom: 1.5rem;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+        }
+
+        .notebook-alert {
+            background: white;
+            border: 2px dashed #afb42b;
+            padding: 1.2rem;
+            text-align: center;
+            font-weight: 800;
+            color: #827717;
+            border-radius: 12px;
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(175, 180, 43, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-item {
+            background: white;
+            padding: 1.5rem 1.5rem 1.5rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+            border-left: 8px solid;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .activity-item:hover {
+            transform: translateX(5px);
+        }
+
+        /* Colores por tipo de actividad */
+        .act-resp { border-color: #4caf50; }
+        .act-dib { border-color: #9c27b0; }
+        .act-anal { border-color: #f44336; }
+        .act-map { border-color: #2196f3; }
+
+        .act-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .act-resp .act-tag { background: #4caf50; }
+        .act-dib .act-tag { background: #9c27b0; }
+        .act-anal .act-tag { background: #f44336; }
+        .act-map .act-tag { background: #2196f3; }
+
+        .activity-item p {
+            margin: 0;
+            color: #333;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .activity-item strong {
+            color: var(--primary-dark);
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Biología: La Célula</h1>
+        <p>Ciclo III - Explora la unidad fundamental de la vida</p>
+    </header>
+
+    <main>
+        <!-- SECCIÓN 1: ZONA DE JUEGO (SIEMPRE ARRIBA) -->
+        <section id="zona-juego">
+            <div class="container">
+                <div class="game-header">
+                    <div class="instruction">
+                        👆 Encuentra las 10 palabras clave ocultas trazando una línea sobre ellas.
+                    </div>
+                    <div class="stats">
+                        <div>⏱️ <span id="timer">00:00</span></div>
+                        <div style="color: var(--error-color)">❌ <span id="errors">0</span></div>
+                        <div style="color: var(--primary-dark)">🎯 <span id="found-count">0</span>/10</div>
+                    </div>
+                </div>
+
+                <div class="board-container">
+                    <div id="board">
+                        <!-- La cuadrícula se inyecta dinámicamente vía JS -->
+                    </div>
+                </div>
+
+                <div class="words-container" id="words-list">
+                    <!-- Las píldoras de palabras se inyectan dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: ZONA DE LECTURA Y TALLER (SIEMPRE VISIBLE ABAJO) -->
+        <section id="zona-lectura">
+            <div class="article-content">
+                <h2>La Célula: El Bloque de Construcción de la Vida</h2>
+                
+                <p>Imagina una ciudad inmensa y compleja, llena de fábricas, plantas de energía, centros de control y sistemas de transporte. Ahora imagina que toda esa ciudad es tan diminuta que no puede ser vista a simple vista. Así de maravillosa y compleja es <strong>la célula</strong>. Todo ser vivo en nuestro planeta, desde la bacteria más simple hasta el ser humano más complejo, está formado por estas increíbles estructuras estructurales y funcionales.</p>
+
+                <h3>Tipos de Células: Dos Mundos Diferentes</h3>
+                <p>Aunque todas las células comparten características básicas, la naturaleza las ha dividido en dos grandes grupos dependiendo de cómo organizan su material genético (ADN):</p>
+                <ul>
+                    <li><strong>Célula Procariota:</strong> Son las más antiguas y simples. Su principal característica es que <strong>no tienen un núcleo definido</strong>. Su ADN flota libremente en el interior. Las bacterias son el mejor ejemplo de organismos formados por células procariotas.</li>
+                    <li><strong>Célula Eucariota:</strong> Son mucho más evolucionadas, grandes y complejas. Su ADN está cuidadosamente guardado y protegido dentro de un verdadero núcleo. Las plantas, los animales, los hongos y nosotros, los seres humanos, estamos hechos de células eucariotas.</li>
+                </ul>
+
+                <h3>La Estructura Básica: Las Partes Principales</h3>
+                <p>Toda célula eucariota posee tres partes fundamentales que actúan como la estructura principal de nuestra "ciudad celular":</p>
+                <ul>
+                    <li><strong>Membrana celular:</strong> Es la frontera protectora de la célula. Funciona como una aduana inteligente que decide qué entra (nutrientes, oxígeno) y qué sale (desechos). Mantiene el interior de la célula a salvo de su entorno.</li>
+                    <li><strong>Citoplasma:</strong> Es un líquido gelatinoso que llena el interior de la célula. En él flotan todas las "fábricas" de la célula y ocurren la mayoría de las reacciones químicas necesarias para la vida.</li>
+                    <li><strong>Núcleo:</strong> Es el centro de mando o el "cerebro" de la célula. Contiene el ADN, que son las instrucciones genéticas que determinan cómo es y cómo funciona el ser vivo.</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Dato Curioso:</strong> Si desenrolláramos el ADN contenido en el núcleo de una sola de tus células, ¡mediría casi 2 metros de largo! Increíble cómo cabe en un espacio microscópico, ¿verdad?
+                </div>
+
+                <h3>Los Organelos: Los Trabajadores de la Célula</h3>
+                <p>Dentro del citoplasma flotan diversas estructuras especializadas llamadas organelos, cada una con un trabajo específico para mantener a la célula viva:</p>
+                <ul>
+                    <li><strong>Mitocondria:</strong> Es la planta de energía. Se encarga de tomar los nutrientes y convertirlos en energía utilizable mediante un proceso llamado respiración celular.</li>
+                    <li><strong>Ribosoma:</strong> Son las fábricas de proteínas. Leen las instrucciones enviadas desde el núcleo y ensamblan las proteínas que el cuerpo necesita para crecer y repararse.</li>
+                    <li><strong>Vacuola:</strong> Son como grandes almacenes o bodegas. Guardan agua, nutrientes o productos de desecho. En las células vegetales (plantas), hay una vacuola gigante que ayuda a mantener la forma de la planta; en los animales, son más pequeñas.</li>
+                    <li><strong>Lisosoma:</strong> Son el sistema de reciclaje y limpieza. Contienen sustancias químicas que descomponen restos de células viejas, bacterias o nutrientes grandes.</li>
+                    <li><strong>Cloroplasto:</strong> Estos son exclusivos de las células vegetales. Contienen clorofila (lo que da color verde a las plantas) y son los responsables de realizar la fotosíntesis, convirtiendo la luz solar en alimento.</li>
+                </ul>
+                <p>Comprender cómo funciona la célula es el primer paso para entender cómo funcionamos nosotros mismos, cómo nos enfermamos, cómo sanamos y cómo se desarrolla la vida en nuestro maravilloso planeta.</p>
+
+                <!-- TALLER DE REPASO -->
+                <div class="workshop">
+                    <h2>Taller de Comprensión Lectora</h2>
+                    <div class="notebook-alert">
+                        ✍️ Instrucción: Escribe y resuelve de forma ordenada las siguientes actividades en tu cuaderno de biología.
+                    </div>
+
+                    <!-- 1. Responder -->
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>1.</strong> Según la lectura, define con tus propias palabras qué es la membrana celular y explica por qué el texto la compara con una "aduana inteligente".</p>
+                    </div>
+
+                    <!-- 2. Dibujar/Ilustrar -->
+                    <div class="activity-item act-dib">
+                        <span class="act-tag">Ilustrar</span>
+                        <p><strong>2.</strong> Imagina y dibuja la "ciudad celular" mencionada en la lectura. Dibuja al menos 3 estructuras (ej. núcleo como centro de control, mitocondria como planta de energía) representadas como edificios.</p>
+                    </div>
+
+                    <!-- 3. Análisis -->
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Análisis Crítico</span>
+                        <p><strong>3.</strong> Reflexiona: Las bacterias son organismos procariotas. Si estos organismos no tienen un núcleo definido que proteja su ADN, ¿qué ventajas o desventajas biológicas crees que esto representa para ellos?</p>
+                    </div>
+
+                    <!-- 4. Mapa -->
+                    <div class="activity-item act-map">
+                        <span class="act-tag">Mapa Conceptual</span>
+                        <p><strong>4.</strong> Elabora un mapa conceptual jerárquico cuyo título principal sea "Tipos de Células". Debe ramificarse en Eucariotas y Procariotas, indicando sus diferencias principales y ejemplos de seres vivos que las poseen.</p>
+                    </div>
+
+                    <!-- 5. Responder -->
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>5.</strong> Explica cuál es la función principal de los ribosomas y por qué su trabajo es indispensable basándose en las instrucciones que reciben del núcleo.</p>
+                    </div>
+
+                    <!-- 6. Dibujar/Ilustrar -->
+                    <div class="activity-item act-dib">
+                        <span class="act-tag">Dibujar</span>
+                        <p><strong>6.</strong> Dibuja una célula vegetal y señala dentro de ella dónde se ubican los <em>Cloroplastos</em>. Escribe al lado de tu dibujo una breve frase explicando qué proceso realizan.</p>
+                    </div>
+
+                    <!-- 7. Análisis -->
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Análisis Crítico</span>
+                        <p><strong>7.</strong> Analiza la siguiente situación hipotética: Si a una célula animal se le eliminaran todos sus lisosomas de repente, ¿qué problema inmediato enfrentaría el citoplasma de esa célula?</p>
+                    </div>
+
+                    <!-- 8. Mapa -->
+                    <div class="activity-item act-map">
+                        <span class="act-tag">Mapa Mental</span>
+                        <p><strong>8.</strong> Construye un mapa mental centrado en la palabra "Organelos". Añade al menos 4 ramas para diferentes organelos y acompáñalos de un dibujo sencillo que represente su función principal.</p>
+                    </div>
+
+                    <!-- 9. Responder -->
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>9.</strong> Las células vegetales tienen una gran vacuola central, mientras que las de los animales tienen vacuolas pequeñas. Según el texto, ¿para qué utiliza la planta esta estructura gigante?</p>
+                    </div>
+
+                    <!-- 10. Análisis -->
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Análisis Crítico</span>
+                        <p><strong>10.</strong> La mitocondria es descrita como la "planta de energía". Si una persona realiza deporte de alto rendimiento todos los días, ¿crees que las células de sus músculos tendrán más o menos mitocondrias que las de una persona sedentaria? Justifica tu respuesta.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal de Finalización -->
+        <div class="modal" id="result-modal">
+            <div class="modal-content">
+                <h2 style="color: var(--primary-color); font-size: 2.2rem; margin-bottom: 0.5rem;">¡Investigación Completada!</h2>
+                <p style="font-size: 1.1rem; color: #555;">Tu calificación final en la actividad es:</p>
+                <div class="grade-display" id="final-grade">5.0</div>
+                <p id="feedback-msg" style="font-size: 1.05rem; line-height: 1.4; color: #424242; margin-bottom: 1.5rem;"></p>
+                <button class="btn-restart" id="btn-restart">Intentar de Nuevo</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. Configuración y Estado del Juego
+        const WORDS = [
+            "NUCLEO", "MITOCONDRIA", "RIBOSOMA", "MEMBRANA", "CITOPLASMA", 
+            "VACUOLA", "LISOSOMA", "CLOROPLASTO", "EUCARIOTA", "PROCARIOTA"
+        ];
+        const GRID_SIZE = 15;
+        let grid = [];
+        let wordStatus = {}; // Rastrea qué palabras se han encontrado
+        
+        let isSelecting = false;
+        let startCell = null;
+        let currentPath = []; // Coordenadas [{r, c}] seleccionadas actualmente
+        
+        let timer = 0;
+        let timerInterval = null;
+        let errors = 0;
+        let foundCount = 0;
+
+        // Referencias del DOM
+        const boardEl = document.getElementById('board');
+        const wordsListEl = document.getElementById('words-list');
+        const timerEl = document.getElementById('timer');
+        const errorsEl = document.getElementById('errors');
+        const foundCountEl = document.getElementById('found-count');
+        const modal = document.getElementById('result-modal');
+
+        function initGame() {
+            // Reiniciar estado
+            clearInterval(timerInterval);
+            timer = 0;
+            errors = 0;
+            foundCount = 0;
+            updateStats();
+            wordStatus = {};
+            WORDS.forEach(w => wordStatus[w] = false);
+            modal.classList.remove('active');
+
+            // ALGORITMO EXHAUSTIVO: Generar tablero garantizando el 100% de colocación
+            let success = false;
+            let attempts = 0;
+            while (!success) {
+                success = tryGenerateBoard();
+                attempts++;
+                if (attempts > 500) {
+                    // Matemáticamente en 15x15 para 10 palabras es casi imposible fallar 500 veces seguidas,
+                    // pero es un failsafe necesario.
+                    console.warn("Dificultad algorítmica. Reiniciando matriz de generación...");
+                    attempts = 0; 
+                }
+            }
+
+            fillRandomLetters();
+            renderBoard();
+            renderWordsList();
+            
+            // Iniciar Cronómetro
+            timerInterval = setInterval(() => {
+                timer++;
+                updateStats();
+            }, 1000);
+        }
+
+        // Crea una matriz bidimensional vacía
+        function createEmptyGrid() {
+            return Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+        }
+
+        // Intenta colocar TODAS las palabras. Retorna true solo si ubica las 10 con éxito.
+        function tryGenerateBoard() {
+            grid = createEmptyGrid();
+            
+            // Mezclar orden de palabras para variabilidad
+            let shuffledWords = [...WORDS].sort(() => Math.random() - 0.5);
+            
+            for (let word of shuffledWords) {
+                if (!placeWord(word)) {
+                    return false; // Falló al ubicar una palabra. Abortar esta cuadrícula y reintentar.
+                }
+            }
+            return true; // Éxito total
+        }
+
+        // Lógica de fuerza bruta aleatorizada para posicionar UNA palabra
+        function placeWord(word) {
+            // Direcciones: Horizontal, Vertical, Diagonales
+            const directions = [
+                [0, 1],   // Derecha
+                [1, 0],   // Abajo
+                [1, 1],   // Diagonal Abajo-Derecha
+                [-1, 1],  // Diagonal Arriba-Derecha
+                [0, -1],  // Izquierda
+                [-1, 0],  // Arriba
+                [-1, -1], // Diagonal Arriba-Izquierda
+                [1, -1]   // Diagonal Abajo-Izquierda
+            ];
+
+            let shuffledDirs = [...directions].sort(() => Math.random() - 0.5);
+            
+            // Crear array aleatorio de todas las coordenadas (0,0) a (14,14)
+            let positions = [];
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    positions.push({r, c});
+                }
+            }
+            positions.sort(() => Math.random() - 0.5);
+
+            // Búsqueda exhaustiva: probar cada celda y, en cada celda, cada dirección.
+            for (let pos of positions) {
+                for (let dir of shuffledDirs) {
+                    if (canPlaceWord(word, pos.r, pos.c, dir[0], dir[1])) {
+                        // Posición válida. Escribir palabra en la cuadrícula (en memoria)
+                        for (let i = 0; i < word.length; i++) {
+                            grid[pos.r + i * dir[0]][pos.c + i * dir[1]] = word[i];
+                        }
+                        return true; 
+                    }
+                }
+            }
+            return false; // Imposible ubicar en la configuración actual del tablero
+        }
+
+        // Verifica si una palabra cabe y no choca (excepto si cruza con la misma letra)
+        function canPlaceWord(word, r, c, dr, dc) {
+            let endR = r + (word.length - 1) * dr;
+            let endC = c + (word.length - 1) * dc;
+
+            // Verificar límites de la cuadrícula
+            if (endR < 0 || endR >= GRID_SIZE || endC < 0 || endC >= GRID_SIZE) {
+                return false;
+            }
+
+            // Verificar colisiones
+            for (let i = 0; i < word.length; i++) {
+                let currentR = r + i * dr;
+                let currentC = c + i * dc;
+                let cellChar = grid[currentR][currentC];
+                
+                // Si la celda no está vacía y la letra no coincide, colisión.
+                if (cellChar !== '' && cellChar !== word[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function fillRandomLetters() {
+            const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    }
+                }
+            }
+        }
+
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    cell.textContent = grid[r][c];
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function renderWordsList() {
+            wordsListEl.innerHTML = '';
+            WORDS.forEach(word => {
+                const pill = document.createElement('div');
+                pill.className = `word-pill ${wordStatus[word] ? 'found' : ''}`;
+                pill.id = `pill-${word}`;
+                pill.textContent = word;
+                wordsListEl.appendChild(pill);
+            });
+        }
+
+        function updateStats() {
+            const mins = Math.floor(timer / 60).toString().padStart(2, '0');
+            const secs = (timer % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${mins}:${secs}`;
+            errorsEl.textContent = errors;
+            foundCountEl.textContent = foundCount;
+        }
+
+        
+        // Iniciar selección
+        boardEl.addEventListener('pointerdown', (e) => {
+            const cell = getCellFromEvent(e);
+            if (!cell) return;
+            
+            isSelecting = true;
+            startCell = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
+            clearHighlight();
+            highlightPath(startCell, startCell);
+            
+            // Previene el scroll nativo al arrastrar sobre el tablero
+            if(e.cancelable) e.preventDefault();
+        });
+
+        // Arrastrar selección
+        document.addEventListener('pointermove', (e) => {
+            if (!isSelecting) return;
+            const cell = getCellFromEvent(e);
+            if (!cell) return;
+            
+            const currentCell = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
+            
+            // Validar que se forme una línea recta antes de resaltar
+            if (isValidLine(startCell, currentCell)) {
+                clearHighlight();
+                highlightPath(startCell, currentCell);
+            }
+        });
+
+        // Finalizar selección
+        document.addEventListener('pointerup', (e) => {
+            if (!isSelecting) return;
+            isSelecting = false;
+            
+            if (currentPath.length > 1) {
+                checkSelection();
+            } else {
+                clearHighlight(); // Clic simple, limpiar.
+            }
+        });
+
+        // Utiliza elementFromPoint para soporte robusto de deslizamiento táctil entre elementos
+        function getCellFromEvent(e) {
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            
+            // Fallback para touch events crudos si pointer events falla en un dispositivo muy viejo
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            const target = document.elementFromPoint(clientX, clientY);
+            if (target && target.classList.contains('cell')) {
+                return target;
+            }
+            return null;
+        }
+
+        // Matemáticas para asegurar que la selección es horizontal, vertical o diagonal a 45 grados
+        function isValidLine(start, end) {
+            const dr = Math.abs(end.r - start.r);
+            const dc = Math.abs(end.c - start.c);
+            return dr === 0 || dc === 0 || dr === dc;
+        }
+
+        // Pinta el camino visualmente en el DOM
+        function highlightPath(start, end) {
+            currentPath = [];
+            const rDiff = end.r - start.r;
+            const cDiff = end.c - start.c;
+            
+            const steps = Math.max(Math.abs(rDiff), Math.abs(cDiff));
+            
+            const rStep = steps === 0 ? 0 : rDiff / steps;
+            const cStep = steps === 0 ? 0 : cDiff / steps;
+
+            for (let i = 0; i <= steps; i++) {
+                const r = start.r + i * rStep;
+                const c = start.c + i * cStep;
+                currentPath.push({r, c});
+                
+                const cellEl = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                if (cellEl && !cellEl.classList.contains('found')) {
+                    cellEl.classList.add('highlight');
+                }
+            }
+        }
+
+        function clearHighlight() {
+            const highlighted = document.querySelectorAll('.cell.highlight');
+            highlighted.forEach(el => el.classList.remove('highlight'));
+            currentPath = [];
+        }
+
+        function checkSelection() {
+            let selectedWord = "";
+            let domCells = [];
+            
+            // Reconstruir la palabra a partir de las coordenadas seleccionadas
+            currentPath.forEach(pos => {
+                selectedWord += grid[pos.r][pos.c];
+                domCells.push(document.querySelector(`.cell[data-r="${pos.r}"][data-c="${pos.c}"]`));
+            });
+            
+            const reversedWord = selectedWord.split('').reverse().join('');
+            let matchedWord = null;
+            
+            // Validar al derecho o al revés contra la lista original
+            if (WORDS.includes(selectedWord) && !wordStatus[selectedWord]) {
+                matchedWord = selectedWord;
+            } else if (WORDS.includes(reversedWord) && !wordStatus[reversedWord]) {
+                matchedWord = reversedWord;
+            }
+
+            if (matchedWord) {
+                // ÉXITO: Palabra encontrada
+                wordStatus[matchedWord] = true;
+                foundCount++;
+                
+                domCells.forEach(el => {
+                    el.classList.remove('highlight');
+                    el.classList.add('found');
+                });
+                
+                document.getElementById(`pill-${matchedWord}`).classList.add('found');
+                updateStats();
+                
+                // Condición de Victoria
+                if (foundCount === WORDS.length) {
+                    endGame();
+                }
+            } else {
+                // ERROR: Selección incorrecta
+                errors++;
+                updateStats();
+                clearHighlight();
+                // Opcional: Feedback visual de error (shake) podría ir aquí.
+            }
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            
+            // Sistema de Calificación (Escala 1.0 a 5.0)
+            // Base 5.0. 
+            // Penalización por error: -0.2
+            // Penalización por tiempo: -0.1 por cada 30 segundos después de los primeros 120s.
+            let timePenalty = timer > 120 ? Math.floor((timer - 120) / 30) * 0.1 : 0;
+            let errorPenalty = errors * 0.2;
+            
+            let finalGrade = 5.0 - errorPenalty - timePenalty;
+            
+            // Límites (Min 1.0, Max 5.0)
+            if (finalGrade < 1.0) finalGrade = 1.0;
+            if (finalGrade > 5.0) finalGrade = 5.0; 
+            
+            const gradeDisplay = document.getElementById('final-grade');
+            gradeDisplay.textContent = finalGrade.toFixed(1);
+            
+            let feedback = "";
+            if (finalGrade >= 4.5) {
+                feedback = "¡Excelente precisión biológica! Dominas perfectamente las partes de la célula.";
+                gradeDisplay.style.color = "#2e7d32"; // Green
+            } else if (finalGrade >= 3.5) {
+                feedback = "¡Buen trabajo! Has encontrado todas las estructuras, pero ten cuidado con los errores.";
+                gradeDisplay.style.color = "#ff8f00"; // Amber
+            } else {
+                feedback = "Misión completada. Te recomendamos repasar detenidamente el artículo inferior sobre la célula y sus organelos.";
+                gradeDisplay.style.color = "#c62828"; // Red
+            }
+            
+            document.getElementById('feedback-msg').textContent = feedback;
+            modal.classList.add('active');
+        }
+
+        // Listener para reinicio
+        document.getElementById('btn-restart').addEventListener('click', initGame);
+
+        // Iniciar juego al cargar el documento
+        window.onload = initGame;
+
+        // Evitar comportamientos touch por defecto en el contenedor principal para móviles
+        document.getElementById('zona-juego').addEventListener('touchmove', function(e) {
+            // Solo prevenir si estamos interactuando con el board
+            if(e.target.closest('#board')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+    </script>
+</body>
+</html>

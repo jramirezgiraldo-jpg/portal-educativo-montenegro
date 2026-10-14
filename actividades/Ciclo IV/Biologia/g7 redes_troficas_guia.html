@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- REQUISITO TÉCNICO CRÍTICO 2: Viewport para mobile-first y prevención de bugs -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Redes Tróficas y Flujo de Energía</title>
+    
+    <style>
+        :root {
+            /* Tema Cyberpunk - Ecología Digital (Verde Neón, Cyan, Oscuro) */
+            --cp-bg: #090f0c;
+            --cp-dark: #121c18;
+            --cp-cyan: #00f3ff;
+            --cp-green: #00ff66;
+            --cp-dark-green: #008f39;
+            --cp-purple: #9d00ff;
+            --cp-red: #ff2a2a;
+            --cp-gray: #a9b1d6;
+            --cp-magenta: #ff00ff;
+            
+            /* Tema Lectura Académica (Claro, Alto Contraste) */
+            --read-bg: #f4f7f6;
+            --read-text: #2c3e50;
+            --read-heading: #1a252f;
+            --card-bg: #ffffff;
+            --accent-blue: #2980b9;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            color: var(--cp-gray);
+            scroll-behavior: smooth;
+        }
+
+        #zona-juego {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            background: radial-gradient(circle at 50% 50%, var(--cp-dark) 0%, var(--cp-bg) 100%);
+            border-bottom: 5px solid var(--cp-green);
+            /* CRÍTICO: Prevenir comportamientos táctiles por defecto (zoom, scroll) */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 600px;
+            background-color: rgba(18, 28, 24, 0.85);
+            border: 2px solid var(--cp-green);
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.2), inset 0 0 15px rgba(0, 243, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            height: 75vh;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid var(--cp-green);
+            font-family: monospace;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            color: var(--cp-cyan);
+            text-shadow: 0 0 8px var(--cp-cyan);
+            z-index: 10;
+        }
+
+        .hud-lives {
+            color: var(--cp-red);
+            text-shadow: 0 0 8px var(--cp-red);
+            letter-spacing: 2px;
+        }
+
+        #game-canvas {
+            width: 100%;
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(
+                180deg,
+                rgba(0, 255, 102, 0.05) 0%,
+                rgba(0, 243, 255, 0.05) 100%
+            );
+        }
+
+        /* Rejilla Matrix Fondo */
+        #game-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 255, 102, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 102, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .word-bubble {
+            position: absolute;
+            padding: 12px 24px;
+            background: rgba(9, 15, 12, 0.95);
+            border: 2px solid var(--cp-cyan);
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 800;
+            font-size: clamp(0.95rem, 3.5vw, 1.25rem);
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            transform: translateX(-50%);
+            transition: transform 0.1s;
+            z-index: 5;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .word-bubble:active {
+            transform: translateX(-50%) scale(0.9);
+        }
+
+        @keyframes explodeAnim {
+            0% { transform: translateX(-50%) scale(1); border-color: var(--cp-green); box-shadow: 0 0 20px var(--cp-green); color: var(--cp-green); }
+            50% { transform: translateX(-50%) scale(1.4); opacity: 0.9; background: rgba(0, 255, 102, 0.2); }
+            100% { transform: translateX(-50%) scale(1.8); opacity: 0; filter: blur(4px); }
+        }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(-50%); }
+            20%, 60% { transform: translateX(calc(-50% - 12px)); }
+            40%, 80% { transform: translateX(calc(-50% + 12px)); }
+        }
+
+        .exploding {
+            animation: explodeAnim 0.35s ease-out forwards;
+            pointer-events: none;
+        }
+
+        .error-shake {
+            animation: shakeError 0.4s ease forwards;
+            border-color: var(--cp-red) !important;
+            box-shadow: 0 0 20px var(--cp-red) !important;
+            color: var(--cp-red) !important;
+            pointer-events: none;
+        }
+
+        .overlay-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(9, 15, 12, 0.95);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 25px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .title-neon {
+            color: var(--cp-green);
+            font-size: clamp(2rem, 7vw, 3rem);
+            text-shadow: 0 0 10px var(--cp-green), 0 0 25px var(--cp-dark-green);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .instruction-box {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--cp-cyan);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            color: var(--cp-gray);
+            font-size: clamp(1rem, 3.8vw, 1.2rem);
+            line-height: 1.6;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .btn-neon {
+            background: rgba(0, 255, 102, 0.1);
+            color: var(--cp-green);
+            border: 2px solid var(--cp-green);
+            padding: 15px 35px;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            text-transform: uppercase;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.3) inset, 0 0 15px rgba(0, 255, 102, 0.3);
+            transition: all 0.2s;
+            letter-spacing: 2px;
+        }
+
+        .btn-neon:active {
+            background: var(--cp-green);
+            color: var(--cp-bg);
+            box-shadow: 0 0 30px var(--cp-green);
+            transform: scale(0.95);
+        }
+
+        .final-score {
+            font-size: clamp(4rem, 12vw, 6rem);
+            font-weight: 900;
+            margin: 15px 0;
+            font-family: monospace;
+            line-height: 1;
+        }
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(40px, 6vw, 80px) clamp(20px, 5vw, 40px);
+            width: 100%;
+            box-sizing: border-box;
+            user-select: text; 
+            -webkit-user-select: text;
+            touch-action: auto;
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: clamp(25px, 6vw, 60px);
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+            border-top: 10px solid var(--cp-dark-green);
+        }
+
+        .article-title {
+            color: var(--read-heading);
+            font-size: clamp(2rem, 7vw, 3rem);
+            border-bottom: 4px solid #eaeef1;
+            padding-bottom: 20px;
+            margin-top: 0;
+            line-height: 1.15;
+            font-weight: 900;
+        }
+
+        .article-container h2 {
+            color: var(--cp-dark-green);
+            margin-top: 45px;
+            font-size: clamp(1.5rem, 5.5vw, 2rem);
+            border-left: 5px solid var(--cp-green);
+            padding-left: 15px;
+            line-height: 1.3;
+        }
+        
+        .article-container h3 {
+            color: var(--accent-blue);
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            margin-top: 30px;
+        }
+
+        .article-container p, .article-container li {
+            font-size: clamp(1.1rem, 3.8vw, 1.25rem);
+            line-height: 1.85;
+            margin-bottom: 20px;
+            color: #3d4a57;
+        }
+
+        .highlight-box {
+            background-color: #e8f5e9;
+            border-left: 5px solid var(--cp-dark-green);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-style: normal;
+            color: #2d3436;
+            font-weight: 500;
+        }
+
+        .workshop-section {
+            margin-top: 70px;
+            background-color: #ffffff;
+            padding: clamp(25px, 6vw, 50px);
+            border-radius: 16px;
+            border: 2px dashed var(--accent-blue);
+            box-shadow: inset 0 0 20px rgba(41, 128, 185, 0.05);
+        }
+
+        .workshop-header {
+            color: var(--read-heading);
+            text-align: center;
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 900;
+        }
+
+        .workshop-instruction {
+            text-align: center;
+            font-weight: 700;
+            color: #d35400;
+            background-color: #fdf2e9;
+            border: 2px solid #e67e22;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            box-shadow: 0 5px 15px rgba(230, 126, 34, 0.2);
+        }
+
+        .activity-card {
+            background: #fcfcfc;
+            border-left: 6px solid var(--read-text);
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 0 10px 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .activity-card:hover {
+            transform: translateX(5px);
+        }
+
+        .activity-type {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .type-responde { background-color: #2980b9; }
+        .type-analiza { background-color: #c0392b; }
+        .type-dibuja { background-color: #27ae60; }
+        .type-mapa { background-color: #8e44ad; }
+        
+        .activity-card p { margin: 0; color: var(--read-text); font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-wrapper">
+                
+                <div class="hud">
+                    <div id="score-display">ENERGÍA: 0/15</div>
+                    <div id="lives-display" class="hud-lives">♥♥♥♥♥</div>
+                </div>
+
+                <div id="game-canvas"></div>
+
+                <!-- Pantalla de Inicio -->
+                <div id="start-screen" class="overlay-screen">
+                    <h1 class="title-neon">Red Trófica<br>Activa</h1>
+                    <div class="instruction-box">
+                        <p style="color: var(--cp-green); font-weight: 900; margin-top: 0; font-size: 1.2em;">MISIÓN ECOLÓGICA:</p>
+                        <p>Toca y recolecta ÚNICAMENTE los términos que pertenecen a la <strong>Estructura de Redes Tróficas y Flujo de Energía</strong> (Ej. niveles tróficos, tipos de alimentación).</p>
+                        <ul style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                            <li><span style="color:var(--cp-green)">Acierto:</span> Sumas energía.</li>
+                            <li><span style="color:var(--cp-red)">Error:</span> Si tocas un distractor (otras áreas de biología) pierdes 1 vida.</li>
+                            <li><span style="color:var(--cp-red)">Omisión:</span> Si dejas caer una palabra correcta, pierdes 1 vida.</li>
+                        </ul>
+                    </div>
+                    <button class="btn-neon" id="btn-start">Iniciar Ecosistema</button>
+                    <button class="btn-neon" style="margin-top:20px; font-size: 1rem; border-color: var(--cp-gray); color: var(--cp-gray); background: transparent; padding: 10px 20px;" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Leer Teoría Primero ↓</button>
+                </div>
+
+                <!-- Pantalla Final -->
+                <div id="end-screen" class="overlay-screen" style="display: none;">
+                    <h2 class="title-neon" id="end-title" style="font-size: clamp(1.8rem, 6vw, 2.5rem);">Simulación Terminada</h2>
+                    <p style="color: var(--cp-gray); margin-bottom: 5px; font-size: 1.2rem;">Calificación de Asimilación:</p>
+                    <div class="final-score" id="final-grade">0.0</div>
+                    <p id="end-message" style="color: var(--cp-cyan); max-width: 90%; line-height: 1.5; font-size: 1.1rem;"></p>
+                    <button class="btn-neon" style="margin-top: 25px;" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Ir al Taller y Teoría ↓</button>
+                    <button class="btn-neon" style="margin-top: 15px; background: transparent; border-color: var(--cp-cyan); color: var(--cp-cyan); font-size: 1rem; padding: 10px 20px;" id="btn-restart">Reiniciar Simulación</button>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h1 class="article-title">El Motor de la Vida: Redes Tróficas y Flujo de Energía</h1>
+                
+                <h2>1. El Origen de la Energía</h2>
+                <p>Si miras a tu alrededor, toda la vida que observas necesita una cosa fundamental para existir: energía. Pero, ¿de dónde proviene originalmente esta energía que mueve a plantas, animales y humanos? La respuesta es casi siempre la misma: <strong>el Sol</strong>.</p>
+                <p>En la biología, el ecosistema funciona como una compleja red de transferencias de energía térmica, lumínica y química. Entender cómo viaja esta energía desde el Sol hasta el último ser vivo en descomposición es esencial para comprender el equilibrio de la naturaleza y por qué la extinción de una sola especie puede desencadenar un efecto dominó.</p>
+
+                <h2>2. Niveles Tróficos: Los Roles en el Ecosistema</h2>
+                <p>Las especies de un ecosistema se organizan en "Niveles Tróficos" según su forma de obtener alimento. Cada ser vivo desempeña un rol crucial:</p>
+                
+                <h3>A. Productores (Autótrofos)</h3>
+                <p>Son el primer eslabón y la base de la vida. Organismos como plantas, algas y algunas bacterias tienen la increíble capacidad de capturar la energía lumínica del Sol y, mediante la <strong>fotosíntesis</strong>, transformarla en energía química (azúcares). Al fabricar su propio alimento, se les denomina organismos <strong>autótrofos</strong>.</p>
+                
+                <h3>B. Consumidores (Heterótrofos)</h3>
+                <p>Son aquellos organismos que no pueden fabricar su propio alimento y necesitan comer a otros. Se dividen en varias categorías dependiendo de qué coman:</p>
+                <ul>
+                    <li><strong>Consumidores Primarios (Herbívoros):</strong> Se alimentan directamente de los productores. Ejemplos: vacas, orugas, conejos.</li>
+                    <li><strong>Consumidores Secundarios (Carnívoros):</strong> Se alimentan de los herbívoros. Ejemplos: ranas, arañas, lobos pequeños.</li>
+                    <li><strong>Consumidores Terciarios (Superdepredadores):</strong> Se alimentan de otros carnívoros. Suelen estar en la cima de la pirámide. Ejemplos: águilas, tiburones, leones.</li>
+                    <li><strong>Omnívoros:</strong> Pueden comer tanto productores como a otros consumidores. Ejemplos: osos, cerdos, seres humanos.</li>
+                </ul>
+
+                <h3>C. Descomponedores (Recicladores)</h3>
+                <p>A menudo ignorados, pero vitales. Los hongos y las bacterias se encargan de degradar los restos de plantas y animales muertos. Su función es <strong>devolver los nutrientes inorgánicos al suelo</strong>, cerrando el ciclo de la materia para que los productores puedan volver a utilizarlos. Son los recicladores de la naturaleza.</p>
+
+                <div class="highlight-box">
+                    <strong>¡Atención a la Física!</strong> La <em>materia</em> (los nutrientes) realiza un ciclo cerrado: se recicla continuamente en el ecosistema. Sin embargo, la <em>energía</em> sigue un flujo lineal: entra como luz, pasa por los seres vivos y se pierde poco a poco en forma de <strong>calor</strong>. La energía no se recicla.
+                </div>
+
+                <h2>3. Cadenas, Redes y Pirámides Tróficas</h2>
+                <p>Para representar gráficamente quién se come a quién, los científicos usan modelos visuales:</p>
+                <p>Una <strong>Cadena Trófica</strong> es una línea recta. Por ejemplo: <em>Pasto -> Saltamontes -> Sapo -> Serpiente</em>. Sin embargo, en la realidad la naturaleza es más compleja. Un sapo come muchos insectos, y una serpiente no solo come sapos.</p>
+                <p>Por eso utilizamos las <strong>Redes Tróficas</strong>, que son conjuntos de muchas cadenas alimenticias entrelazadas, mostrando las múltiples interacciones reales de un ecosistema.</p>
+                <p>Finalmente, la <strong>Pirámide Trófica</strong> nos ayuda a entender un principio termodinámico conocido como la <strong>Regla del 10%</strong>. Cada vez que un animal se come a otro, solo asimila aproximadamente el 10% de la energía de su presa para crear su propia biomasa; el otro 90% se gasta en respiración, movimiento y se pierde como calor. Esto explica por qué en la base de la pirámide hay miles de plantas (mucha energía y biomasa), pero en la punta solo hay unos pocos leones (poca energía disponible).</p>
+
+                <h2>4. La Importancia del Equilibrio</h2>
+                <p>Las redes tróficas nos enseñan que todas las especies están interconectadas. El papel de los depredadores no es solo ser "malos" o cazar; ellos mantienen bajo control a las poblaciones de herbívoros. Si eliminamos a los depredadores, los herbívoros se reproducen sin control (convirtiéndose en plagas), devoran toda la vegetación (productores) y terminan muriendo de hambre, colapsando todo el ecosistema.</p>
+
+                <!-- Taller de Aplicación -->
+                <div class="workshop-section">
+                    <h2 class="workshop-header">Taller de Repaso</h2>
+                    <div class="workshop-instruction">
+                        ✍️ INSTRUCCIÓN: Escribe y resuelve de manera clara y ordenada estas 10 actividades en tu cuaderno de Ciencias Naturales / Biología.
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">1. Responde</span>
+                        <p>Según el texto, ¿cuál es la diferencia fundamental entre cómo se comporta la materia y cómo se comporta la energía en un ecosistema?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">2. Dibuja e Identifica</span>
+                        <p>Ilustra en tu cuaderno una Cadena Trófica simple de 4 eslabones utilizando especies típicas de tu región o país. Debes etiquetar quién es el productor y qué tipo de consumidor es cada uno.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">3. Analiza el Caso Crítico</span>
+                        <p>Imagina que en un bosque se extinguen repentinamente todos los hongos y bacterias descomponedoras. Argumenta lógicamente qué sucedería con las plantas a mediano y largo plazo.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">4. Mapa Conceptual</span>
+                        <p>Construye un mapa conceptual que clasifique y organice los Niveles Tróficos (Productores, Consumidores [divídelos en sus tipos] y Descomponedores). Incluye una breve definición para cada rama.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">5. Responde</span>
+                        <p>¿Qué proceso biológico realizan los productores para transformar la energía lumínica del sol en energía química asimilable? ¿Por qué se les llama "autótrofos"?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">6. Analiza la Regla del 10%</span>
+                        <p>Basándote en la explicación termodinámica de la "Regla del 10%", explica por qué la base de una pirámide trófica (las plantas) siempre debe ser mucho más ancha y masiva que la punta (los depredadores).</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-dibuja">7. Ilustra el Proceso</span>
+                        <p>Dibuja una Pirámide Trófica. Dibuja flechas que indiquen cómo sube la energía (disminuyendo) y cómo parte de esa energía se pierde hacia el exterior en forma de calor.</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-mapa">8. Mapa Mental (Red vs Cadena)</span>
+                        <p>Crea un mapa mental comparativo donde expliques gráficamente y con palabras clave la diferencia entre una <strong>Cadena Trófica</strong> (lineal) y una <strong>Red Trófica</strong> (compleja e interconectada).</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-responde">9. Responde</span>
+                        <p>Los seres humanos comemos ensaladas (plantas) y también carne de res (herbívoro). ¿En qué clasificación de consumidores entramos debido a esta dieta mixta?</p>
+                    </div>
+
+                    <div class="activity-card">
+                        <span class="activity-type type-analiza">10. Analiza (Impacto Ambiental)</span>
+                        <p>En un ecosistema agrícola, los granjeros cazan y eliminan a todos los búhos y serpientes porque los consideran "peligrosos". Estos animales se comían a los ratones. Analiza y describe el efecto dominó que sufrirá el cultivo de los granjeros.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fase 1: Base de Datos de Palabras (Redes Tróficas vs Distractores)
+        const correctWords = [
+            "Productor", "Consumidor", "Descomponedor", "Autótrofo", 
+            "Heterótrofo", "Herbívoro", "Carnívoro", "Omnívoro", 
+            "Fotosíntesis", "Biomasa", "Pirámide Trófica", "Red Trófica", 
+            "Energía", "Detritívoro", "Depredador"
+        ];
+        
+        const distractorWords = [
+            "Gravedad", "Protón", "Velocidad", "ADN", 
+            "Mitocondria", "Fricción", "Electromagnetismo", "Ósmosis", 
+            "Mitosis", "Genoma", "Alelo", "Plásmido", 
+            "Nucleótido", "Tensión Superficial", "Inercia"
+        ];
+
+        // Estado del Juego
+        let state = {
+            score: 0,
+            lives: 5,
+            maxScore: 15, // Acertar 15 para la nota máxima
+            isGameRunning: false,
+            activeObjects: [], // { element, y, speed, isCorrect }
+            spawnInterval: null,
+            animationFrame: null,
+            poolCorrect: [],
+            poolDistract: [],
+            spawnRateMs: 1400,
+            baseFallSpeed: 1.2 // Ajustado para dar tiempo de reacción en mobile
+        };
+
+        // Referencias al DOM
+        const canvasEl = document.getElementById('game-canvas');
+        const scoreEl = document.getElementById('score-display');
+        const livesEl = document.getElementById('lives-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const btnStart = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+        const finalGradeEl = document.getElementById('final-grade');
+        const endMessageEl = document.getElementById('end-message');
+
+        // Utilidad: Fisher-Yates shuffle
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            // Resetear estado
+            state.score = 0;
+            state.lives = 5;
+            state.isGameRunning = true;
+            
+            // Ajustar velocidad base según la altura de la pantalla (responsivo)
+            state.baseFallSpeed = window.innerHeight < 750 ? 1.0 : 1.4; 
+            state.spawnRateMs = 1350;
+            
+            // Limpiar área
+            canvasEl.innerHTML = '';
+            state.activeObjects = [];
+
+            // Preparar arrays de palabras desordenadas
+            state.poolCorrect = shuffle([...correctWords]);
+            state.poolDistract = shuffle([...distractorWords]);
+
+            updateHUD();
+
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+
+            // Iniciar ciclos
+            state.spawnInterval = setInterval(spawnWord, state.spawnRateMs);
+            state.animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop() {
+            if (!state.isGameRunning) return;
+
+            const canvasHeight = canvasEl.clientHeight;
+
+            // Recorrer de atrás hacia adelante para eliminar nodos de forma segura
+            for (let i = state.activeObjects.length - 1; i >= 0; i--) {
+                let obj = state.activeObjects[i];
+                
+                // Aplicar gravedad
+                obj.y += obj.speed;
+                obj.element.style.top = obj.y + 'px';
+
+                // Detectar si el objeto salió por el fondo
+                if (obj.y > canvasHeight + 10) {
+                    
+                    // Mecánica: Cae Correcta = Pierde Vida. Cae Distractor = No pasa nada.
+                    if (obj.isCorrect) {
+                        loseLife();
+                        // Feedback visual de daño
+                        canvasEl.style.boxShadow = "inset 0 -20px 20px -20px var(--cp-red)";
+                        setTimeout(() => canvasEl.style.boxShadow = "none", 250);
+                    }
+                    
+                    // Eliminar del DOM y memoria
+                    if (obj.element.parentNode) canvasEl.removeChild(obj.element);
+                    state.activeObjects.splice(i, 1);
+                }
+            }
+
+            // Continuar loop
+            state.animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function spawnWord() {
+            if (!state.isGameRunning) return;
+
+            // Condición de fin por agotar correctas o lograr puntaje
+            if (state.score >= state.maxScore || (state.poolCorrect.length === 0 && state.activeObjects.filter(o => o.isCorrect).length === 0)) {
+                setTimeout(endGame, 1500); // Dar margen antes de cortar
+                clearInterval(state.spawnInterval);
+                return;
+            }
+
+            // Ratio: ~55% correctas, ~45% distractores
+            let isCorrect = Math.random() < 0.55;
+            let text = "";
+
+            if (isCorrect && state.poolCorrect.length > 0) {
+                text = state.poolCorrect.pop();
+            } else if (!isCorrect && state.poolDistract.length > 0) {
+                text = state.poolDistract.pop();
+            } else if (state.poolCorrect.length > 0) {
+                // Forzar correcta si se acabaron los distractores
+                isCorrect = true;
+                text = state.poolCorrect.pop();
+            } else {
+                return; // Pools vacíos
+            }
+
+            // Crear el chip de la palabra
+            const bubble = document.createElement('div');
+            bubble.classList.add('word-bubble');
+            bubble.innerText = text;
+
+            // Posición X aleatoria entre 15% y 85% para evitar que se salgan los textos largos
+            const randomX = Math.floor(Math.random() * 70) + 15;
+            bubble.style.left = randomX + '%';
+            bubble.style.top = '-50px'; // Empezar por fuera de la vista arriba
+
+            // Evento Unificado Táctil y Ratón
+            bubble.addEventListener('pointerdown', (e) => handleTap(e, bubble, isCorrect));
+
+            canvasEl.appendChild(bubble);
+            
+            // Ligeras variaciones en la velocidad de caída
+            const speedVariance = (Math.random() * 0.5) - 0.2;
+
+            state.activeObjects.push({
+                element: bubble,
+                y: -50,
+                speed: state.baseFallSpeed + speedVariance,
+                isCorrect: isCorrect
+            });
+
+            // Curva de dificultad (Aumenta velocidad con el puntaje)
+            if (state.score === 5) state.baseFallSpeed += 0.3;
+            if (state.score === 10) state.baseFallSpeed += 0.3;
+        }
+
+        function handleTap(e, element, isCorrect) {
+            e.preventDefault(); // Prevenir comportamientos default de navegadores táctiles
+
+            if (!state.isGameRunning) return;
+            
+            // Ignorar si el elemento ya está en animación de explosión o error
+            if (element.classList.contains('exploding') || element.classList.contains('error-shake')) return;
+
+            // Retirar del motor de físicas interno
+            const index = state.activeObjects.findIndex(obj => obj.element === element);
+            if (index > -1) {
+                state.activeObjects.splice(index, 1);
+            }
+
+            if (isCorrect) {
+                // ACELERACIÓN (Correcta)
+                state.score++;
+                updateHUD();
+                
+                element.classList.add('exploding');
+                // Api de vibración sutil si está disponible
+                if (navigator.vibrate) navigator.vibrate(30); 
+                
+                // Limpieza tras la animación
+                setTimeout(() => {
+                    if (element.parentNode) canvasEl.removeChild(element);
+                }, 350);
+
+                if(state.score >= state.maxScore) {
+                    endGame();
+                }
+
+            } else {
+                // ERROR (Tocó un distractor)
+                loseLife();
+                
+                element.classList.add('error-shake');
+                if (navigator.vibrate) navigator.vibrate([80, 50, 80]); // Patrón de error
+                
+                setTimeout(() => {
+                    if (element.parentNode) canvasEl.removeChild(element);
+                }, 400);
+            }
+        }
+
+        function loseLife() {
+            state.lives--;
+            updateHUD();
+            
+            if (state.lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateHUD() {
+            scoreEl.innerText = `ENERGÍA: ${state.score}/${state.maxScore}`;
+            
+            let hearts = "";
+            for(let i=0; i<5; i++) {
+                hearts += (i < state.lives) ? "♥" : "♡";
+            }
+            livesEl.innerText = hearts;
+        }
+
+        function endGame() {
+            if(!state.isGameRunning) return; 
+            
+            state.isGameRunning = false;
+            clearInterval(state.spawnInterval);
+            cancelAnimationFrame(state.animationFrame);
+
+            // Fórmula de Calificación Colombiana (1.0 a 5.0)
+            let grade = 1.0 + (state.score / state.maxScore) * 4.0;
+
+            // Penalización: Si pierde todas las vidas, la nota máxima se capa a 2.9 (reprobado)
+            if (state.lives <= 0) {
+                grade = Math.min(grade, 2.9);
+            }
+
+            if (grade < 1.0) grade = 1.0;
+            if (grade > 5.0) grade = 5.0;
+
+            finalGradeEl.innerText = grade.toFixed(1);
+
+            // Feedback de texto dinámico basado en la nota
+            if (grade >= 4.0) {
+                finalGradeEl.style.color = "var(--cp-green)";
+                finalGradeEl.style.textShadow = "0 0 25px var(--cp-green)";
+                endMessageEl.innerText = "¡SISTEMA ESTABLE! Has demostrado una comprensión excelente sobre el flujo de energía en las redes tróficas.";
+            } else if (grade >= 3.0) {
+                finalGradeEl.style.color = "#f1c40f";
+                finalGradeEl.style.textShadow = "0 0 25px #f1c40f";
+                endMessageEl.innerText = "EQUILIBRIO PRECARIO. Comprendes los básicos, pero algunos conceptos están cruzados. Te recomiendo leer de nuevo el artículo.";
+            } else {
+                finalGradeEl.style.color = "var(--cp-red)";
+                finalGradeEl.style.textShadow = "0 0 25px var(--cp-red)";
+                endMessageEl.innerText = "¡COLAPSO DEL ECOSISTEMA! La red trófica ha fallado por falta de conocimientos clave. Revisa exhaustivamente la teoría abajo.";
+            }
+
+            endScreen.style.display = 'flex';
+        }
+
+        // Asignar Eventos a botones
+        btnStart.addEventListener('click', initGame);
+        btnRestart.addEventListener('click', initGame);
+
+    </script>
+</body>
+</html>

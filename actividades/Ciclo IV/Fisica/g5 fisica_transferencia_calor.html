@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- REQUISITO TÉCNICO CRÍTICO 2: Viewport responsivo -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Física: Transferencia de Calor</title>
+    <!-- REQUISITO TÉCNICO CRÍTICO 1: Todo el CSS incrustado, uso de fuentes del sistema -->
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --text-color: #2c3e50;
+            --primary: #1a5276;
+            --primary-hover: #154360;
+            --secondary: #e67e22;
+            --secondary-hover: #d35400;
+            --accent: #27ae60;
+            --danger: #c0392b;
+            --board-bg: #0b5345;
+            --card-bg: #117864;
+            --card-done: #7f8c8d;
+            --white: #ffffff;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Contenedor principal adaptable */
+        .app-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* --- FASE 2: ZONA DE JUEGO (UI & JUEGO INTERACTIVO) --- */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            color: var(--primary);
+            /* Tipografía elástica */
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 0.5rem;
+        }
+
+        .instruccion {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: var(--primary);
+            color: var(--white);
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Tablero tipo Jeopardy */
+        #zona-juego {
+            background: var(--board-bg);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .jeopardy-grid {
+            display: grid;
+            /* Grid fluido adaptado a 4 columnas por defecto, ajustado en media queries para móviles */
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .category-header {
+            background: var(--primary);
+            color: var(--white);
+            text-align: center;
+            padding: 1rem 0.5rem;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .question-btn {
+            background: var(--card-bg);
+            color: var(--secondary);
+            border: 2px solid #1abc9c;
+            border-radius: 6px;
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-weight: 900;
+            padding: 1.5rem 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.2);
+            /* CRÍTICO: Prevenir zoom/scroll accidental en elementos interactivos táctiles */
+            touch-action: none;
+            user-select: none;
+        }
+
+        .question-btn:hover:not(:disabled) {
+            background: #1abc9c;
+            color: var(--white);
+            transform: scale(1.02);
+        }
+
+        .question-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .question-btn:disabled {
+            background: var(--card-done);
+            color: #bdc3c7;
+            border-color: #95a5a6;
+            cursor: not-allowed;
+            text-shadow: none;
+            transform: none;
+        }
+
+        /* Modales Responsivos */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--white);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-points {
+            color: var(--secondary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .modal-question {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            color: var(--primary);
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: var(--bg-color);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .option-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .option-btn.correct-anim {
+            background: var(--accent) !important;
+            border-color: var(--accent) !important;
+            color: var(--white) !important;
+        }
+
+        .option-btn.wrong-anim {
+            background: var(--danger) !important;
+            border-color: var(--danger) !important;
+            color: var(--white) !important;
+        }
+
+        /* Mensajes modales genéricos (resultado/fin de juego) */
+        .result-icon svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+        }
+        .text-correct { color: var(--accent); }
+        .text-wrong { color: var(--danger); }
+        
+        .btn-close {
+            margin-top: 1.5rem;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        /* --- FASE 3: ZONA DE LECTURA (TALLER Y ARTÍCULO) --- */
+        #zona-lectura {
+            background: var(--white);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 3rem;
+        }
+
+        .lectura-header {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .lectura-header h2 {
+            color: var(--primary);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+        }
+
+        article.teoria {
+            font-size: 1.1rem;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        article.teoria h3 {
+            color: var(--secondary);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        article.teoria p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        article.teoria ul {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        article.teoria li {
+            margin-bottom: 0.5rem;
+        }
+
+        .taller-repaso {
+            margin-top: 4rem;
+            background: #fdfbf7;
+            border: 2px solid #e5e0d8;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .taller-repaso h3 {
+            color: var(--danger);
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .taller-instruccion {
+            background: #fcf3cf;
+            border-left: 5px solid #f1c40f;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            font-weight: bold;
+            color: #7d6608;
+            text-align: center;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .actividad {
+            margin-bottom: 1.5rem;
+            background: var(--white);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .actividad-tipo {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--primary);
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            background: #eaf2f8;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* --- MEDIA QUERIES PARA ADAPTABILIDAD TOTAL --- */
+        @media (max-width: 768px) {
+            .jeopardy-grid {
+                /* En tablets/móviles grandes pasamos a 2 columnas para no asfixiar el texto */
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .category-header {
+                font-size: 1rem;
+            }
+            .question-btn {
+                padding: 1rem 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .taller-repaso {
+                padding: 1rem;
+            }
+            .actividad {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- FASE 2: UI DEL JUEGO -->
+        <header>
+            <h1>Física: Transferencia de Calor</h1>
+            <p class="instruccion">Toca una casilla, lee la pista y selecciona la respuesta correcta.</p>
+            <div class="stats-bar">
+                <div id="ui-score">Puntos: 0</div>
+                <div id="ui-progress">Preguntas: 0 / 12</div>
+            </div>
+        </header>
+
+        <main>
+            <!-- FASE 2: TABLERO INTERACTIVO -->
+            <section id="zona-juego">
+                <div class="jeopardy-grid" id="board">
+                    <!-- El JS inyecta dinámicamente las categorías y botones aquí -->
+                </div>
+            </section>
+
+            <!-- FASE 3: LECTURA TEÓRICA Y TALLER (SIEMPRE VISIBLE) -->
+            <section id="zona-lectura">
+                <div class="lectura-header">
+                    <h2>Material de Estudio: La Física del Calor</h2>
+                    <p>Lee detenidamente el siguiente texto para consolidar tu aprendizaje.</p>
+                </div>
+                
+                <article class="teoria">
+                    <h3>¿Qué es el Calor y cómo se transfiere?</h3>
+                    <p>En el lenguaje cotidiano solemos confundir los términos "calor" y "temperatura". En física, la temperatura es una medida de la energía cinética promedio de las partículas de un cuerpo (qué tan rápido se mueven). El <strong>calor</strong>, por su parte, es la <em>energía térmica en tránsito</em> que fluye de manera natural desde un cuerpo con mayor temperatura hacia un cuerpo con menor temperatura. Este flujo de energía nunca se detiene hasta que ambos cuerpos alcanzan el "equilibrio térmico", es decir, la misma temperatura.</p>
+                    <p>El calor no se transfiere de una sola forma. Dependiendo del estado de la materia (sólido, líquido, gas) o incluso en la ausencia de esta (el vacío), la energía térmica utiliza tres mecanismos fundamentales: <strong>conducción, convección y radiación.</strong></p>
+
+                    <h3>1. Conducción: El paso directo en sólidos</h3>
+                    <p>La conducción térmica es el proceso mediante el cual el calor se transfiere a través de un material por el contacto directo de sus partículas, sin que el material en sí se desplace. Ocurre principalmente en los <strong>sólidos</strong>.</p>
+                    <p>Imagina que acercas una varilla de metal al fuego. Los átomos en el extremo caliente comienzan a vibrar intensamente y chocan con los átomos vecinos, pasándoles esa energía. Este efecto dominó continúa hasta que el calor llega al otro extremo de la varilla.</p>
+                    <ul>
+                        <li><strong>Conductores térmicos:</strong> Materiales que permiten un rápido flujo de calor. Los metales (aluminio, cobre, hierro, plata) son excelentes conductores. Por esta razón, las ollas y sartenes en la cocina están hechas de metal, asegurando que la comida reciba el calor de la estufa rápidamente.</li>
+                        <li><strong>Aislantes térmicos:</strong> Materiales que dificultan o retrasan el paso del calor. La madera, el plástico, el corcho, la lana y el aire atrapado son malos conductores (buenos aislantes). En los utensilios de cocina, las asas o mangos suelen ser de madera o plástico (baquelita) precisamente para evitar que te quemes al agarrarlos.</li>
+                    </ul>
+
+                    <h3>2. Convección: Fluidos en movimiento</h3>
+                    <p>La convección es el mecanismo de transferencia de calor que ocurre exclusivamente en los <strong>fluidos</strong> (líquidos y gases). A diferencia de la conducción, en la convección sí hay un movimiento real y visible de materia.</p>
+                    <p>Este fenómeno se basa en los cambios de densidad provocados por la temperatura. Cuando un fluido se calienta, sus moléculas se separan; el fluido se expande, se vuelve <em>menos denso</em> (más ligero) y asciende. El fluido más frío que se encuentra en la parte superior, siendo más denso y pesado, desciende para ocupar el lugar vacío. Al calentarse también, sube, creando un ciclo continuo llamado <strong>corriente de convección</strong>.</p>
+                    <p><strong>Ejemplos prácticos:</strong></p>
+                    <ul>
+                        <li><strong>Hirviendo agua:</strong> El agua en el fondo de la olla se calienta, sube, y el agua fría de la superficie baja, creando ese burbujeo característico.</li>
+                        <li><strong>Climatización de interiores:</strong> En lugares fríos, los calefactores se instalan cerca del suelo porque el aire caliente subirá y calentará la habitación. Por el contrario, los aires acondicionados se instalan arriba para que el aire frío descienda.</li>
+                    </ul>
+
+                    <h3>3. Radiación: El calor a través del vacío</h3>
+                    <p>La radiación térmica es la transferencia de calor mediante <strong>ondas electromagnéticas</strong> (principalmente ondas infrarrojas). Es el único mecanismo que no necesita ningún medio material para viajar; puede propagarse a través del vacío perfecto.</p>
+                    <p>Gracias a la radiación, el inmenso calor del Sol logra viajar millones de kilómetros a través del vacío del espacio para calentar la Tierra. Cualquier objeto que tenga temperatura emite radiación térmica. Una fogata, por ejemplo, te calienta las manos principalmente por radiación cuando te pones de lado.</p>
+                    <p>El color y la textura de los objetos influyen en cómo interactúan con la radiación:</p>
+                    <ul>
+                        <li><strong>Colores oscuros (negro):</strong> Son excelentes <em>absorbentes</em> de radiación térmica. Se calientan muy rápido bajo el sol.</li>
+                        <li><strong>Colores claros (blanco) y superficies brillantes:</strong> Son excelentes <em>reflectores</em>. Rebotan la radiación térmica. Por ello, usar ropa blanca en días calurosos ayuda a mantenerte fresco.</li>
+                    </ul>
+
+                    <h3>Aislamiento Térmico en la Vida Diaria</h3>
+                    <p>Comprender estos tres mecanismos permite a la ingeniería y la arquitectura diseñar herramientas y espacios más eficientes.</p>
+                    <p>Tomemos el caso de un <strong>termo</strong> para café. Un termo de alta calidad utiliza paredes dobles de acero o vidrio. Entre ambas paredes se extrae el aire, creando un vacío casi perfecto. Como la <em>conducción</em> y la <em>convección</em> requieren materia (sólidos o fluidos) para ocurrir, el vacío impide completamente que el calor escape por esos dos medios. Además, las paredes internas son reflectantes (como espejos) para rebotar la <em>radiación</em> infrarroja de vuelta hacia el café, manteniéndolo caliente por horas.</p>
+                    <p>En la construcción, las ventanas de "doble vidrio" encierran una capa de gas argón o aire estático entre los paneles. Como los gases estáticos son excelentes aislantes térmicos, esto reduce drásticamente la pérdida de calor por conducción en invierno y evita que el calor exterior ingrese en verano, logrando un notable ahorro energético.</p>
+                </article>
+
+                <!-- Taller de Repaso (10 Actividades Alternadas) -->
+                <aside class="taller-repaso">
+                    <h3>Taller de Repaso</h3>
+                    <div class="taller-instruccion">
+                        ✏️ INSTRUCCIÓN OBLIGATORIA: Escribe y resuelve estas actividades en tu cuaderno. Lee nuevamente el artículo si tienes dudas.
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Pregunta Directa</span>
+                        <p><strong>1.</strong> Define con tus propias palabras qué es el "calor" en física y explica en qué dirección fluye siempre entre dos cuerpos.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Dibujo / Ilustración</span>
+                        <p><strong>2.</strong> Dibuja en tu cuaderno una olla de metal con agua calentándose en la estufa. Utiliza tres colores distintos para dibujar flechas que ilustren e identifiquen <strong>dónde y cómo</strong> ocurren la conducción, la convección y la radiación en esa misma escena.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Análisis Crítico</span>
+                        <p><strong>3.</strong> En la cocina de un restaurante, un chef necesita revolver una sopa hirviendo durante largo rato. Analiza y explica por qué debe usar una cuchara de madera o con mango de silicona, en lugar de una cuchara fabricada 100% de metal.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Mapa Conceptual</span>
+                        <p><strong>4.</strong> Elabora un mapa conceptual que tenga como centro el título "Transferencia de Calor". Debe ramificarse en los tres mecanismos aprendidos, detallando brevemente qué necesitan para propagarse (medio sólido, fluido o vacío) y un ejemplo de cada uno.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Pregunta Directa</span>
+                        <p><strong>5.</strong> Basándote en el concepto de densidad explicado en el texto, ¿por qué la convección térmica <strong>NO</strong> puede ocurrir dentro de un bloque de hierro sólido o un cubo de hielo?</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Dibujo / Ilustración</span>
+                        <p><strong>6.</strong> Dibuja el corte de una habitación que tiene un calefactor encendido a nivel del suelo en pleno invierno. Ilustra usando flechas circulares el recorrido del aire frío y el aire caliente, explicando el ciclo de las corrientes de convección.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Análisis Crítico</span>
+                        <p><strong>7.</strong> Imagina que debes atravesar un desierto soleado al mediodía, y tienes dos túnicas gruesas: una negra y una blanca. Tomando en cuenta los principios de la <em>radiación térmica</em>, analiza cuál color elegirías usar y justifica físicamente tu respuesta.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Esquema / Cuadro</span>
+                        <p><strong>8.</strong> Crea un cuadro comparativo dividiendo "Conductores Térmicos" y "Aislantes Térmicos". Define la función de cada grupo y elabora una lista con al menos tres ejemplos de materiales para cada uno que puedas encontrar observando tu propia casa.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Análisis Crítico</span>
+                        <p><strong>9.</strong> Es común escuchar la frase: <em>"El hielo enfría mi bebida"</em>. Evalúa esta afirmación basándote en la regla del flujo del calor del artículo. Físicamente hablando, ¿es el hielo el que le "da frío" al agua, o es el agua la que le "da calor" al hielo? Explica.</p>
+                    </div>
+
+                    <div class="actividad">
+                        <span class="actividad-tipo">Dibujo / Diseño</span>
+                        <p><strong>10.</strong> Eres un arquitecto diseñando una casa para un clima con inviernos extremos. Dibuja el corte transversal (por dentro) del muro exterior ideal. Señala qué material usarías por fuera, qué material aislante usarías adentro (ej. cámara de aire, lana de vidrio) y explica por qué tu diseño evitará la pérdida de calor.</p>
+                    </div>
+                </aside>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- Modales para las preguntas del juego -->
+    <div id="game-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-points" id="modal-points">Por 100 Puntos</div>
+            <div class="modal-question" id="modal-question-text">¿Pregunta de prueba?</div>
+            <div class="options-grid" id="modal-options">
+                <!-- Botones inyectados dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Resultado/Final de Juego -->
+    <div id="result-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="result-icon" class="result-icon"></div>
+            <h2 id="result-title" style="margin-bottom: 1rem; color: var(--primary);">Resultado</h2>
+            <p id="result-message" style="font-size: 1.2rem; margin-bottom: 1rem;"></p>
+            <button class="btn-close" id="btn-close-result">Continuar</button>
+        </div>
+    </div>
+
+    <!-- LÓGICA JAVASCRIPT DEL JUEGO INTERACTIVO -->
+    <script>
+        // --- 1. DATOS DEL JUEGO (Preguntas y Categorías) ---
+        const gameData = [
+            {
+                category: "Conducción",
+                questions: [
+                    {
+                        points: 100,
+                        q: "Mecanismo de transferencia de calor que ocurre principalmente en sólidos mediante el contacto directo de sus partículas.",
+                        options: ["Radiación", "Conducción", "Convección"],
+                        correctIndex: 1
+                    },
+                    {
+                        points: 200,
+                        q: "Tipo de material ideal para fabricar la base de las ollas debido a que es un excelente conductor térmico.",
+                        options: ["Metal (Cobre / Aluminio)", "Madera pura", "Plástico o Baquelita"],
+                        correctIndex: 0
+                    },
+                    {
+                        points: 300,
+                        q: "Así se le llama a los materiales como la madera, lana o el aire estático, que retrasan o evitan el paso rápido del calor.",
+                        options: ["Conductores perfectos", "Reflectores térmicos", "Aislantes térmicos"],
+                        correctIndex: 2
+                    }
+                ]
+            },
+            {
+                category: "Convección",
+                questions: [
+                    {
+                        points: 100,
+                        q: "Este mecanismo de transferencia de calor es exclusivo de los fluidos (líquidos y gases).",
+                        options: ["Convección", "Conducción", "Vaporización"],
+                        correctIndex: 0
+                    },
+                    {
+                        points: 200,
+                        q: "Al calentar agua en una olla, ¿qué sucede físicamente con el agua que está en el fondo más caliente?",
+                        options: ["Se hunde porque se vuelve más pesada y densa.", "Sube porque se expande y se vuelve menos densa.", "Se queda estática esperando a evaporarse."],
+                        correctIndex: 1
+                    },
+                    {
+                        points: 300,
+                        q: "Es el nombre que reciben los flujos circulares continuos que se forman cuando un fluido caliente sube y el frío baja (ej. aire en una habitación).",
+                        options: ["Corrientes de convección", "Ondas de conducción", "Flujos electromagnéticos"],
+                        correctIndex: 0
+                    }
+                ]
+            },
+            {
+                category: "Radiación",
+                questions: [
+                    {
+                        points: 100,
+                        q: "Es el único mecanismo de transferencia térmica que puede viajar por el vacío absoluto del espacio.",
+                        options: ["Evaporación", "Radiación", "Conducción espacial"],
+                        correctIndex: 1
+                    },
+                    {
+                        points: 200,
+                        q: "¿A través de qué tipo de ondas viaja el calor irradiado por el Sol hasta nuestro planeta?",
+                        options: ["Ondas de sonido", "Ondas electromagnéticas (infrarrojas)", "Ondas sísmicas"],
+                        correctIndex: 1
+                    },
+                    {
+                        points: 300,
+                        q: "Si estás bajo el sol brillante, los objetos de este color tenderán a calentarse mucho más rápido porque absorben la radiación.",
+                        options: ["Blanco puro", "Transparente", "Negro u oscuro"],
+                        correctIndex: 2
+                    }
+                ]
+            },
+            {
+                category: "Aplicaciones",
+                questions: [
+                    {
+                        points: 100,
+                        q: "En las construcciones modernas, ¿para qué se usa colocar dos vidrios con una capa de aire sellada en el medio en las ventanas?",
+                        options: ["Para aislar térmicamente la casa.", "Para aumentar la conducción del sol.", "Para hacerlas más resistentes a los golpes."],
+                        correctIndex: 0
+                    },
+                    {
+                        points: 200,
+                        q: "Un termo de café posee un 'vacío' entre sus dos paredes internas. Ese vacío impide principalmente que el calor escape por...",
+                        options: ["Exclusivamente Radiación.", "Conducción y Convección.", "Congelamiento."],
+                        correctIndex: 1
+                    },
+                    {
+                        points: 300,
+                        q: "Si construyes una casa en un clima de extremo calor todo el año, ¿de qué color pintarías el techo exterior para reducir el calor interno?",
+                        options: ["Gris oscuro", "Negro", "Blanco (para reflejar la radiación)"],
+                        correctIndex: 2
+                    }
+                ]
+            }
+        ];
+
+        // --- 2. ESTADO DEL JUEGO ---
+        let currentScore = 0;
+        const maxScore = 2400; // 4 categorias * (100+200+300)
+        let questionsAnswered = 0;
+        const totalQuestions = 12;
+        let currentActiveButton = null;
+        let currentQuestionData = null;
+
+        // --- 3. REFERENCIAS DOM ---
+        const boardContainer = document.getElementById('board');
+        const uiScore = document.getElementById('ui-score');
+        const uiProgress = document.getElementById('ui-progress');
+        
+        const gameModal = document.getElementById('game-modal');
+        const modalPoints = document.getElementById('modal-points');
+        const modalQuestionText = document.getElementById('modal-question-text');
+        const modalOptions = document.getElementById('modal-options');
+        
+        const resultModal = document.getElementById('result-modal');
+        const resultIcon = document.getElementById('result-icon');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const btnCloseResult = document.getElementById('btn-close-result');
+
+        // --- 4. RENDERIZAR TABLERO ---
+        function initGame() {
+            // El grid CSS espera 4 columnas (categorías). 
+            // Para mantener el orden lógico de Jeopardy en HTML (Header1, Header2.. 100-1, 100-2...)
+            // Primero insertamos los encabezados de categorías
+            
+            // Ajuste responsive para la estructura grid:
+            // Dependiendo del ancho, se reordenan. Con grid-template-columns repetido, el orden natural funciona si agrupamos por "filas".
+            
+            // Fila 1: Categorías
+            gameData.forEach(cat => {
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = cat.category;
+                boardContainer.appendChild(header);
+            });
+
+            // Filas 2, 3, 4: Preguntas por valor (100, 200, 300)
+            for (let pointLevel = 0; pointLevel < 3; pointLevel++) {
+                gameData.forEach((cat, catIndex) => {
+                    const qData = cat.questions[pointLevel];
+                    const btn = document.createElement('button');
+                    btn.className = 'question-btn';
+                    btn.textContent = qData.points;
+                    btn.setAttribute('data-cat', catIndex);
+                    btn.setAttribute('data-level', pointLevel);
+                    
+                    // Evento para abrir modal (soporta click y touch nativo)
+                    btn.addEventListener('click', () => openQuestion(catIndex, pointLevel, btn));
+                    boardContainer.appendChild(btn);
+                });
+            }
+        }
+
+        // --- 5. LÓGICA DE PREGUNTAS Y MODALES ---
+        function openQuestion(catIndex, pointLevel, btnElement) {
+            currentActiveButton = btnElement;
+            currentQuestionData = gameData[catIndex].questions[pointLevel];
+            
+            modalPoints.textContent = `Categoría: ${gameData[catIndex].category} - ${currentQuestionData.points} Puntos`;
+            modalQuestionText.textContent = currentQuestionData.q;
+            
+            // Limpiar opciones anteriores
+            modalOptions.innerHTML = '';
+            
+            // Generar botones de opciones
+            currentQuestionData.options.forEach((optText, index) => {
+                const optBtn = document.createElement('button');
+                optBtn.className = 'option-btn';
+                optBtn.textContent = optText;
+                optBtn.addEventListener('click', () => evaluateAnswer(index, optBtn));
+                modalOptions.appendChild(optBtn);
+            });
+
+            // Mostrar modal
+            gameModal.classList.add('active');
+        }
+
+        // SVG Icons en línea para offline
+        const svgCorrect = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+        const svgWrong = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+        const svgTrophy = `<svg viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>`;
+
+        function evaluateAnswer(selectedIndex, btnClicked) {
+            // Desactivar todos los botones de la modal temporalmente
+            const allOpts = modalOptions.querySelectorAll('.option-btn');
+            allOpts.forEach(btn => btn.style.pointerEvents = 'none');
+
+            const isCorrect = (selectedIndex === currentQuestionData.correctIndex);
+            
+            if (isCorrect) {
+                btnClicked.classList.add('correct-anim');
+                currentScore += currentQuestionData.points;
+            } else {
+                btnClicked.classList.add('wrong-anim');
+                // Resaltar la correcta también
+                allOpts[currentQuestionData.correctIndex].classList.add('correct-anim');
+            }
+
+            // Actualizar interfaz principal
+            questionsAnswered++;
+            uiScore.textContent = `Puntos: ${currentScore}`;
+            uiProgress.textContent = `Preguntas: ${questionsAnswered} / 12`;
+            
+            // Marcar botón del tablero como usado
+            currentActiveButton.disabled = true;
+            currentActiveButton.textContent = "—";
+
+            // Esperar 1.5 segundos para ver colores de respuesta antes de cerrar
+            setTimeout(() => {
+                gameModal.classList.remove('active');
+                
+                // Mostrar feedback parcial en modal secundario
+                setTimeout(() => {
+                    showFeedback(isCorrect, currentQuestionData.points);
+                }, 400); // Dar tiempo a que el modal principal termine transición
+            }, 1500);
+        }
+
+        function showFeedback(isCorrect, pointsVal) {
+            if (isCorrect) {
+                resultIcon.innerHTML = svgCorrect;
+                resultTitle.textContent = "¡Respuesta Correcta!";
+                resultTitle.className = "text-correct";
+                resultMessage.textContent = `Has sumado +${pointsVal} puntos.`;
+            } else {
+                resultIcon.innerHTML = svgWrong;
+                resultTitle.textContent = "Respuesta Incorrecta";
+                resultTitle.className = "text-wrong";
+                resultMessage.textContent = "El calor requiere estudio. ¡No sumas puntos esta vez!";
+            }
+            
+            resultModal.classList.add('active');
+        }
+
+        // Evento de botón continuar en feedback
+        btnCloseResult.addEventListener('click', () => {
+            resultModal.classList.remove('active');
+            
+            // Revisar si se terminó el juego
+            if (questionsAnswered === totalQuestions) {
+                setTimeout(showFinalGrade, 400);
+            }
+        });
+
+        function showFinalGrade() {
+            // Calcular nota de 1.0 a 5.0 según porcentaje
+            // Fórmula: (Puntos / MaxPuntos) * 4 + 1
+            const ratio = currentScore / maxScore;
+            let nota = (ratio * 4) + 1;
+            
+            // Asegurar un decimal
+            nota = Math.max(1.0, Math.min(5.0, nota)).toFixed(1);
+            
+            resultIcon.innerHTML = svgTrophy;
+            resultTitle.textContent = "¡Juego Completado!";
+            resultTitle.style.color = "#f39c12"; // Dorado
+            
+            let extraMsg = "";
+            if (nota >= 4.5) extraMsg = "¡Excelente dominio de la termodinámica!";
+            else if (nota >= 3.5) extraMsg = "Buen trabajo, aunque hay espacio para mejorar.";
+            else extraMsg = "Te recomendamos leer el material de estudio debajo nuevamente.";
+
+            resultMessage.innerHTML = `
+                Tu puntuación final es: <strong>${currentScore} de ${maxScore}</strong><br><br>
+                Calificación equivalente: <strong style="font-size: 1.5rem;">${nota} / 5.0</strong><br><br>
+                <span style="font-size:0.9rem; color:#666;">${extraMsg}</span>
+                <br><br>
+                <em>Recuerda bajar para leer el artículo teórico y hacer el taller de repaso.</em>
+            `;
+            
+            btnCloseResult.textContent = "Revisar Tablero";
+            resultModal.classList.add('active');
+        }
+
+        // Iniciar juego al cargar
+        window.addEventListener('DOMContentLoaded', initGame);
+
+    </script>
+</body>
+</html>

@@ -42,9 +42,16 @@ Actividades ciencias naturales/
     ├── 4p 7 Turismo/            # Turismo y Paisaje Cultural Cafetero (9 actividades)
     ├── 4p Etica/                # Ética y Convivencia Humana (8 actividades)
     ├── 4p Musica/               # Educación Artística y Musical (8 actividades)
-    ├── 4p Nocturno 1/           # Ciclo Nocturno I - Física, Química, Biología (10 actividades)
-    ├── 4p Nocturno 2/           # Ciclo Nocturno II - Ciencias Integradas (13 actividades)
-    └── 4p Pensar Quimica/       # Pensar la Química (4 actividades)
+    ├── 4p Pensar Quimica/       # Pensar la Química (4 actividades)
+    ├── Ciclo II/                # Nocturno Ciclo II - Ecosistemas y Biología (9 actividades)
+    ├── Ciclo III/               # Nocturno Ciclo III - Biología Celular (8 actividades)
+    ├── Ciclo IV/                # Nocturno Ciclo IV - Biología, Física y Química (26 actividades)
+    │   ├── Biologia/            # Ciclo IV Biología (8 actividades)
+    │   ├── Fisica/              # Ciclo IV Física (10 actividades)
+    │   └── Quimica/             # Ciclo IV Química (8 actividades)
+    └── Ciclo VI/                # Nocturno Ciclo VI - Física y Química (13 actividades)
+        ├── Fisica/              # Ciclo VI Física (5 actividades)
+        └── Quimica/             # Ciclo VI Química (8 actividades)
 ```
 
 ---
@@ -53,16 +60,18 @@ Actividades ciencias naturales/
 
 | Área / Dimensión | Grado / Nivel | Cantidad | Enfoque Pedagógico |
 | :--- | :--- | :---: | :--- |
-| **Física 6°** | Grado 6° | 8 | Fenómenos cotidianos de la estática, átomo, electrización por frotamiento, cargas eléctricas, conductores vs aislantes, electroscopio y síntesis. |
-| **Física 7°** | Grado 7° | 8 | Campo gravitacional, energía mecánica, energía potencial y altura, relación masa-energía, constante gravitatoria y revolución industrial. |
-| **Turismo & PCC** | Grado 7° | 9 | Turismo local en Montenegro, atributos del Paisaje Cultural Cafetero (PCC), tipologías del turismo, impactos ambientales y mapeo de tesoros ocultos. |
-| **Ética y Convivencia** | Formación Humana | 8 | Empatía hacia estudiantes nuevos, prejuicios y etiquetas, respeto en el disenso, comunicación asertiva, laberinto de responsabilidad y valor de la disculpa. |
-| **Educación Musical** | Artes y Música | 8 | Geografía del piano y patrones de teclas, técnica pianística, solfeo rítmico, lectura en pentagrama, coordinación bimanual y recital. |
-| **Nocturno Ciclo I** | CLEI Nocturno | 10 | Homeostasis biológica, máquinas térmicas, reacciones químicas, ondas y luz, calentamiento global y leyes de Newton. |
-| **Nocturno Ciclo II** | CLEI Nocturno | 13 | Adaptaciones de los seres vivos, tipos de mezclas, ecosistemas, soluciones químicas, factores bióticos/abióticos, cargas eléctricas y célula. |
+| **Física 6°** | Grado 6° | 8 | Fenómenos cotidianos de la estática, átomo, electrización por frotamiento, cargas eléctricas, conductores vs aislantes y electroscopio. |
+| **Física 7°** | Grado 7° | 8 | Campo gravitacional, energía mecánica, energía potencial y altura, constante gravitatoria y revolución industrial. |
+| **Turismo & PCC** | Grado 7° | 9 | Turismo local en Montenegro, atributos del Paisaje Cultural Cafetero (PCC), tipologías del turismo, impactos y mapeo de tesoros. |
+| **Ética y Convivencia** | Formación Humana | 8 | Empatía hacia estudiantes nuevos, prejuicios y etiquetas, respeto en el disenso, comunicación asertiva y valor de la disculpa. |
+| **Educación Musical** | Artes y Música | 8 | Geografía del piano y patrones de teclas, técnica pianística, solfeo rítmico, lectura en pentagrama y recital. |
 | **Pensar la Química** | Secundaria / Media | 4 | Estados de agregación de la materia, clasificación de la materia, sustancias puras y mezclas homogéneas/heterogéneas. |
+| **Nocturno Ciclo II** | CLEI II (4°-5°) | 9 | Ecosistemas terrestres y acuáticos, adaptaciones, factores bióticos/abióticos, niveles tróficos, redes tróficas y pirámides. |
+| **Nocturno Ciclo III** | CLEI III (6°-7°) | 8 | Estructura celular, organelos celulares, respiración y división celular, niveles de organización, taxonomía y fotosíntesis. |
+| **Nocturno Ciclo IV** | CLEI IV (8°-9°) | 26 | **Biología (8):** ADN, reproducción celular, genética, evolución, redes tróficas. <br>**Física (10):** Máquinas térmicas, transferencia de calor, trabajo y potencia. <br>**Química (8):** Tabla periódica, enlaces, reacciones y estequiometría. |
+| **Nocturno Ciclo VI** | CLEI VI (10°-11°) | 13 | **Física (5):** Primera ley de Newton, ondas y luz, acústica agrícola y óptica. <br>**Química (8):** Química del carbono, hidrocarburos, biomoléculas y derivados del café. |
 
-**Total de Actividades:** **68 recursos interactivos autónomos**.
+**Total de Actividades:** **101 recursos interactivos autónomos**.
 
 ---
 

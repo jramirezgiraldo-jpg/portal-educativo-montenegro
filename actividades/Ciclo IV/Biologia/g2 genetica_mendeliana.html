@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- CRÍTICO: Configuración de viewport para móviles y prevención de zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Genética Mendeliana - Tap & Sort</title>
+    
+    <style>
+        :root {
+            /* Colores del Juego */
+            --bg-game: #111827;
+            --text-game: #f3f4f6;
+            --primary: #8b5cf6;
+            --primary-dark: #6d28d9;
+            --secondary: #10b981;
+            --success: #059669;
+            --danger: #ef4444;
+            --chip-bg: #1f2937;
+            --chip-border: #374151;
+            
+            /* Colores de Lectura */
+            --bg-reading: #ffffff;
+            --bg-reading-alt: #f8fafc;
+            --text-reading: #334155;
+            --text-heading: #0f172a;
+            --accent-reading: #8b5cf6;
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-game);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: clamp(15px, 4vw, 30px);
+            background-color: var(--bg-game);
+            color: var(--text-game);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* CRÍTICO: Evitar scroll o pull-to-refresh accidental en el área del juego */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+        }
+
+        .instructions {
+            font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+            color: #9ca3af;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            background-color: #1f2937;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            border: 1px solid var(--chip-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        #score-display { color: var(--secondary); }
+        #errors-display { color: var(--danger); }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(10px, 2vw, 15px);
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+            align-content: flex-start;
+        }
+
+        .chip {
+            background-color: var(--chip-bg);
+            border: 2px solid var(--chip-border);
+            border-radius: var(--radius-md);
+            padding: clamp(12px, 3.5vw, 18px);
+            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            flex: 1 1 calc(33% - 15px);
+            min-width: 150px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            border-color: var(--primary);
+            background-color: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+            transform: translateY(-3px);
+            color: #fff;
+        }
+
+        .chip.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+
+        .category-btn {
+            background-color: #1f2937;
+            border: 2px dashed #4b5563;
+            border-radius: var(--radius-lg);
+            padding: clamp(15px, 4vw, 20px);
+            flex: 1 1 30%;
+            min-width: 120px;
+            color: var(--text-game);
+            font-weight: bold;
+            font-size: clamp(0.95rem, 3.5vw, 1.2rem);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-btn:active {
+            background-color: #374151;
+            transform: scale(0.98);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        
+        @keyframes flashRed {
+            0% { background-color: var(--danger); border-color: white; }
+            100% { background-color: var(--chip-bg); border-color: var(--chip-border); }
+        }
+
+        @keyframes flashGreenBtn {
+            0% { background-color: var(--success); border-color: white; color: white; transform: scale(1.05); }
+            100% { background-color: #1f2937; border-color: #4b5563; }
+        }
+
+        .error-anim {
+            animation: shake 0.4s ease, flashRed 0.5s ease;
+        }
+
+        .success-btn-anim {
+            animation: flashGreenBtn 0.5s ease;
+        }
+
+        .end-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 24, 39, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .end-screen.visible { display: flex; }
+
+        .end-screen h2 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+
+        .end-screen p { margin-bottom: 20px; font-size: clamp(1.1rem, 4vw, 1.3rem); }
+
+        .final-grade {
+            font-size: clamp(4rem, 12vw, 6rem);
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
+            margin: 20px 0;
+        }
+
+        .scroll-down-hint {
+            margin-top: 40px;
+            color: #9ca3af;
+            animation: bounce 2s infinite;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: var(--bg-reading);
+            color: var(--text-reading);
+            /* Importante: Reestablecer comportamientos táctiles naturales aquí */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+            border-top: 6px solid var(--primary);
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .article-container h2 {
+            color: var(--text-heading);
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border-bottom: 4px solid var(--accent-reading);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-container h3 {
+            color: var(--accent-reading);
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .article-container p {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-left: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-container li {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.7;
+            margin-bottom: 0.8rem;
+        }
+
+        .highlight-box {
+            background-color: var(--bg-reading-alt);
+            border-left: 5px solid var(--secondary);
+            padding: 1.5rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 2.5rem 0;
+            font-style: italic;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .taller-section {
+            background-color: var(--bg-reading-alt);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: var(--radius-lg);
+            margin-top: 4rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--accent-reading);
+        }
+
+        .taller-section h3 {
+            color: var(--text-heading);
+            text-align: center;
+            margin-top: 0;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+        }
+
+        .instruction-alert {
+            background-color: #fff;
+            border: 2px dashed var(--accent-reading);
+            color: var(--text-heading);
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 2.5rem;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            box-shadow: 0 4px 6px rgba(139, 92, 246, 0.1);
+        }
+
+        .taller-list {
+            list-style: none;
+            counter-reset: taller-counter;
+        }
+
+        .taller-list li {
+            position: relative;
+            background: #fff;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem 1.5rem 1.5rem 4.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 4px solid var(--primary);
+            font-size: clamp(1rem, 3.5vw, 1.1rem);
+            line-height: 1.6;
+        }
+
+        .taller-list li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 15px;
+            top: 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 5px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Genética Mendeliana</h1>
+                <div class="instructions">
+                    💡 <strong>Misión:</strong> Toca un concepto de la lista (se marcará en púrpura) y luego toca la categoría a la que pertenece.
+                </div>
+            </div>
+
+            <div class="hud">
+                <div id="score-display">Puntos: 0 / 15</div>
+                <div id="errors-display">Errores: 0</div>
+            </div>
+
+            <div class="chips-container" id="chips-container">
+                <!-- Generados vía JavaScript -->
+            </div>
+
+            <div class="categories-container">
+                <div class="category-btn" onclick="checkCategory('GENOTIPO')" id="btn-GENOTIPO">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    GENOTIPO Y ALELOS
+                </div>
+                <div class="category-btn" onclick="checkCategory('FENOTIPO')" id="btn-FENOTIPO">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    FENOTIPO Y RASGOS
+                </div>
+                <div class="category-btn" onclick="checkCategory('LEYES')" id="btn-LEYES">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    LEYES Y HERRAMIENTAS
+                </div>
+            </div>
+
+            <div class="end-screen" id="end-screen">
+                <h2>¡Clasificación Genética Completa!</h2>
+                <p>Has secuenciado todos los conceptos exitosamente.</p>
+                <p>Tu nota final (basada en errores) es:</p>
+                <div class="final-grade" id="final-grade">5.0</div>
+                <div class="scroll-down-hint">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <p>Desliza para leer la lección y realizar el taller</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Genética Mendeliana: Descifrando el Código de la Herencia</h2>
+                
+                <p>¿Alguna vez te has preguntado por qué te pareces tanto a tus abuelos, o por qué en una camada de perritos negros puede nacer uno con pelaje blanco? Durante mucho tiempo, la humanidad creyó que las características de los padres simplemente se "mezclaban" como si fueran pintura. Sin embargo, en el siglo XIX, un monje austriaco llamado <strong>Gregor Mendel</strong> cambió para siempre nuestra comprensión de la vida observando algo tan sencillo como las plantas de guisantes en su jardín.</p>
+
+                <p>Mendel descubrió que la herencia no es una mezcla líquida, sino que se transmite a través de "paquetes" o unidades discretas de información que hoy conocemos como <strong>genes</strong>. A través de sus meticulosos experimentos, sentó las bases de lo que hoy llamamos Genética Clásica o Mendeliana, un campo vital que nos permite desde mejorar cultivos alimentarios hasta predecir enfermedades hereditarias en humanos.</p>
+
+                <h3>1. El Código y la Apariencia: Genotipo vs. Fenotipo</h3>
+                <p>Para entender las leyes de la herencia, primero debemos dominar el lenguaje de la genética. Todo organismo tiene un manual de instrucciones interno escrito en su ADN. A esta composición genética oculta la llamamos <strong>Genotipo</strong>. Los genes pueden tener diferentes versiones; por ejemplo, el gen para el color de los ojos puede tener una versión para color café y otra para color azul. A estas versiones alternativas de un mismo gen las llamamos <strong>Alelos</strong>.</p>
+                
+                <ul>
+                    <li><strong>Organismo Homocigoto:</strong> Cuando heredas dos alelos idénticos para un rasgo (ej. dos alelos para ojos azules).</li>
+                    <li><strong>Organismo Heterocigoto:</strong> Cuando heredas dos alelos diferentes para un rasgo (ej. uno para ojos café y otro para ojos azules).</li>
+                </ul>
+
+                <p>Por otro lado, la forma en que esos genes se expresan físicamente y son visibles ante nuestros ojos se denomina <strong>Fenotipo</strong>. El fenotipo es lo que vemos: la altura de una planta, la textura de una semilla, o la producción de leche en el ganado.</p>
+
+                <h3>2. Los Principios y Leyes de Mendel</h3>
+                <p>Al cruzar miles de plantas, Mendel notó patrones matemáticos precisos que resumió en sus célebres leyes:</p>
+
+                <ul>
+                    <li><strong>Principio de Dominancia:</strong> Mendel observó que algunos alelos son "fuertes" y ocultan a otros. A estos los llamó <strong>Dominantes</strong> (representados con letras mayúsculas, ej. 'A'). Los alelos que quedan ocultos en presencia de un dominante se llaman <strong>Recesivos</strong> (letras minúsculas, ej. 'a'). Si tienes el genotipo 'Aa', el rasgo dominante será el que se vea en el fenotipo.</li>
+                    <li><strong>Ley de la Segregación (1ra Ley):</strong> Durante la formación de los gametos (espermatozoides y óvulos), los dos alelos que determinan un rasgo se separan. Cada gameto recibe solo un alelo. Es por esto que un padre heterocigoto (Aa) puede pasar el rasgo dominante a un hijo y el recesivo a otro.</li>
+                    <li><strong>Ley de la Distribución Independiente (2da Ley):</strong> Los genes para diferentes rasgos se heredan de forma independiente unos de otros. El gen que determina el color de la semilla no afecta al gen que determina la altura de la planta. (Nota: esto aplica a genes en diferentes cromosomas).</li>
+                </ul>
+
+                <h3>3. El Cuadro de Punnett: Nuestra Bola de Cristal</h3>
+                <p>Para predecir cómo se combinarán los genes, los biólogos usan una herramienta visual muy poderosa llamada <strong>Cuadro de Punnett</strong>. Es una simple cuadrícula matemática donde se colocan los posibles gametos de un padre en la parte superior y los del otro padre en un lado. Al rellenar las casillas cruzando las letras, podemos calcular la probabilidad genética de que los hijos hereden ciertos fenotipos y genotipos.</p>
+
+                <div class="highlight-box">
+                    "La genética mendeliana no solo explica nuestro pasado evolutivo; en el campo moderno, permite a los agrónomos cruzar plantas para obtener café resistente a la roya, y a los ganaderos criar animales más sanos y productivos."
+                </div>
+
+                <p>En conclusión, el trabajo de Mendel demostró que la herencia es predecible y calculable. Sus descubrimientos nos enseñaron que dentro del núcleo microscópico de nuestras células reside un código increíblemente preciso que dicta la gran diversidad de la vida en nuestro planeta.</p>
+
+                <div class="taller-section">
+                    <h3>Taller de Repaso y Consolidación</h3>
+                    
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN OBLIGATORIA: Escribe y resuelve de forma ordenada las siguientes 10 actividades en tu cuaderno de Ciencias/Biología.
+                    </div>
+
+                    <ul class="taller-list">
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Define con tus propias palabras la diferencia fundamental entre <strong>Genotipo</strong> y <strong>Fenotipo</strong>. Da un ejemplo de cada uno aplicable a un ser humano.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Si cruzas una planta de guisantes de tallo alto (heterocigota) con otra de tallo alto (heterocigota), ¿es biológicamente posible que nazca una planta de tallo enano? Argumenta tu respuesta basándote en los alelos recesivos.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Dibuja un <strong>Cuadro de Punnett</strong> para realizar el cruce entre una madre heterocigota (Aa) y un padre homocigoto recesivo (aa). Usa la letra 'A' para representar el color negro (dominante) de un conejo, y la 'a' para el blanco (recesivo).
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual que organice jerárquicamente los siguientes términos: <em>ADN, Gen, Alelos, Homocigoto, Heterocigoto, Dominante, Recesivo</em>.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Según el Principio de Dominancia, ¿qué ocurre si un organismo posee un genotipo formado por un alelo dominante y un alelo recesivo (Aa)? ¿Cuál de los dos dictará la apariencia física?
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Gregor Mendel era un monje, no un agricultor moderno. Sin embargo, ¿por qué crees que sus descubrimientos sobre la genética son tan importantes para los cultivadores de café en Colombia en la actualidad? Menciona al menos una aplicación práctica.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Ilustra la <strong>Ley de la Segregación</strong>. Dibuja una célula original que contiene dos alelos (R y r) y muestra cómo se separan (segregan) para formar dos gametos diferentes (espermatozoides u óvulos) en su interior.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Mental</span><br>
+                            Crea un mapa mental cuyo nodo central sea <strong>"Leyes y Herramientas de Mendel"</strong>. Saca ramas para la 1ra Ley, la 2da Ley, el Principio de Dominancia y el Cuadro de Punnett, resumiendo cada uno con 3 palabras clave.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Si la producción de mucha leche en una vaca es un rasgo recesivo (bb) y la producción baja de leche es dominante (B), ¿qué genotipo exacto debe tener una vaca para ser una gran productora de leche?
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            El fenotipo de una planta (como su altura final) depende de su genotipo. Sin embargo, si plantas una semilla genéticamente destinada a ser alta en un suelo sin agua ni nutrientes, no crecerá. ¿Qué nos dice esto sobre la relación entre los genes y el medio ambiente? Analiza la situación.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Datos del Juego (15 conceptos, 5 por categoría)
+        const concepts = [
+            // CATEGORÍA 1: GENOTIPO Y ALELOS
+            { id: 1, text: "Composición genética oculta", category: "GENOTIPO" },
+            { id: 2, text: "Homocigoto (AA o aa)", category: "GENOTIPO" },
+            { id: 3, text: "Heterocigoto (Aa)", category: "GENOTIPO" },
+            { id: 4, text: "Versiones de un gen (Alelos)", category: "GENOTIPO" },
+            { id: 5, text: "ADN e información hereditaria", category: "GENOTIPO" },
+            
+            // CATEGORÍA 2: FENOTIPO Y RASGOS
+            { id: 6, text: "Características físicas visibles", category: "FENOTIPO" },
+            { id: 7, text: "Color de los ojos o cabello", category: "FENOTIPO" },
+            { id: 8, text: "Textura lisa o rugosa en semillas", category: "FENOTIPO" },
+            { id: 9, text: "Altura final de la planta", category: "FENOTIPO" },
+            { id: 10, text: "Producción de leche (rasgo observable)", category: "FENOTIPO" },
+            
+            // CATEGORÍA 3: LEYES Y HERRAMIENTAS
+            { id: 11, text: "Cuadro de Punnett", category: "LEYES" },
+            { id: 12, text: "Ley de la Segregación", category: "LEYES" },
+            { id: 13, text: "Principio de Dominancia", category: "LEYES" },
+            { id: 14, text: "Distribución Independiente", category: "LEYES" },
+            { id: 15, text: "Cálculo de probabilidad genética", category: "LEYES" }
+        ];
+
+        // 2. Estado de la Aplicación
+        let state = {
+            score: 0,
+            errors: 0,
+            total: concepts.length,
+            selectedChipId: null,
+            shuffledConcepts: []
+        };
+
+        // Algoritmo de mezcla Fisher-Yates
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // 3. Inicialización del juego
+        function initGame() {
+            state.shuffledConcepts = shuffleArray([...concepts]);
+            renderChips();
+            updateHUD();
+        }
+
+        // 4. Renderizar chips interactivos
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = '';
+
+            state.shuffledConcepts.forEach(concept => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${concept.id}`;
+                chip.textContent = concept.text;
+                
+                // Eventos de ratón y táctil para compatibilidad universal
+                chip.addEventListener('click', () => selectChip(concept.id));
+                
+                container.appendChild(chip);
+            });
+        }
+
+        // 5. Manejo de selección de chip
+        function selectChip(id) {
+            // Limpiar visualmente todos los chips
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            
+            // Seleccionar el tocado si no está oculto
+            const chip = document.getElementById(`chip-${id}`);
+            if (chip && !chip.classList.contains('hidden')) {
+                chip.classList.add('selected');
+                state.selectedChipId = id;
+            }
+        }
+
+        // 6. Lógica de validación al tocar Categoría
+        function checkCategory(categoryName) {
+            // Requerir un chip seleccionado primero
+            if (!state.selectedChipId) return;
+
+            const concept = state.shuffledConcepts.find(c => c.id === state.selectedChipId);
+            const chipElement = document.getElementById(`chip-${state.selectedChipId}`);
+            const btnElement = document.getElementById(`btn-${categoryName}`);
+
+            if (concept.category === categoryName) {
+                // ACIERTO
+                state.score++;
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('hidden'); // Ocultar chip resuelto
+                state.selectedChipId = null;
+                
+                // Feedback visual positivo
+                btnElement.classList.add('success-btn-anim');
+                setTimeout(() => btnElement.classList.remove('success-btn-anim'), 500);
+
+                updateHUD();
+                checkWinCondition();
+
+            } else {
+                // ERROR
+                state.errors++;
+                updateHUD();
+                
+                // Feedback visual negativo
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('error-anim');
+                state.selectedChipId = null;
+                
+                setTimeout(() => {
+                    chipElement.classList.remove('error-anim');
+                }, 500);
+            }
+        }
+
+        // 7. Actualización del Panel Frontal (HUD)
+        function updateHUD() {
+            document.getElementById('score-display').textContent = `Puntos: ${state.score} / ${state.total}`;
+            document.getElementById('errors-display').textContent = `Errores: ${state.errors}`;
+        }
+
+        // 8. Condición de Victoria y Sistema de Calificación Estricto
+        function checkWinCondition() {
+            if (state.score === state.total) {
+                setTimeout(showEndScreen, 600); // Retardo sutil para la última animación
+            }
+        }
+
+        function showEndScreen() {
+            const endScreen = document.getElementById('end-screen');
+            const gradeDisplay = document.getElementById('final-grade');
+            
+            // Calcular nota (Base 5.0, pierde 0.2 por error, mínimo 1.0)
+            let grade = 5.0 - (state.errors * 0.2);
+            if (grade < 1.0) grade = 1.0;
+            
+            gradeDisplay.textContent = grade.toFixed(1);
+            
+            // Colores basados en rendimiento escolar estándar
+            if (grade >= 4.0) {
+                gradeDisplay.style.color = 'var(--success)';
+            } else if (grade >= 3.0) {
+                gradeDisplay.style.color = '#fbbf24'; // Amarillo/Naranja
+            } else {
+                gradeDisplay.style.color = 'var(--danger)';
+            }
+
+            endScreen.classList.add('visible');
+        }
+
+        // Arrancar el motor del juego cuando el DOM esté listo
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

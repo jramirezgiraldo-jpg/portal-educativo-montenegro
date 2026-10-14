@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sopa de Letras: Máquinas Térmicas</title>
+    <style>
+        :root {
+            --primary-color: #d84315; /* Orange/Red for heat/thermal */
+            --primary-light: #ff7043;
+            --primary-dark: #bf360c;
+            --secondary-color: #0277bd; /* Blue for cooling/fridge */
+            --bg-color: #f5f5f6;
+            --text-color: #212121;
+            --grid-bg: #ffffff;
+            --cell-border: #e0e0e0;
+            --cell-text: #424242;
+            --highlight-color: rgba(255, 167, 38, 0.4);
+            --found-color: rgba(76, 175, 80, 0.6);
+            --error-color: #d32f2f;
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+        }
+
+        header h1 {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        #zona-juego {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            background: #fff3e0;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+        }
+
+        .instruction {
+            font-weight: 500;
+            color: var(--primary-dark);
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+        }
+
+        .board-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            background-color: var(--cell-border);
+            border: 2px solid var(--cell-border);
+            border-radius: 4px;
+            touch-action: none; /* CRITICAL FOR MOBILE INTERACTION */
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .cell {
+            background-color: var(--grid-bg);
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(12px, 3.5vw, 20px);
+            font-weight: bold;
+            color: var(--cell-text);
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
+        .cell.highlight {
+            background-color: var(--highlight-color);
+        }
+
+        .cell.found {
+            background-color: var(--found-color);
+            color: white;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .words-container {
+            margin-top: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .word-pill {
+            background: #eeeeee;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
+            font-weight: 500;
+            color: #616161;
+            transition: all 0.3s;
+            border: 1px solid #e0e0e0;
+        }
+
+        .word-pill.found {
+            background: var(--found-color);
+            color: white;
+            text-decoration: line-through;
+            border-color: var(--found-color);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .grade-display {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            color: var(--primary-color);
+        }
+
+        .btn-restart {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        #zona-lectura {
+            background: white;
+            margin-top: 2rem;
+            border-top: 6px solid var(--secondary-color);
+            padding: 3rem 0;
+        }
+
+        .article-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .article-content h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #eeeeee;
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            color: var(--secondary-color);
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            margin: 2rem 0 1rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+        }
+
+        .article-content ul {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box {
+            background: #e1f5fe;
+            border-left: 4px solid var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 2rem 0;
+            font-style: italic;
+        }
+
+        /* Workshop Area */
+        .workshop {
+            background: #fff8e1;
+            padding: 2.5rem;
+            border-radius: 12px;
+            margin-top: 3rem;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .workshop h2 {
+            color: #f57f17;
+            text-align: center;
+            border: none;
+        }
+
+        .notebook-alert {
+            background: white;
+            border: 2px dashed #f57f17;
+            padding: 1rem;
+            text-align: center;
+            font-weight: bold;
+            color: #ef6c00;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .activity-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 5px solid;
+        }
+
+        .act-resp { border-color: #4caf50; }
+        .act-dib { border-color: #9c27b0; }
+        .act-anal { border-color: #f44336; }
+        .act-map { border-color: #2196f3; }
+
+        .act-tag {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            color: white;
+            margin-bottom: 0.8rem;
+        }
+
+        .act-resp .act-tag { background: #4caf50; }
+        .act-dib .act-tag { background: #9c27b0; }
+        .act-anal .act-tag { background: #f44336; }
+        .act-map .act-tag { background: #2196f3; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Física: Máquinas Térmicas</h1>
+        <p>Ciclo IV - Comprendiendo el trabajo y la energía</p>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div class="container">
+                <div class="game-header">
+                    <div class="instruction">
+                        Encuentra las 10 palabras arrastrando el dedo o el ratón en línea recta.
+                    </div>
+                    <div class="stats">
+                        <div>⏳ <span id="timer">00:00</span></div>
+                        <div>❌ Errores: <span id="errors">0</span></div>
+                        <div>✅ <span id="found-count">0</span>/10</div>
+                    </div>
+                </div>
+
+                <div class="board-container">
+                    <div id="board">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+
+                <div class="words-container" id="words-list">
+                    <!-- Generado por JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-content">
+                <h2>Máquinas Térmicas: Del Motor del Jeep al Sistema de tu Nevera</h2>
+                
+                <p>A diario dependemos de la transformación de la energía para casi todas nuestras actividades. La <strong>termodinámica</strong> es la rama de la física que estudia las interacciones entre el calor, el trabajo y la energía. Un concepto fundamental derivado de este estudio son las máquinas térmicas, dispositivos capaces de transformar calor en trabajo mecánico, o viceversa.</p>
+
+                <h3>1. Principios Básicos de la Termodinámica</h3>
+                <p>Para entender las máquinas térmicas, debemos recordar que la energía no se crea ni se destruye, solo se transforma. Sin embargo, en cualquier proceso de transferencia, una parte de la energía se dispersa (usualmente como calor residual que no podemos aprovechar), lo cual está ligado al concepto de entropía.</p>
+                <p>Una máquina térmica básica funciona operando entre dos fuentes a distinta temperatura (una fuente caliente y un sumidero frío). El calor fluye naturalmente de lo caliente a lo frío, y la máquina aprovecha ese flujo natural para extraer <strong>trabajo</strong> útil.</p>
+
+                <h3>2. El Motor de Combustión: La Fuerza del Jeep</h3>
+                <p>Imagina los clásicos Jeeps Willys que transitan por las zonas montañosas y cafeteras de Colombia, cargados hasta el tope. ¿Cómo logran mover tanto peso cuesta arriba? La respuesta está en su motor de <strong>combustión</strong> interna.</p>
+                <p>Este motor transforma la <strong>energía</strong> química del combustible (gasolina) en energía térmica (calor) mediante una pequeña explosión, que luego se convierte en energía mecánica (movimiento). El ciclo común ocurre dentro de un <strong>cilindro</strong> y tiene cuatro tiempos:</p>
+                <ul>
+                    <li><strong>Admisión:</strong> Entra la mezcla de aire y combustible.</li>
+                    <li><strong>Compresión:</strong> Un pistón comprime la mezcla, elevando su <strong>temperatura</strong>.</li>
+                    <li><strong>Expansión (Combustión):</strong> La bujía genera una chispa, la mezcla explota y los gases calientes se expanden violentamente. Esta <strong>expansión</strong> empuja el pistón hacia abajo. ¡Aquí es donde se genera el trabajo!</li>
+                    <li><strong>Escape:</strong> Los gases de desecho son expulsados del sistema (el humo que sale por el tubo de escape).</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Ningún motor es 100% eficiente:</strong> Por leyes físicas, es imposible convertir todo el <strong>calor</strong> de la explosión en trabajo. Una gran parte de ese calor se pierde y debe ser disipado por el radiador para que el motor no se funda.
+                </div>
+
+                <h3>3. La Refrigeración: Trabajo para mover el Calor</h3>
+                <p>Un <strong>refrigerador</strong> o nevera funciona bajo los mismos principios, pero en sentido inverso. Sabemos que el calor fluye naturalmente de lo caliente a lo frío. Para conservar los alimentos, necesitamos hacer lo opuesto: extraer calor del interior (que ya está frío) y expulsarlo al exterior de la cocina (que está más caliente).</p>
+                <p>Como esto va en contra de la naturaleza (el flujo espontáneo), la física nos dice que debemos aplicar un <em>trabajo</em>. Aquí entra el <strong>compresor</strong> eléctrico de la nevera. El sistema utiliza un líquido refrigerante que circula por tuberías:</p>
+                <ul>
+                    <li>El refrigerante se evapora dentro de la nevera, absorbiendo el calor de los alimentos.</li>
+                    <li>El gas viaja al compresor, donde se aumenta su presión y temperatura.</li>
+                    <li>Pasa a las rejillas traseras, donde cede el calor al aire de la habitación y vuelve a volverse líquido para reiniciar el ciclo.</li>
+                </ul>
+
+                <p>Tanto el Jeep que escala montañas como la nevera que enfría tu almuerzo son pruebas palpables de que el control sobre la temperatura, el calor y la presión son la base de la tecnología moderna.</p>
+
+                <!-- Workshop Section -->
+                <div class="workshop">
+                    <h2>Taller de Repaso y Afianzamiento</h2>
+                    <div class="notebook-alert">
+                        📝 INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno.
+                    </div>
+
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>1.</strong> Define con tus propias palabras qué es una máquina térmica y nombra los dos ejemplos principales mencionados en el texto.</p>
+                    </div>
+
+                    <div class="activity-item act-dib">
+                        <span class="act-tag">Dibujar</span>
+                        <p><strong>2.</strong> Dibuja e identifica los 4 tiempos del motor de un Jeep (Admisión, Compresión, Expansión, Escape). Usa flechas para indicar el movimiento del pistón.</p>
+                    </div>
+
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Análisis Crítico</span>
+                        <p><strong>3.</strong> ¿Por qué la parte trasera de una nevera (las rejillas) se siente caliente mientras el interior está frío? Explica físicamente qué está ocurriendo.</p>
+                    </div>
+
+                    <div class="activity-item act-map">
+                        <span class="act-tag">Mapa Conceptual</span>
+                        <p><strong>4.</strong> Elabora un mapa conceptual sobre la Termodinámica, incluyendo los conceptos de calor, temperatura, trabajo y eficiencia energética.</p>
+                    </div>
+
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>5.</strong> Según el texto, ¿cuál es la función específica del 'compresor' en el ciclo de refrigeración?</p>
+                    </div>
+
+                    <div class="activity-item act-dib">
+                        <span class="act-tag">Ilustrar</span>
+                        <p><strong>6.</strong> Haz una ilustración que muestre el flujo natural del calor (de cuerpo caliente a frío) y compáralo con el flujo forzado dentro de una nevera.</p>
+                    </div>
+
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Análisis Crítico</span>
+                        <p><strong>7.</strong> Analiza: Si un motor térmico nunca puede ser 100% eficiente, ¿qué pasa con la energía de la gasolina que no se convierte en movimiento en el Jeep?</p>
+                    </div>
+
+                    <div class="activity-item act-map">
+                        <span class="act-tag">Mapa Mental</span>
+                        <p><strong>8.</strong> Crea un mapa mental centralizado en la palabra "Energía". Ramifica hacia cómo se transforma en un motor (química -> térmica -> mecánica).</p>
+                    </div>
+
+                    <div class="activity-item act-resp">
+                        <span class="act-tag">Responder</span>
+                        <p><strong>9.</strong> En qué etapa exacta del ciclo de combustión se genera verdaderamente el 'trabajo' que impulsa al vehículo?</p>
+                    </div>
+
+                    <div class="activity-item act-anal">
+                        <span class="act-tag">Análisis Crítico</span>
+                        <p><strong>10.</strong> Reflexiona: Considera los gases de escape de los motores de combustión. ¿Qué impacto ambiental tienen y por qué se investigan ahora alternativas eléctricas?</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="modal" id="result-modal">
+            <div class="modal-content">
+                <h2>¡Reto Completado!</h2>
+                <p>Tu calificación final es:</p>
+                <div class="grade-display" id="final-grade">0.0</div>
+                <p id="feedback-msg">Evaluación basada en tiempo y precisión.</p>
+                <button class="btn-restart" id="btn-restart">Jugar de Nuevo</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Game Settings and State
+        const WORDS = [
+            "TERMODINAMICA", "CALOR", "TEMPERATURA", "MOTOR", 
+            "COMBUSTION", "TRABAJO", "REFRIGERADOR", "ENERGIA", 
+            "EXPANSION", "COMPRESOR"
+        ];
+        const GRID_SIZE = 15;
+        let grid = [];
+        let wordListStatus = {};
+        
+        let isSelecting = false;
+        let startCell = null;
+        let selectedPath = [];
+        
+        let timer = 0;
+        let timerInterval = null;
+        let errors = 0;
+        let foundCount = 0;
+
+        // DOM Elements
+        const boardEl = document.getElementById('board');
+        const wordsListEl = document.getElementById('words-list');
+        const timerEl = document.getElementById('timer');
+        const errorsEl = document.getElementById('errors');
+        const foundCountEl = document.getElementById('found-count');
+        const modal = document.getElementById('result-modal');
+
+        function initGame() {
+            // Reset Stats
+            clearInterval(timerInterval);
+            timer = 0;
+            errors = 0;
+            foundCount = 0;
+            updateStats();
+            wordListStatus = {};
+            WORDS.forEach(w => wordListStatus[w] = false);
+            modal.classList.remove('active');
+
+            // Generate Board Algorithm
+            let success = false;
+            let attempts = 0;
+            while (!success && attempts < 100) {
+                success = tryGenerateBoard();
+                attempts++;
+            }
+
+            if (!success) {
+                console.error("Fallo crítico: No se pudieron acomodar las palabras.");
+                // Fallback safe init if mathematical impossibility happens (extremely rare on 15x15)
+                tryGenerateBoard(); 
+            }
+
+            fillRandomLetters();
+            renderBoard();
+            renderWordsList();
+            
+            // Start Timer
+            timerInterval = setInterval(() => {
+                timer++;
+                updateStats();
+            }, 1000);
+        }
+
+        function createEmptyGrid() {
+            return Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+        }
+
+        function tryGenerateBoard() {
+            grid = createEmptyGrid();
+            
+            // Randomize word order for different layouts
+            let shuffledWords = [...WORDS].sort(() => Math.random() - 0.5);
+            
+            for (let word of shuffledWords) {
+                if (!placeWord(word)) {
+                    return false; // Failed to place, must retry whole board
+                }
+            }
+            return true;
+        }
+
+        function placeWord(word) {
+            const directions = [
+                [0, 1],   // Right
+                [1, 0],   // Down
+                [1, 1],   // Diagonal Down-Right
+                [-1, 1],  // Diagonal Up-Right
+                [0, -1],  // Left
+                [-1, 0],  // Up
+                [-1, -1], // Diagonal Up-Left
+                [1, -1]   // Diagonal Down-Left
+            ];
+
+            // Randomize starting directions and positions
+            let shuffledDirs = [...directions].sort(() => Math.random() - 0.5);
+            let positions = [];
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    positions.push({r, c});
+                }
+            }
+            positions.sort(() => Math.random() - 0.5);
+
+            for (let pos of positions) {
+                for (let dir of shuffledDirs) {
+                    if (canPlaceWord(word, pos.r, pos.c, dir[0], dir[1])) {
+                        // Place it
+                        for (let i = 0; i < word.length; i++) {
+                            grid[pos.r + i * dir[0]][pos.c + i * dir[1]] = word[i];
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function canPlaceWord(word, r, c, dr, dc) {
+            let endR = r + (word.length - 1) * dr;
+            let endC = c + (word.length - 1) * dc;
+
+            if (endR < 0 || endR >= GRID_SIZE || endC < 0 || endC >= GRID_SIZE) {
+                return false;
+            }
+
+            for (let i = 0; i < word.length; i++) {
+                let currentR = r + i * dr;
+                let currentC = c + i * dc;
+                let cellChar = grid[currentR][currentC];
+                if (cellChar !== '' && cellChar !== word[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function fillRandomLetters() {
+            const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] === '') {
+                        grid[r][c] = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    }
+                }
+            }
+        }
+
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    cell.textContent = grid[r][c];
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function renderWordsList() {
+            wordsListEl.innerHTML = '';
+            WORDS.forEach(word => {
+                const pill = document.createElement('div');
+                pill.className = `word-pill ${wordListStatus[word] ? 'found' : ''}`;
+                pill.id = `pill-${word}`;
+                pill.textContent = word;
+                wordsListEl.appendChild(pill);
+            });
+        }
+
+        function updateStats() {
+            const mins = Math.floor(timer / 60).toString().padStart(2, '0');
+            const secs = (timer % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${mins}:${secs}`;
+            errorsEl.textContent = errors;
+            foundCountEl.textContent = foundCount;
+        }
+
+        // Pointer Events (Unified for Mouse & Touch)
+        boardEl.addEventListener('pointerdown', (e) => {
+            const cell = getCellFromEvent(e);
+            if (!cell) return;
+            
+            isSelecting = true;
+            startCell = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
+            clearHighlight();
+            highlightPath(startCell, startCell);
+            
+            // Prevent scrolling on touch devices while drawing
+            e.preventDefault();
+        });
+
+        document.addEventListener('pointermove', (e) => {
+            if (!isSelecting) return;
+            const cell = getCellFromEvent(e);
+            if (!cell) return;
+            
+            const currentCell = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
+            
+            // Check if valid straight line
+            if (isValidLine(startCell, currentCell)) {
+                clearHighlight();
+                highlightPath(startCell, currentCell);
+            }
+        });
+
+        document.addEventListener('pointerup', (e) => {
+            if (!isSelecting) return;
+            isSelecting = false;
+            
+            if (selectedPath.length > 1) {
+                checkSelection();
+            } else {
+                clearHighlight();
+            }
+        });
+
+        function getCellFromEvent(e) {
+            // Utiliza coordendas reales de pantalla para el evento táctil continuo
+            const target = document.elementFromPoint(e.clientX, e.clientY);
+            if (target && target.classList.contains('cell')) {
+                return target;
+            }
+            return null;
+        }
+
+        function isValidLine(start, end) {
+            const dr = Math.abs(end.r - start.r);
+            const dc = Math.abs(end.c - start.c);
+            // Straight line: horiz, vert, or perfect diagonal
+            return dr === 0 || dc === 0 || dr === dc;
+        }
+
+        function highlightPath(start, end) {
+            selectedPath = [];
+            const rDiff = end.r - start.r;
+            const cDiff = end.c - start.c;
+            
+            const steps = Math.max(Math.abs(rDiff), Math.abs(cDiff));
+            
+            const rStep = steps === 0 ? 0 : rDiff / steps;
+            const cStep = steps === 0 ? 0 : cDiff / steps;
+
+            for (let i = 0; i <= steps; i++) {
+                const r = start.r + i * rStep;
+                const c = start.c + i * cStep;
+                selectedPath.push({r, c});
+                
+                const cellEl = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                if (cellEl && !cellEl.classList.contains('found')) {
+                    cellEl.classList.add('highlight');
+                }
+            }
+        }
+
+        function clearHighlight() {
+            const highlighted = document.querySelectorAll('.cell.highlight');
+            highlighted.forEach(el => el.classList.remove('highlight'));
+            selectedPath = [];
+        }
+
+        function checkSelection() {
+            let selectedWord = "";
+            let domCells = [];
+            
+            selectedPath.forEach(pos => {
+                selectedWord += grid[pos.r][pos.c];
+                domCells.push(document.querySelector(`.cell[data-r="${pos.r}"][data-c="${pos.c}"]`));
+            });
+            
+            const reversedWord = selectedWord.split('').reverse().join('');
+            
+            let matchedWord = null;
+            if (WORDS.includes(selectedWord) && !wordListStatus[selectedWord]) {
+                matchedWord = selectedWord;
+            } else if (WORDS.includes(reversedWord) && !wordListStatus[reversedWord]) {
+                matchedWord = reversedWord;
+            }
+
+            if (matchedWord) {
+                // Correct match
+                wordListStatus[matchedWord] = true;
+                foundCount++;
+                
+                domCells.forEach(el => {
+                    el.classList.remove('highlight');
+                    el.classList.add('found');
+                });
+                
+                document.getElementById(`pill-${matchedWord}`).classList.add('found');
+                updateStats();
+                
+                if (foundCount === WORDS.length) {
+                    endGame();
+                }
+            } else {
+                // Wrong match
+                errors++;
+                updateStats();
+                clearHighlight();
+            }
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            
+            // Sistema de calificación de 1.0 a 5.0
+            // Base 5.0, descontar 0.2 por error, descontar si toma mas de 2 mins (120s)
+            let timePenalty = timer > 120 ? Math.floor((timer - 120) / 30) * 0.1 : 0;
+            let errorPenalty = errors * 0.2;
+            
+            let finalGrade = 5.0 - errorPenalty - timePenalty;
+            
+            if (finalGrade < 1.0) finalGrade = 1.0;
+            
+            document.getElementById('final-grade').textContent = finalGrade.toFixed(1);
+            
+            let feedback = "";
+            if (finalGrade >= 4.5) feedback = "¡Excelente precisión y velocidad!";
+            else if (finalGrade >= 3.5) feedback = "¡Buen trabajo! Has entendido bien los conceptos.";
+            else feedback = "Completado. Te recomendamos repasar los conceptos en el texto inferior.";
+            
+            document.getElementById('feedback-msg').textContent = feedback;
+            modal.classList.add('active');
+        }
+
+        document.getElementById('btn-restart').addEventListener('click', initGame);
+
+        // Start automatically
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

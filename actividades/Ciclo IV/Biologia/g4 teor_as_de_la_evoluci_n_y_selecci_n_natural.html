@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Evolución y Selección Natural</title>
+    <style>
+        :root {
+            /* Paleta inspirada en la naturaleza (verdes, marrones y azules pálidos) */
+            --primary: #2e7d32; /* Verde bosque */
+            --primary-dark: #1b5e20;
+            --secondary: #8d6e63; /* Marrón tierra */
+            --secondary-dark: #5d4037;
+            --accent: #0277bd; /* Azul cielo */
+            --bg-page: #f1f8e9; /* Fondo muy claro verdoso */
+            --bg-card: #ffffff;
+            --text-main: #263238;
+            --text-light: #ffffff;
+            --success: #43a047;
+            --danger: #e53935;
+            --border-radius: 10px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1.2rem, 3vw, 2rem) 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            border-bottom: 5px solid var(--secondary);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            letter-spacing: 0.5px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: rgba(0,0,0,0.2);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: clamp(1rem, 4vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        #zona-juego {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            /* CRÍTICO: Prevención de bugs táctiles (zoom/scroll accidental al jugar) */
+            touch-action: none;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e8f5e9;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            color: var(--primary-dark);
+            border: 2px solid #c8e6c9;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.3rem, 1.5vw, 1rem);
+        }
+
+        .category-title {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            font-weight: 900;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.2rem;
+            border-radius: var(--border-radius);
+            font-size: clamp(0.7rem, 2.5vw, 1.1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+            word-break: break-word;
+        }
+
+        .pts-btn {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
+            font-weight: 900;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pts-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .pts-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 8px solid var(--secondary);
+        }
+
+        .modal-header-text {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--secondary-dark);
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-question-text {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f8f9fa;
+            border: 2px solid #cfd8dc;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #eceff1;
+            border-color: #90a4ae;
+        }
+
+        .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); }
+        .opt-btn.incorrect { background-color: var(--danger); color: white; border-color: var(--danger); }
+
+        .feedback-alert {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .continue-btn {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #01579b;
+        }
+
+        .continue-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #01579b;
+        }
+
+        .final-mark {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary-dark);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #zona-lectura {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .theory-article h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            border-bottom: 4px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .theory-article h2:first-child { margin-top: 0; }
+
+        .theory-article h3 {
+            color: var(--secondary-dark);
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2rem;
+        }
+
+        .theory-article p, .theory-article li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: #37474f;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .theory-article ul { padding-left: 1.5rem; }
+
+        .workshop-container {
+            margin-top: 4rem;
+            background-color: #efebe9;
+            border: 3px dashed var(--secondary);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .workshop-container h2 {
+            margin-top: 0;
+            color: var(--secondary-dark);
+            border-bottom: none;
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+        }
+
+        .instruction-banner {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .workshop-list li {
+            background-color: #ffffff;
+            border-left: 8px solid var(--accent);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tag-format {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            background-color: #e1f5fe;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .question-text {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Evolución y Selección Natural</h1>
+        <p>Toca una casilla, lee la pista y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <!-- FASE 2: ZONA DE JUEGO INTERACTIVA -->
+        <section id="zona-juego">
+            <div class="stats-panel">
+                <div>Puntuación: <span id="score-counter">0</span></div>
+                <div>Progreso: <span id="progress-counter">0</span>/12</div>
+            </div>
+            <div class="grid-container" id="jeopardy-grid">
+                <!-- Se inyecta dinámicamente mediante JavaScript -->
+            </div>
+        </section>
+
+        <!-- FASE 3: ZONA DE LECTURA TEÓRICA Y TALLER (Siempre visible) -->
+        <section id="zona-lectura">
+            <article class="theory-article">
+                <h2>El Origen de la Biodiversidad: Evolución y Selección Natural</h2>
+                
+                <p>Si miras a tu alrededor, especialmente en países megadiversos como Colombia y específicamente en la región andina y cafetera, notarás una inmensa variedad de seres vivos. Desde la imponente Palma de Cera hasta el escurridizo Oso de Anteojos, cada organismo parece estar perfectamente diseñado para sobrevivir en su entorno particular. Pero, ¿cómo llegó la naturaleza a crear tanta diversidad? La respuesta científica a esta pregunta se encuentra en la <strong>Evolución Biológica</strong>.</p>
+                <p>La evolución biológica se define como el proceso continuo de transformación de las especies a lo largo del tiempo, a través de cambios genéticos en las poblaciones. Estos cambios, acumulados durante millones de años, han dado origen a toda la diversidad de formas de vida que existen en la Tierra a partir de ancestros comunes.</p>
+
+                <h2>Las Primeras Ideas: Lamarck vs. Darwin</h2>
+                <p>Antes de comprender cómo funcionaba la evolución, los científicos debatieron diferentes mecanismos. Uno de los primeros fue <strong>Jean-Baptiste Lamarck</strong>. Él propuso la teoría de los "caracteres adquiridos" y la "ley del uso y desuso". Lamarck creía, por ejemplo, que si una jirafa estiraba su cuello durante toda su vida para alcanzar hojas altas, su cuello se alargaría, y luego heredaría ese cuello largo a sus hijos. Hoy sabemos que esto es incorrecto; los cambios físicos causados por el uso o el esfuerzo durante la vida de un individuo no cambian su ADN ni se heredan.</p>
+                
+                <p>El cambio de paradigma llegó con el naturalista inglés <strong>Charles Darwin</strong>, quien, tras su histórico viaje en el barco HMS Beagle, publicó en 1859 su obra magna: <em>El origen de las especies</em>. Darwin propuso un mecanismo completamente diferente y revolucionario que sí explicaba correctamente la evolución: <strong>La Selección Natural</strong>.</p>
+
+                <h2>El Motor de la Evolución: La Selección Natural</h2>
+                <p>La Selección Natural no afirma que los organismos "busquen" ser perfectos o que el entorno los modifique directamente. En cambio, funciona como un filtro implacable basado en tres condiciones esenciales:</p>
+                <ul>
+                    <li><strong>Variabilidad:</strong> Dentro de cualquier población natural existen diferencias. No hay dos osos de anteojos o dos palmas exactamente iguales; algunos pueden tener pelaje ligeramente más grueso o raíces más fuertes por puro azar genético.</li>
+                    <li><strong>Heredabilidad:</strong> Estas diferencias (variaciones) deben poder transmitirse de padres a hijos a través de los genes.</li>
+                    <li><strong>Reproducción Diferencial:</strong> Los recursos en la naturaleza (agua, alimento, espacio) son limitados, lo que crea una competencia. Los individuos que, por azar, nacen con características que les dan una ventaja en su entorno (ej. mejor camuflaje, mayor tolerancia al frío), sobreviven más tiempo y dejan más descendencia. Así, la naturaleza "selecciona" los rasgos beneficiosos.</li>
+                </ul>
+
+                <h2>Mecanismos que Generan Variabilidad</h2>
+                <p>Para que la selección natural funcione, primero debe haber diferencias entre los individuos. Esta variabilidad se genera principalmente a través de las <strong>Mutaciones</strong>. Una mutación es un cambio aleatorio en la secuencia del ADN de un organismo. Mientras que algunas mutaciones son dañinas o neutras, otras pueden proporcionar una ventaja crucial (como resistir una enfermedad o digerir un nuevo alimento), convirtiéndose en el combustible principal de la evolución.</p>
+
+                <h2>Adaptación y Especiación</h2>
+                <p>Cuando una característica favorable se vuelve común en una población a lo largo de las generaciones debido a la selección natural, decimos que ha ocurrido una <strong>Adaptación</strong>. Las adaptaciones son rasgos físicos, fisiológicos o de comportamiento que mejoran las posibilidades de supervivencia y reproducción en un hábitat específico.</p>
+                <p>Si una población se divide y queda aislada geográficamente (por ejemplo, por una cadena montañosa o un gran río), los dos grupos comenzarán a acumular mutaciones y adaptaciones diferentes según su nuevo entorno. Con el tiempo suficiente, estos grupos serán tan diferentes que ya no podrán reproducirse entre sí. A este proceso de formación de nuevas especies se le conoce como <strong>Especiación</strong>.</p>
+
+                <h2>La Biodiversidad en la Región Cafetera y los Andes</h2>
+                <p>La topografía montañosa de Colombia es un laboratorio vivo de evolución. La cordillera de los Andes crea diferentes "pisos térmicos" (valles cálidos, bosques nublados, páramos helados). Cada una de estas alturas actúa como una isla ecológica que aísla poblaciones y las obliga a adaptarse a condiciones extremas.</p>
+                <p>Por ejemplo, la <strong>Palma de Cera del Quindío</strong> (nuestro árbol nacional) está adaptada para crecer a enormes alturas en el bosque nublado andino, desarrollando un tronco ceroso que la protege de hongos e insectos en un ambiente tan húmedo y alto, buscando la luz del sol por encima del dosel del bosque.</p>
+                <p>Otro caso excepcional es el <strong>Oso de Anteojos</strong> (Tremarctos ornatus). A diferencia de los osos polares adaptados al hielo, nuestro oso andino tiene fuertes garras adaptadas para trepar árboles, y una mandíbula especializada para romper las duras bromelias y palmas que componen su dieta vegetariana en las frías y escarpadas montañas de nuestra región. Estas especies no fueron creadas perfectas de la nada; son el resultado de millones de años de prueba y error guiados por la implacable mano de la Selección Natural.</p>
+            </article>
+
+            <div class="workshop-container">
+                <h2>Taller de Análisis Evolutivo</h2>
+                
+                <div class="instruction-banner">
+                    <!-- Icono SVG en línea -->
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>INSTRUCCIÓN: Escribe y resuelve estas actividades en tu cuaderno de biología.</span>
+                </div>
+
+                <ul class="workshop-list">
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">1. Según el artículo, ¿cómo se define científicamente la "evolución biológica" y por qué es responsable de la gran variedad de especies de hoy en día?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Dibujar / Ilustrar</span>
+                        <span class="question-text">2. Dibuja dos viñetas tipo cómic contrastando teorías: En la viñeta 1, ilustra cómo explicaría Lamarck el origen del cuello largo de las jirafas (ley de uso y desuso). En la viñeta 2, ilustra cómo lo explicaría Darwin (variabilidad natural y supervivencia del más apto).</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico / Deducción</span>
+                        <span class="question-text">3. Si un grupo de osos de anteojos quedara atrapado durante miles de años en una zona del páramo muchísimo más fría y nevada, ¿qué adaptaciones físicas (pelaje, grasa, dieta) crees que favorecería la selección natural para que formen una nueva especie? Explica el porqué.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Conceptual</span>
+                        <span class="question-text">4. Elabora un mapa conceptual jerárquico usando los siguientes conceptos clave: Evolución, Variabilidad Genética, Mutaciones al azar, Selección Natural, Adaptación, y Especiación.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">5. Menciona y explica brevemente cuáles son las TRES condiciones indispensables que deben cumplirse para que el mecanismo de Selección Natural funcione en la naturaleza.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Ilustrar Conceptos</span>
+                        <span class="question-text">6. Dibuja el perfil de la cordillera de los Andes mostrando tres pisos térmicos (valle cálido, bosque nublado, páramo). Ilustra cómo esta geografía funciona como barrera para aislar poblaciones y promover la aparición de nuevas especies.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">7. Muchas personas dicen erróneamente: "La evolución significa que los animales se esfuerzan conscientemente por volverse perfectos". Basado en el texto sobre las mutaciones y el azar, ¿por qué esta afirmación popular es completamente falsa?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Mental</span>
+                        <span class="question-text">8. Construye un Mapa Mental centralizado en el concepto "Biodiversidad de la Región Cafetera". Usa ramificaciones para conectar especies locales (Palma de Cera, Oso de Anteojos) con sus hábitats y las adaptaciones físicas específicas que desarrollan para sobrevivir allí.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">9. ¿Cuál fue el principal error biológico en la teoría de Jean-Baptiste Lamarck con respecto a la "herencia de los caracteres adquiridos" durante la vida de un organismo?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico y Práctico</span>
+                        <span class="question-text">10. Situación real: Un agricultor de café usa un potente insecticida que logra matar al 99% de una plaga. ¿Qué ocurrirá con los genes del 1% de los insectos que sobrevivieron por azar? Relaciona este hecho con la Selección Natural y explica qué grave problema tendrá el agricultor al año siguiente.</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Pregunta -->
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header-text" id="modal-cat-pts">Categoría - Puntos</div>
+            <div class="modal-question-text" id="modal-q-text">¿Pregunta?</div>
+            <div id="options-area">
+                <!-- Se inyectan opciones vía JS -->
+            </div>
+            <div class="feedback-alert" id="feedback-alert"></div>
+            <button class="continue-btn" id="btn-next">Volver al Tablero</button>
+        </div>
+    </div>
+
+    <!-- Modal Final de Calificación -->
+    <div class="modal-overlay" id="results-modal">
+        <div class="modal-content" style="border-top-color: var(--success);">
+            <div class="modal-question-text" style="color: var(--primary-dark); margin-bottom: 0.5rem;">¡Desafío Evolutivo Superado!</div>
+            <p style="font-size: 1.2rem; color: #546e7a;">Has resuelto todas las pistas de la cuadrícula interactiva.</p>
+            
+            <div style="font-size: 1.4rem; font-weight: bold; margin-top:1rem;">
+                Puntos Ganados: <span id="final-pts-text" style="color: var(--secondary-dark);">0</span> / 2400
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top:1.5rem;">Tu Calificación Final es:</div>
+            <div class="final-mark" id="final-grade-display">5.0</div>
+            
+            <p style="font-size: 1.1rem; background-color: #e3f2fd; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 2rem; color: #0277bd;">
+                <strong>Siguiente Paso:</strong> Cierra esta ventana, lee detenidamente el artículo sobre Evolución en la zona inferior y resuelve el taller en tu cuaderno.
+            </p>
+            
+            <button class="continue-btn" style="display: block; box-shadow: 0 4px 0 #1b5e20; background-color: var(--success);" onclick="document.getElementById('results-modal').style.display='none'">Cerrar e ir al Taller</button>
+        </div>
+    </div>
+
+    <script>
+        // Estructura de Datos de las Preguntas
+        const gameData = [
+            {
+                category: "Conceptos Clave",
+                questions: [
+                    { pts: 100, q: "¿Qué es la evolución biológica?", options: ["Cambio en las características de las poblaciones a lo largo del tiempo", "La generación espontánea de animales de la nada", "El mantenimiento inalterable de las especies desde la creación"], correctIdx: 0 },
+                    { pts: 200, q: "Es el mecanismo fundamental propuesto por Darwin por el cual los organismos mejor adaptados sobreviven y se reproducen.", options: ["Deriva genética", "Selección Natural", "Clonación artificial"], correctIdx: 1 },
+                    { pts: 300, q: "¿Qué significa el término 'Biodiversidad'?", options: ["Un tipo específico de planta andina", "La extinción progresiva de especies", "La inmensa variedad de seres vivos que habitan un ecosistema"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "Darwin y Lamarck",
+                questions: [
+                    { pts: 100, q: "¿Qué proponía erróneamente Lamarck sobre los cuellos de las jirafas?", options: ["Crecían por el esfuerzo de estirarlos y luego lo heredaban", "Dios las creó exactamente con ese tamaño de cuello", "Se alargaban únicamente por mutaciones al azar en el ADN"], correctIdx: 0 },
+                    { pts: 200, q: "Naturalista inglés que viajó en el Beagle y escribió la obra 'El origen de las especies'.", options: ["Gregor Mendel", "Charles Darwin", "Louis Pasteur"], correctIdx: 1 },
+                    { pts: 300, q: "¿Cuál es una diferencia clave entre la teoría de Darwin y la de Lamarck?", options: ["Lamarck descubrió la genética y el ADN moderno", "Darwin se basó en los fósiles alienígenas encontrados en África", "Darwin propuso variabilidad al azar y selección natural; Lamarck el uso/desuso"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "Mecanismos",
+                questions: [
+                    { pts: 100, q: "Son cambios al azar en la secuencia de ADN que generan la nueva variabilidad genética indispensable en una especie.", options: ["Mutaciones", "Clonaciones directas", "Selección artificial"], correctIdx: 0 },
+                    { pts: 200, q: "Proceso evolutivo que ocurre cuando una población se separa geográficamente, formando nuevas especies con el paso del tiempo.", options: ["Fosilización masiva", "Especiación", "Extinción selectiva"], correctIdx: 1 },
+                    { pts: 300, q: "Es el conjunto de rasgos físicos o de comportamiento que mejoran la supervivencia y reproducción de un organismo en su hábitat.", options: ["Involución natural", "Mutación neutra", "Adaptación"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "Adaptación Local",
+                questions: [
+                    { pts: 100, q: "¿Por qué la región cafetera (Los Andes) alberga tanta biodiversidad de especies?", options: ["Por el aislamiento geográfico y la variedad de climas en sus pisos térmicos", "Porque hace frío extremo todo el año, lo que ayuda a crecer", "Porque no existen depredadores naturales en las montañas"], correctIdx: 0 },
+                    { pts: 200, q: "Ejemplo clásico de adaptación de la Palma de Cera en los Andes.", options: ["Crecer con espinas venenosas para evitar a los insectos herbívoros", "Desarrollar raíces acuáticas para vivir completamente bajo los ríos", "Crecer altísima buscando luz sobre el bosque nublado y tener tronco ceroso"], correctIdx: 2 },
+                    { pts: 300, q: "El oso de anteojos andino (Tremarctos ornatus) está físicamente adaptado para...", options: ["Trepar árboles fuertes y consumir bromelias en las montañas", "Correr extremadamente rápido por planicies desérticas", "Cazar focas nadando en los glaciares nevados"], correctIdx: 0 }
+                ]
+            }
+        ];
+
+        // Estado del Juego
+        let currentScore = 0;
+        let answeredQuestions = 0;
+        const totalQuestions = 12;
+        const maxScore = 2400; // 4 columnas * (100+200+300) = 2400
+        
+        let activeColIdx = -1;
+        let activeRowIdx = -1;
+        let activeBtnElement = null;
+
+        // Referencias del DOM
+        const gridContainer = document.getElementById("jeopardy-grid");
+        const scoreDisplay = document.getElementById("score-counter");
+        const progressDisplay = document.getElementById("progress-counter");
+        
+        const qModal = document.getElementById("question-modal");
+        const mCatPts = document.getElementById("modal-cat-pts");
+        const mQuestion = document.getElementById("modal-q-text");
+        const optionsArea = document.getElementById("options-area");
+        const feedbackAlert = document.getElementById("feedback-alert");
+        const btnNext = document.getElementById("btn-next");
+
+        // Inicializador del Tablero
+        function buildGame() {
+            // Render Cabeceras de Categoría
+            gameData.forEach(col => {
+                const header = document.createElement("div");
+                header.className = "category-title";
+                header.textContent = col.category;
+                gridContainer.appendChild(header);
+            });
+
+            // Render Botones (Filas de Valores 100, 200, 300)
+            for (let row = 0; row < 3; row++) {
+                gameData.forEach((col, colIdx) => {
+                    const btn = document.createElement("button");
+                    btn.className = "pts-btn";
+                    const points = col.questions[row].pts;
+                    btn.textContent = points;
+                    
+                    // Asignar evento click (funciona bien en touch por el CSS touch-action:none)
+                    btn.addEventListener("click", () => openModal(colIdx, row, btn));
+                    
+                    gridContainer.appendChild(btn);
+                });
+            }
+        }
+
+        // Lógica de Modales de Pregunta
+        function openModal(colIdx, rowIdx, btnElement) {
+            activeColIdx = colIdx;
+            activeRowIdx = rowIdx;
+            activeBtnElement = btnElement;
+
+            const qData = gameData[colIdx].questions[rowIdx];
+            
+            mCatPts.textContent = `${gameData[colIdx].category} | ${qData.pts} Pts`;
+            mQuestion.textContent = qData.q;
+            
+            // Limpiar estado anterior
+            optionsArea.innerHTML = "";
+            feedbackAlert.style.display = "none";
+            btnNext.style.display = "none";
+
+            // Crear botones de opciones
+            qData.options.forEach((optText, optIdx) => {
+                const optBtn = document.createElement("button");
+                optBtn.className = "opt-btn";
+                optBtn.textContent = optText;
+                optBtn.addEventListener("click", () => handleAnswer(optIdx, optBtn));
+                optionsArea.appendChild(optBtn);
+            });
+
+            qModal.style.display = "flex";
+        }
+
+        // Lógica de Validación y Puntuación
+        function handleAnswer(selectedIdx, clickedElement) {
+            // Prevenir múltiples clics bloqueando las opciones
+            const allOpts = optionsArea.querySelectorAll(".opt-btn");
+            allOpts.forEach(b => b.disabled = true);
+
+            const qData = gameData[activeColIdx].questions[activeRowIdx];
+            const isCorrect = (selectedIdx === qData.correctIdx);
+
+            feedbackAlert.style.display = "block";
+            
+            if (isCorrect) {
+                clickedElement.classList.add("correct");
+                currentScore += qData.pts;
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackAlert.textContent = `¡Correcto! Selección natural en acción. +${qData.pts} puntos.`;
+                feedbackAlert.style.backgroundColor = "#e8f5e9";
+                feedbackAlert.style.color = "var(--success)";
+                feedbackAlert.style.border = "2px solid #a5d6a7";
+            } else {
+                clickedElement.classList.add("incorrect");
+                allOpts[qData.correctIdx].classList.add("correct"); // Resaltar la respuesta verdadera
+                
+                feedbackAlert.textContent = `Incorrecto. No estás adaptado para esta pregunta. 0 puntos.`;
+                feedbackAlert.style.backgroundColor = "#ffebee";
+                feedbackAlert.style.color = "var(--danger)";
+                feedbackAlert.style.border = "2px solid #ef9a9a";
+            }
+
+            // Actualizar estado general del tablero
+            answeredQuestions++;
+            progressDisplay.textContent = answeredQuestions;
+            activeBtnElement.disabled = true;
+            activeBtnElement.textContent = "—";
+
+            btnNext.style.display = "block";
+        }
+
+        // Transición de flujos (Continuar)
+        btnNext.addEventListener("click", () => {
+            qModal.style.display = "none";
+            
+            // Revisar si terminó el juego
+            if (answeredQuestions === totalQuestions) {
+                setTimeout(showFinalGrade, 600);
+            }
+        });
+
+        // Cálculo de Calificación Final (Escala colombiana estándar 1.0 a 5.0)
+        function showFinalGrade() {
+            const resultsModal = document.getElementById("results-modal");
+            document.getElementById("final-pts-text").textContent = currentScore;
+
+            // Escala lineal simple
+            const percentage = currentScore / maxScore;
+            const computedGrade = (percentage * 4.0) + 1.0;
+            const finalGradeStr = computedGrade.toFixed(1);
+
+            const gradeDisplay = document.getElementById("final-grade-display");
+            gradeDisplay.textContent = finalGradeStr;
+            
+            // Asignar colores según desempeño
+            if (computedGrade >= 4.0) {
+                gradeDisplay.style.color = "var(--success)";
+            } else if (computedGrade >= 3.0) {
+                gradeDisplay.style.color = "var(--secondary-dark)";
+            } else {
+                gradeDisplay.style.color = "var(--danger)";
+            }
+
+            resultsModal.style.display = "flex";
+        }
+
+        // Arrancar juego al cargar el DOM de manera segura
+        window.addEventListener("DOMContentLoaded", buildGame);
+    </script>
+</body>
+</html>

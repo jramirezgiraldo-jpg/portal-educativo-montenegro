@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- REQUISITO TÉCNICO CRÍTICO 2: Viewport estricto para mobile-first y prevención de bugs de zoom táctil -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guía Interactiva: Nomenclatura Inorgánica</title>
+    
+    <style>
+        :root {
+            /* Tema Cyberpunk - Juego */
+            --cp-bg: #0b0c10;
+            --cp-dark: #1f2833;
+            --cp-cyan: #66fcf1;
+            --cp-teal: #45a29e;
+            --cp-magenta: #f000ff;
+            --cp-red: #ff3333;
+            --cp-yellow: #ffea00;
+            --cp-text: #e0e0e0;
+            
+            /* Tema Lectura Académica */
+            --read-bg: #f8f9fa;
+            --read-card: #ffffff;
+            --read-text: #2b2d42;
+            --read-heading: #1d3557;
+            --accent-blue: #457b9d;
+            --accent-red: #e63946;
+            --accent-green: #2a9d8f;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            scroll-behavior: smooth;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, var(--cp-dark) 0%, var(--cp-bg) 100%);
+            border-bottom: 4px solid var(--cp-teal);
+            padding: 10px;
+            box-sizing: border-box;
+            
+            /* CRÍTICO: Prevenir comportamientos táctiles por defecto como scroll o arrastre */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            height: 75vh;
+            background-color: rgba(11, 12, 16, 0.85);
+            border: 2px solid var(--cp-cyan);
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.15), inset 0 0 15px rgba(69, 162, 158, 0.2);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border-bottom: 2px solid var(--cp-teal);
+            font-family: monospace;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            color: var(--cp-cyan);
+            z-index: 10;
+        }
+
+        .hud-lives {
+            color: var(--cp-red);
+            text-shadow: 0 0 8px var(--cp-red);
+            letter-spacing: 2px;
+        }
+
+        #game-area {
+            flex-grow: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(102,252,241,0.02) 0%, rgba(240,0,255,0.02) 100%);
+        }
+
+        /* Grid Cyberpunk de fondo */
+        #game-area::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(102, 252, 241, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 252, 241, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+
+        .falling-word {
+            position: absolute;
+            padding: 10px 16px;
+            background: rgba(31, 40, 51, 0.95);
+            border: 2px solid var(--cp-cyan);
+            border-radius: 8px;
+            color: var(--cp-text);
+            font-weight: bold;
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            text-align: center;
+            cursor: crosshair;
+            box-shadow: 0 0 10px rgba(102, 252, 241, 0.2);
+            z-index: 5;
+            text-transform: uppercase;
+            will-change: transform;
+        }
+
+        @keyframes explodeAnim {
+            0% { transform: scale(1); border-color: var(--cp-cyan); box-shadow: 0 0 15px var(--cp-cyan); }
+            50% { transform: scale(1.5); opacity: 0.8; background: rgba(102, 252, 241, 0.3); color: var(--cp-bg); }
+            100% { transform: scale(2); opacity: 0; filter: blur(5px); }
+        }
+
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-12px); }
+            40%, 80% { transform: translateX(12px); }
+        }
+
+        .exploding {
+            animation: explodeAnim 0.35s ease-out forwards;
+            pointer-events: none !important;
+        }
+
+        .shaking {
+            animation: shakeAnim 0.4s ease forwards;
+            border-color: var(--cp-red) !important;
+            box-shadow: 0 0 20px var(--cp-red) !important;
+            color: var(--cp-red) !important;
+            pointer-events: none !important;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 12, 16, 0.95);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .title-neon {
+            color: var(--cp-cyan);
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            text-shadow: 0 0 10px var(--cp-cyan), 0 0 20px var(--cp-teal);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .instructions {
+            background: rgba(102, 252, 241, 0.05);
+            border: 1px solid var(--cp-teal);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: var(--cp-text);
+            font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+            line-height: 1.5;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            max-width: 95%;
+        }
+
+        .btn-neon {
+            background: rgba(102, 252, 241, 0.1);
+            color: var(--cp-cyan);
+            border: 2px solid var(--cp-cyan);
+            padding: 12px 25px;
+            font-size: clamp(1.1rem, 4vw, 1.2rem);
+            text-transform: uppercase;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(102, 252, 241, 0.2) inset, 0 0 10px rgba(102, 252, 241, 0.2);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-neon:active {
+            background: var(--cp-cyan);
+            color: var(--cp-bg);
+            box-shadow: 0 0 20px var(--cp-cyan);
+            transform: scale(0.95);
+        }
+
+        .grade-display {
+            font-size: clamp(3.5rem, 10vw, 5rem);
+            font-weight: 900;
+            margin: 10px 0;
+            font-family: monospace;
+            line-height: 1;
+        }
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(30px, 5vw, 60px) clamp(15px, 4vw, 30px);
+            width: 100%;
+            box-sizing: border-box;
+            /* Restaurar scroll e interacciones normales para leer */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .article-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--read-card);
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            border-top: 6px solid var(--accent-blue);
+        }
+
+        .article-title {
+            color: var(--read-heading);
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-top: 0;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+
+        .article-card h2 {
+            color: var(--accent-blue);
+            margin-top: 35px;
+            font-size: clamp(1.3rem, 5vw, 1.7rem);
+            border-left: 4px solid var(--accent-red);
+            padding-left: 12px;
+            line-height: 1.3;
+        }
+        
+        .article-card h3 {
+            color: var(--accent-green);
+            margin-top: 25px;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+        }
+
+        .article-card p, .article-card li {
+            font-size: clamp(1.05rem, 3.5vw, 1.15rem);
+            line-height: 1.7;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .highlight-box {
+            background-color: #f1faee;
+            border-left: 4px solid var(--accent-green);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            color: #1d3557;
+            font-weight: 600;
+        }
+
+        .workshop-container {
+            margin-top: 50px;
+            background-color: #ffffff;
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            border: 2px dashed var(--accent-blue);
+        }
+
+        .workshop-title {
+            text-align: center;
+            color: var(--read-heading);
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        .instruction-alert {
+            background-color: #ffe8d6;
+            color: #b08968;
+            border: 2px solid #ddb892;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: clamp(1rem, 4vw, 1.15rem);
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .activity-item {
+            background: #fafafa;
+            border-left: 5px solid var(--read-text);
+            padding: 18px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .act-badge {
+            display: inline-block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-responde { background-color: var(--accent-blue); }
+        .badge-analiza { background-color: var(--accent-red); }
+        .badge-dibuja { background-color: var(--accent-green); }
+        .badge-mapa { background-color: #6a4c93; }
+
+        .activity-item p { margin: 0; color: #1d3557; font-weight: 600; }
+        
+        .svg-icon {
+            width: 80px; height: 80px; margin-bottom: 15px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-container">
+                
+                <div class="hud">
+                    <div id="score-display">PUNTOS: 0/15</div>
+                    <div id="lives-display" class="hud-lives">♥♥♥♥♥</div>
+                </div>
+
+                <div id="game-area"></div>
+
+                <!-- Pantalla de Inicio -->
+                <div id="start-screen" class="overlay">
+                    <svg class="svg-icon" viewBox="0 0 100 100" fill="none" stroke="var(--cp-cyan)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Icono SVG Erlenmeyer / Laboratorio -->
+                        <path d="M40 20 L60 20" />
+                        <path d="M45 20 L45 40 L25 80 L75 80 L55 40 L55 20" />
+                        <path d="M30 70 L70 70" stroke="var(--cp-magenta)"/>
+                        <circle cx="50" cy="55" r="3" fill="var(--cp-cyan)" />
+                        <circle cx="40" cy="65" r="2" fill="var(--cp-magenta)" />
+                        <circle cx="60" cy="65" r="4" fill="var(--cp-cyan)" />
+                    </svg>
+
+                    <h1 class="title-neon">Laboratorio<br>Inorgánico</h1>
+                    <div class="instructions">
+                        <p style="color: var(--cp-cyan); font-weight: 900; margin-top:0;">MISIÓN: IDENTIFICAR COMPUESTOS INORGÁNICOS</p>
+                        <ul style="text-align: left; padding-left: 20px; margin-bottom:0;">
+                            <li><span style="color:var(--cp-cyan)">TOCA:</span> Nombres y fórmulas de Óxidos, Hidróxidos y Ácidos (+1 pt).</li>
+                            <li><span style="color:var(--cp-red)">IGNORA:</span> Biomoléculas y sustancias orgánicas (Tocarlas resta vida).</li>
+                            <li><span style="color:var(--cp-yellow)">ALERTA:</span> Si dejas caer un compuesto inorgánico correcto, pierdes una vida.</li>
+                        </ul>
+                    </div>
+                    <button class="btn-neon" id="btn-start">Iniciar Reacción</button>
+                    <button class="btn-neon" style="margin-top:15px; font-size:0.9rem; border:none; background:transparent; box-shadow:none; text-decoration:underline; color: var(--cp-text);" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Ver Teoría Primero ↓</button>
+                </div>
+
+                <!-- Pantalla de Fin de Juego -->
+                <div id="end-screen" class="overlay" style="display: none;">
+                    <h2 class="title-neon" id="end-title" style="font-size: clamp(1.6rem, 5vw, 2.2rem);">Reacción Finalizada</h2>
+                    <p style="color: var(--cp-text); margin-bottom: 5px; font-size: 1.1rem;">Nivel de Pureza:</p>
+                    <div class="grade-display" id="final-grade">0.0</div>
+                    <p id="end-message" style="color: var(--cp-cyan); max-width: 90%; line-height: 1.4; font-size: 1.05rem; margin-bottom: 25px;"></p>
+                    <button class="btn-neon" id="btn-restart">Reiniciar Sistema</button>
+                    <button class="btn-neon" style="margin-top:15px; font-size:1rem; border:none; background:transparent; box-shadow:none; color:var(--cp-magenta);" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Completar Taller ↓</button>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-card">
+                <h1 class="article-title">El Lenguaje de la Química: Nomenclatura Inorgánica Básica</h1>
+                
+                <h2>1. Introducción a la Nomenclatura Inorgánica</h2>
+                <p>Imagina que viajas a un país donde nadie habla tu idioma; la comunicación sería un caos. En el mundo científico pasa lo mismo. Para evitar confusiones, los químicos crearon un sistema universal para nombrar las sustancias: la <strong>Nomenclatura Química</strong>. Este sistema permite que cualquier persona en el mundo sepa exactamente qué elementos componen una sustancia con solo leer su nombre o su fórmula.</p>
+                <p>En la química inorgánica, las sustancias se agrupan en "familias" o funciones químicas, dependiendo de los elementos que las forman. Las familias más importantes que nos rodean en el día a día son los <strong>Óxidos</strong>, los <strong>Hidróxidos (Bases)</strong> y los <strong>Ácidos</strong>.</p>
+
+                <h2>2. Los Óxidos: Cuando el Oxígeno Ataca</h2>
+                <p>Los óxidos son compuestos binarios, es decir, están formados por solo dos elementos: el <strong>Oxígeno (O)</strong> acompañado de cualquier otro elemento de la tabla periódica.</p>
+                <ul>
+                    <li><strong>Óxidos Metálicos:</strong> Oxígeno + Metal. Ejemplos comunes incluyen la herrumbre de los metales.</li>
+                    <li><strong>Óxidos No Metálicos:</strong> Oxígeno + No Metal. Suelen ser gases.</li>
+                </ul>
+                <div class="highlight-box">
+                    <strong>En el hogar y la agricultura:</strong> El óxido de calcio (<strong>CaO</strong>), comúnmente llamado "Cal viva", se utiliza frecuentemente en la agricultura para tratar suelos que son demasiado ácidos y mejorar el crecimiento de los cultivos, además de su uso milenario en la construcción. Otro óxido famoso es el Dióxido de Carbono (<strong>CO₂</strong>), el gas que exhalamos y que le da las burbujas a las gaseosas.
+                </div>
+
+                <h2>3. Los Hidróxidos: Bases Poderosas en el Hogar</h2>
+                <p>Los hidróxidos o bases se caracterizan por tener un grupo llamado <strong>hidroxilo (OH)</strong> unido a un metal. Tienen un sabor amargo (¡aunque nunca debes probarlos en el laboratorio!), son resbalosos al tacto como el jabón, y tienen la capacidad de neutralizar a los ácidos.</p>
+                
+                <h3>Ejemplos Cotidianos:</h3>
+                <ul>
+                    <li><strong>NaOH (Hidróxido de Sodio):</strong> Conocido comercialmente como "Sosa Cáustica" o diablo rojo. Es un químico muy fuerte y corrosivo que se usa en los hogares para destapar cañerías obstruidas con grasa y cabello, y a nivel industrial para fabricar jabones.</li>
+                    <li><strong>Mg(OH)₂ (Hidróxido de Magnesio):</strong> Si alguna vez has tomado "Leche de Magnesia" para aliviar la acidez estomacal, has consumido un hidróxido. Actúa neutralizando el exceso de ácido en tu estómago.</li>
+                </ul>
+
+                <h2>4. Los Ácidos: Sustancias Corrosivas y Vitales</h2>
+                <p>Los ácidos son sustancias que en su fórmula química generalmente comienzan con el elemento <strong>Hidrógeno (H)</strong>. Tienen un sabor agrio (como el limón) y son capaces de reaccionar fuertemente con los metales, desgastándolos.</p>
+                
+                <h3>Ácidos en la vida diaria:</h3>
+                <ul>
+                    <li><strong>HCl (Ácido Clorhídrico):</strong> En los supermercados lo venden diluido bajo el nombre de "Ácido Muriático", usado para limpiar cerámicas y quitar manchas difíciles. Curiosamente, tu estómago produce este mismo ácido de forma natural para digerir los alimentos.</li>
+                    <li><strong>H₂SO₄ (Ácido Sulfúrico):</strong> Es uno de los químicos más producidos en el mundo. Aunque no lo veas directamente, está dentro de la batería de los carros (ácido de batería) y es fundamental en la fabricación de los fertilizantes que sostienen la agricultura mundial.</li>
+                </ul>
+
+                <p>Comprender estas sustancias no solo es útil para aprobar un examen, sino para la vida misma. Conocer los nombres y fórmulas nos advierte sobre los peligros de ciertas sustancias, como el riesgo de mezclar ácido muriático (HCl) con cloro de limpieza, lo cual genera un gas tóxico mortal.</p>
+
+                <div class="workshop-container">
+                    <h2 class="workshop-title">Taller Académico</h2>
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN: Lee cuidadosamente el texto anterior. Luego, escribe y resuelve de manera clara y ordenada estas 10 actividades en tu cuaderno de Ciencias.
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-responde">1. Responde</span>
+                        <p>Según la lectura, ¿cuál es el propósito principal de la Nomenclatura Química a nivel mundial?</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-dibuja">2. Dibuja e Ilustra</span>
+                        <p>Dibuja dos productos químicos comunes de tu hogar mencionados en la lectura (ej. una botella de sosa cáustica o ácido muriático) y escribe al lado de ellos su fórmula química oficial.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-analiza">3. Analiza Críticamente</span>
+                        <p>Imagina que un agricultor tiene un suelo muy "ácido" donde sus plantas no crecen bien. ¿Qué sustancia mencionada en la lectura le recomendarías aplicar a la tierra y por qué?</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-mapa">4. Cuadro Comparativo</span>
+                        <p>Elabora un cuadro comparativo entre los "Hidróxidos (Bases)" y los "Ácidos" describiendo sus características principales (elemento o grupo que los identifica, sensación al tacto o sabor en alimentos, y un ejemplo de cada uno).</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-responde">5. Responde</span>
+                        <p>¿Qué significa que un compuesto sea "binario" y a qué familia de compuestos inorgánicos hace referencia la lectura con este término?</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-analiza">6. Analiza el Peligro</span>
+                        <p>¿Por qué es sumamente peligroso e irresponsable mezclar productos de aseo al azar, como el Ácido Muriático y el Cloro, para limpiar el baño?</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-dibuja">7. Ilustra la Biología</span>
+                        <p>Dibuja un estómago humano simple y señala qué ácido produce internamente para la digestión, escribiendo su nombre químico oficial y su fórmula.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-mapa">8. Mapa Conceptual</span>
+                        <p>Elabora un mapa conceptual que tenga como título central "Compuestos Inorgánicos" y se divida en tres ramas: Óxidos, Hidróxidos y Ácidos. En cada rama, incluye la fórmula general (qué elementos los componen) y un ejemplo comercial.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-responde">9. Responde</span>
+                        <p>¿Cuál es la función en la vida diaria de la sustancia química conocida como Hidróxido de Magnesio (Mg(OH)₂)?</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-analiza">10. Reflexión Crítica</span>
+                        <p>A pesar de que el Ácido Sulfúrico (H₂SO₄) es muy corrosivo, la lectura menciona que es vital para la agricultura mundial. Explica, según lo leído, por qué ocurre esto.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Bases de datos de palabras inorgánicas vs biológicas/orgánicas
+        const correctWords = [
+            "Óxido", "Hidróxido", "Ácido", "H2O", "NaOH", 
+            "HCl", "CaO", "CO2", "Ác. Sulfúrico", "Ác. Clorhídrico", 
+            "Sosa Cáustica", "Cal Viva", "H2SO4", "Sal", "Amoníaco"
+        ];
+        
+        const distractorWords = [
+            "Glucosa", "ADN", "Proteína", "Lípido", "Célula", 
+            "Mitocondria", "Colesterol", "Vitamina", "ARN", "Gen", 
+            "Enzima", "Fructosa", "Celulosa", "Queratina", "Almidón"
+        ];
+
+        // Estado Global del Juego
+        let state = {
+            score: 0,
+            lives: 5,
+            maxScore: 15,
+            isRunning: false,
+            activeWords: [],
+            lastSpawnTime: 0,
+            spawnRateMs: 1400, // Tiempo inicial entre spawns
+            baseSpeed: 0, // Pixeles por frame, calculado en init()
+            poolCorrect: [],
+            poolDistract: [],
+            animationId: null
+        };
+
+        // Referencias DOM
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score-display');
+        const livesDisplay = document.getElementById('lives-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const finalGrade = document.getElementById('final-grade');
+        const endMessage = document.getElementById('end-message');
+
+        // Utilidad: Barajar Array (Fisher-Yates)
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function initGame() {
+            state.score = 0;
+            state.lives = 5;
+            state.isRunning = true;
+            
+            // Ajustar velocidad base dependiendo del alto del dispositivo
+            const areaHeight = gameArea.clientHeight;
+            state.baseSpeed = areaHeight / 350; // Aprox 2-3 px por frame en escritorio, menos en mobile
+            state.spawnRateMs = 1400;
+            
+            // Limpiar área de juego
+            gameArea.innerHTML = '';
+            state.activeWords = [];
+            
+            // Llenar piscinas barajadas (doble para asegurar stock)
+            state.poolCorrect = shuffleArray([...correctWords, ...correctWords]); 
+            state.poolDistract = shuffleArray([...distractorWords, ...distractorWords]);
+
+            updateHUD();
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+
+            state.lastSpawnTime = performance.now();
+            
+            // Iniciar bucle
+            state.animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop(currentTime) {
+            if (!state.isRunning) return;
+
+            // Chequeo de tiempo para spawnear nueva palabra
+            if (currentTime - state.lastSpawnTime > state.spawnRateMs) {
+                spawnWord();
+                state.lastSpawnTime = currentTime;
+            }
+
+            const areaHeight = gameArea.clientHeight;
+
+            // Iteración en reversa para poder eliminar elementos con seguridad
+            for (let i = state.activeWords.length - 1; i >= 0; i--) {
+                let wordObj = state.activeWords[i];
+                
+                // Gravedad
+                wordObj.y += wordObj.speed;
+                // Renderizar posición con translate para max performance
+                wordObj.element.style.transform = `translate(${wordObj.currentX}px, ${wordObj.y}px)`;
+
+                // Out of Bounds (Caída)
+                if (wordObj.y > areaHeight + 20) {
+                    // Penalización por dejar caer una palabra correcta
+                    if (wordObj.isCorrect) {
+                        loseLife();
+                        flashScreen('var(--cp-red)');
+                    }
+                    
+                    wordObj.element.remove();
+                    state.activeWords.splice(i, 1);
+                }
+            }
+
+            if (state.isRunning) {
+                state.animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function spawnWord() {
+            if (state.score >= state.maxScore) {
+                endGame();
+                return;
+            }
+
+            // Probabilidades: 60% correcta, 40% distractor
+            let isCorrect = Math.random() < 0.6;
+            let text = "";
+
+            if (isCorrect && state.poolCorrect.length > 0) {
+                text = state.poolCorrect.pop();
+            } else if (!isCorrect && state.poolDistract.length > 0) {
+                text = state.poolDistract.pop();
+            } else if (state.poolCorrect.length > 0) {
+                isCorrect = true;
+                text = state.poolCorrect.pop();
+            } else {
+                return; // Fallback final
+            }
+
+            const element = document.createElement('div');
+            element.classList.add('falling-word');
+            element.innerText = text;
+
+            // Append oculto/arriba para medir dimensiones reales
+            gameArea.appendChild(element);
+            
+            // Posición aleatoria horizontal en porcentaje (evita bordes absolutos)
+            const leftPercent = Math.random() * 70 + 5;
+            element.style.left = `${leftPercent}%`;
+            
+            // Obtener coord X en px basado en el porcentaje
+            const rect = element.getBoundingClientRect();
+            const parentRect = gameArea.getBoundingClientRect();
+            const startX = rect.left - parentRect.left;
+            const startY = -60;
+
+            // Resetear Left para usar hardware acceleration en Transform
+            element.style.left = '0px';
+            element.style.transform = `translate(${startX}px, ${startY}px)`;
+
+            // Evento Unificado Touch/Mouse
+            element.addEventListener('pointerdown', (e) => handleTap(e, element, isCorrect, startX));
+
+            // Variación leve en velocidad por cada elemento
+            const speedVar = (Math.random() * 1.5) - 0.5;
+
+            state.activeWords.push({
+                element: element,
+                currentX: startX,
+                y: startY,
+                speed: state.baseSpeed + speedVar,
+                isCorrect: isCorrect
+            });
+
+            // Curva de Dificultad
+            if (state.score === 5) {
+                state.baseSpeed += 0.4;
+                state.spawnRateMs = 1200;
+            }
+            if (state.score === 10) {
+                state.baseSpeed += 0.5;
+                state.spawnRateMs = 1000;
+            }
+        }
+
+        function handleTap(e, element, isCorrect, xPos) {
+            e.preventDefault(); 
+            e.stopPropagation();
+
+            if (!state.isRunning || element.classList.contains('exploding') || element.classList.contains('shaking')) return;
+
+            // Detener caída inmediatamente
+            const index = state.activeWords.findIndex(obj => obj.element === element);
+            let currentY = 0;
+            if (index > -1) {
+                currentY = state.activeWords[index].y;
+                state.activeWords.splice(index, 1);
+            }
+
+            // Congelar visual
+            element.style.transform = `translate(${xPos}px, ${currentY}px)`;
+
+            if (isCorrect) {
+                // ACIERTO
+                state.score++;
+                updateHUD();
+                
+                element.classList.add('exploding');
+                flashScreen('rgba(102, 252, 241, 0.3)');
+                
+                // Vibración táctil si aplica
+                if (navigator.vibrate) navigator.vibrate(40); 
+                
+                setTimeout(() => element.remove(), 350);
+
+                if(state.score >= state.maxScore) {
+                    setTimeout(endGame, 400); 
+                }
+
+            } else {
+                // FALLO / DISTRACTOR
+                loseLife();
+                element.classList.add('shaking');
+                
+                if (navigator.vibrate) navigator.vibrate([60, 40, 60]); 
+                
+                setTimeout(() => element.remove(), 400);
+            }
+        }
+
+        function loseLife() {
+            state.lives--;
+            updateHUD();
+            if (state.lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateHUD() {
+            scoreDisplay.innerText = `PUNTOS: ${state.score}/${state.maxScore}`;
+            let hearts = "";
+            for(let i=0; i<5; i++) {
+                hearts += (i < state.lives) ? "♥" : "♡";
+            }
+            livesDisplay.innerText = hearts;
+        }
+
+        function flashScreen(color) {
+            gameArea.style.boxShadow = `inset 0 0 40px ${color}`;
+            setTimeout(() => gameArea.style.boxShadow = "none", 150);
+        }
+
+        function endGame() {
+            if(!state.isRunning) return; 
+            
+            state.isRunning = false;
+            cancelAnimationFrame(state.animationId); 
+
+            // Cálculo de nota (1.0 a 5.0 estándar colombiano)
+            let nota = 1.0 + (state.score / state.maxScore) * 4.0;
+            
+            if (state.lives <= 0) {
+                nota = Math.min(nota, 2.9); // Top cap si muere
+            }
+            
+            nota = Math.max(1.0, Math.min(5.0, nota));
+            finalGrade.innerText = nota.toFixed(1);
+
+            if (nota >= 4.0) {
+                finalGrade.style.color = "var(--cp-cyan)";
+                finalGrade.style.textShadow = "0 0 20px var(--cp-cyan)";
+                endMessage.innerText = "¡EXCELENTE! Tienes gran dominio separando los compuestos inorgánicos de las biomoléculas. Eres un as del laboratorio.";
+            } else if (nota >= 3.0) {
+                finalGrade.style.color = "var(--cp-yellow)";
+                finalGrade.style.textShadow = "0 0 20px var(--cp-yellow)";
+                endMessage.innerText = "BUEN INTENTO. Identificaste varios ácidos, óxidos y bases, pero dejaste caer algunos o los confundiste con compuestos orgánicos.";
+            } else {
+                finalGrade.style.color = "var(--cp-red)";
+                finalGrade.style.textShadow = "0 0 20px var(--cp-red)";
+                endMessage.innerText = "REACCIÓN FALLIDA. Tu laboratorio se contaminó con compuestos orgánicos o perdiste muchas fórmulas importantes. Lee la teoría e intenta de nuevo.";
+            }
+
+            endScreen.style.display = 'flex';
+        }
+
+        // Asignación de botones
+        document.getElementById('btn-start').addEventListener('click', initGame);
+        document.getElementById('btn-restart').addEventListener('click', initGame);
+
+    </script>
+</body>
+</html>

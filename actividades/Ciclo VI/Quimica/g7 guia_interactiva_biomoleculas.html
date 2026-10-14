@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- REQUISITO TÉCNICO CRÍTICO 2: Viewport para mobile-first y prevención de bugs -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biomoléculas I: Carbohidratos y Lípidos</title>
+    
+    <style>
+        :root {
+            /* Tema Cyberpunk - Juego */
+            --cp-bg: #0a0b10;
+            --cp-dark: #12141d;
+            --cp-cyan: #00f3ff;
+            --cp-magenta: #ff00a0;
+            --cp-green: #39ff14;
+            --cp-red: #ff2a2a;
+            --cp-yellow: #fcee0a;
+            --cp-text: #e0e0e0;
+            
+            /* Tema Lectura Académica */
+            --read-bg: #f4f6f9;
+            --read-card: #ffffff;
+            --read-text: #2b2d42;
+            --read-heading: #14213d;
+            --accent-blue: #023e8a;
+            --accent-orange: #e85d04;
+            --accent-green: #2a9d8f;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cp-bg);
+            scroll-behavior: smooth;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            height: 100vh; /* Altura completa de la pantalla para el juego */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at 50% 50%, var(--cp-dark) 0%, var(--cp-bg) 100%);
+            border-bottom: 4px solid var(--cp-magenta);
+            padding: 10px;
+            box-sizing: border-box;
+            
+            /* CRÍTICO: Prevenir comportamientos táctiles por defecto */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px; /* Mobile-first adaptativo a PC */
+            height: 70vh;
+            background-color: rgba(10, 11, 16, 0.9);
+            border: 2px solid var(--cp-cyan);
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.15), inset 0 0 15px rgba(255, 0, 160, 0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid var(--cp-magenta);
+            font-family: monospace;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            color: var(--cp-cyan);
+            text-shadow: 0 0 5px var(--cp-cyan);
+            z-index: 10;
+        }
+
+        .hud-lives {
+            color: var(--cp-red);
+            text-shadow: 0 0 8px var(--cp-red);
+            letter-spacing: 2px;
+        }
+
+        #game-area {
+            flex-grow: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(0,243,255,0.03) 0%, rgba(255,0,160,0.03) 100%);
+        }
+
+        /* Patrón de fondo estilo rejilla cyberpunk */
+        #game-area::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+            background-size: 25px 25px;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .word-bubble {
+            position: absolute;
+            padding: 12px 18px;
+            background: rgba(18, 20, 29, 0.95);
+            border: 2px solid var(--cp-cyan);
+            border-radius: 8px;
+            color: var(--cp-text);
+            font-weight: 800;
+            font-size: clamp(0.9rem, 3.5vw, 1.15rem);
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+            z-index: 5;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            will-change: transform;
+            transform-origin: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animaciones para interacciones */
+        @keyframes explodeAnim {
+            0% { transform: scale(1); border-color: var(--cp-green); box-shadow: 0 0 20px var(--cp-green); color: var(--cp-green); }
+            50% { transform: scale(1.4); opacity: 0.8; background: rgba(57, 255, 20, 0.2); }
+            100% { transform: scale(1.8); opacity: 0; filter: blur(4px); }
+        }
+
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .exploding {
+            animation: explodeAnim 0.35s ease-out forwards;
+            pointer-events: none !important;
+        }
+
+        .shaking {
+            animation: shakeAnim 0.4s ease forwards;
+            border-color: var(--cp-red) !important;
+            box-shadow: 0 0 20px var(--cp-red) !important;
+            color: var(--cp-red) !important;
+            pointer-events: none !important;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 11, 16, 0.92);
+            backdrop-filter: blur(6px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .title-neon {
+            color: var(--cp-cyan);
+            font-size: clamp(1.8rem, 6vw, 2.8rem);
+            text-shadow: 0 0 10px var(--cp-cyan), 0 0 20px rgba(0, 243, 255, 0.5);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .instructions {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid var(--cp-magenta);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: var(--cp-text);
+            font-size: clamp(0.95rem, 3.8vw, 1.1rem);
+            line-height: 1.5;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            max-width: 90%;
+        }
+
+        .btn-neon {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--cp-cyan);
+            border: 2px solid var(--cp-cyan);
+            padding: 15px 30px;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            text-transform: uppercase;
+            font-weight: 900;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2) inset, 0 0 15px rgba(0, 243, 255, 0.2);
+            transition: all 0.2s;
+            font-family: inherit;
+            letter-spacing: 1px;
+        }
+
+        .btn-neon:active {
+            background: var(--cp-cyan);
+            color: var(--cp-bg);
+            box-shadow: 0 0 30px var(--cp-cyan);
+            transform: scale(0.95);
+        }
+
+        .grade-display {
+            font-size: clamp(4rem, 12vw, 6rem);
+            font-weight: 900;
+            margin: 10px 0;
+            font-family: monospace;
+            line-height: 1;
+        }
+
+        /* SVG Icon */
+        .icon-molecule {
+            width: 80px; height: 80px;
+            margin-bottom: 15px;
+        }
+
+        #zona-lectura {
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            padding: clamp(30px, 5vw, 60px) clamp(15px, 4vw, 30px);
+            width: 100%;
+            box-sizing: border-box;
+            /* Restaurar interacciones normales para lectura */
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .article-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--read-card);
+            padding: clamp(20px, 5vw, 50px);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+            border-top: 8px solid var(--accent-blue);
+        }
+
+        .article-title {
+            color: var(--read-heading);
+            font-size: clamp(1.8rem, 6vw, 2.6rem);
+            border-bottom: 3px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-top: 0;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+
+        .article-card h2 {
+            color: var(--accent-blue);
+            margin-top: 40px;
+            font-size: clamp(1.4rem, 5vw, 1.8rem);
+            border-left: 4px solid var(--accent-green);
+            padding-left: 12px;
+            line-height: 1.3;
+        }
+
+        .article-card p, .article-card li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            line-height: 1.7;
+            margin-bottom: 18px;
+            color: #4a4e69;
+        }
+
+        .highlight-box {
+            background-color: #f1f8ff;
+            border-left: 4px solid var(--accent-blue);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+            color: #03254c;
+            font-weight: 500;
+        }
+
+        /* Estilos del Taller de Repaso */
+        .workshop-container {
+            margin-top: 60px;
+            background-color: #ffffff;
+            padding: clamp(20px, 5vw, 40px);
+            border-radius: 12px;
+            border: 2px dashed var(--accent-blue);
+            box-shadow: inset 0 0 15px rgba(2, 62, 138, 0.03);
+        }
+
+        .workshop-title {
+            text-align: center;
+            color: var(--read-heading);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        .instruction-alert {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeeba;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: clamp(1.05rem, 4vw, 1.2rem);
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .activity-item {
+            background: #fafafa;
+            border-left: 5px solid var(--read-text);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+            transition: transform 0.2s;
+        }
+
+        .activity-item:active {
+            transform: scale(0.98);
+        }
+
+        .act-badge {
+            display: inline-block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-responde { background-color: var(--accent-blue); }
+        .badge-analiza { background-color: var(--accent-orange); }
+        .badge-dibuja { background-color: var(--accent-green); }
+        .badge-mapa { background-color: #6f42c1; }
+
+        .activity-item p { margin: 0; color: var(--read-heading); font-weight: 600; }
+
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-container">
+                
+                <div class="hud">
+                    <div id="score-display">EXTRACTOS: 0/15</div>
+                    <div id="lives-display" class="hud-lives">♥♥♥♥♥</div>
+                </div>
+
+                <div id="game-area"></div>
+
+                <!-- Pantalla de Inicio -->
+                <div id="start-screen" class="overlay">
+                    <!-- Icono SVG ADN/Biomolécula simplificado -->
+                    <svg class="icon-molecule" viewBox="0 0 100 100" fill="none" stroke="var(--cp-cyan)" stroke-width="4" stroke-linecap="round">
+                        <circle cx="30" cy="50" r="15"></circle>
+                        <circle cx="70" cy="50" r="15"></circle>
+                        <line x1="45" y1="50" x2="55" y2="50"></line>
+                        <circle cx="50" cy="20" r="10" stroke="var(--cp-magenta)"></circle>
+                        <circle cx="50" cy="80" r="10" stroke="var(--cp-magenta)"></circle>
+                        <line x1="38" y1="38" x2="45" y2="28" stroke="var(--cp-magenta)"></line>
+                        <line x1="62" y1="62" x2="55" y2="72" stroke="var(--cp-magenta)"></line>
+                    </svg>
+
+                    <h1 class="title-neon">Síntesis<br>Biológica</h1>
+                    <div class="instructions">
+                        <p style="color: var(--cp-magenta); font-weight: 900; margin-top:0;">OBJETIVO: AISLAR CARBOHIDRATOS Y LÍPIDOS</p>
+                        <ul style="text-align: left; padding-left: 20px; margin-bottom:0;">
+                            <li><span style="color:var(--cp-green)">TOCA:</span> Glúcidos, azúcares, grasas y relacionados con el café (+1 pt).</li>
+                            <li><span style="color:var(--cp-red)">NO TOQUES:</span> Proteínas, ácidos nucleicos u otros distractores (pierdes vida).</li>
+                            <li><span style="color:var(--cp-yellow)">CUIDADO:</span> Si dejas caer una molécula correcta, pierdes una vida.</li>
+                        </ul>
+                    </div>
+                    <button class="btn-neon" id="btn-start">Iniciar Extracción</button>
+                    <button class="btn-neon" style="margin-top:15px; font-size:1rem; border:none; background:transparent; box-shadow:none; text-decoration:underline;" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Leer Teoría Primero ↓</button>
+                </div>
+
+                <!-- Pantalla de Fin de Juego -->
+                <div id="end-screen" class="overlay" style="display: none;">
+                    <h2 class="title-neon" id="end-title" style="font-size: clamp(1.8rem, 6vw, 2.2rem);">Proceso Finalizado</h2>
+                    <p style="color: var(--cp-text); margin-bottom: 5px; font-size: 1.2rem;">Evaluación del Laboratorio:</p>
+                    <div class="grade-display" id="final-grade">0.0</div>
+                    <p id="end-message" style="color: var(--cp-cyan); max-width: 90%; line-height: 1.4; font-size: 1.1rem; margin-bottom: 25px;"></p>
+                    <button class="btn-neon" id="btn-restart">Reiniciar Proceso</button>
+                    <button class="btn-neon" style="margin-top:15px; font-size:1rem; border:none; background:transparent; box-shadow:none; color:var(--cp-magenta);" onclick="document.getElementById('zona-lectura').scrollIntoView({behavior: 'smooth'})">Ir al Taller de Repaso ↓</button>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-card">
+                <h1 class="article-title">Biomoléculas I: Carbohidratos, Lípidos y el Secreto del Café</h1>
+                
+                <h2>1. ¿Qué son las Biomoléculas?</h2>
+                <p>Las biomoléculas son los compuestos químicos que forman la base estructural y funcional de todos los seres vivos. Constituyen la "materia prima" de las células. Generalmente, se dividen en cuatro grandes grupos: Carbohidratos, Lípidos, Proteínas y Ácidos Nucleicos. En esta guía, nos enfocaremos en los dos primeros, que actúan principalmente como las grandes <strong>baterías de energía</strong> de la vida.</p>
+
+                <h2>2. Carbohidratos (Glúcidos o Azúcares)</h2>
+                <p>Los carbohidratos son las moléculas biológicas más abundantes. Su función principal es proporcionar <strong>energía rápida y fácilmente disponible</strong> para las células, aunque también cumplen funciones estructurales importantes.</p>
+                <ul>
+                    <li><strong>Estructura Monomérica:</strong> La unidad básica (el "ladrillo") de los carbohidratos se llama <em>monosacárido</em>. Los ejemplos más importantes son la <strong>Glucosa</strong> (el azúcar de la sangre) y la <strong>Fructosa</strong> (el azúcar de las frutas).</li>
+                    <li><strong>Estructura Polimérica:</strong> Cuando miles de estos "ladrillos" se unen, forman <em>polisacáridos</em>. Las plantas almacenan su energía en forma de <strong>Almidón</strong> y construyen sus paredes celulares con <strong>Celulosa</strong>. Los animales, por su parte, almacenan energía en el hígado y los músculos en forma de <strong>Glucógeno</strong>.</li>
+                </ul>
+                <div class="highlight-box">
+                    <strong>Azúcares Reductores:</strong> Son aquellos azúcares (como la glucosa y la fructosa) que poseen un grupo químico libre capaz de reaccionar con otras moléculas. Son fundamentales en procesos biológicos y en la cocina (como veremos en el café).
+                </div>
+
+                <h2>3. Lípidos (Grasas y Aceites)</h2>
+                <p>Los lípidos son moléculas hidrofóbicas (no se mezclan con el agua). A diferencia de los carbohidratos, que dan energía rápida, los lípidos son reservas de <strong>energía a largo plazo</strong>, proporcionando más del doble de energía por gramo que los azúcares.</p>
+                <ul>
+                    <li><strong>Estructura Básica:</strong> La molécula lipídica más común es el <strong>Triglicérido</strong> (la grasa que almacenamos en nuestro cuerpo y los aceites vegetales). Está formado por una molécula de <em>Glicerol</em> unida a tres <em>Ácidos Grasos</em>.</li>
+                    <li><strong>Funciones Clave:</strong> Además del almacenamiento de energía, los lípidos (como los <strong>Fosfolípidos</strong> y el <strong>Colesterol</strong>) son el material de construcción principal de todas las membranas celulares del cuerpo.</li>
+                </ul>
+
+                <h2>4. Contexto Local: Los Azúcares en la Maduración del Café</h2>
+                <p>En el Eje Cafetero, comprender la bioquímica de los carbohidratos es fundamental para producir un café de alta calidad. Durante el proceso de maduración de la cereza de café (cuando pasa de verde a rojo intenso), ocurre una transformación bioquímica fascinante.</p>
+                <p>En las primeras etapas, la semilla acumula grandes cantidades de polisacáridos complejos. Sin embargo, a medida que el fruto madura, las enzimas comienzan a descomponer estos carbohidratos complejos en <strong>azúcares más simples</strong>, como la sacarosa y azúcares reductores (glucosa y fructosa). El mucílago (la baba dulce que recubre el grano) concentra altas cantidades de estos glúcidos.</p>
+                <p><strong>¿Por qué es esto importante?</strong> Cuando el grano se tuesta a altas temperaturas, los azúcares reductores presentes en la semilla reaccionan con los aminoácidos en la famosa <em>Reacción de Maillard</em>. Esta reacción química es la responsable de crear los compuestos aromáticos, el color marrón y las complejas notas de sabor (caramelo, chocolate, afrutado) del café tostado. Cuantificar los azúcares reductores en la finca ayuda a los caficultores a determinar el punto exacto de cosecha para garantizar la mejor taza posible.</p>
+
+                <!-- Taller de Repaso -->
+                <div class="workshop-container">
+                    <h2 class="workshop-title">Taller Académico</h2>
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN: Lee cuidadosamente el texto anterior. Luego, escribe y resuelve de manera clara y ordenada estas 10 actividades en tu cuaderno de Biología / Química.
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-responde">1. Responde</span>
+                        <p>Según la lectura, ¿qué son las biomoléculas y cuáles son los dos grupos principales que actúan como "baterías de energía" para los seres vivos?</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-dibuja">2. Dibuja e Ilustra</span>
+                        <p>Dibuja un modelo simple de un "Triglicérido" (Lípido). Dibuja un rectángulo que represente el "Glicerol" y únele tres colas onduladas que representen los "Ácidos Grasos". Etiqueta cada parte.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-analiza">3. Analiza Funciones</span>
+                        <p>Si un atleta necesita energía inmediata para una carrera de 100 metros, ¿qué tipo de biomolécula (Carbohidrato o Lípido) utilizará su cuerpo primero? Argumenta tu respuesta basándote en la lectura.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-mapa">4. Mapa Conceptual</span>
+                        <p>Elabora un mapa conceptual sobre los "Carbohidratos". Debe incluir la división entre Monómeros (Monosacáridos) y Polímeros (Polisacáridos), e incluir ejemplos de cada uno (Glucosa, Fructosa, Almidón, Celulosa, Glucógeno).</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-responde">5. Responde (Café)</span>
+                        <p>¿Qué transformación bioquímica ocurre con los azúcares dentro de la cereza de café a medida que el fruto madura pasando de verde a rojo?</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-analiza">6. Analiza el Impacto Ecológico/Agrícola</span>
+                        <p>Si un recolector cosecha el café cuando aún está verde (pintón), ¿cómo afectará esto a la cantidad de azúcares reductores en el grano y al sabor final de la bebida? Justifica tu respuesta.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-dibuja">7. Ilustra el Proceso</span>
+                        <p>Dibuja una cereza de café roja. Señala sus partes e indica en qué capa (como el mucílago o la semilla) crees que se concentra la mayor cantidad de azúcares y fructosa según lo leído.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-mapa">8. Cuadro Comparativo</span>
+                        <p>Diseña en tu cuaderno un cuadro comparativo entre Carbohidratos y Lípidos. Compara tres aspectos: 1) Unidad estructural básica (monómeros/componentes), 2) Función energética (rápida o a largo plazo), y 3) Dos ejemplos biológicos de cada uno.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-responde">9. Responde (Química)</span>
+                        <p>¿Qué importancia tienen los "Azúcares reductores" (como la glucosa) durante el proceso de tostión del café? Menciona el nombre de la reacción química involucrada.</p>
+                    </div>
+
+                    <div class="activity-item">
+                        <span class="act-badge badge-analiza">10. Analiza Estructuras</span>
+                        <p>La lectura menciona que las plantas construyen sus paredes celulares con Celulosa y los animales guardan energía como Glucógeno. ¿Qué tienen en común estructuralmente la Celulosa y el Glucógeno a pesar de tener funciones tan distintas?</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Bases de datos de palabras
+        const correctWords = [
+            "Glucosa", "Fructosa", "Sacarosa", "Almidón", "Celulosa", 
+            "Glucógeno", "Triglicérido", "Fosfolípido", "Ácido Graso", 
+            "Glicerol", "Colesterol", "Monosacárido", "Polisacárido", "Lípido", "Azúcar Reductor"
+        ];
+        
+        const distractorWords = [
+            "Proteína", "Aminoácido", "Enzima", "ADN", "ARN", 
+            "Nucleótido", "Ribosoma", "Mitocondria", "Hierro", 
+            "Cloruro", "Péptido", "Queratina", "Hemoglobina", "Gen", "Vitamina C"
+        ];
+
+        // Estado del Juego
+        let state = {
+            score: 0,
+            lives: 5,
+            maxScore: 15,
+            isRunning: false,
+            activeWords: [],
+            lastSpawnTime: 0,
+            spawnRateMs: 1200, // Ms entre spawns
+            baseSpeed: 0, // Se calcula según altura de pantalla
+            poolCorrect: [],
+            poolDistract: [],
+            animationId: null
+        };
+
+        // Referencias DOM
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score-display');
+        const livesDisplay = document.getElementById('lives-display');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+        const finalGrade = document.getElementById('final-grade');
+        const endMessage = document.getElementById('end-message');
+
+        // Función para desordenar arrays (Fisher-Yates)
+        function shuffle(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Inicializar Juego
+        function initGame() {
+            state.score = 0;
+            state.lives = 5;
+            state.isRunning = true;
+            
+            // Adaptar velocidad base a la altura del contenedor
+            const areaHeight = gameArea.clientHeight;
+            state.baseSpeed = areaHeight / 300; // Velocidad proporcional
+            state.spawnRateMs = 1200;
+            
+            // Limpiar área
+            gameArea.innerHTML = '';
+            state.activeWords = [];
+            
+            // Llenar pools de palabras
+            state.poolCorrect = shuffle([...correctWords, ...correctWords]); 
+            state.poolDistract = shuffle([...distractorWords, ...distractorWords]);
+
+            updateHUD();
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+
+            state.lastSpawnTime = performance.now();
+            state.animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // Bucle Principal
+        function gameLoop(currentTime) {
+            if (!state.isRunning) return;
+
+            // Spawnear nuevas palabras
+            if (currentTime - state.lastSpawnTime > state.spawnRateMs) {
+                spawnWord();
+                state.lastSpawnTime = currentTime;
+            }
+
+            const areaHeight = gameArea.clientHeight;
+
+            // Actualizar posiciones (iteración inversa para poder eliminar)
+            for (let i = state.activeWords.length - 1; i >= 0; i--) {
+                let wordObj = state.activeWords[i];
+                
+                wordObj.y += wordObj.speed;
+                // Uso de transform para mejor rendimiento
+                wordObj.element.style.transform = `translate(${wordObj.x}px, ${wordObj.y}px)`;
+
+                // Si sale de la pantalla
+                if (wordObj.y > areaHeight + 50) {
+                    if (wordObj.isCorrect) {
+                        // Penalización por dejar caer una correcta
+                        loseLife();
+                        flashBorder('var(--cp-red)');
+                    }
+                    
+                    wordObj.element.remove();
+                    state.activeWords.splice(i, 1);
+                }
+            }
+
+            if (state.isRunning) {
+                state.animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Generar una palabra en la pantalla
+        function spawnWord() {
+            if (state.score >= state.maxScore) {
+                endGame();
+                return;
+            }
+
+            // Probabilidad 60% correcta, 40% distractor
+            let isCorrect = Math.random() < 0.6;
+            let text = "";
+
+            if (isCorrect && state.poolCorrect.length > 0) {
+                text = state.poolCorrect.pop();
+            } else if (!isCorrect && state.poolDistract.length > 0) {
+                text = state.poolDistract.pop();
+            } else if (state.poolCorrect.length > 0) {
+                isCorrect = true;
+                text = state.poolCorrect.pop();
+            } else {
+                return; // Sin palabras
+            }
+
+            const element = document.createElement('div');
+            element.classList.add('word-bubble');
+            element.innerText = text;
+
+            // Calcular X inicial para que no se salga de los bordes
+            gameArea.appendChild(element);
+            const rect = element.getBoundingClientRect();
+            const maxWidth = gameArea.clientWidth - rect.width;
+            
+            // X aleatorio, Y fuera de pantalla arriba (-50)
+            const startX = Math.random() * maxWidth;
+            const startY = -50;
+            
+            element.style.transform = `translate(${startX}px, ${startY}px)`;
+
+            // Evento Unificado (Funciona para Mouse y Touch)
+            element.addEventListener('pointerdown', (e) => handleTap(e, element, isCorrect, startX));
+
+            // Variación de velocidad
+            const speedVar = (Math.random() * 1) - 0.5;
+
+            state.activeWords.push({
+                element: element,
+                x: startX,
+                y: startY,
+                speed: state.baseSpeed + speedVar,
+                isCorrect: isCorrect
+            });
+
+            // Aumentar dificultad
+            if (state.score === 5) state.baseSpeed += 0.5;
+            if (state.score === 10) state.baseSpeed += 0.5;
+        }
+
+        // Manejar toque en palabra
+        function handleTap(e, element, isCorrect, xPos) {
+            e.preventDefault(); 
+            e.stopPropagation();
+
+            if (!state.isRunning || element.classList.contains('exploding') || element.classList.contains('shaking')) return;
+
+            // Eliminar de lógica de actualización de físicas
+            const index = state.activeWords.findIndex(obj => obj.element === element);
+            let currentY = 0;
+            if (index > -1) {
+                currentY = state.activeWords[index].y;
+                state.activeWords.splice(index, 1);
+            }
+
+            // Fijar posición exacta actual para la animación CSS
+            element.style.transform = `translate(${xPos}px, ${currentY}px)`;
+
+            if (isCorrect) {
+                // Éxito
+                state.score++;
+                updateHUD();
+                
+                element.classList.add('exploding');
+                flashBorder('rgba(57, 255, 20, 0.3)');
+                if (navigator.vibrate) navigator.vibrate(40); 
+                
+                setTimeout(() => element.remove(), 350);
+
+                if(state.score >= state.maxScore) {
+                    setTimeout(endGame, 500);
+                }
+
+            } else {
+                // Error (tocó distractor)
+                loseLife();
+                element.classList.add('shaking');
+                if (navigator.vibrate) navigator.vibrate([60, 40, 60]); 
+                
+                setTimeout(() => element.remove(), 400);
+            }
+        }
+
+        function loseLife() {
+            state.lives--;
+            updateHUD();
+            if (state.lives <= 0) {
+                endGame();
+            }
+        }
+
+        function updateHUD() {
+            scoreDisplay.innerText = `EXTRACTOS: ${state.score}/${state.maxScore}`;
+            let hearts = "";
+            for(let i=0; i<5; i++) {
+                hearts += (i < state.lives) ? "♥" : "♡";
+            }
+            livesDisplay.innerText = hearts;
+        }
+
+        function flashBorder(color) {
+            gameArea.style.boxShadow = `inset 0 0 30px ${color}`;
+            setTimeout(() => gameArea.style.boxShadow = "none", 200);
+        }
+
+        function endGame() {
+            if(!state.isRunning) return; 
+            
+            state.isRunning = false;
+            cancelAnimationFrame(state.animationId);
+
+            // Calcular nota tipo Colombia (1.0 a 5.0)
+            let nota = 1.0 + (state.score / state.maxScore) * 4.0;
+            
+            // Penalización si pierde por vidas
+            if (state.lives <= 0) nota = Math.min(nota, 3.4);
+            
+            nota = Math.max(1.0, Math.min(5.0, nota));
+            finalGrade.innerText = nota.toFixed(1);
+
+            // Mensajes según desempeño
+            if (nota >= 4.0) {
+                finalGrade.style.color = "var(--cp-green)";
+                finalGrade.style.textShadow = "0 0 20px var(--cp-green)";
+                endMessage.innerText = "¡SÍNTESIS EXITOSA! Has demostrado un conocimiento profundo sobre carbohidratos, lípidos y su papel bioquímico.";
+            } else if (nota >= 3.0) {
+                finalGrade.style.color = "var(--cp-yellow)";
+                finalGrade.style.textShadow = "0 0 20px var(--cp-yellow)";
+                endMessage.innerText = "SÍNTESIS INCOMPLETA. Diferenciaste algunas biomoléculas, pero confundiste algunas grasas y azúcares. Repasa la teoría.";
+            } else {
+                finalGrade.style.color = "var(--cp-red)";
+                finalGrade.style.textShadow = "0 0 20px var(--cp-red)";
+                endMessage.innerText = "SÍNTESIS FALLIDA. Demasiada contaminación cruzada con proteínas y nucleótidos. Lee atentamente la teoría de abajo.";
+            }
+
+            endScreen.style.display = 'flex';
+        }
+
+        // Eventos de botones
+        document.getElementById('btn-start').addEventListener('click', initGame);
+        document.getElementById('btn-restart').addEventListener('click', initGame);
+
+    </script>
+</body>
+</html>

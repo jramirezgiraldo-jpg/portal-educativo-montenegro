@@ -1248,13 +1248,13 @@
                     </p>
                 </div>
                 <div class="hero-actions">
-                    <a href="actividades_completas.zip" download="actividades_instituto_montenegro.zip" class="btn-hero-zip" title="Descargar las 68 actividades en un solo paquete comprimido">
+                    <a href="actividades_completas.zip" download="actividades_instituto_montenegro.zip" class="btn-hero-zip" title="Descargar las 101 actividades en un solo paquete comprimido">
                         <svg viewBox="0 0 24 24">
                             <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
                             <path d="M12 12v9"></path>
                             <path d="m8 17 4 4 4-4"></path>
                         </svg>
-                        <span>Descargar ZIP (~0.9 MB)</span>
+                        <span>Descargar ZIP (~1.1 MB)</span>
                     </a>
                     <button class="btn-hero-all" id="btn-show-all-toggle">
                         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2.2">
@@ -1263,7 +1263,7 @@
                             <rect x="14" y="14" width="7" height="7"></rect>
                             <rect x="3" y="14" width="7" height="7"></rect>
                         </svg>
-                        <span id="btn-all-label">Ver Todas (68)</span>
+                        <span id="btn-all-label">Ver Todas (101)</span>
                     </button>
                 </div>
             </div>
@@ -1482,41 +1482,41 @@
                 {
                     key: 'ciclo-iv',
                     name: 'Nocturno - Ciclo IV',
-                    subtitle: 'Homeostasis, Termodinámica y Reacciones',
+                    subtitle: 'Biología, Física y Química Integradas',
                     grade: 'CLEI IV (Grados 8° - 9°)',
                     color: '#059669',
                     iconBg: 'rgba(5, 150, 105, 0.15)',
-                    topics: 'Biología homeostasis, máquinas térmicas, reacciones químicas, control maestro interactivo y juego del ahorcado.',
+                    topics: 'Biología (ADN, genética, evolución, redes tróficas), Física (máquinas térmicas, transferencia de calor, trabajo y potencia) y Química (tabla periódica, enlaces, reacciones y estequiometría).',
                     iconSvg: `<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>`
                 },
                 {
                     key: 'ciclo-vi',
                     name: 'Nocturno - Ciclo VI',
-                    subtitle: 'Ondas, Luz, Carbono y Leyes de Newton',
+                    subtitle: 'Física y Química Orgánica',
                     grade: 'CLEI VI (Grados 10° - 11°)',
                     color: '#4f46e5',
                     iconBg: 'rgba(79, 70, 229, 0.15)',
-                    topics: 'Física de ondas y luz, química del carbono, sopa de letras calentamiento global, interactivo de cambio climático y desafío Jeopardy 1ra Ley de Newton.',
+                    topics: 'Física (1ra ley de Newton, ondas y luz, acústica agrícola, escape room de óptica) y Química (química del carbono, hidrocarburos, biomoléculas y derivados del café).',
                     iconSvg: `<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>`
                 },
                 {
                     key: 'ciclo-ii',
                     name: 'Nocturno - Ciclo II',
-                    subtitle: 'Adaptaciones, Ecosistemas y Mezclas',
+                    subtitle: 'Biología, Ecosistemas y Redes Tróficas',
                     grade: 'CLEI II (Grados 4° - 5°)',
                     color: '#16a34a',
                     iconBg: 'rgba(22, 163, 74, 0.15)',
-                    topics: 'Adaptaciones en seres vivos, tipos de mezclas, ecosistemas, soluciones químicas, dinámicas tap-sort, juego de memoria y factores bióticos.',
+                    topics: 'Ecosistemas terrestres y acuáticos, adaptaciones de seres vivos, factores bióticos y abióticos, niveles tróficos, redes tróficas cafeteras y pirámides ecológicas.',
                     iconSvg: `<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>`
                 },
                 {
                     key: 'ciclo-iii',
                     name: 'Nocturno - Ciclo III',
-                    subtitle: 'Cargas Eléctricas, Célula y Membrana',
+                    subtitle: 'Biología Celular, Fotosíntesis y Taxonomía',
                     grade: 'CLEI III (Grados 6° - 7°)',
                     color: '#0d9488',
                     iconBg: 'rgba(13, 148, 136, 0.15)',
-                    topics: 'Física de cargas eléctricas, clasificación de materiales y Escape Room pedagógico de la célula y su membrana.',
+                    topics: 'La célula, organelos celulares, respiración y división celular, niveles de organización, taxonomía y dominios, fotosíntesis, cadenas tróficas y ciclos biogeoquímicos.',
                     iconSvg: `<circle cx="12" cy="12" r="9"></circle><path d="M12 8v4l3 3"></path>`
                 },
                 {
@@ -1767,11 +1767,15 @@
                     const safeDesc = escapeHtml(item.desc);
                     const safeType = escapeHtml(item.type);
                     const typeIcon = getTypeIconSvg(item.typeKey);
+                    const subBadge = item.subArea 
+                        ? `<span class="badge-type" style="background: rgba(99, 102, 241, 0.12); color: var(--card-color, #6366f1); font-weight: 700; border-color: rgba(99, 102, 241, 0.25);">${escapeHtml(item.subArea)}</span>` 
+                        : (currentSubjectKey === 'all' ? `<span class="badge-type" style="font-weight: 700;">${escapeHtml(item.area)}</span>` : '');
 
                     card.innerHTML = `
                         <div>
                             <div class="card-top">
                                 <div class="card-badges">
+                                    ${subBadge}
                                     <span class="badge-type">
                                         ${typeIcon}
                                         ${safeType}

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Organelos Celulares</title>
+    <style>
+        :root {
+            /* Tema del Juego (Oscuro) */
+            --game-bg: #0f172a;
+            --game-text: #f8fafc;
+            --game-card-bg: #1e293b;
+            --game-card-border: #334155;
+            --primary: #3b82f6;
+            --primary-light: rgba(59, 130, 246, 0.2);
+            --success: #22c55e;
+            --success-light: rgba(34, 197, 94, 0.2);
+            --error: #ef4444;
+            --error-light: rgba(239, 68, 68, 0.2);
+            
+            /* Tema de Lectura (Claro) */
+            --read-bg: #f8fafc;
+            --read-text: #334155;
+            --read-heading: #0f172a;
+            --read-accent: #0284c7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--read-bg);
+            color: var(--read-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #zona-juego {
+            background-color: var(--game-bg);
+            color: var(--game-text);
+            padding: clamp(15px, 3vw, 30px);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .game-header {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .instructions {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: #cbd5e1;
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: var(--game-card-bg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--game-card-border);
+            font-weight: bold;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            margin-bottom: 20px;
+        }
+
+        .stat-value { color: var(--primary); }
+        .score-value { color: var(--success); transition: color 0.3s; }
+
+        .game-board {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(10px, 2vw, 20px);
+            flex-grow: 1;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .column-title {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card {
+            background: var(--game-card-bg);
+            border: 2px solid var(--game-card-border);
+            border-radius: 10px;
+            padding: clamp(12px, 3vw, 18px);
+            font-size: clamp(13px, 3.5vw, 16px); /* Elastic typography */
+            cursor: pointer;
+            touch-action: none; /* Critical for mobile games */
+            user-select: none;
+            -webkit-user-select: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            min-height: 80px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-concept {
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: clamp(14px, 4vw, 17px);
+        }
+
+        .card-definition {
+            justify-content: flex-start;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        /* Estados de las Tarjetas */
+        .card:hover {
+            border-color: #64748b;
+            transform: translateY(-2px);
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            transform: scale(1.02);
+        }
+
+        .card.matched {
+            border-color: var(--success);
+            background: var(--success-light);
+            opacity: 0.6;
+            pointer-events: none; /* Deshabilita clics */
+            transform: scale(1);
+        }
+
+        .card.error {
+            border-color: var(--error);
+            background: var(--error-light);
+        }
+
+        /* Animación Shake */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        /* Pantalla Final */
+        #victory-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--game-card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            border: 2px solid var(--success);
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            z-index: 10;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        #victory-screen h2 {
+            color: var(--success);
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .scroll-down {
+            margin-top: 30px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-align: center;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        #zona-lectura {
+            padding: clamp(30px, 5vw, 60px) clamp(15px, 4vw, 30px);
+            background: var(--read-bg);
+        }
+
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: clamp(20px, 5vw, 50px);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .article-container h2 {
+            color: var(--read-accent);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--read-accent);
+            line-height: 1.2;
+        }
+
+        .article-container h3 {
+            color: var(--read-heading);
+            font-size: 1.4rem;
+            margin-top: 35px;
+            margin-bottom: 15px;
+        }
+
+        .article-container p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            text-align: justify;
+        }
+
+        .article-container ul {
+            margin-bottom: 20px;
+            padding-left: 30px;
+            font-size: 1.1rem;
+        }
+
+        .article-container li {
+            margin-bottom: 10px;
+        }
+
+        /* Taller */
+        .workshop-section {
+            margin-top: 60px;
+            border-top: 2px dashed #cbd5e1;
+            padding-top: 40px;
+        }
+
+        .workshop-header {
+            background: var(--read-accent);
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .instruction-alert {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 30px;
+            border: 1px solid #fca5a5;
+        }
+
+        .activity-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .activity-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+        }
+
+        .type-responder::before { background-color: #3b82f6; }
+        .type-analizar::before { background-color: #f59e0b; }
+        .type-dibujar::before { background-color: #8b5cf6; }
+        .type-mapa::before { background-color: #10b981; }
+
+        .type-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .type-responder .type-label { color: #3b82f6; }
+        .type-analizar .type-label { color: #f59e0b; }
+        .type-dibujar .type-label { color: #8b5cf6; }
+        .type-mapa .type-label { color: #10b981; }
+
+        .activity-text {
+            font-size: 1.1rem;
+            color: var(--read-text);
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Organelos Celulares</h1>
+                <div class="instructions">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <strong>Guía:</strong> Toca un concepto en la columna izquierda y luego toca su definición correspondiente en la derecha para emparejarlos.
+                </div>
+                <div class="stats-bar">
+                    <span>Tiempo: <span id="timer" class="stat-value">00:00</span></span>
+                    <span>Pares: <span id="counter" class="stat-value">0/10</span></span>
+                    <span>Nota: <span id="grade" class="score-value">5.0</span></span>
+                </div>
+            </div>
+
+            <div class="game-board">
+                <div class="column" id="col-concepts">
+                    <div class="column-title">Organelo</div>
+                    <!-- Tarjetas de conceptos se generan con JS -->
+                </div>
+                <div class="column" id="col-definitions">
+                    <div class="column-title">Función</div>
+                    <!-- Tarjetas de definiciones se generan con JS -->
+                </div>
+            </div>
+
+            <div id="victory-screen">
+                <h2>¡Laboratorio Completado!</h2>
+                <p>Has emparejado correctamente todos los organelos celulares.</p>
+                <div style="font-size: 4rem; margin: 10px 0;">🏆</div>
+                <p style="font-size: 1.2rem;">Tu nota final es: <strong id="final-grade" style="font-size: 1.8rem; color: var(--success);">5.0</strong></p>
+            </div>
+
+            <div class="scroll-down">
+                ▼ Desliza hacia abajo para leer la teoría y hacer el taller ▼
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>La Célula: Una Ciudad Microscópica y sus Organelos</h2>
+                
+                <p>Imagina una ciudad bulliciosa y altamente organizada. Hay una alcaldía que da las órdenes, centrales eléctricas que generan energía, fábricas que producen bienes, un sistema de transporte para distribuir esos bienes, fronteras vigiladas y plantas de reciclaje para manejar los desechos. Así de fascinante y compleja es la unidad básica de la vida: <strong>la célula</strong>.</p>
+
+                <p>Tanto las plantas, los animales, como tu propio cuerpo, están formados por trillones de estas ciudades microscópicas. Para que la célula sobreviva y funcione, cuenta con pequeñas estructuras especializadas llamadas <strong>organelos</strong> (que significa "órganos pequeños"). Cada organelo tiene un trabajo específico e irremplazable, y juntos mantienen la vida celular.</p>
+
+                <h3>1. El Centro de Mando y Protección</h3>
+                <ul>
+                    <li><strong>El Núcleo (La Alcaldía):</strong> Es el centro de control de la célula. Su función principal es almacenar y proteger el material genético (ADN). El ADN contiene los "planos" o las instrucciones detalladas para fabricar todo lo que la célula necesita y dirige todas sus actividades.</li>
+                    <li><strong>Membrana Celular (La Frontera y Aduana):</strong> Es una barrera flexible que envuelve a la célula. Su trabajo es vital: protege el interior y es "semipermeable", lo que significa que controla rigurosamente qué sustancias entran (como nutrientes y oxígeno) y qué sustancias salen (como desechos).</li>
+                    <li><strong>Citoplasma (El Espacio Urbano):</strong> Es una sustancia gelatinosa, compuesta principalmente de agua y sales, que llena el interior de la célula. En este medio flotan los organelos y ocurren la mayoría de las reacciones químicas necesarias para la vida.</li>
+                </ul>
+
+                <h3>2. Fábricas y Logística</h3>
+                <ul>
+                    <li><strong>Ribosomas (Las Fábricas):</strong> Son organelos muy pequeños pero cruciales. Su única e importante función es sintetizar (fabricar) proteínas, siguiendo las instrucciones enviadas por el núcleo. Las proteínas son los ladrillos de construcción del cuerpo.</li>
+                    <li><strong>Retículo Endoplasmático (La Red de Transporte):</strong> Es una red de canales membranales. El retículo rugoso (que tiene ribosomas pegados) ayuda a fabricar y transportar proteínas. El retículo liso participa en la producción de lípidos (grasas) y en la desintoxicación de la célula.</li>
+                    <li><strong>Aparato de Golgi (El Centro de Empaquetado):</strong> Funciona como el servicio postal de la célula. Recibe proteínas y lípidos, los modifica, los empaqueta en pequeñas vesículas y los distribuye a donde se necesiten, ya sea dentro o fuera de la célula.</li>
+                </ul>
+
+                <h3>3. Energía y Limpieza</h3>
+                <ul>
+                    <li><strong>Mitocondria (La Central Eléctrica):</strong> Es la encargada de producir la energía que la célula necesita para funcionar. A través de un proceso llamado "respiración celular", toma los nutrientes y el oxígeno para generar ATP, la moneda energética de la célula.</li>
+                    <li><strong>Cloroplasto (El Panel Solar - Solo en plantas):</strong> Organelo exclusivo de células vegetales y algas. Contiene clorofila y es el responsable de realizar la fotosíntesis, un proceso asombroso donde se captura la luz del sol, agua y dióxido de carbono para fabricar alimento (glucosa).</li>
+                    <li><strong>Lisosoma (El Camión de Basura y Reciclaje):</strong> Son pequeñas bolsas que contienen enzimas digestivas potentes. Su función es descomponer partículas de alimento, destruir virus o bacterias invasoras y reciclar organelos viejos que ya no funcionan.</li>
+                    <li><strong>Vacuola (El Almacén):</strong> Es un saco que almacena agua, nutrientes y productos de desecho. En las células animales son pequeñas, pero en las células vegetales suele haber una vacuola central gigante que, al llenarse de agua, le da soporte y rigidez a la planta.</li>
+                </ul>
+
+                <p>Como puedes ver, la célula no es un simple saco de agua, sino una máquina biológica perfecta donde el trabajo en equipo de sus organelos hace posible el milagro de la vida.</p>
+
+                <!-- Taller -->
+                <div class="workshop-section">
+                    <div class="workshop-header">
+                        TALLER DE REPASO Y APLICACIÓN
+                    </div>
+                    
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN: Escribe, desarrolla y resuelve de forma completa y argumentada cada una de las siguientes 10 actividades en tu cuaderno. No rayes la pantalla.
+                    </div>
+
+                    <!-- Actividad 1 -->
+                    <div class="activity-card type-responder">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            1. Responder Directamente
+                        </div>
+                        <div class="activity-text">Según el texto, ¿cuál es la función principal del núcleo celular y qué molécula crucial almacena en su interior?</div>
+                    </div>
+
+                    <!-- Actividad 2 -->
+                    <div class="activity-card type-analizar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            2. Analizar Críticamente
+                        </div>
+                        <div class="activity-text">Las células de tus músculos requieren una enorme cantidad de energía constante para que puedas correr o saltar. Analizando esto, ¿qué organelo (central eléctrica) esperarías encontrar en mucha mayor cantidad en una célula muscular en comparación con una célula de la piel? Argumenta tu respuesta.</div>
+                    </div>
+
+                    <!-- Actividad 3 -->
+                    <div class="activity-card type-dibujar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+                            3. Dibujar / Ilustrar
+                        </div>
+                        <div class="activity-text">Dibuja una célula vegetal grande en tu cuaderno. Señala e ilustra con claridad al menos dos estructuras que el texto indica que son exclusivas o muy prominentes en las plantas (como el organelo fotosintético y el gran almacén de agua). Usa color verde para el organelo correcto.</div>
+                    </div>
+
+                    <!-- Actividad 4 -->
+                    <div class="activity-card type-mapa">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                            4. Mapa Mental
+                        </div>
+                        <div class="activity-text">Elabora un mapa mental sobre la "Ruta de Producción Logística" de la célula. Conecta lógicamente mediante flechas y dibujos: El Núcleo (que da la orden), los Ribosomas (que fabrican), el Retículo Endoplasmático (que transporta) y el Aparato de Golgi (que empaqueta y envía).</div>
+                    </div>
+
+                    <!-- Actividad 5 -->
+                    <div class="activity-card type-responder">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            5. Responder Directamente
+                        </div>
+                        <div class="activity-text">¿Qué diferencia fundamental existe entre la función de la mitocondria y la función del cloroplasto, considerando que ambos están relacionados con la energía?</div>
+                    </div>
+
+                    <!-- Actividad 6 -->
+                    <div class="activity-card type-analizar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            6. Analizar Críticamente
+                        </div>
+                        <div class="activity-text">El texto compara a los lisosomas con un "camión de basura" porque contienen potentes enzimas digestivas. ¿Qué pasaría catastróficamente con la célula si todos sus lisosomas se rompieran repentinamente y liberaran esas enzimas en el citoplasma?</div>
+                    </div>
+
+                    <!-- Actividad 7 -->
+                    <div class="activity-card type-dibujar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+                            7. Dibujar / Ilustrar
+                        </div>
+                        <div class="activity-text">Dibuja la Membrana Celular actuando como una frontera o aduana. Ilustra sustancias buenas (como agua, nutrientes, oxígeno) recibiendo el paso "permitido" hacia el interior, y sustancias dañinas o desechos siendo expulsados hacia el exterior.</div>
+                    </div>
+
+                    <!-- Actividad 8 -->
+                    <div class="activity-card type-mapa">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                            8. Cuadro Conceptual
+                        </div>
+                        <div class="activity-text">Crea un cuadro conceptual que clasifique a los 10 organelos mencionados en el texto dentro de tres grandes categorías: 1) "Control, Soporte y Frontera", 2) "Fábrica y Transporte" y 3) "Energía y Limpieza".</div>
+                    </div>
+
+                    <!-- Actividad 9 -->
+                    <div class="activity-card type-responder">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            9. Responder Directamente
+                        </div>
+                        <div class="activity-text">¿De qué está compuesto principalmente el citoplasma y por qué es vital que tenga una consistencia gelatinosa (en lugar de ser sólido o aire) para los organelos?</div>
+                    </div>
+
+                    <!-- Actividad 10 -->
+                    <div class="activity-card type-analizar">
+                        <div class="type-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            10. Analizar Críticamente
+                        </div>
+                        <div class="activity-text">Si un médico aplica un antibiótico diseñado para destruir exclusivamente los ribosomas de una bacteria infecciosa, ¿por qué la bacteria terminaría muriendo eventualmente, incluso si su membrana y ADN quedan intactos?</div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Datos del juego: Conceptos y Definiciones
+        const gameData = [
+            { id: 1, concept: "Núcleo", definition: "Almacena el ADN y dirige todas las actividades celulares." },
+            { id: 2, concept: "Mitocondria", definition: "Produce energía (ATP) a través de la respiración celular." },
+            { id: 3, concept: "Cloroplasto", definition: "Realiza la fotosíntesis transformando luz en alimento (plantas)." },
+            { id: 4, concept: "Membrana Celular", definition: "Barrera que controla qué sustancias entran y salen de la célula." },
+            { id: 5, concept: "Citoplasma", definition: "Sustancia gelatinosa donde flotan los organelos." },
+            { id: 6, concept: "Ribosoma", definition: "Pequeña fábrica encargada de sintetizar proteínas." },
+            { id: 7, concept: "Aparato de Golgi", definition: "Empaqueta, modifica y distribuye proteínas y lípidos." },
+            { id: 8, concept: "Lisosoma", definition: "Vesícula con enzimas que digiere desechos y recicla." },
+            { id: 9, concept: "Retículo Endoplasmático", definition: "Red de transporte interno de materiales y síntesis." },
+            { id: 10, concept: "Vacuola", definition: "Saco de almacenamiento de agua y nutrientes." }
+        ];
+
+        const totalPairs = gameData.length;
+        
+        // Variables de estado
+        let selectedConcept = null;
+        let selectedDefinition = null;
+        let matchedCount = 0;
+        let errors = 0;
+        let currentGrade = 5.0;
+        
+        // Variables de tiempo
+        let seconds = 0;
+        let timerInterval = null;
+        let timerStarted = false;
+
+        // Referencias DOM
+        const colConcepts = document.getElementById('col-concepts');
+        const colDefinitions = document.getElementById('col-definitions');
+        const uiCounter = document.getElementById('counter');
+        const uiGrade = document.getElementById('grade');
+        const uiTimer = document.getElementById('timer');
+        const victoryScreen = document.getElementById('victory-screen');
+        const finalGrade = document.getElementById('final-grade');
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function initGame() {
+            // Mezclar independientemente
+            const conceptsShuffled = shuffleArray(gameData);
+            const definitionsShuffled = shuffleArray(gameData);
+
+            // Renderizar Conceptos
+            conceptsShuffled.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card card-concept';
+                card.textContent = item.concept;
+                card.dataset.id = item.id;
+                card.dataset.type = 'concept';
+                card.onclick = () => handleCardClick(card);
+                colConcepts.appendChild(card);
+            });
+
+            // Renderizar Definiciones
+            definitionsShuffled.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card card-definition';
+                card.textContent = item.definition;
+                card.dataset.id = item.id;
+                card.dataset.type = 'definition';
+                card.onclick = () => handleCardClick(card);
+                colDefinitions.appendChild(card);
+            });
+        }
+
+        function handleCardClick(cardElement) {
+            // Ignorar clics si ya está emparejada
+            if (cardElement.classList.contains('matched')) return;
+
+            // Iniciar cronómetro al primer clic
+            if (!timerStarted) {
+                startTimer();
+                timerStarted = true;
+            }
+
+            const type = cardElement.dataset.type;
+
+            // Lógica para columna de Conceptos
+            if (type === 'concept') {
+                if (selectedConcept === cardElement) {
+                    // Deseleccionar si se toca de nuevo
+                    cardElement.classList.remove('selected');
+                    selectedConcept = null;
+                } else {
+                    // Seleccionar nuevo, quitar selección previa
+                    if (selectedConcept) selectedConcept.classList.remove('selected');
+                    selectedConcept = cardElement;
+                    selectedConcept.classList.add('selected');
+                }
+            } 
+            // Lógica para columna de Definiciones
+            else if (type === 'definition') {
+                if (selectedDefinition === cardElement) {
+                    cardElement.classList.remove('selected');
+                    selectedDefinition = null;
+                } else {
+                    if (selectedDefinition) selectedDefinition.classList.remove('selected');
+                    selectedDefinition = cardElement;
+                    selectedDefinition.classList.add('selected');
+                }
+            }
+
+            // Si hay uno de cada lado seleccionado, validar
+            if (selectedConcept && selectedDefinition) {
+                validateMatch();
+            }
+        }
+
+        function validateMatch() {
+            const idConcept = selectedConcept.dataset.id;
+            const idDef = selectedDefinition.dataset.id;
+            
+            const card1 = selectedConcept;
+            const card2 = selectedDefinition;
+
+            if (idConcept === idDef) {
+                // CORRECTO
+                card1.classList.remove('selected');
+                card2.classList.remove('selected');
+                
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                
+                matchedCount++;
+                updateStats();
+                
+                if (matchedCount === totalPairs) {
+                    endGame();
+                }
+            } else {
+                // INCORRECTO
+                errors++;
+                currentGrade = Math.max(1.0, currentGrade - 0.2); // Resta 0.2 por error
+                updateStats();
+
+                card1.classList.remove('selected');
+                card2.classList.remove('selected');
+                
+                card1.classList.add('error', 'shake');
+                card2.classList.add('error', 'shake');
+
+                // Limpiar clases de error después de animación
+                setTimeout(() => {
+                    card1.classList.remove('error', 'shake');
+                    card2.classList.remove('error', 'shake');
+                }, 400);
+            }
+
+            // Limpiar selecciones
+            selectedConcept = null;
+            selectedDefinition = null;
+        }
+
+        function updateStats() {
+            uiCounter.textContent = `${matchedCount}/${totalPairs}`;
+            uiGrade.textContent = currentGrade.toFixed(1);
+            
+            // Colores de nota
+            if (currentGrade < 3.0) {
+                uiGrade.style.color = "var(--error)";
+            } else if (currentGrade < 4.0) {
+                uiGrade.style.color = "#f59e0b"; // Naranja
+            } else {
+                uiGrade.style.color = "var(--success)";
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                uiTimer.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            
+            // Mostrar pantalla de victoria
+            setTimeout(() => {
+                victoryScreen.style.display = 'block';
+                finalGrade.textContent = currentGrade.toFixed(1);
+                
+                if (currentGrade < 3.0) {
+                    finalGrade.style.color = "var(--error)";
+                } else if (currentGrade < 4.0) {
+                    finalGrade.style.color = "#f59e0b";
+                } else {
+                    finalGrade.style.color = "var(--success)";
+                }
+            }, 500);
+        }
+
+        // Iniciar el juego al cargar la página
+        window.onload = () => {
+            initGame();
+        };
+
+    </script>
+</body>
+</html>
