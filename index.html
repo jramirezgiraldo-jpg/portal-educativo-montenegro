@@ -1169,7 +1169,401 @@
             height: 22px;
             stroke: currentColor;
             fill: none;
-            stroke-width: 2.5;
+        /* ==========================================================================
+           NAVEGACIÓN POR CARPETAS Y CAJONES DISCIPLINARIOS (CICLO IV & CICLO VI)
+           ========================================================================== */
+        .cycle-folders-nav {
+            margin-bottom: 2rem;
+        }
+
+        .cycle-folders-intro {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .cycle-folders-intro h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cycle-folders-intro p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .folders-drawers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 1.35rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .folder-drawer-card {
+            background: linear-gradient(145deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem 1.5rem 1.5rem;
+            position: relative;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .folder-drawer-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--drawer-color, var(--primary));
+            box-shadow: 0 16px 30px -8px rgba(0, 0, 0, 0.45);
+        }
+
+        .folder-drawer-tab {
+            position: absolute;
+            top: 0;
+            left: 1.5rem;
+            background: var(--drawer-color, var(--primary));
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.25rem 0.85rem;
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .folder-drawer-tab svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        .folder-drawer-body {
+            margin-top: 0.85rem;
+        }
+
+        .folder-drawer-icon-wrap {
+            width: 54px;
+            height: 54px;
+            border-radius: var(--radius-md);
+            background: var(--drawer-bg, rgba(99, 102, 241, 0.15));
+            color: var(--drawer-color, var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .folder-drawer-icon-wrap svg {
+            width: 28px;
+            height: 28px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .folder-drawer-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+            line-height: 1.2;
+        }
+
+        .folder-drawer-count {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--drawer-color, var(--primary));
+            margin-bottom: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .folder-drawer-desc {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+        }
+
+        .folder-drawer-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .folder-drawer-tag {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.22rem 0.6rem;
+            border-radius: var(--radius-pill);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .folder-drawer-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 44px;
+            padding: 0 1.1rem;
+            border-radius: var(--radius-md);
+            background: var(--drawer-bg, rgba(99, 102, 241, 0.12));
+            color: var(--drawer-color, var(--primary));
+            font-weight: 700;
+            font-size: 0.88rem;
+            border: 1.5px solid transparent;
+            transition: all var(--transition-fast);
+        }
+
+        .folder-drawer-card:hover .folder-drawer-action {
+            background: var(--drawer-color, var(--primary));
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+
+        .folder-drawer-action svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+            transition: transform var(--transition-fast);
+        }
+
+        .folder-drawer-card:hover .folder-drawer-action svg {
+            transform: translateX(4px);
+        }
+
+        /* Barra de navegación de carpetas activa */
+        .folder-active-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 0.85rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.85rem;
+        }
+
+        .folder-pills-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .folder-pill-btn {
+            height: 42px;
+            padding: 0 1rem;
+            border-radius: var(--radius-pill);
+            background: var(--bg-surface);
+            border: 1.5px solid var(--border-subtle);
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 0.84rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .folder-pill-btn:hover {
+            border-color: var(--pill-color, var(--primary));
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .folder-pill-btn.active {
+            background: var(--pill-color, var(--primary));
+            color: #ffffff;
+            border-color: var(--pill-color, var(--primary));
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .active-folder-banner {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 2px solid var(--active-folder-color, var(--primary));
+            border-radius: var(--radius-xl);
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .active-folder-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 6px;
+            background: var(--active-folder-color, var(--primary));
+        }
+
+        .active-folder-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--active-folder-color, var(--primary));
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .active-folder-title {
+            font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .active-folder-desc {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            max-width: 75ch;
+            line-height: 1.5;
+        }
+
+        /* Secciones de Cajón en Vista General del Ciclo */
+        .drawer-materia-section {
+            background: var(--bg-card);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            box-shadow: var(--shadow-sm);
+            border-left: 6px solid var(--drawer-color, var(--primary));
+            transition: border-color var(--transition-fast);
+        }
+
+        .drawer-materia-section:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .drawer-materia-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .drawer-materia-title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .drawer-materia-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--drawer-bg, rgba(99, 102, 241, 0.15));
+            color: var(--drawer-color, var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .drawer-materia-icon svg {
+            width: 25px;
+            height: 25px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        .drawer-materia-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .drawer-materia-sub {
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .drawer-count-pill {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.65rem;
+            border-radius: var(--radius-pill);
+            background: var(--drawer-bg, rgba(99, 102, 241, 0.15));
+            color: var(--drawer-color, var(--primary));
+            border: 1px solid var(--border-subtle);
+        }
+
+        .btn-open-single-drawer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            height: 40px;
+            padding: 0 1rem;
+            border-radius: var(--radius-pill);
+            background: var(--bg-surface);
+            border: 1.5px solid var(--border-subtle);
+            color: var(--drawer-color, var(--primary));
+            font-weight: 700;
+            font-size: 0.84rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-open-single-drawer:hover {
+            background: var(--drawer-color, var(--primary));
+            color: #ffffff;
+            border-color: var(--drawer-color, var(--primary));
+            transform: translateY(-1px);
+        }
+
+        .btn-open-single-drawer svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
         }
     </style>
 </head>
@@ -1334,8 +1728,11 @@
                 </select>
             </div>
 
-            <!-- Cuadrícula de actividades desplegadas -->
-            <div class="activities-grid" id="activities-container">
+            <!-- Contenedor dinámico de Navegación por Carpetas y Cajones Disciplinares (Ciclo IV y Ciclo VI) -->
+            <div id="cycle-folders-navigation" class="cycle-folders-nav" style="display: none;"></div>
+
+            <!-- Contenedor de actividades desplegadas (cuadrícula directa o cajones seccionales) -->
+            <div id="activities-container">
                 <!-- Se inyecta dinámicamente -->
             </div>
 
@@ -1566,6 +1963,7 @@
             const viewActivities = document.getElementById('view-activities');
             const subjectsContainer = document.getElementById('subjects-container');
             const activitiesContainer = document.getElementById('activities-container');
+            const cycleFoldersNav = document.getElementById('cycle-folders-navigation');
             
             const detailHeaderCard = document.getElementById('detail-header-card');
             const detailIconBox = document.getElementById('detail-icon-box');
@@ -1583,6 +1981,77 @@
             const emptyState = document.getElementById('empty-state');
             const btnClearDetailSearch = document.getElementById('btn-clear-detail-search');
 
+            // Definición de sub-carpetas disciplinarias (Cajones de materias)
+            const CYCLE_SUBFOLDERS = {
+                'ciclo-iv': {
+                    title: 'Carpetas Disciplinares de Ciclo IV',
+                    subtitle: 'Este ciclo integra tres asignaturas fundamentales. Explora los cajones independientes para acceder a sus actividades:',
+                    folders: [
+                        {
+                            key: 'Biología',
+                            name: 'Biología',
+                            count: 8,
+                            color: '#10b981',
+                            rgb: '16, 185, 129',
+                            iconBg: 'rgba(16, 185, 129, 0.15)',
+                            iconSvg: `<path d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.5v5c1.2.7 2 2 2 3.5a4 4 0 0 1-8 0c0-1.5.8-2.8 2-3.5v-5A3.99 3.99 0 0 1 8 6a4 4 0 0 1 4-4Z"></path><circle cx="12" cy="6" r="1.5"></circle><circle cx="12" cy="18" r="1.5"></circle><line x1="12" y1="9.5" x2="12" y2="14.5"></line>`,
+                            topics: 'Reproducción celular (mitosis y meiosis), genética mendeliana, estructura del ADN y ARN, teorías de la evolución, taxonomía y ciclos biogeoquímicos.',
+                            tags: ['Genética', 'ADN y ARN', 'Evolución', 'Taxonomía', 'Ciclos']
+                        },
+                        {
+                            key: 'Física',
+                            name: 'Física',
+                            count: 10,
+                            color: '#0284c7',
+                            rgb: '2, 132, 199',
+                            iconBg: 'rgba(2, 132, 199, 0.15)',
+                            iconSvg: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>`,
+                            topics: 'Máquinas térmicas, calor y temperatura, mecanismos de transferencia de calor, trabajo mecánico, potencia mecánica, eficiencia termodinámica y entropía.',
+                            tags: ['Máquinas Térmicas', 'Calor', 'Trabajo Mecánico', 'Potencia', 'Entropía']
+                        },
+                        {
+                            key: 'Química',
+                            name: 'Química',
+                            count: 8,
+                            color: '#8b5cf6',
+                            rgb: '139, 92, 246',
+                            iconBg: 'rgba(139, 92, 246, 0.15)',
+                            iconSvg: `<path d="M10 2v7.31L4.1 19.34A2 2 0 0 0 5.8 22h12.4a2 2 0 0 0 1.7-2.66L14 9.31V2"></path><line x1="8.5" y1="2" x2="15.5" y2="2"></line><line x1="14" y1="9" x2="10" y2="9"></line>`,
+                            topics: 'Tabla periódica, enlaces químicos y electronegatividad, nomenclatura inorgánica, reacciones químicas, estequiometría, soluciones y leyes de los gases.',
+                            tags: ['Tabla Periódica', 'Enlaces', 'Reacciones', 'Estequiometría', 'Gases']
+                        }
+                    ]
+                },
+                'ciclo-vi': {
+                    title: 'Carpetas Disciplinares de Ciclo VI',
+                    subtitle: 'Este ciclo integra dos campos de la ciencia contemporánea. Selecciona un cajón disciplinar:',
+                    folders: [
+                        {
+                            key: 'Física',
+                            name: 'Física',
+                            count: 5,
+                            color: '#3b82f6',
+                            rgb: '59, 130, 246',
+                            iconBg: 'rgba(59, 130, 246, 0.15)',
+                            iconSvg: `<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>`,
+                            topics: 'Primera ley de Newton e inercia, naturaleza de ondas y luz, fenómenos acústicos en el agro y escape room pedagógico de óptica.',
+                            tags: ['1ra Ley Newton', 'Ondas y Luz', 'Acústica', 'Escape Room Óptica']
+                        },
+                        {
+                            key: 'Química',
+                            name: 'Química Orgánica',
+                            count: 8,
+                            color: '#a855f7',
+                            rgb: '168, 85, 247',
+                            iconBg: 'rgba(168, 85, 247, 0.15)',
+                            iconSvg: `<polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon><circle cx="12" cy="12" r="4"></circle>`,
+                            topics: 'Química del carbono (tetravalencia), hidrocarburos alifáticos y aromáticos, grupos oxigenados y nitrogenados, aplicaciones en la química del café y biomoléculas.',
+                            tags: ['Carbono', 'Hidrocarburos', 'Compuestos del Café', 'Biomoléculas']
+                        }
+                    ]
+                }
+            };
+
             // Tema y Modales
             const themeToggleBtn = document.getElementById('btn-theme-toggle');
             const sunIcon = themeToggleBtn.querySelector('.sun-icon');
@@ -1595,6 +2064,7 @@
 
             // Estado
             let currentSubjectKey = null;
+            let currentSubFolder = null;
             let currentSearchTerm = '';
             let currentTypeFilter = 'all';
 
@@ -1719,15 +2189,83 @@
                 }
             }
 
+            function createActivityCardElement(item) {
+                const card = document.createElement('article');
+                card.className = 'activity-card';
+                card.style.setProperty('--card-color', item.themeColor || '#6366f1');
+
+                const safeTitle = escapeHtml(item.title);
+                const safeH1 = item.h1 && item.h1 !== item.title ? `<div class="card-h1">${escapeHtml(item.h1)}</div>` : '';
+                const safeDesc = escapeHtml(item.desc);
+                const safeType = escapeHtml(item.type);
+                const typeIcon = getTypeIconSvg(item.typeKey);
+                const subBadge = item.subArea 
+                    ? `<span class="badge-type" style="background: rgba(99, 102, 241, 0.12); color: var(--card-color, #6366f1); font-weight: 700; border-color: rgba(99, 102, 241, 0.25);">${escapeHtml(item.subArea)}</span>` 
+                    : (currentSubjectKey === 'all' ? `<span class="badge-type" style="font-weight: 700;">${escapeHtml(item.area)}</span>` : '');
+
+                card.innerHTML = `
+                    <div>
+                        <div class="card-top">
+                            <div class="card-badges">
+                                ${subBadge}
+                                <span class="badge-type">
+                                    ${typeIcon}
+                                    ${safeType}
+                                </span>
+                            </div>
+                            <span class="card-size">${item.sizeKB} KB</span>
+                        </div>
+
+                        <div class="card-body">
+                            <h3 class="card-title">${safeTitle}</h3>
+                            ${safeH1}
+                            <p class="card-desc">${safeDesc}</p>
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <a href="${item.path}" target="_blank" rel="noopener noreferrer" class="btn-action-primary" title="Abrir y desarrollar actividad en nueva pestaña">
+                            <svg viewBox="0 0 24 24">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <span>Iniciar</span>
+                        </a>
+                        <a href="${item.path}" download="${item.fileName}" class="btn-action-download" title="Descargar archivo HTML autónomo para uso offline">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Descargar</span>
+                        </a>
+                    </div>
+                `;
+                return card;
+            }
+
+            function setSubFolder(folderKey) {
+                currentSubFolder = folderKey;
+                if (currentSubjectKey) {
+                    if (folderKey) {
+                        window.location.hash = `asignatura=${currentSubjectKey}&materia=${encodeURIComponent(folderKey)}`;
+                    } else {
+                        window.location.hash = `asignatura=${currentSubjectKey}`;
+                    }
+                }
+                renderCurrentSubjectActivities();
+                const scrollTarget = document.getElementById('cycle-folders-navigation');
+                if (scrollTarget) {
+                    const topPos = scrollTarget.getBoundingClientRect().top + window.pageYOffset - 90;
+                    window.scrollTo({ top: Math.max(0, topPos), behavior: 'smooth' });
+                }
+            }
+            window.setSubFolder = setSubFolder;
+
             function renderCurrentSubjectActivities() {
                 activitiesContainer.innerHTML = '';
                 const term = normalizeStr(currentSearchTerm);
 
-                const list = activities.filter(act => {
-                    if (currentSubjectKey && currentSubjectKey !== 'all') {
-                        if (act.categoryKey !== currentSubjectKey) return false;
-                    }
-
+                const filterItem = (act) => {
                     if (currentTypeFilter !== 'all') {
                         if (currentTypeFilter === 'juego' && act.typeKey !== 'juego') return false;
                         if (currentTypeFilter === 'ova' && act.typeKey !== 'ova') return false;
@@ -1741,78 +2279,198 @@
                             normalizeStr(act.h1).includes(term) ||
                             normalizeStr(act.desc).includes(term) ||
                             normalizeStr(act.area).includes(term) ||
+                            normalizeStr(act.subArea).includes(term) ||
                             normalizeStr(act.type).includes(term) ||
                             normalizeStr(act.fileName).includes(term);
                         if (!match) return false;
                     }
-
                     return true;
-                });
+                };
 
-                if (list.length === 0) {
-                    emptyState.classList.add('active');
-                    return;
-                }
-                emptyState.classList.remove('active');
+                const subFolderConfig = CYCLE_SUBFOLDERS[currentSubjectKey];
 
-                const fragment = document.createDocumentFragment();
+                if (subFolderConfig) {
+                    cycleFoldersNav.style.display = 'block';
 
-                list.forEach(item => {
-                    const card = document.createElement('article');
-                    card.className = 'activity-card';
-                    card.style.setProperty('--card-color', item.themeColor || '#6366f1');
+                    if (!currentSubFolder) {
+                        // VISTA GENERAL: CAJONES DE MATERIAS Y SECCIONES SEPARADAS
+                        let cardsHtml = '';
+                        subFolderConfig.folders.forEach((f, idx) => {
+                            const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && a.subArea.toLowerCase().includes(f.key.toLowerCase()));
+                            const matchCount = fActs.filter(filterItem).length;
+                            const tagsHtml = f.tags.map(t => `<span class="folder-drawer-tag">${t}</span>`).join('');
 
-                    const safeTitle = escapeHtml(item.title);
-                    const safeH1 = item.h1 && item.h1 !== item.title ? `<div class="card-h1">${escapeHtml(item.h1)}</div>` : '';
-                    const safeDesc = escapeHtml(item.desc);
-                    const safeType = escapeHtml(item.type);
-                    const typeIcon = getTypeIconSvg(item.typeKey);
-                    const subBadge = item.subArea 
-                        ? `<span class="badge-type" style="background: rgba(99, 102, 241, 0.12); color: var(--card-color, #6366f1); font-weight: 700; border-color: rgba(99, 102, 241, 0.25);">${escapeHtml(item.subArea)}</span>` 
-                        : (currentSubjectKey === 'all' ? `<span class="badge-type" style="font-weight: 700;">${escapeHtml(item.area)}</span>` : '');
-
-                    card.innerHTML = `
-                        <div>
-                            <div class="card-top">
-                                <div class="card-badges">
-                                    ${subBadge}
-                                    <span class="badge-type">
-                                        ${typeIcon}
-                                        ${safeType}
+                            cardsHtml += `
+                                <div class="folder-drawer-card" style="--drawer-color: ${f.color}; --drawer-bg: ${f.iconBg}; --drawer-rgb: ${f.rgb};" onclick="window.setSubFolder('${f.key}')">
+                                    <span class="folder-drawer-tab">
+                                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                        Cajón 0${idx + 1}
                                     </span>
+                                    <div class="folder-drawer-body">
+                                        <div class="folder-drawer-icon-wrap">
+                                            <svg viewBox="0 0 24 24">${f.iconSvg}</svg>
+                                        </div>
+                                        <h4 class="folder-drawer-title">${f.name}</h4>
+                                        <span class="folder-drawer-count">
+                                            <span>●</span> ${matchCount} ${matchCount === 1 ? 'actividad interactiva' : 'actividades interactivas'}
+                                        </span>
+                                        <p class="folder-drawer-desc">${f.topics}</p>
+                                        <div class="folder-drawer-tags">${tagsHtml}</div>
+                                    </div>
+                                    <div class="folder-drawer-action">
+                                        <span>Entrar al Cajón de ${f.name}</span>
+                                        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                    </div>
                                 </div>
-                                <span class="card-size">${item.sizeKB} KB</span>
+                            `;
+                        });
+
+                        cycleFoldersNav.innerHTML = `
+                            <div class="cycle-folders-intro">
+                                <h3>
+                                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2.2">
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    <span>${subFolderConfig.title}</span>
+                                </h3>
+                                <p>${subFolderConfig.subtitle}</p>
+                            </div>
+                            <div class="folders-drawers-grid">
+                                ${cardsHtml}
+                            </div>
+                        `;
+
+                        // Renderizar las actividades divididas en sus respectivos cajones
+                        let totalMatches = 0;
+                        subFolderConfig.folders.forEach(f => {
+                            const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && a.subArea.toLowerCase().includes(f.key.toLowerCase()));
+                            const filteredActs = fActs.filter(filterItem);
+                            totalMatches += filteredActs.length;
+
+                            if (filteredActs.length > 0) {
+                                const section = document.createElement('section');
+                                section.className = 'drawer-materia-section';
+                                section.style.setProperty('--drawer-color', f.color);
+                                section.style.setProperty('--drawer-bg', f.iconBg);
+
+                                section.innerHTML = `
+                                    <div class="drawer-materia-header">
+                                        <div class="drawer-materia-title-group">
+                                            <div class="drawer-materia-icon">
+                                                <svg viewBox="0 0 24 24">${f.iconSvg}</svg>
+                                            </div>
+                                            <div>
+                                                <div class="drawer-materia-name">
+                                                    <span>Cajón de ${f.name}</span>
+                                                    <span class="drawer-count-pill">${filteredActs.length} actividades</span>
+                                                </div>
+                                                <div class="drawer-materia-sub">${f.topics}</div>
+                                            </div>
+                                        </div>
+                                        <button class="btn-open-single-drawer" onclick="window.setSubFolder('${f.key}')" title="Ver sólo las actividades de ${f.name}">
+                                            <span>Abrir sólo esta carpeta</span>
+                                            <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                        </button>
+                                    </div>
+                                `;
+
+                                const subGrid = document.createElement('div');
+                                subGrid.className = 'activities-grid';
+                                filteredActs.forEach(act => {
+                                    subGrid.appendChild(createActivityCardElement(act));
+                                });
+                                section.appendChild(subGrid);
+                                activitiesContainer.appendChild(section);
+                            }
+                        });
+
+                        if (totalMatches === 0) {
+                            emptyState.classList.add('active');
+                        } else {
+                            emptyState.classList.remove('active');
+                        }
+
+                    } else {
+                        // VISTA DE CARPETA ÚNICA ABIERTA
+                        const activeFolderObj = subFolderConfig.folders.find(f => f.key.toLowerCase() === currentSubFolder.toLowerCase()) || subFolderConfig.folders[0];
+                        
+                        let pillsHtml = `
+                            <button class="folder-pill-btn" onclick="window.setSubFolder(null)">
+                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                <span>Ver todos los cajones</span>
+                            </button>
+                        `;
+
+                        subFolderConfig.folders.forEach(f => {
+                            const isSelected = f.key.toLowerCase() === activeFolderObj.key.toLowerCase();
+                            pillsHtml += `
+                                <button class="folder-pill-btn ${isSelected ? 'active' : ''}" style="--pill-color: ${f.color};" onclick="window.setSubFolder('${f.key}')">
+                                    <span>${f.name} (${f.count})</span>
+                                </button>
+                            `;
+                        });
+
+                        cycleFoldersNav.innerHTML = `
+                            <div class="folder-active-bar">
+                                <button class="btn-back" style="margin-bottom: 0;" onclick="window.setSubFolder(null)">
+                                    <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                                    <span>← Volver a todos los cajones</span>
+                                </button>
+                                <div class="folder-pills-wrap">
+                                    ${pillsHtml}
+                                </div>
                             </div>
 
-                            <div class="card-body">
-                                <h3 class="card-title">${safeTitle}</h3>
-                                ${safeH1}
-                                <p class="card-desc">${safeDesc}</p>
+                            <div class="active-folder-banner" style="--active-folder-color: ${activeFolderObj.color};">
+                                <span class="active-folder-badge">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                    Carpeta Disciplinar Abierta
+                                </span>
+                                <h3 class="active-folder-title">Carpeta: ${activeFolderObj.name}</h3>
+                                <p class="active-folder-desc">${activeFolderObj.topics}</p>
                             </div>
-                        </div>
+                        `;
 
-                        <div class="card-actions">
-                            <a href="${item.path}" target="_blank" rel="noopener noreferrer" class="btn-action-primary" title="Abrir y desarrollar actividad en nueva pestaña">
-                                <svg viewBox="0 0 24 24">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                <span>Iniciar</span>
-                            </a>
-                            <a href="${item.path}" download="${item.fileName}" class="btn-action-download" title="Descargar archivo HTML autónomo para uso offline">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                <span>Descargar</span>
-                            </a>
-                        </div>
-                    `;
+                        const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && a.subArea.toLowerCase().includes(activeFolderObj.key.toLowerCase()));
+                        const filteredActs = fActs.filter(filterItem);
 
-                    fragment.appendChild(card);
-                });
+                        if (filteredActs.length === 0) {
+                            emptyState.classList.add('active');
+                        } else {
+                            emptyState.classList.remove('active');
+                            const grid = document.createElement('div');
+                            grid.className = 'activities-grid';
+                            filteredActs.forEach(act => {
+                                grid.appendChild(createActivityCardElement(act));
+                            });
+                            activitiesContainer.appendChild(grid);
+                        }
+                    }
 
-                activitiesContainer.appendChild(fragment);
+                } else {
+                    // ASIGNATURA SIMPLE O CATÁLOGO COMPLETO
+                    cycleFoldersNav.style.display = 'none';
+
+                    const list = activities.filter(act => {
+                        if (currentSubjectKey && currentSubjectKey !== 'all') {
+                            if (act.categoryKey !== currentSubjectKey) return false;
+                        }
+                        return filterItem(act);
+                    });
+
+                    if (list.length === 0) {
+                        emptyState.classList.add('active');
+                        return;
+                    }
+                    emptyState.classList.remove('active');
+
+                    const grid = document.createElement('div');
+                    grid.className = 'activities-grid';
+                    list.forEach(item => {
+                        grid.appendChild(createActivityCardElement(item));
+                    });
+                    activitiesContainer.appendChild(grid);
+                }
             }
 
             function escapeHtml(text) {
@@ -1827,8 +2485,9 @@
                 return text.replace(/[&<>"']/g, m => map[m]);
             }
 
-            function navigateToSubject(subjectKey) {
+            function navigateToSubject(subjectKey, subFolder = null) {
                 currentSubjectKey = subjectKey;
+                currentSubFolder = subFolder;
                 currentSearchTerm = '';
                 detailSearchInput.value = '';
                 currentTypeFilter = 'all';
@@ -1865,7 +2524,11 @@
                         detailIconBox.style.setProperty('--detail-icon-bg', sub.iconBg);
                         detailIconBox.style.setProperty('--detail-accent', sub.color);
                         detailIconSvg.innerHTML = sub.iconSvg;
-                        window.location.hash = `asignatura=${sub.key}`;
+                        if (subFolder) {
+                            window.location.hash = `asignatura=${sub.key}&materia=${encodeURIComponent(subFolder)}`;
+                        } else {
+                            window.location.hash = `asignatura=${sub.key}`;
+                        }
                     }
                 }
 
@@ -1912,9 +2575,11 @@
                 if (hash === 'todas') {
                     navigateToSubject('all');
                 } else if (hash.startsWith('asignatura=')) {
-                    const key = hash.replace('asignatura=', '');
-                    if (SUBJECTS.some(s => s.key === key)) {
-                        navigateToSubject(key);
+                    const params = new URLSearchParams(hash);
+                    const subKey = params.get('asignatura');
+                    const materia = params.get('materia');
+                    if (SUBJECTS.some(s => s.key === subKey)) {
+                        navigateToSubject(subKey, materia);
                         return;
                     }
                     navigateToSubject(null);
