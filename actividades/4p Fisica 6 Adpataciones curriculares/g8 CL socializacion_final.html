@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mis Primeras Palabras: Átomos y Modelos</title>
+    <style>
+        /* STREAMING_CHUNK:Configuring root variables and page layout */
+        :root {
+            --primary: #512da8;
+            --primary-dark: #311b92;
+            --secondary: #00838f;
+            --secondary-dark: #006064;
+            --accent: #ffb300;
+            --accent-dark: #ffa000;
+            --bg-page: #fffdf7;
+            --card-bg: #ffffff;
+            --text-main: #263238;
+            --text-light: #ffffff;
+            --s1: #1e88e5; /* Azul silábico 1 */
+            --s2: #d32f2f; /* Rojo silábico 2 */
+            --border-radius: 16px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        /* STREAMING_CHUNK:Defining dynamic visual modes (lowercase and syllables) */
+        body.lowercase-mode .up-text { text-transform: lowercase !important; }
+        body:not(.lowercase-mode) .up-text { text-transform: uppercase !important; }
+
+        body:not(.syllable-mode) .syllable-container .s1,
+        body:not(.syllable-mode) .syllable-container .s2,
+        body:not(.syllable-mode) .syllable-container .s-sep {
+            color: inherit !important;
+        }
+
+        .s1 { color: var(--s1); font-weight: bold; }
+        .s2 { color: var(--s2); font-weight: bold; }
+        .s-sep { color: #b0bec5; font-weight: bold; margin: 0 1px; }
+
+        /* STREAMING_CHUNK:Styling the persistent top bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: var(--primary);
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            box-sizing: border-box;
+            z-index: 1000;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .top-bar-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .top-btn {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .top-btn:active {
+            transform: scale(0.95);
+        }
+
+        .stars-display {
+            background-color: var(--accent);
+            color: #5d4037;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* STREAMING_CHUNK:Configuring station navigation tabs */
+        .main-container {
+            max-width: 900px;
+            margin: 75px auto 40px auto;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+
+        .stations-nav {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .station-tab {
+            background-color: #ede7f6;
+            border: 3px solid #d1c4e9;
+            border-radius: 12px;
+            padding: 10px 5px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            color: #4527a0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .station-tab span {
+            font-size: 22px;
+        }
+
+        .station-tab.active {
+            background-color: var(--secondary);
+            border-color: var(--secondary-dark);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        /* STREAMING_CHUNK:Styling station panels */
+        .station-panel {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            border: 4px solid #e0e0e0;
+        }
+
+        .station-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-title {
+            color: var(--primary-dark);
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 3px dashed #d1c4e9;
+            padding-bottom: 10px;
+        }
+
+        /* STREAMING_CHUNK:Station 1 styles (Phonological cards) */
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .vocab-card {
+            background-color: #ede7f6;
+            border: 3px solid #d1c4e9;
+            border-radius: 14px;
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .big-picto {
+            font-size: 55px;
+            background: white;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        .vocab-word {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .audio-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 3px 0 var(--secondary-dark);
+        }
+
+        .audio-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 0 var(--secondary-dark);
+        }
+
+        .mini-game-box {
+            background-color: #e0f2f1;
+            border: 3px dashed #80cbc4;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .vowel-options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .vowel-btn {
+            background-color: white;
+            border: 3px solid var(--secondary);
+            color: var(--secondary-dark);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #80cbc4;
+        }
+
+        .vowel-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 0 0 #80cbc4;
+        }
+
+        /* STREAMING_CHUNK:Station 2 styles (Syllable Train) */
+        .train-container {
+            text-align: center;
+        }
+
+        .syllable-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            min-height: 70px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .slot {
+            width: 75px;
+            height: 70px;
+            border: 3px dashed #b0bec5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: bold;
+            background-color: #fafafa;
+        }
+
+        .slot.filled {
+            border: 3px solid var(--primary);
+            background-color: #ede7f6;
+            color: var(--primary-dark);
+        }
+
+        .syl-bank {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .syl-chip {
+            background-color: var(--accent);
+            color: #5d4037;
+            border: 3px solid var(--accent-dark);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--accent-dark);
+        }
+
+        .syl-chip:active {
+            transform: translateY(3px);
+            box-shadow: 0 0 0 var(--accent-dark);
+        }
+
+        .train-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            background-color: #78909c;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #455a64;
+        }
+
+        /* STREAMING_CHUNK:Station 3 styles (Pictographic Story) */
+        .story-card {
+            background-color: #ede7f6;
+            border: 3px solid #d1c4e9;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .picto-sentence {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .picto-word {
+            background-color: white;
+            border: 3px solid #9575cd;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            width: 90px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        .picto-word.speaking {
+            background-color: #fff59d;
+            border-color: #fbc02d;
+            transform: scale(1.08);
+        }
+
+        .pw-icon { font-size: 38px; }
+        .pw-text { font-size: 15px; font-weight: bold; margin-top: 5px; }
+
+        .question-box {
+            background-color: white;
+            border: 2px dashed #9575cd;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 15px;
+        }
+
+        .quiz-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quiz-option {
+            background-color: #f5f5f5;
+            border: 3px solid #bdbdbd;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quiz-option.correct { background-color: var(--primary); color: white; border-color: #311b92; }
+        .quiz-option.incorrect { background-color: #d32f2f; color: white; border-color: #b71c1c; }
+
+        /* STREAMING_CHUNK:Station 4 & 5 styles (Comprehension & Trace Canvas) */
+        .match-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .retos-card {
+            background-color: #e0f2f1;
+            border: 3px solid #80cbc4;
+            border-radius: 14px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .builder-box {
+            background-color: #e8f5e9;
+            border: 3px solid #a5d6a7;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .builder-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            min-height: 80px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .builder-card {
+            background-color: white;
+            border: 3px solid #81c784;
+            border-radius: 10px;
+            padding: 10px;
+            width: 90px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .canvas-container {
+            text-align: center;
+            background-color: #fafafa;
+            border: 3px solid #cfd8dc;
+            border-radius: 14px;
+            padding: 15px;
+        }
+
+        #trace-canvas {
+            background: linear-gradient(to bottom, #ffffff 0%, #ffffff 30%, #e3f2fd 30%, #e3f2fd 70%, #ffffff 70%, #ffffff 100%);
+            border: 2px solid #b0bec5;
+            border-radius: 8px;
+            cursor: crosshair;
+            max-width: 100%;
+            touch-action: none;
+        }
+
+        .canvas-tools {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .word-select-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* STREAMING_CHUNK:Notebook Card (Always Visible) */
+        .notebook-card {
+            background-color: #fffde7;
+            border: 4px dashed #fbc02d;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-top: 40px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+
+        .notebook-title {
+            color: #f57f17;
+            font-size: 22px;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notebook-list {
+            padding-left: 20px;
+        }
+
+        .notebook-list li {
+            font-size: 17px;
+            margin-bottom: 12px;
+            color: #4e342e;
+            font-weight: bold;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-bar, .stations-nav, .audio-btn, .action-btn, .vowel-btn, .syl-chip, .canvas-tools {
+                display: none !important;
+            }
+            .station-panel {
+                display: block !important;
+                border: none !important;
+                box-shadow: none !important;
+                page-break-after: always;
+            }
+            body { background-color: white !important; }
+            .notebook-card { border: 2px solid #000 !important; }
+        }
+    </style>
+</head>
+<body class="uppercase-mode syllable-mode">
+
+    <!-- STREAMING_CHUNK:Top bar structure -->
+    <header class="top-bar">
+        <div class="top-bar-controls">
+            <button class="top-btn" onclick="toggleCase()">🔤 <span id="case-lbl">MAYÚS</span></button>
+            <button class="top-btn" onclick="toggleSyllables()">👏 <span id="syl-lbl">SÍLABAS</span></button>
+        </div>
+        <div class="stars-display">⭐ <span id="global-stars">0</span> ESTRELLAS</div>
+        <button class="top-btn" onclick="speakText('Bienvenido a mis primeras palabras sobre átomos y modelos. Toca cualquier botón con altavoz para escuchar.')">🔊 AYUDA</button>
+    </header>
+
+    <div class="main-container">
+        <!-- STREAMING_CHUNK:Station navigation menu -->
+        <nav class="stations-nav">
+            <div class="station-tab active" onclick="switchStation(0)"><span>👂</span>VOCALES</div>
+            <div class="station-tab" onclick="switchStation(1)"><span>🚂</span>SÍLABAS</div>
+            <div class="station-tab" onclick="switchStation(2)"><span>📖</span>CUENTO</div>
+            <div class="station-tab" onclick="switchStation(3)"><span>🎯</span>COMPRENDO</div>
+            <div class="station-tab" onclick="switchStation(4)"><span>✏️</span>TRAZO</div>
+        </nav>
+
+        <!-- STREAMING_CHUNK:Station 1 Panel (Phonological awareness) -->
+        <section id="station-0" class="station-panel active">
+            <h2 class="panel-title"><span>👂🔤</span> Vocales y Sonidos: Átomos y Modelos</h2>
+            <p>Toca cada tarjeta para escuchar la palabra y sus palmas. Luego resuelve el reto de la vocal.</p>
+            
+            <div class="vocab-grid" id="vocab-grid-container">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="mini-game-box">
+                <h3 id="vowel-game-title">¿Con qué vocal empieza?</h3>
+                <div id="vowel-game-display" style="font-size: 50px; margin: 10px;"></div>
+                <div class="vowel-options">
+                    <button class="vowel-btn" onclick="checkVowel('A')">A</button>
+                    <button class="vowel-btn" onclick="checkVowel('E')">E</button>
+                    <button class="vowel-btn" onclick="checkVowel('I')">I</button>
+                    <button class="vowel-btn" onclick="checkVowel('O')">O</button>
+                    <button class="vowel-btn" onclick="checkVowel('U')">U</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STREAMING_CHUNK:Station 2 Panel (Syllable Train) -->
+        <section id="station-1" class="station-panel">
+            <h2 class="panel-title"><span>🚂👏</span> El Tren de las Sílabas</h2>
+            <p>Arma la palabra tocando las fichas en orden correcto según escuches las palmas.</p>
+            
+            <div class="train-container">
+                <div id="train-picto" style="font-size: 60px;">⚛️</div>
+                <button class="audio-btn" style="margin: 10px auto;" onclick="playCurrentTrainWord()">🔊 Escuchar Palabra</button>
+                
+                <div class="syllable-slots" id="train-slots">
+                    <!-- Dynamic slots -->
+                </div>
+
+                <div class="syl-bank" id="train-bank">
+                    <!-- Shuffled chips -->
+                </div>
+
+                <div class="train-controls">
+                    <button class="action-btn" onclick="resetTrain()">🔄 Borrar</button>
+                    <button class="action-btn" style="background-color: var(--primary);" onclick="nextTrainWord()">➡️ Siguiente</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STREAMING_CHUNK:Station 3 Panel (Pictographic Story) -->
+        <section id="station-2" class="station-panel">
+            <h2 class="panel-title"><span>🖼️📖</span> Leo con Dibujos (Cuento en 3 Escenas)</h2>
+            <p>Toca cada palabra con dibujo para escuchar su sonido o lee toda la frase.</p>
+            
+            <div id="story-container">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- STREAMING_CHUNK:Station 4 Panel (Comprehension) -->
+        <section id="station-3" class="station-panel">
+            <h2 class="panel-title"><span>🎯🧠</span> Comprendo: Leo y Uno</h2>
+            <p>Demuestra tu comprensión relacionando la lectura con la imagen correcta.</p>
+            
+            <div class="match-grid" id="quiz-container">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- STREAMING_CHUNK:Station 5 Panel (Builder & Trace Canvas) -->
+        <section id="station-4" class="station-panel">
+            <h2 class="panel-title"><span>✏️🎨</span> Escribo con Fichas y Pizarra Mágica</h2>
+            <p>Paso 1: Arma la frase tocando las tarjetas. Paso 2: Dibuja y repasa en la pizarra.</p>
+            
+            <div class="builder-box">
+                <h3>Arma la Frase</h3>
+                <p id="builder-target-prompt" style="font-weight: bold; color: var(--secondary-dark);"></p>
+                <div class="builder-slots" id="builder-slots"></div>
+                <div class="syl-bank" id="builder-bank"></div>
+            </div>
+
+            <div class="canvas-container">
+                <h3>Pizarra Mágica de Trazo (Renglón Ferrocaril)</h3>
+                <div class="canvas-tools" id="canvas-word-buttons">
+                    <!-- Trace word buttons -->
+                </div>
+                <br>
+                <canvas id="trace-canvas" width="640" height="200"></canvas>
+                <div class="canvas-tools">
+                    <button class="action-btn" style="background-color: #d32f2f;" onclick="clearCanvas()">🧽 Borrar Pizarra</button>
+                    <button class="action-btn" style="background-color: var(--primary);" onclick="window.print()">🖨️ Imprimir Guía</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STREAMING_CHUNK:Notebook pre-writing challenges card -->
+        <section class="notebook-card">
+            <h3 class="notebook-title">
+                <span>📒 MIS 5 RETOS EN EL CUADERNO (MODELOS ATÓMICOS)</span>
+                <button class="audio-btn" onclick="speakNotebook()">🔊 Escuchar Retos</button>
+            </h3>
+            <ol class="notebook-list">
+                <li>🎨 Pinto las vocales de las palabras clave (ÁTOMO, CARGA, GRUPO, HABLAR) con color amarillo brillante.</li>
+                <li>☀️ Dibujo un átomo con sus cargas en mi hoja y copio su nombre principal en grande.</li>
+                <li>🖐️ Realizo una exposición corta frente a mis compañeros explicando mi maqueta o proyecto.</li>
+                <li>👏 Cuento con palmas las palabras Á-TO-MO (3) y CAR-GA (2), dibujando un círculo (⚪) por cada sílaba.</li>
+                <li>✍️ Escribo mi NOMBRE completo empezando desde el margen izquierdo de mi cuaderno.</li>
+            </ol>
+        </section>
+    </div>
+
+    <!-- STREAMING_CHUNK:Core JavaScript Application Logic -->
+    <script>
+        let globalStars = 0;
+        let currentStation = 0;
+
+        const vocabData = [
+            { word: "ATOMO", syls: ['A', 'TO', 'MO'], count: 3, picto: "⚛️", vowel: "A" },
+            { word: "CARGA", syls: ['CAR', 'GA'], count: 2, picto: "⚡", vowel: "A" },
+            { word: "GRUPO", syls: ['GRU', 'PO'], count: 2, picto: "👥", vowel: "U" },
+            { word: "MODELO", syls: ['MO', 'DE', 'LO'], count: 3, picto: "🧊", vowel: "O" },
+            { word: "HABLAR", syls: ['HA', 'BLAR'], count: 2, picto: "🗣️", vowel: "A" },
+            { word: "IDEA", syls: ['I', 'DE', 'A'], count: 3, picto: "💡", vowel: "I" }
+        ];
+
+        const trainWords = [
+            { word: "ATOMO", syls: ['A', 'TO', 'MO'], picto: "⚛️" },
+            { word: "CARGA", syls: ['CAR', 'GA'], picto: "⚡" },
+            { word: "GRUPO", syls: ['GRU', 'PO'], picto: "👥" },
+            { word: "MODELO", syls: ['MO', 'DE', 'LO'], picto: "🧊" },
+            { word: "HABLAR", syls: ['HA', 'BLAR'], picto: "🗣️" }
+        ];
+        let currentTrainIdx = 0;
+        let currentTrainSlots = [];
+
+        const storyScenes = [
+            {
+                title: "Escena 1: El átomo",
+                sentence: [
+                    { text: "EL", picto: "🔍" },
+                    { text: "ATOMO", picto: "⚛️" },
+                    { text: "ES", picto: "✨" },
+                    { text: "PEQUE", picto: "🔎" }
+                ],
+                audio: "El átomo es pequeño",
+                question: "¿Cómo es el átomo?",
+                options: [
+                    { text: "PEQUE", picto: "🔎", correct: true },
+                    { text: "GRANDE", picto: "🏔️", correct: false }
+                ]
+            },
+            {
+                title: "Escena 2: La carga",
+                sentence: [
+                    { text: "CADA", picto: "🔄" },
+                    { text: "CARGA", picto: "⚡" },
+                    { text: "TIENE", picto: "🤝" },
+                    { text: "FUERZA", picto: "💪" }
+                ],
+                audio: "Cada carga tiene fuerza",
+                question: "¿Qué tiene cada carga?",
+                options: [
+                    { text: "FUERZA", picto: "💪", correct: true },
+                    { text: "AGUA", picto: "💧", correct: false }
+                ]
+            },
+            {
+                title: "Escena 3: El grupo",
+                sentence: [
+                    { text: "EL", picto: "📍" },
+                    { text: "GRUPO", picto: "👥" },
+                    { text: "VA", picto: "🚶" },
+                    { text: "HABLAR", picto: "🗣️" }
+                ],
+                audio: "El grupo va a hablar",
+                question: "¿Qué va a hacer el grupo?",
+                options: [
+                    { text: "HABLAR", picto: "🗣️", correct: true },
+                    { text: "DORMIR", picto: "🛌", correct: false }
+                ]
+            }
+        ];
+
+        const quizRetos = [
+            {
+                title: "Reto 1: Reconoce la palabra",
+                target: "ATOMO",
+                pictoTarget: "⚛️",
+                options: [
+                    { picto: "⚛️", label: "ÁTOMO", correct: true },
+                    { picto: "⚡", label: "CARGA", correct: false }
+                ]
+            },
+            {
+                title: "Reto 2: Proyecto",
+                target: "TENGO UN MODELO",
+                pictoTarget: "🧊",
+                options: [
+                    { picto: "💧", label: "AGUA", correct: false },
+                    { picto: "🧊", label: "MODELO", correct: true }
+                ]
+            },
+            {
+                title: "Reto 3: ¿Verdadero o Falso?",
+                target: "EL ÁTOMO TIENE CARGAS",
+                pictoTarget: "⚡",
+                options: [
+                    { label: "SÍ ES VERDAD", picto: "✅", correct: true },
+                    { label: "NO ES VERDAD", picto: "❌", correct: false }
+                ]
+            }
+        ];
+
+        const builderData = {
+            target: ["EL", "GRUPO", "VA", "HABLAR"],
+            pictos: ["👥", "👥", "🚶", "🗣️"],
+            shuffled: [
+                { text: "VA", picto: "🚶" },
+                { text: "EL", picto: "👥" },
+                { text: "HABLAR", picto: "🗣️" },
+                { text: "GRUPO", picto: "👥" }
+            ]
+        };
+        let builderSlotsState = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initVocabStation();
+            initTrainStation();
+            initStoryStation();
+            initQuizStation();
+            initBuilderStation();
+            initCanvas();
+        });
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                utterance.rate = 0.82;
+                utterance.pitch = 1.05;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function toggleCase() {
+            document.body.classList.toggle('lowercase-mode');
+            const lbl = document.getElementById('case-lbl');
+            lbl.innerText = document.body.classList.contains('lowercase-mode') ? 'minús' : 'MAYÚS';
+            speakText(document.body.classList.contains('lowercase-mode') ? 'Letra minúscula' : 'Letra mayúscula');
+        }
+
+        function toggleSyllables() {
+            document.body.classList.toggle('syllable-mode');
+            const lbl = document.getElementById('syl-lbl');
+            lbl.innerText = document.body.classList.contains('syllable-mode') ? 'SÍLABAS' : 'SOLO';
+            speakText(document.body.classList.contains('syllable-mode') ? 'Modo sílabas en color activado' : 'Modo palabra completa');
+        }
+
+        function addStars(num) {
+            globalStars += num;
+            document.getElementById('global-stars').innerText = globalStars;
+            if (globalStars % 10 === 0) {
+                speakText("¡Excelente trabajo! Has ganado muchas estrellas.");
+            }
+        }
+
+        function switchStation(idx) {
+            const tabs = document.querySelectorAll('.station-tab');
+            const panels = document.querySelectorAll('.station-panel');
+            tabs.forEach((t, i) => {
+                t.classList.toggle('active', i === idx);
+            });
+            panels.forEach((p, i) => {
+                p.classList.toggle('active', i === idx);
+            });
+            currentStation = idx;
+            speakText(tabs[idx].innerText.replace(/[^a-zA-ZáéíóúÁÉÍÓÚ]/g, ''));
+        }
+
+        let currentVowelTarget = null;
+        function initVocabStation() {
+            const container = document.getElementById('vocab-grid-container');
+            container.innerHTML = vocabData.map((item, idx) => `
+                <div class="vocab-card">
+                    <div class="big-picto">${item.picto}</div>
+                    <div class="vocab-word syllable-container up-text">
+                        ${renderSyllables(item.syls)}
+                    </div>
+                    <button class="audio-btn" onclick="playVocabItem(${idx})">
+                        🔊 Escuchar (${item.count} palmas)
+                    </button>
+                </div>
+            `).join('');
+            setupVowelGame();
+        }
+
+        function renderSyllables(syls) {
+            return syls.map((s, i) => {
+                const cls = (i % 2 === 0) ? 's1' : 's2';
+                const sep = (i < syls.length - 1) ? '<span class="s-sep">-</span>' : '';
+                return `<span class="${cls}">${s}</span>${sep}`;
+            }).join('');
+        }
+
+        function playVocabItem(idx) {
+            const item = vocabData[idx];
+            speakText(`${item.word}. Escucha las palmas: ` + item.syls.join("... ") + `. Son ${item.count} palmas.`);
+            addStars(1);
+        }
+
+        function setupVowelGame() {
+            const item = vocabData[Math.floor(Math.random() * vocabData.length)];
+            currentVowelTarget = item.vowel;
+            document.getElementById('vowel-game-title').innerHTML = `¿Con qué vocal empieza <span class="up-text">${item.word}</span>?`;
+            document.getElementById('vowel-game-display').innerHTML = `${item.picto} _ ${item.word.slice(1)}`;
+        }
+
+        function checkVowel(v) {
+            if (v === currentVowelTarget) {
+                speakText(`¡Muy bien! Empieza con ${v}.`);
+                addStars(3);
+                setupVowelGame();
+            } else {
+                speakText("Inténtalo de nuevo.");
+            }
+        }
+
+        function initTrainStation() {
+            renderTrainCurrent();
+        }
+
+        function renderTrainCurrent() {
+            const item = trainWords[currentTrainIdx];
+            document.getElementById('train-picto').innerText = item.picto;
+            currentTrainSlots = new Array(item.syls.length).fill(null);
+            renderTrainSlotsUI();
+
+            const shuffled = [...item.syls].sort(() => Math.random() - 0.5);
+            const bankEl = document.getElementById('train-bank');
+            bankEl.innerHTML = shuffled.map((s) => `
+                <div class="syl-chip" onclick="selectSylChip('${s}')">${s}</div>
+            `).join('');
+        }
+
+        function renderTrainSlotsUI() {
+            const slotsEl = document.getElementById('train-slots');
+            slotsEl.innerHTML = currentTrainSlots.map(s => `
+                <div class="slot ${s ? 'filled' : ''}">${s ? s : ''}</div>
+            `).join('');
+        }
+
+        function selectSylChip(syl) {
+            const emptyIdx = currentTrainSlots.indexOf(null);
+            if (emptyIdx !== -1) {
+                currentTrainSlots[emptyIdx] = syl;
+                renderTrainSlotsUI();
+                speakText(syl);
+
+                if (!currentTrainSlots.includes(null)) {
+                    const formed = currentTrainSlots.join('');
+                    const target = trainWords[currentTrainIdx].word;
+                    if (formed === target) {
+                        speakText(`¡Excelente! Armaste la palabra ${target}`);
+                        addStars(5);
+                    } else {
+                        speakText("Casi, prueba de nuevo.");
+                    }
+                }
+            }
+        }
+
+        function playCurrentTrainWord() {
+            const item = trainWords[currentTrainIdx];
+            speakText(`${item.word}. Sílabas: ` + item.syls.join(", "));
+        }
+
+        function resetTrain() {
+            renderTrainCurrent();
+            speakText("Tablero limpio.");
+        }
+
+        function nextTrainWord() {
+            currentTrainIdx = (currentTrainIdx + 1) % trainWords.length;
+            renderTrainCurrent();
+            playCurrentTrainWord();
+        }
+
+        function initStoryStation() {
+            const container = document.getElementById('story-container');
+            container.innerHTML = storyScenes.map((scene, sIdx) => `
+                <div class="story-card">
+                    <h3>${scene.title}</h3>
+                    <button class="audio-btn" style="margin: 0 auto 10px auto;" onclick="speakText('${scene.audio}')">🔊 Leer Frase Completa</button>
+                    <div class="picto-sentence">
+                        ${scene.sentence.map((w, wIdx) => `
+                            <div class="picto-word" id="pw-${sIdx}-${wIdx}" onclick="clickPictoWord(${sIdx}, ${wIdx}, '${w.text}')">
+                                <div class="pw-icon">${w.picto}</div>
+                                <div class="pw-text up-text">${w.text}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="question-box">
+                        <strong>${scene.question}</strong>
+                        <div class="quiz-options">
+                            ${scene.options.map((opt) => `
+                                <div class="quiz-option" onclick="checkSceneQuiz(this, ${opt.correct})">
+                                    <span>${opt.picto}</span> <span class="up-text">${opt.text}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clickPictoWord(sIdx, wIdx, text) {
+            const el = document.getElementById(`pw-${sIdx}-${wIdx}`);
+            el.classList.add('speaking');
+            speakText(text);
+            setTimeout(() => el.classList.remove('speaking'), 800);
+            addStars(1);
+        }
+
+        function checkSceneQuiz(el, isCorrect) {
+            if (isCorrect) {
+                el.classList.add('correct');
+                speakText("¡Correcto! Muy bien.");
+                addStars(3);
+            } else {
+                el.classList.add('incorrect');
+                speakText("Inténtalo otra vez.");
+                setTimeout(() => el.classList.remove('incorrect'), 1000);
+            }
+        }
+
+        function initQuizStation() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = quizRetos.map((reto) => `
+                <div class="retos-card">
+                    <h3>${reto.title}</h3>
+                    <div style="font-size: 40px; margin: 5px;">${reto.pictoTarget}</div>
+                    <div style="font-size: 20px; font-weight: bold;" class="up-text">${reto.target}</div>
+                    <button class="audio-btn" style="margin: 8px auto;" onclick="speakText('${reto.target}')">🔊 Escuchar</button>
+                    <div class="quiz-options">
+                        ${reto.options.map(opt => `
+                            <div class="quiz-option" onclick="checkRetoOption(this, ${opt.correct})">
+                                <span>${opt.picto}</span> <span class="up-text">${opt.label || opt.text || ''}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function checkRetoOption(el, isCorrect) {
+            if (isCorrect) {
+                el.classList.add('correct');
+                speakText("¡Excelente acierto!");
+                addStars(3);
+            } else {
+                el.classList.add('incorrect');
+                speakText("Prueba con otra opción.");
+                setTimeout(() => el.classList.remove('incorrect'), 1000);
+            }
+        }
+
+        function initBuilderStation() {
+            document.getElementById('builder-target-prompt').innerHTML = `Arma la frase: <span class="up-text">${builderData.target.join(' ')}</span>`;
+            builderSlotsState = new Array(builderData.target.length).fill(null);
+            renderBuilderUI();
+        }
+
+        function renderBuilderUI() {
+            const slotsEl = document.getElementById('builder-slots');
+            slotsEl.innerHTML = builderSlotsState.map(s => `
+                <div class="slot" style="width: 85px; font-size: 16px;">${s ? s.picto + '<br>' + s.text : ''}</div>
+            `).join('');
+
+            const bankEl = document.getElementById('builder-bank');
+            bankEl.innerHTML = builderData.shuffled.map((item) => `
+                <div class="builder-card" onclick="selectBuilderCard('${item.text}', '${item.picto}')">
+                    <div style="font-size: 30px;">${item.picto}</div>
+                    <div class="up-text" style="font-weight:bold; font-size:13px;">${item.text}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectBuilderCard(text, picto) {
+            const emptyIdx = builderSlotsState.indexOf(null);
+            if (emptyIdx !== -1) {
+                builderSlotsState[emptyIdx] = { text, picto };
+                renderBuilderUI();
+                speakText(text);
+
+                if (!builderSlotsState.includes(null)) {
+                    const formed = builderSlotsState.map(s => s.text).join(' ');
+                    const targetStr = builderData.target.join(' ');
+                    if (formed === targetStr) {
+                        speakText(`¡Felicitaciones! Frase completa: ${targetStr}`);
+                        addStars(10);
+                    } else {
+                        speakText("Orden incorrecto, intenta de nuevo.");
+                        builderSlotsState = new Array(builderData.target.length).fill(null);
+                        renderBuilderUI();
+                    }
+                }
+            }
+        }
+
+        let canvas, ctx;
+        let isDrawing = false;
+        const traceWords = ["ATOMO", "CARGA", "GRUPO", "MODELO", "HABLAR"];
+        let currentTraceWord = "ATOMO";
+
+        function initCanvas() {
+            canvas = document.getElementById('trace-canvas');
+            ctx = canvas.getContext('2d');
+
+            const toolsEl = document.getElementById('canvas-word-buttons');
+            toolsEl.innerHTML = traceWords.map(w => `
+                <button class="word-select-btn up-text" onclick="setTraceWord('${w}')">${w}</button>
+            `).join('');
+
+            drawTraceGuide();
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDraw);
+            canvas.addEventListener('mouseleave', stopDraw);
+
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e.touches[0]); }, {passive: false});
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]); }, {passive: false});
+            canvas.addEventListener('touchend', (e) => { e.preventDefault(); stopDraw(); }, {passive: false});
+        }
+
+        function setTraceWord(w) {
+            currentTraceWord = w;
+            drawTraceGuide();
+            speakText(`Traza la palabra ${w}`);
+        }
+
+        function drawTraceGuide() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.font = "bold 65px 'Comic Sans MS', sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.strokeStyle = "#b0bec5";
+            ctx.lineWidth = 4;
+            ctx.setLineDash([8, 8]);
+            ctx.strokeText(currentTraceWord, canvas.width / 2, canvas.height / 2);
+            ctx.setLineDash([]);
+        }
+
+        function clearCanvas() {
+            drawTraceGuide();
+            speakText("Pizarra borrada.");
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * (canvas.width / rect.width),
+                y: (e.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function startDraw(e) {
+            isDrawing = true;
+            const pos = getMousePos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getMousePos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = "#512da8";
+            ctx.lineWidth = 8;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.stroke();
+        }
+
+        function stopDraw() {
+            isDrawing = false;
+        }
+
+        function speakNotebook() {
+            speakText("Retos para el cuaderno. 1. Pinto las vocales de amarillo. 2. Dibujo un átomo con sus cargas. 3. Realizo una exposición corta frente al grupo. 4. Cuento con palmas y dibujo círculos. 5. Escribo mi nombre empezando por la izquierda.");
+        }
+    </script>
+</body>
+</html>
+```eof

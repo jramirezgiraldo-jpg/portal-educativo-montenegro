@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Biotecnología Aplicada al Campo</title>
+    <style>
+        /* STREAMING_CHUNK: Configurando variables de color y tipografía base */
+        :root {
+            --primary: #00695c; /* Verde azulado biotecnológico */
+            --primary-dark: #004d40;
+            --secondary: #827717; /* Verde oliva agrario */
+            --secondary-dark: #558b2f;
+            --accent: #ef6c00; /* Naranja roya/alerta */
+            --bg-page: #f1f8f6;
+            --bg-card: #ffffff;
+            --text-main: #263238;
+            --text-light: #ffffff;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --border-radius: 12px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* STREAMING_CHUNK: Diseñando el encabezado adaptativo */
+        header {
+            background-color: var(--primary);
+            background-image: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text-light);
+            text-align: center;
+            padding: clamp(1.2rem, 3vw, 2rem) 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border-bottom: 5px solid var(--accent);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            letter-spacing: 0.5px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: rgba(0,0,0,0.2);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        main {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: clamp(1rem, 4vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        /* STREAMING_CHUNK: Estructurando la zona de juego interactiva */
+        #zona-juego {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1rem, 3vw, 2rem);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            touch-action: none;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e0f2f1;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            color: var(--primary-dark);
+            border: 2px solid #b2dfdb;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.3rem, 1.5vw, 1rem);
+        }
+
+        /* STREAMING_CHUNK: Estilizando los botones y cuadrícula del juego */
+        .category-title {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            font-weight: 900;
+            text-align: center;
+            padding: clamp(0.5rem, 2vw, 1rem) 0.2rem;
+            border-radius: 8px;
+            font-size: clamp(0.65rem, 2.5vw, 1rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--secondary-dark);
+            word-break: break-word;
+        }
+
+        .pts-btn {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(1.2rem, 5vw, 2.2rem);
+            font-weight: 900;
+            padding: clamp(1.2rem, 4vw, 2.5rem) 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pts-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--primary-dark);
+        }
+
+        .pts-btn:disabled {
+            background-color: #cfd8dc;
+            color: #90a4ae;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        /* STREAMING_CHUNK: Definiendo la apariencia de los modales responsivos */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-top: 8px solid var(--accent);
+        }
+
+        .modal-header-text {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--secondary);
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-question-text {
+            font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .opt-btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3.5vw, 1.2rem);
+            margin-bottom: 0.8rem;
+            background-color: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opt-btn:hover:not(:disabled) {
+            background-color: #eceff1;
+            border-color: #b0bec5;
+        }
+
+        .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); }
+        .opt-btn.incorrect { background-color: var(--danger); color: white; border-color: var(--danger); }
+
+        .feedback-alert {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+
+        .continue-btn {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #e65100;
+        }
+
+        .continue-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #e65100;
+        }
+
+        .final-mark {
+            font-size: clamp(4rem, 15vw, 6rem);
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* STREAMING_CHUNK: Maquetando la zona de lectura y el taller de repaso */
+        #zona-lectura {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .theory-article h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            border-bottom: 4px solid var(--secondary);
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .theory-article h2:first-child { margin-top: 0; }
+
+        .theory-article h3 {
+            color: var(--secondary-dark);
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            margin-top: 2rem;
+        }
+
+        .theory-article p, .theory-article li {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: #37474f;
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .theory-article ul { padding-left: 1.5rem; }
+
+        .workshop-container {
+            margin-top: 4rem;
+            background-color: #f1f8e9; /* Fondo suave agrario */
+            border: 3px dashed var(--secondary);
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .workshop-container h2 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: none;
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+        }
+
+        .instruction-banner {
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-weight: 900;
+            text-align: center;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .workshop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .workshop-list li {
+            background-color: #ffffff;
+            border-left: 8px solid var(--accent);
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tag-format {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--secondary-dark);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            background-color: #e0f2f1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .question-text {
+            font-size: clamp(1.05rem, 3.5vw, 1.2rem);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Biotecnología Aplicada al Campo</h1>
+        <p>Toca una casilla, lee la pista biotecnológica y selecciona la respuesta correcta.</p>
+    </header>
+
+    <main>
+        <!-- STREAMING_CHUNK: Creando el contenedor de la zona de juego interactiva -->
+        <section id="zona-juego">
+            <div class="stats-panel">
+                <div>Puntuación: <span id="score-counter">0</span></div>
+                <div>Progreso: <span id="progress-counter">0</span>/12</div>
+            </div>
+            <div class="grid-container" id="jeopardy-grid">
+                <!-- Se inyecta dinámicamente mediante JavaScript -->
+            </div>
+        </section>
+
+        <!-- STREAMING_CHUNK: Incluyendo el artículo teórico (Siempre visible) -->
+        <section id="zona-lectura">
+            <article class="theory-article">
+                <h2>Biotecnología Aplicada: Innovación para una Agricultura Sostenible</h2>
+                
+                <p>Históricamente, la agricultura mundial dependió casi exclusivamente de agroquímicos sintéticos (fertilizantes y pesticidas) para combatir plagas y mejorar las cosechas. Sin embargo, el uso prolongado de estas sustancias tóxicas ha dejado una huella profunda: suelos estériles, aguas contaminadas y pérdida de biodiversidad. Hoy en día, la ciencia nos ofrece una ruta más limpia e inteligente: la <strong>Biotecnología Agrícola</strong>, que consiste en utilizar o manipular organismos vivos (o sus componentes) para resolver problemas del campo y crear productos útiles y ecológicos.</p>
+
+                <h2>Los Bioinsumos: Aliados Microscópicos</h2>
+                <p>En el corazón de la biotecnología aplicada están los <strong>bioinsumos</strong>. A diferencia de los químicos fabricados en laboratorios, los bioinsumos son productos de origen biológico formulados a partir de bacterias, hongos, virus, extractos de plantas o compuestos naturales. Se clasifican principalmente en:</p>
+                <ul>
+                    <li><strong>Biofertilizantes:</strong> Microorganismos que, al aplicarse al suelo o la semilla, mejoran la absorción de nutrientes vitales (como el nitrógeno o el fósforo) actuando como un "abono vivo".</li>
+                    <li><strong>Biopesticidas y Biocontroladores:</strong> Organismos vivos que atacan exclusivamente a las plagas o enfermedades de los cultivos, dejando intactas a las especies beneficiosas como las abejas.</li>
+                    <li><strong>Bioestimulantes:</strong> Sustancias naturales que fortalecen a la planta, haciéndola más resistente a sequías o heladas.</li>
+                </ul>
+
+                <h2>La Amenaza Silenciosa: La Roya del Café</h2>
+                <p>En Colombia y el mundo, la caficultura se enfrenta a uno de sus peores enemigos microscópicos: la roya. Causada por el hongo patógeno <em>Hemileia vastatrix</em>, esta enfermedad se manifiesta como un polvo anaranjado en el envés de las hojas del cafeto. Al invadir la hoja, el hongo destruye la capacidad de la planta para hacer fotosíntesis, provocando la caída prematura de las hojas y la pérdida casi total de la cosecha.</p>
+                <p>Tradicionalmente, los caficultores combatían la roya aplicando fungicidas a base de <strong>cobre</strong>. Aunque efectivos a corto plazo, estos metales pesados no se degradan fácilmente, acumulándose año tras año hasta envenenar el suelo y aniquilar los microorganismos beneficiosos de la tierra.</p>
+
+                <h2>Biocontroladores Fúngicos: Hongos contra Hongos</h2>
+                <p>Para sustituir los tóxicos de cobre, la biotecnología emplea una estrategia fascinante de <strong>control biológico</strong>: usar hongos antagonistas para aniquilar al hongo de la roya. Es una guerra biológica donde la naturaleza trabaja a nuestro favor.</p>
+                <p>Un ejemplo sobresaliente es el uso de hongos "hiperparásitos" (un parásito que ataca a otro parásito), como <em>Lecanicillium lecanii</em> o especies del famoso género <em>Trichoderma spp.</em>. Cuando estos biocontroladores se pulverizan sobre el cafetal, sus esporas germinan sobre las manchas de roya. Inmediatamente, el hongo biocontrolador secreta enzimas especiales que disuelven la pared celular de la roya, la envuelve con sus propias hifas (filamentos) y literalmente se alimenta de ella hasta destruirla.</p>
+
+                <h3>Beneficios del Control Biotecnológico</h3>
+                <p>El uso de bioinsumos y biocontroladores marca la transición hacia una <strong>agroecología</strong> verdaderamente sostenible. Las ventajas son innumerables: no dejan residuos tóxicos en el grano de café (mejorando su precio y calidad en mercados internacionales), protegen la salud de los trabajadores agrícolas que ya no respiran venenos, preservan la biodiversidad del suelo y evitan la contaminación de los ríos. La biotecnología nos demuestra que la mejor tecnología agraria es comprender y replicar el equilibrio de la naturaleza.</p>
+            </article>
+
+            <!-- STREAMING_CHUNK: Estructurando el taller de repaso con formatos alternados -->
+            <div class="workshop-container">
+                <h2>Taller de Biotecnología Agrícola</h2>
+                
+                <div class="instruction-banner">
+                    <!-- Icono SVG en línea -->
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>ATENCIÓN: Escribe y resuelve estas 10 actividades en tu cuaderno de biología.</span>
+                </div>
+
+                <ul class="workshop-list">
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">1. Define qué es la biotecnología agrícola y menciona su objetivo principal frente al uso de agroquímicos tradicionales.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Dibujar / Ilustrar</span>
+                        <span class="question-text">2. Dibuja un esquema dividido en dos partes. Lado A: Un fungicida químico tradicional a base de cobre cayendo en la tierra. Lado B: Un biocontrolador fúngico actuando específicamente sobre la hoja de café infectada.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">3. Teniendo en cuenta la fotosíntesis, ¿por qué el hongo de la roya (*Hemileia vastatrix*) representa una amenaza tan destructiva para la economía de una finca cafetera?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Conceptual</span>
+                        <span class="question-text">4. Elabora un mapa conceptual con el título central "Bioinsumos". Saca tres ramas principales (Biofertilizantes, Biopesticidas, Bioestimulantes) y anota la función de cada uno.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">5. ¿Cuál es el mecanismo de acción de los hongos biocontroladores (como *Trichoderma* o *Lecanicillium*) para destruir al hongo patógeno de la roya?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Ilustrar / Cómic</span>
+                        <span class="question-text">6. Diseña una viñeta tipo cómic mostrando el concepto de "Hiperparásito". Dibuja a la roya atacando a la planta de café, y luego al hongo biocontrolador envolviendo y destruyendo a la roya.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico</span>
+                        <span class="question-text">7. Explica: ¿Qué desventajas y graves consecuencias ecológicas a largo plazo tiene el uso continuo de fungicidas a base de metales pesados (como el cobre) en los suelos agrícolas?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Mapa Mental</span>
+                        <span class="question-text">8. Crea un Mapa Mental titulado "Beneficios de la Biotecnología en el Café". Incluye ramificaciones para: ecología del suelo, salud del agricultor, calidad del producto y limpieza del agua.</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Respuesta Directa</span>
+                        <span class="question-text">9. ¿Cuál es la diferencia fundamental entre un "hongo patógeno" (como la roya) y un "hongo antagonista" o biocontrolador?</span>
+                    </li>
+                    <li>
+                        <span class="tag-format">Análisis Crítico / Argumentación</span>
+                        <span class="question-text">10. Escribe un párrafo de 6 líneas argumentando por qué un caficultor debería hacer la transición de químicos tradicionales hacia bioinsumos, basándote en la sostenibilidad ecológica y económica futura.</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- STREAMING_CHUNK: Creando el Modal para visualizar las preguntas interactivas -->
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header-text" id="modal-cat-pts">Categoría - Puntos</div>
+            <div class="modal-question-text" id="modal-q-text">¿Pregunta?</div>
+            <div id="options-area">
+                <!-- Se inyectan opciones vía JS -->
+            </div>
+            <div class="feedback-alert" id="feedback-alert"></div>
+            <button class="continue-btn" id="btn-next">Volver al Tablero</button>
+        </div>
+    </div>
+
+    <!-- STREAMING_CHUNK: Creando el Modal de Calificación Final -->
+    <div class="modal-overlay" id="results-modal">
+        <div class="modal-content" style="border-top-color: var(--success);">
+            <div class="modal-question-text" style="color: var(--primary-dark); margin-bottom: 0.5rem;">¡Evaluación Biotecnológica Completada!</div>
+            <p style="font-size: 1.2rem; color: #546e7a;">Has resuelto todas las pistas de la cuadrícula interactiva.</p>
+            
+            <div style="font-size: 1.4rem; font-weight: bold; margin-top:1rem;">
+                Puntos Ganados: <span id="final-pts-text" style="color: var(--accent);">0</span> / 2400
+            </div>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top:1.5rem;">Tu Calificación Final es:</div>
+            <div class="final-mark" id="final-grade-display">5.0</div>
+            
+            <p style="font-size: 1.1rem; background-color: #e0f2f1; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 2rem; color: #004d40;">
+                <strong>Siguiente Paso:</strong> Cierra esta ventana, lee detenidamente el artículo sobre biotecnología en la zona inferior y resuelve el taller en tu cuaderno.
+            </p>
+            
+            <button class="continue-btn" style="display: block; box-shadow: 0 4px 0 #1b5e20; background-color: var(--success);" onclick="document.getElementById('results-modal').style.display='none'">Cerrar e ir al Taller</button>
+        </div>
+    </div>
+
+    <!-- STREAMING_CHUNK: Agregando la lógica JavaScript para el juego interactivo -->
+    <script>
+        // Estructura de Datos de las Preguntas
+        const gameData = [
+            {
+                category: "Biotecnología",
+                questions: [
+                    { pts: 100, q: "Disciplina que utiliza o manipula organismos vivos (o sus componentes) para resolver problemas y crear productos útiles.", options: ["Geología", "Biotecnología", "Astronomía"], correctIdx: 1 },
+                    { pts: 200, q: "Nombre general que reciben los productos agrícolas (como fertilizantes o pesticidas) fabricados a partir de organismos vivos o naturales.", options: ["Bioinsumos", "Agroquímicos sintéticos", "Minerales pesados"], correctIdx: 0 },
+                    { pts: 300, q: "Tipo de bioinsumo compuesto por microorganismos que mejoran la absorción de nutrientes en las plantas actuando como 'abono vivo'.", options: ["Bioestimulantes", "Biofertilizantes", "Herbicidas"], correctIdx: 1 }
+                ]
+            },
+            {
+                category: "Patógenos",
+                questions: [
+                    { pts: 100, q: "Hongo patógeno devastador que ataca las hojas del cafeto causando manchas anaranjadas y caída prematura.", options: ["Moho gris", "Roya del café", "Marchitez bacteriana"], correctIdx: 1 },
+                    { pts: 200, q: "Nombre científico del temido hongo causante de la roya del café.", options: ["Escherichia coli", "Hemileia vastatrix", "Staphylococcus aureus"], correctIdx: 1 },
+                    { pts: 300, q: "Metal pesado utilizado comúnmente en fungicidas químicos tradicionales que se acumula y envenena el suelo a largo plazo.", options: ["Cobre", "Oro", "Sodio"], correctIdx: 0 }
+                ]
+            },
+            {
+                category: "Biocontroladores",
+                questions: [
+                    { pts: 100, q: "Estrategia que utiliza organismos vivos (como hongos antagonistas o insectos) para aniquilar plagas y enfermedades.", options: ["Fumigación tóxica", "Control biológico", "Poda severa"], correctIdx: 1 },
+                    { pts: 200, q: "Famoso género de hongo antagonista conocido mundialmente por ser un agresivo biocontrolador de otros hongos patógenos.", options: ["Champiñón", "Trichoderma", "Penicillium"], correctIdx: 1 },
+                    { pts: 300, q: "Término biológico para un organismo que parasita a otro parásito (ej. el hongo Lecanicillium atacando a la roya).", options: ["Simbionte mutuo", "Huésped primario", "Hiperparásito"], correctIdx: 2 }
+                ]
+            },
+            {
+                category: "Sostenibilidad",
+                questions: [
+                    { pts: 100, q: "Característica y ventaja principal de los bioinsumos y biocontroladores frente a los pesticidas químicos.", options: ["No dejan residuos tóxicos en el medio ambiente", "Contaminan el agua más rápido", "Dañan permanentemente las hojas"], correctIdx: 0 },
+                    { pts: 200, q: "Beneficio biológico fundamental de reducir el uso de químicos pesados e integrar biocontroladores en los cafetales.", options: ["Protege la biodiversidad y los microorganismos del suelo", "Aumenta la erosión del suelo andino", "Mata a todos los polinizadores como las abejas"], correctIdx: 0 },
+                    { pts: 300, q: "Enfoque agrícola sostenible que combina principios ecológicos con producción, apoyado fuertemente por la biotecnología.", options: ["Industrialización intensiva", "Agroecología", "Monocultivo extractivista"], correctIdx: 1 }
+                ]
+            }
+        ];
+
+        // Variables del Estado del Juego
+        let currentScore = 0;
+        let answeredQuestions = 0;
+        const totalQuestions = 12;
+        const maxScore = 2400; // 4 categorías * (100+200+300)
+        
+        let activeColIdx = -1;
+        let activeRowIdx = -1;
+        let activeBtnElement = null;
+
+        // Referencias de Elementos del DOM
+        const gridContainer = document.getElementById("jeopardy-grid");
+        const scoreDisplay = document.getElementById("score-counter");
+        const progressDisplay = document.getElementById("progress-counter");
+        
+        const qModal = document.getElementById("question-modal");
+        const mCatPts = document.getElementById("modal-cat-pts");
+        const mQuestion = document.getElementById("modal-q-text");
+        const optionsArea = document.getElementById("options-area");
+        const feedbackAlert = document.getElementById("feedback-alert");
+        const btnNext = document.getElementById("btn-next");
+
+        // Función de Inicialización del Tablero
+        function buildGame() {
+            // Renderización de Cabeceras
+            gameData.forEach(col => {
+                const header = document.createElement("div");
+                header.className = "category-title";
+                header.textContent = col.category;
+                gridContainer.appendChild(header);
+            });
+
+            // Renderización de Botones de Puntos por fila (100, 200, 300)
+            for (let row = 0; row < 3; row++) {
+                gameData.forEach((col, colIdx) => {
+                    const btn = document.createElement("button");
+                    btn.className = "pts-btn";
+                    const points = col.questions[row].pts;
+                    btn.textContent = points;
+                    
+                    // Asignación de evento para abrir modal (Optimizado para Touch y Mouse)
+                    btn.addEventListener("click", () => openModal(colIdx, row, btn));
+                    
+                    gridContainer.appendChild(btn);
+                });
+            }
+        }
+
+        // Función para poblar y abrir el Modal de Pregunta
+        function openModal(colIdx, rowIdx, btnElement) {
+            activeColIdx = colIdx;
+            activeRowIdx = rowIdx;
+            activeBtnElement = btnElement;
+
+            const qData = gameData[colIdx].questions[rowIdx];
+            
+            mCatPts.textContent = `${gameData[colIdx].category} | ${qData.pts} Pts`;
+            mQuestion.textContent = qData.q;
+            
+            // Reinicio de estados del modal
+            optionsArea.innerHTML = "";
+            feedbackAlert.style.display = "none";
+            btnNext.style.display = "none";
+
+            // Renderizado de las opciones de respuesta
+            qData.options.forEach((optText, optIdx) => {
+                const optBtn = document.createElement("button");
+                optBtn.className = "opt-btn";
+                optBtn.textContent = optText;
+                optBtn.addEventListener("click", () => handleAnswer(optIdx, optBtn));
+                optionsArea.appendChild(optBtn);
+            });
+
+            qModal.style.display = "flex";
+        }
+
+        // Función para validar la respuesta seleccionada
+        function handleAnswer(selectedIdx, clickedElement) {
+            // Bloqueo de opciones para prevenir clics múltiples accidentales
+            const allOpts = optionsArea.querySelectorAll(".opt-btn");
+            allOpts.forEach(b => b.disabled = true);
+
+            const qData = gameData[activeColIdx].questions[activeRowIdx];
+            const isCorrect = (selectedIdx === qData.correctIdx);
+
+            feedbackAlert.style.display = "block";
+            
+            if (isCorrect) {
+                clickedElement.classList.add("correct");
+                currentScore += qData.pts;
+                scoreDisplay.textContent = currentScore;
+                
+                feedbackAlert.textContent = `¡Respuesta Correcta! Excelente conocimiento aplicado. +${qData.pts} puntos.`;
+                feedbackAlert.style.backgroundColor = "#e8f5e9";
+                feedbackAlert.style.color = "var(--success)";
+                feedbackAlert.style.border = "2px solid #a5d6a7";
+            } else {
+                clickedElement.classList.add("incorrect");
+                allOpts[qData.correctIdx].classList.add("correct"); // Evidenciar la opción válida
+                
+                feedbackAlert.textContent = `Respuesta Incorrecta. La biotecnología correcta está en verde. 0 puntos.`;
+                feedbackAlert.style.backgroundColor = "#ffebee";
+                feedbackAlert.style.color = "var(--danger)";
+                feedbackAlert.style.border = "2px solid #ef9a9a";
+            }
+
+            // Actualización del progreso en la interfaz general
+            answeredQuestions++;
+            progressDisplay.textContent = answeredQuestions;
+            activeBtnElement.disabled = true;
+            activeBtnElement.textContent = "—";
+
+            // Activación del botón para cerrar modal
+            btnNext.style.display = "block";
+        }
+
+        // Función para manejar el flujo continuo del juego
+        btnNext.addEventListener("click", () => {
+            qModal.style.display = "none";
+            
+            // Verificación de conclusión del juego
+            if (answeredQuestions === totalQuestions) {
+                setTimeout(showFinalGrade, 600);
+            }
+        });
+
+        // Función para calcular y mostrar la calificación final
+        function showFinalGrade() {
+            const resultsModal = document.getElementById("results-modal");
+            document.getElementById("final-pts-text").textContent = currentScore;
+
+            // Escala de calificación lineal entre 1.0 y 5.0 (Sistema Educativo Estándar)
+            const percentage = currentScore / maxScore;
+            const computedGrade = (percentage * 4.0) + 1.0;
+            const finalGradeStr = computedGrade.toFixed(1);
+
+            const gradeDisplay = document.getElementById("final-grade-display");
+            gradeDisplay.textContent = finalGradeStr;
+            
+            // Asignación de colores semánticos a la nota
+            if (computedGrade >= 4.0) {
+                gradeDisplay.style.color = "var(--success)";
+            } else if (computedGrade >= 3.0) {
+                gradeDisplay.style.color = "var(--accent)";
+            } else {
+                gradeDisplay.style.color = "var(--danger)";
+            }
+
+            resultsModal.style.display = "flex";
+        }
+
+        // Ejecución segura de la inicialización al estar el DOM listo
+        window.addEventListener("DOMContentLoaded", buildGame);
+    </script>
+</body>
+</html>

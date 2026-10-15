@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ecología de Poblaciones y Ecosistemas Cafeteros</title>
+    <style>
+        :root {
+            --primary: #1b5e20;      /* Green 900 */
+            --primary-light: #e8f5e9;/* Green 50 */
+            --primary-dark: #0f3812;
+            --secondary: #d84315;    /* Deep Orange 800 */
+            --secondary-light: #fbe9e7;
+            --accent: #fbc02d;       /* Amber 700 */
+            --text-main: #212121;
+            --text-light: #ffffff;
+            --bg-body: #f1f8e9;
+            --bg-card: #ffffff;
+            --success: #2e7d32;
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: clamp(10px, 3vw, 20px);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: var(--text-light);
+            padding: clamp(15px, 4vw, 30px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(27, 94, 32, 0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: -30%;
+            right: -5%;
+            width: 200px;
+            height: 200px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1.5'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-5.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-4c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E");
+            background-size: cover;
+            pointer-events: none;
+            transform: rotate(15deg);
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.8rem);
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: var(--primary-light);
+            margin-bottom: 25px;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: clamp(10px, 2vw, 20px);
+            background: rgba(0, 0, 0, 0.25);
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(4px);
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-weight: 700;
+        }
+
+        .stat-icon {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+
+        .stars {
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(251, 192, 45, 0.4);
+        }
+
+        #zona-juego {
+            background: var(--bg-card);
+            padding: clamp(15px, 4vw, 30px);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(27, 94, 32, 0.05);
+            margin-bottom: 40px;
+        }
+
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 12px);
+            margin-bottom: 25px;
+        }
+
+        .word-item {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: 700;
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .word-item.found {
+            background: var(--success);
+            color: white;
+            text-decoration: line-through;
+            transform: scale(0.95);
+            opacity: 0.9;
+        }
+
+        .grid-wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: clamp(1px, 0.5vw, 4px);
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            background: var(--primary-light);
+            border: 6px solid var(--primary);
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            background: var(--bg-card);
+            aspect-ratio: 1; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(12px, 3.5vw, 24px);
+            font-weight: 800;
+            color: var(--primary-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s, transform 0.1s;
+        }
+
+        .cell.selecting {
+            background: var(--secondary);
+            color: white;
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(216, 67, 21, 0.4);
+        }
+
+        .cell.found {
+            background: var(--success);
+            color: white;
+        }
+
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(33, 33, 33, 0.95);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: clamp(30px, 6vw, 50px);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-restart {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-weight: 800;
+            width: 100%;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(216, 67, 21, 0.3);
+        }
+
+        .btn-restart:hover {
+            background: #bf360c;
+            transform: translateY(-2px);
+        }
+
+        #zona-lectura {
+            background: var(--bg-card);
+            padding: clamp(25px, 5vw, 50px);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(27, 94, 32, 0.05);
+        }
+
+        .article-content {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #374151;
+        }
+
+        .article-content h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid var(--primary-light);
+            line-height: 1.2;
+        }
+
+        .article-content h3 {
+            color: var(--secondary);
+            font-size: clamp(1.4rem, 3vw, 1.7rem);
+            margin: 35px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .article-content h3::before {
+            content: "";
+            display: block;
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d84315'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E");
+            background-size: cover;
+        }
+
+        .article-content p {
+            margin-bottom: 18px;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        .article-content ul {
+            margin: 20px 0 25px 35px;
+            background: var(--bg-body);
+            padding: 20px 20px 20px 40px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .article-content li {
+            margin-bottom: 12px;
+        }
+
+        .highlight-box {
+            background: var(--secondary-light);
+            border-left: 6px solid var(--secondary);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-style: italic;
+            font-weight: 600;
+            color: #a3320f;
+        }
+
+        .workshop-section {
+            margin-top: 60px;
+            background: #fafafa;
+            padding: clamp(25px, 5vw, 45px);
+            border-radius: 16px;
+            border: 2px solid #eeeeee;
+        }
+
+        .workshop-section h2 {
+            color: var(--primary);
+            border-bottom: none;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+        }
+
+        .workshop-instruction {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 35px;
+            color: #1b5e20;
+            border: 2px dashed #4caf50;
+            font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-list li {
+            margin-bottom: 25px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border-left: 5px solid var(--primary-light);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+        
+        .activity-list li:hover {
+            transform: translateY(-3px);
+            border-left-color: var(--secondary);
+        }
+
+        @media (min-width: 700px) {
+            .activity-list li {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .activity-type {
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            white-space: nowrap;
+            text-align: center;
+            width: fit-content;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-type.respond { background: #1976d2; } 
+        .activity-type.analysis { background: #d32f2f; } 
+        .activity-type.drawing { background: #7b1fa2; } 
+        .activity-type.map { background: #00796b; }     
+
+        .activity-text {
+            font-size: clamp(1.05rem, 2vw, 1.15rem);
+            color: #424242;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Ecología en Cafetales</h1>
+        <p class="instruction">Encuentra las 10 palabras sobre poblaciones y agroecosistemas cafeteros.</p>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <!-- SVG Reloj -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat-box">
+                <!-- SVG Contador -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                <span id="counter">0 / 10</span>
+            </div>
+            <div class="stat-box">
+                <span id="rating" class="stars">★★★★★</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="words-list" class="words-container">
+                <!-- Palabras inyectadas por JS -->
+            </div>
+            
+            <div class="grid-wrapper">
+                <div id="grid" class="letter-grid">
+                    <!-- Cuadrícula inyectada por JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>La Vida en el Cafetal: Dinámica de Poblaciones y Agroecosistemas</h2>
+                
+                <p>Cuando observamos una hermosa finca cafetera en las montañas de nuestra región, solemos ver simplemente arbustos verdes repletos de frutos rojos. Sin embargo, desde una perspectiva ecológica, un cultivo de café no es solo una plantación agrícola; es un complejo <strong>agroecosistema</strong> dinámico. En este espacio, miles de organismos interactúan permanentemente, creando redes de vida donde la ecología de poblaciones juega un papel determinante para la producción agrícola y la conservación ambiental.</p>
+
+                <h3>¿Qué es una Población y Cómo se Dinamiza?</h3>
+                <p>En ecología, una <strong>población</strong> se define como el conjunto de individuos de una misma especie que habitan en un área geográfica determinada y en un tiempo específico (por ejemplo, todos los arbustos de café de una hectárea, o la población de aves insectívoras que anidan allí). Estas poblaciones no son estáticas; cambian constantemente de tamaño debido a la natalidad, la mortalidad, la inmigración y la emigración.</p>
+                
+                <p>El tamaño máximo que una población puede alcanzar en un entorno determinado, considerando los recursos disponibles como agua, espacio y nutrientes, se conoce como <strong>capacidad</strong> de carga. Cuando los recursos son abundantes, las poblaciones crecen rápidamente; pero al escasear, el crecimiento se estabiliza gracias a la resistencia ambiental.</p>
+
+                <h3>Interacciones Ecológicas en el Cafetal</h3>
+                <p>Dentro del agroecosistema cafetero, las poblaciones de distintas especies establecen relaciones complejas que regulan la vida natural:</p>
+                
+                <ul>
+                    <li><strong>Mutualismo:</strong> Relaciones donde ambas especies se benefician. Un ejemplo clásico son las abejas y otros insectos polinizadores que visitan las flores blancas del café; las abejas obtienen néctar y alimento, mientras garantizan que la flor sea fecundada para convertirse en un grano de café de alta calidad.</li>
+                    <li><strong>Competencia:</strong> Se presenta cuando dos especies o individuos luchan por los mismos recursos limitados, como cuando las hierbas arvenses compiten directamente con los arbustos de café por los nutrientes del suelo y la luz solar.</li>
+                    <li><strong>Depredación y Parasitismo:</strong> Mecanismos naturales donde un organismo se alimenta de otro. Aquí es donde entra en juego el control biológico: insectos benéficos, avispas parasitoides y aves devoran insectos fitófagos, manteniendo el equilibrio del ecosistema.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    En la naturaleza, un ecosistema diverso es un ecosistema resiliente. Los cafetales tradicionales bajo sombra, que combinan árboles nativos, plátanos y aves, demuestran que la biodiversidad ayuda a mantener a raya a las plagas de manera natural.
+                </div>
+
+                <h3>El Desafío de la Broca del Café</h3>
+                <p>Sin embargo, el equilibrio ecológico a veces se altera, provocando la proliferación descontrolada de ciertas poblaciones perjudiciales. El ejemplo más crítico en la caficultura es la <strong>broca</strong> del café (<em>Hypothenemus hampei</em>), un diminuto escarabajo originario de África que se ha convertido en la plaga más temida de los cafetales mundiales.</p>
+                
+                <p>La hembra de la broca perfora el fruto del café para depositar sus huevos en el interior. Las larvas se alimentan de la almendra (el grano comercial), destruyendo su calidad física, reduciendo el peso de la cosecha y causando pérdidas económicas devastadoras a los caficultores. Estudiar la ecología de la broca —sus ciclos reproductivos, el impacto de la temperatura y su relación con la humedad— es vital para diseñar estrategias de <strong>manejo</strong> integrado.</p>
+
+                <h3>Estrategias de Manejo Integrado y Sostenibilidad</h3>
+                <p>Combatir plagas como la broca utilizando únicamente productos químicos agresivos suele ser contraproducente, ya que destruye a los enemigos naturales y genera resistencia en los insectos. Por ello, la agronomía moderna aplica principios ecológicos estrictos:</p>
+                
+                <ul>
+                    <li><strong>Monitoreo y Coeneo:</strong> Consiste en la recolección manual y rigurosa de todos los frutos maduros y secos que quedan en el arbusto tras la cosecha principal (granos "rebusques"). Esto elimina el refugio y el alimento donde la broca sobrevive entre cosechas, rompiendo su ciclo poblacional.</li>
+                    <li><strong>Control Biológico:</strong> Introducción o conservación de poblaciones de hongos entomopatógenos (como <em>Beauveria bassiana</em>) o pequeñas avispas parasitoides que atacan específicamente a la broca en sus diferentes fases de desarrollo, controlando su población de forma inocua para el medio ambiente.</li>
+                </ul>
+
+                <p>Comprender la ecología de los agroecosistemas cafeteros nos enseña que la agricultura y la conservación no son enemigas; al contrario, trabajar en armonía con las leyes de la naturaleza es la única garantía para asegurar una producción próspera y sostenible para las futuras generaciones.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h2>Taller de Análisis Ecológico</h2>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Lee atentamente el texto científico superior. Luego, escribe y resuelve las siguientes 10 actividades en tu cuaderno de agronomía o biología.
+                </div>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>1.</strong> Define con tus propias palabras qué es un "agroecosistema" y explica por qué un cultivo de café no se considera un medio natural aislado.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>2.</strong> Basándote en el texto, define qué es una "población" ecológica y menciona dos factores naturales que pueden modificar su tamaño en una finca cafetera.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Dibujar</span>
+                        <div class="activity-text"><strong>3.</strong> Dibuja un esquema sencillo que represente una interacción de "Mutualismo" en el cafetal, ilustrando a una abeja polinizando una flor de café y explicando cómo se benefician ambos.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Conceptual</span>
+                        <div class="activity-text"><strong>4.</strong> Elabora un mapa conceptual jerárquico que conecte las interacciones ecológicas mencionadas en la lectura: Mutualismo, Competencia y Depredación/Parasitismo.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>5.</strong> Según la lectura, ¿qué es la "capacidad de carga" de un entorno y qué ocurre cuando los recursos de la naturaleza empiezan a escasear para una población?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>6.</strong> Analiza el impacto de la "broca" del café. Explica por qué este diminuto escarabajo causa tanto daño económico a los caficultores en sus cosechas.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Ilustrar</span>
+                        <div class="activity-text"><strong>7.</strong> Ilustra de manera creativa el concepto de "Control Biológico". Dibuja al hongo <em>Beauveria bassiana</em> o a una avispa parasitoide controlando de forma natural a una broca dentro de un grano de café.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Mental</span>
+                        <div class="activity-text"><strong>8.</strong> Diseña un mapa mental sobre el "Manejo Integrado de Plagas (MIP) en el Cafetal". Incluye ramas principales como el Monitoreo, el Coeneo y el Control Biológico.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>9.</strong> ¿En qué consiste la técnica del "coeneo" y por qué es una estrategia ecológica tan efectiva para romper el ciclo de vida de la broca entre cosechas?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>10.</strong> Piensa críticamente: Si un agricultor decide eliminar todos los árboles de sombra, las aves y la vegetación nativa de su finca para sembrar café a pleno sol, ¿cómo afectaría esta pérdida de biodiversidad al control natural de plagas? Justifica tu respuesta.</div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Modal de Victoria -->
+<div id="win-modal">
+    <div class="modal-content">
+        <!-- SVG Hoja de Café / Ecosistema -->
+        <svg style="width: 90px; height: 90px; margin: 0 auto 15px auto; display: block; fill: var(--primary);" viewBox="0 0 24 24">
+            <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3C8.5 20.5 10 21 12 21c5 0 9-4 9-9 0-2-.5-3.5-1.3-4.7l2.3-1-.66-1.89C19.27 6.4 18.25 7.2 17 8zM12 19c-1.5 0-3-.4-4.2-1.2l.9-2.1c1 .5 2.1.8 3.3.8 3.3 0 6-2.7 6-6 0-1.2-.3-2.3-.8-3.3l2.1-.9C20 9.2 20 10.6 20 12c0 4.4-3.6 8-8 8z"/>
+        </svg>
+        <h2 style="color: var(--primary-dark); font-size: 2.2rem; margin-bottom: 15px;">¡Ecosistema Balanceado!</h2>
+        <p style="font-size: 1.25rem; margin-bottom: 25px; color: #555;">Has encontrado todas las claves ecológicas del cafetal.</p>
+        <div style="background: var(--bg-body); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="font-size: 1.15rem; margin-bottom: 8px;"><strong>Tiempo de Estudio:</strong> <span id="final-time" style="color: var(--secondary); font-weight: 800;"></span></p>
+            <p style="font-size: 1.15rem;"><strong>Calificación Ecológica:</strong> <span id="final-stars" class="stars"></span></p>
+        </div>
+        <button class="btn-restart" onclick="initGame()">Explorar Nuevo Agroecosistema</button>
+    </div>
+</div>
+
+<script>
+    /* Configuración: Exactamente 10 palabras sobre Ecología y Cafetales normalizadas */
+    const RAW_WORDS = [
+        "AGROECOSISTEMA", 
+        "POBLACION", 
+        "BROCA", 
+        "MUTUALISMO", 
+        "COMPETENCIA", 
+        "DEPREDACION", 
+        "BIODIVERSIDAD", 
+        "MANEJO", 
+        "ENERGIA", 
+        "CAPACIDAD"
+    ];
+    
+    const GRID_SIZE = 15; // Grid amplio de 15x15 obligatorio
+    const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+    
+    // Variables de Estado del Juego
+    let wordsToFind = [];
+    let foundWords = [];
+    let grid = [];
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    
+    // Variables de Interacción Táctil y Ratón
+    let isDragging = false;
+    let startRow = -1;
+    let startCol = -1;
+    let currentPath = []; // Elementos DOM seleccionados
+
+    function normalizeWords(words) {
+        return words.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    }
+
+    function initGame() {
+        wordsToFind = normalizeWords(RAW_WORDS);
+        foundWords = [];
+        secondsElapsed = 0;
+        
+        if(timerInterval) clearInterval(timerInterval);
+        
+        document.getElementById("win-modal").style.display = "none";
+        document.getElementById("timer").textContent = "00:00";
+        document.getElementById("counter").textContent = `0 / ${wordsToFind.length}`;
+        updateRating();
+
+        renderWordsList();
+        generateBoard();
+        
+        // Iniciar Cronómetro
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById("timer").textContent = `${m}:${s}`;
+            updateRating();
+        }, 1000);
+    }
+
+    /* REQUISITO CRÍTICO: Ciclo exhaustivo para garantizar posición de TODAS las 10 palabras */
+    function generateBoard() {
+        let boardPlaced = false;
+        
+        while (!boardPlaced) {
+            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
+            boardPlaced = true;
+
+            // Ordenar por longitud descendente mejora radicalmente la tasa de éxito al empaquetar
+            const sortedWords = [...wordsToFind].sort((a, b) => b.length - a.length);
+
+            for (const word of sortedWords) {
+                let placed = false;
+                let attempts = 0;
+                const maxAttempts = 800; // Límite alto para búsqueda profunda
+
+                while (!placed && attempts < maxAttempts) {
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * GRID_SIZE);
+                    const col = Math.floor(Math.random() * GRID_SIZE);
+
+                    if (canPlaceWord(word, row, col, direction)) {
+                        placeWord(word, row, col, direction);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+
+                if (!placed) {
+                    // Si falla una sola palabra, se invalida el tablero completo y se reinicia
+                    boardPlaced = false;
+                    break; 
+                }
+            }
+        }
+
+        // Rellenar vacíos con letras aleatorias
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+                }
+            }
+        }
+
+        renderGrid();
+    }
+
+    function canPlaceWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            const nr = r + i * dr[dir];
+            const nc = c + i * dc[dir];
+
+            if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+            if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+        }
+        return true;
+    }
+
+    function placeWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            grid[r + i * dr[dir]][c + i * dc[dir]] = word[i];
+        }
+    }
+
+    function renderWordsList() {
+        const container = document.getElementById("words-list");
+        container.innerHTML = "";
+        wordsToFind.forEach(word => {
+            const div = document.createElement("div");
+            div.className = "word-item";
+            div.id = `word-${word}`;
+            div.textContent = word;
+            container.appendChild(div);
+        });
+    }
+
+    function renderGrid() {
+        const container = document.getElementById("grid");
+        container.innerHTML = "";
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.textContent = grid[r][c];
+                container.appendChild(cell);
+            }
+        }
+        
+        setupPointerInteractions();
+    }
+
+    function updateRating() {
+        let stars = 5;
+        if (secondsElapsed > 300) stars = 1;      // > 5 mins
+        else if (secondsElapsed > 240) stars = 2; // > 4 mins
+        else if (secondsElapsed > 180) stars = 3; // > 3 mins
+        else if (secondsElapsed > 120) stars = 4; // > 2 mins
+
+        const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+        document.getElementById("rating").textContent = starStr;
+    }
+
+    function setupPointerInteractions() {
+        const gridEl = document.getElementById("grid");
+        
+        // CRÍTICO PARA MÓVILES: Prevenir scroll nativo al arrastrar
+        gridEl.addEventListener('touchstart', (e) => {
+            if(e.target.classList.contains('cell')) {
+                e.preventDefault(); 
+            }
+        }, { passive: false });
+
+        gridEl.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("pointermove", handlePointerMove); 
+        document.addEventListener("pointerup", handlePointerUp);
+    }
+
+    function handlePointerDown(e) {
+        if (e.target.classList.contains('cell')) {
+            isDragging = true;
+            startRow = parseInt(e.target.dataset.row);
+            startCol = parseInt(e.target.dataset.col);
+            
+            clearSelection();
+            e.target.classList.add('selecting');
+            currentPath = [e.target];
+        }
+    }
+
+    function handlePointerMove(e) {
+        if (!isDragging) return;
+        
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        
+        if (target && target.classList.contains('cell')) {
+            const currentRow = parseInt(target.dataset.row);
+            const currentCol = parseInt(target.dataset.col);
+            
+            updateSelectionLine(startRow, startCol, currentRow, currentCol);
+        }
+    }
+
+    function handlePointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        validateFoundWord();
+        clearSelection();
+    }
+
+    function updateSelectionLine(r1, c1, r2, c2) {
+        const dr = r2 - r1;
+        const dc = c2 - c1;
+        
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+            return; 
+        }
+
+        clearSelection();
+        currentPath = [];
+
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+        for (let i = 0; i <= steps; i++) {
+            const currR = r1 + i * stepR;
+            const currC = c1 + i * stepC;
+            const cell = document.querySelector(`.cell[data-row="${currR}"][data-col="${currC}"]`);
+            if (cell) {
+                cell.classList.add('selecting');
+                currentPath.push(cell);
+            }
+        }
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.selecting').forEach(el => el.classList.remove('selecting'));
+    }
+
+    function validateFoundWord() {
+        if (currentPath.length < 2) return;
+
+        let selectedWord = currentPath.map(cell => cell.textContent).join('');
+        let selectedWordReverse = currentPath.map(cell => cell.textContent).reverse().join('');
+        
+        let found = false;
+        let wordMatched = "";
+
+        if (wordsToFind.includes(selectedWord) && !foundWords.includes(selectedWord)) {
+            found = true;
+            wordMatched = selectedWord;
+        } else if (wordsToFind.includes(selectedWordReverse) && !foundWords.includes(selectedWordReverse)) {
+            found = true;
+            wordMatched = selectedWordReverse;
+        }
+
+        if (found) {
+            foundWords.push(wordMatched);
+            
+            currentPath.forEach(cell => {
+                cell.classList.add('found');
+                cell.style.transform = 'scale(1.15)';
+                setTimeout(() => cell.style.transform = 'scale(1)', 150);
+            });
+
+            document.getElementById(`word-${wordMatched}`).classList.add('found');
+            document.getElementById("counter").textContent = `${foundWords.length} / ${wordsToFind.length}`;
+
+            if (foundWords.length === wordsToFind.length) {
+                clearInterval(timerInterval);
+                setTimeout(showWinModal, 600);
+            }
+        }
+    }
+
+    function showWinModal() {
+        document.getElementById("final-time").textContent = document.getElementById("timer").textContent;
+        document.getElementById("final-stars").textContent = document.getElementById("rating").textContent;
+        document.getElementById("win-modal").style.display = "flex";
+    }
+
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>

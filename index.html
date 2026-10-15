@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="Portal Educativo Interactivo - Actividades Juan Felipe Ramírez Giraldo, Instituto Montenegro. Acceso modular por asignaturas a 101 actividades pedagógicas, juegos, OVAs y laboratorios virtuales.">
+    <meta name="description" content="Portal Educativo Interactivo - Actividades Juan Felipe Ramírez Giraldo, Instituto Montenegro. Acceso modular por asignaturas a 124 actividades pedagógicas, juegos, OVAs y laboratorios virtuales.">
     <meta name="theme-color" content="#090d16">
     <title>Actividades Juan Felipe Ramírez Giraldo | Instituto Montenegro</title>
     
@@ -1655,13 +1655,13 @@
                     </p>
                 </div>
                 <div class="hero-actions">
-                    <a href="actividades_completas.zip" download="actividades_instituto_montenegro.zip" class="btn-hero-zip" title="Descargar las 101 actividades en un solo paquete comprimido">
+                    <a href="actividades_completas.zip" download="actividades_instituto_montenegro.zip" class="btn-hero-zip" title="Descargar las 124 actividades en un solo paquete comprimido">
                         <svg viewBox="0 0 24 24">
                             <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
                             <path d="M12 12v9"></path>
                             <path d="m8 17 4 4 4-4"></path>
                         </svg>
-                        <span>Descargar ZIP (~1.1 MB)</span>
+                        <span>Descargar ZIP (~1.4 MB)</span>
                     </a>
                     <button class="btn-hero-all" id="btn-show-all-toggle">
                         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2.2">
@@ -1670,7 +1670,7 @@
                             <rect x="14" y="14" width="7" height="7"></rect>
                             <rect x="3" y="14" width="7" height="7"></rect>
                         </svg>
-                        <span id="btn-all-label">Ver Todas (101)</span>
+                        <span id="btn-all-label">Ver Todas (124)</span>
                     </button>
                 </div>
             </div>
@@ -1868,7 +1868,7 @@
 
             const activities = window.ACTIVIDADES_DATA || [];
 
-            // Definición completa de las 10 asignaturas y ciclos (con Ciclo IV y Ciclo VI destacados)
+            // Definición completa de las 12 asignaturas y ciclos (con Ciclo IV y Ciclo VI destacados)
             const SUBJECTS = [
                 {
                     key: 'fisica-6',
@@ -1879,6 +1879,16 @@
                     iconBg: 'rgba(37, 99, 235, 0.15)',
                     topics: 'Exploración atómica, electrización por frotamiento, ley de cargas, conductores vs aislantes y electroscopio.',
                     iconSvg: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>`
+                },
+                {
+                    key: 'fisica-6-adaptaciones',
+                    name: 'Física 6° (Adaptaciones)',
+                    subtitle: 'Inclusión: Mis Primeras Palabras en Física',
+                    grade: 'Grado 6° (Inclusión)',
+                    color: '#0891b2',
+                    iconBg: 'rgba(8, 145, 178, 0.15)',
+                    topics: 'Vocabulario esencial y comprensión paso a paso: fenómenos cotidianos de estática, el átomo y la materia, frotamiento, atracción, conductores y electroscopio.',
+                    iconSvg: `<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>`
                 },
                 {
                     key: 'fisica-7',
@@ -1903,11 +1913,11 @@
                 {
                     key: 'ciclo-vi',
                     name: 'Nocturno - Ciclo VI',
-                    subtitle: 'Física y Química Orgánica',
+                    subtitle: 'Biología, Física y Química Orgánica Integradas',
                     grade: 'CLEI VI (Grados 10° - 11°)',
                     color: '#4f46e5',
                     iconBg: 'rgba(79, 70, 229, 0.15)',
-                    topics: 'Física (1ra ley de Newton, ondas y luz, acústica agrícola, escape room de óptica) y Química (química del carbono, hidrocarburos, biomoléculas y derivados del café).',
+                    topics: 'Biología (ecología de poblaciones cafeteras, redes tróficas, ciclos de suelos, biodiversidad, fotosíntesis, fermentación y biotecnología), Física (1ra ley de Newton, ondas y luz, acústica agrícola, escape room de óptica) y Química (química del carbono, hidrocarburos, biomoléculas y café).',
                     iconSvg: `<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>`
                 },
                 {
@@ -1919,6 +1929,16 @@
                     iconBg: 'rgba(22, 163, 74, 0.15)',
                     topics: 'Ecosistemas terrestres y acuáticos, adaptaciones de seres vivos, factores bióticos y abióticos, niveles tróficos, redes tróficas cafeteras y pirámides ecológicas.',
                     iconSvg: `<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>`
+                },
+                {
+                    key: 'ciclo-ii-adaptaciones',
+                    name: 'Ciclo II (Adaptaciones)',
+                    subtitle: 'Inclusión: Mis Primeras Palabras en Biología',
+                    grade: 'CLEI II (Inclusión)',
+                    color: '#15803d',
+                    iconBg: 'rgba(21, 128, 61, 0.15)',
+                    topics: 'Vocabulario pedagógico accesible: tipos de ecosistemas, adaptaciones biológicas, factores bióticos y abióticos, cadenas tróficas, redes cafeteras y flujo de energía.',
+                    iconSvg: `<path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle>`
                 },
                 {
                     key: 'ciclo-iii',
@@ -2038,8 +2058,19 @@
                 },
                 'ciclo-vi': {
                     title: 'Carpetas Disciplinares de Ciclo VI',
-                    subtitle: 'Este ciclo integra dos campos de la ciencia contemporánea. Selecciona un cajón disciplinar:',
+                    subtitle: 'Este ciclo integra tres asignaturas fundamentales. Explora los cajones independientes para acceder a sus actividades:',
                     folders: [
+                        {
+                            key: 'Biología',
+                            name: 'Biología',
+                            count: 9,
+                            color: '#10b981',
+                            rgb: '16, 185, 129',
+                            iconBg: 'rgba(16, 185, 129, 0.15)',
+                            iconSvg: `<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>`,
+                            topics: 'Ecología de poblaciones cafeteras, redes tróficas y flujo de energía, ciclos biogeoquímicos de suelos, biodiversidad, fotosíntesis, fermentación y biotecnología aplicada.',
+                            tags: ['Ecosistemas Cafeteros', 'Redes Tróficas', 'Suelos', 'Biodiversidad', 'Biotecnología']
+                        },
                         {
                             key: 'Física',
                             name: 'Física',
@@ -2310,7 +2341,7 @@
                         // VISTA GENERAL: CAJONES DE MATERIAS Y SECCIONES SEPARADAS
                         let cardsHtml = '';
                         subFolderConfig.folders.forEach((f, idx) => {
-                            const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && a.subArea.toLowerCase().includes(f.key.toLowerCase()));
+                            const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && normalizeStr(a.subArea).includes(normalizeStr(f.key)));
                             const matchCount = fActs.filter(filterItem).length;
                             const tagsHtml = f.tags.map(t => `<span class="folder-drawer-tag">${t}</span>`).join('');
 
@@ -2357,7 +2388,7 @@
                         // Renderizar las actividades divididas en sus respectivos cajones
                         let totalMatches = 0;
                         subFolderConfig.folders.forEach(f => {
-                            const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && a.subArea.toLowerCase().includes(f.key.toLowerCase()));
+                            const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && normalizeStr(a.subArea).includes(normalizeStr(f.key)));
                             const filteredActs = fActs.filter(filterItem);
                             totalMatches += filteredActs.length;
 
@@ -2406,7 +2437,7 @@
 
                     } else {
                         // VISTA DE CARPETA ÚNICA ABIERTA
-                        const activeFolderObj = subFolderConfig.folders.find(f => f.key.toLowerCase() === currentSubFolder.toLowerCase()) || subFolderConfig.folders[0];
+                        const activeFolderObj = subFolderConfig.folders.find(f => normalizeStr(f.key) === normalizeStr(currentSubFolder)) || subFolderConfig.folders[0];
                         
                         let pillsHtml = `
                             <button class="folder-pill-btn" onclick="window.setSubFolder(null)">
@@ -2416,10 +2447,11 @@
                         `;
 
                         subFolderConfig.folders.forEach(f => {
-                            const isSelected = f.key.toLowerCase() === activeFolderObj.key.toLowerCase();
+                            const isSelected = normalizeStr(f.key) === normalizeStr(activeFolderObj.key);
+                            const fActsCount = activities.filter(a => a.categoryKey === currentSubjectKey && normalizeStr(a.subArea).includes(normalizeStr(f.key))).length;
                             pillsHtml += `
                                 <button class="folder-pill-btn ${isSelected ? 'active' : ''}" style="--pill-color: ${f.color};" onclick="window.setSubFolder('${f.key}')">
-                                    <span>${f.name} (${f.count})</span>
+                                    <span>${f.name} (${fActsCount})</span>
                                 </button>
                             `;
                         });
@@ -2445,7 +2477,7 @@
                             </div>
                         `;
 
-                        const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && a.subArea.toLowerCase().includes(activeFolderObj.key.toLowerCase()));
+                        const fActs = activities.filter(a => a.categoryKey === currentSubjectKey && normalizeStr(a.subArea).includes(normalizeStr(activeFolderObj.key)));
                         const filteredActs = fActs.filter(filterItem);
 
                         if (filteredActs.length === 0) {

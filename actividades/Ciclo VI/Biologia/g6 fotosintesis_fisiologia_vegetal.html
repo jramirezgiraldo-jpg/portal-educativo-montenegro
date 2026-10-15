@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biología: Fotosíntesis y Fisiología Vegetal en el Cafeto</title>
+    <style>
+        :root {
+            --bg-game: #0f172a;
+            --text-game: #f8fafc;
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #10b981;
+            --success: #10b981;
+            --danger: #ef4444;
+            --chip-bg: #1e293b;
+            --chip-border: #334155;
+            
+            --bg-reading: #ffffff;
+            --bg-reading-alt: #f1f5f9;
+            --text-reading: #334155;
+            --text-heading: #0f172a;
+            --accent-reading: #059669;
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-game);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+        }
+
+        #zona-juego {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: clamp(15px, 4vw, 30px);
+            background-color: var(--bg-game);
+            color: var(--text-game);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .game-header h1 {
+            font-size: clamp(1.4rem, 5vw, 2.2rem);
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions {
+            font-size: clamp(0.9rem, 3.2vw, 1.05rem);
+            color: #cbd5e1;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--chip-bg);
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            font-weight: bold;
+            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+            border: 1px solid var(--chip-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        #score-display { color: var(--primary); }
+        #errors-display { color: var(--danger); }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(8px, 2vw, 12px);
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            align-content: flex-start;
+        }
+
+        .chip {
+            background-color: var(--chip-bg);
+            border: 2px solid var(--chip-border);
+            border-radius: var(--radius-md);
+            padding: clamp(10px, 3vw, 14px);
+            font-size: clamp(0.8rem, 2.8vw, 0.98rem);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            flex: 1 1 calc(33% - 12px);
+            min-width: 140px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        .chip.selected {
+            border-color: var(--primary);
+            background-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            transform: translateY(-3px);
+            color: #fff;
+        }
+
+        .chip.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: auto;
+            padding-bottom: 15px;
+        }
+
+        .category-btn {
+            background-color: var(--chip-bg);
+            border: 2px dashed #475569;
+            border-radius: var(--radius-lg);
+            padding: clamp(10px, 2.5vw, 14px);
+            flex: 1 1 30%;
+            min-width: 110px;
+            color: var(--text-game);
+            font-weight: bold;
+            font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-btn svg {
+            width: clamp(26px, 6vw, 38px);
+            height: clamp(26px, 6vw, 38px);
+            color: var(--secondary);
+        }
+
+        .category-btn:active {
+            background-color: #334155;
+            transform: scale(0.98);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        
+        @keyframes flashRed {
+            0% { background-color: var(--danger); border-color: white; color: white;}
+            100% { background-color: var(--chip-bg); border-color: var(--chip-border); }
+        }
+
+        @keyframes flashGreenBtn {
+            0% { background-color: var(--success); border-color: white; color: white; transform: scale(1.05); }
+            100% { background-color: var(--chip-bg); border-color: #475569; }
+        }
+
+        .error-anim {
+            animation: shake 0.4s ease, flashRed 0.5s ease;
+        }
+
+        .success-btn-anim {
+            animation: flashGreenBtn 0.5s ease;
+        }
+
+        .end-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.96);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .end-screen.visible { display: flex; }
+
+        .end-screen h2 {
+            font-size: clamp(1.8rem, 6vw, 3rem);
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+
+        .end-screen p { margin-bottom: 15px; font-size: clamp(1.05rem, 3.5vw, 1.25rem); color: #f8fafc; }
+
+        .final-grade {
+            font-size: clamp(4rem, 12vw, 6.5rem);
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+            margin: 15px 0;
+        }
+
+        .scroll-down-hint {
+            margin-top: 30px;
+            color: #94a3b8;
+            animation: bounce 2s infinite;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-12px); }
+            60% { transform: translateY(-6px); }
+        }
+
+        #zona-lectura {
+            width: 100%;
+            background-color: var(--bg-reading);
+            color: var(--text-reading);
+            touch-action: auto;
+            user-select: text;
+            -webkit-user-select: text;
+            border-top: 6px solid var(--accent-reading);
+        }
+
+        .article-container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .article-container h2 {
+            color: var(--text-heading);
+            font-size: clamp(1.7rem, 5vw, 2.4rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            border-bottom: 4px solid var(--accent-reading);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-container h3 {
+            color: var(--accent-reading);
+            font-size: clamp(1.3rem, 4vw, 1.7rem);
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .article-container p {
+            font-size: clamp(1.02rem, 3.2vw, 1.12rem);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .article-container ul, .article-container ol {
+            margin-left: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-container li {
+            font-size: clamp(1.02rem, 3.2vw, 1.12rem);
+            line-height: 1.7;
+            margin-bottom: 0.8rem;
+        }
+
+        .highlight-box {
+            background-color: var(--bg-reading-alt);
+            border-left: 5px solid var(--accent-reading);
+            padding: 1.5rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 2.5rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        }
+
+        .highlight-box strong { color: var(--accent-reading); }
+
+        .taller-section {
+            background-color: var(--bg-reading-alt);
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border-radius: var(--radius-lg);
+            margin-top: 4rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border-top: 5px solid var(--primary);
+        }
+
+        .taller-section h3 {
+            color: var(--text-heading);
+            text-align: center;
+            margin-top: 0;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+        }
+
+        .instruction-alert {
+            background-color: #fff;
+            border: 2px dashed var(--accent-reading);
+            color: var(--text-heading);
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 2.5rem;
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            box-shadow: 0 4px 6px rgba(5, 150, 105, 0.1);
+        }
+
+        .taller-list {
+            list-style: none;
+            counter-reset: taller-counter;
+            margin-left: 0;
+        }
+
+        .taller-list li {
+            position: relative;
+            background: #fff;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem 1.5rem 1.5rem 4.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 4px solid var(--accent-reading);
+            font-size: clamp(1rem, 3.2vw, 1.1rem);
+            line-height: 1.6;
+        }
+
+        .taller-list li::before {
+            counter-increment: taller-counter;
+            content: counter(taller-counter);
+            position: absolute;
+            left: 15px;
+            top: 1.5rem;
+            background-color: var(--accent-reading);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 5px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            border: 1px solid #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- ZONA INTERACTIVA (Juego Tap & Sort) -->
+        <section id="zona-juego">
+            <div class="game-header">
+                <h1>Clasificador de Fisiología y Fotosíntesis</h1>
+                <div class="instructions">
+                    💡 <strong>Guía:</strong> Toca un elemento de la lista central (se resaltará en azul) y luego toca el contenedor de categoría correcto abajo.
+                </div>
+            </div>
+
+            <div class="hud">
+                <div id="score-display">Puntuación: 0 / 12</div>
+                <div id="errors-display">Errores: 0</div>
+            </div>
+
+            <div class="chips-container" id="chips-container">
+                <!-- Generado dinámicamente -->
+            </div>
+
+            <div class="categories-container">
+                <!-- 1. FASE LUMINICA -->
+                <div class="category-btn" onclick="checkCategory('FASE LUMINICA')" id="btn-FASE LUMINICA">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    FASE LUMINICA
+                </div>
+                <!-- 2. FASE OSCURA -->
+                <div class="category-btn" onclick="checkCategory('FASE OSCURA')" id="btn-FASE OSCURA">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    FASE OSCURA
+                </div>
+                <!-- 3. FISIOLOGIA DEL CAFETO -->
+                <div class="category-btn" onclick="checkCategory('FISIOLOGIA DEL CAFETO')" id="btn-FISIOLOGIA DEL CAFETO">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    FISIOLOGIA DEL CAFETO
+                </div>
+            </div>
+
+            <!-- Pantalla Final del Juego -->
+            <div class="end-screen" id="end-screen">
+                <h2>¡Proceso Fotosintético Completado!</h2>
+                <p>Has clasificado exitosamente todos los conceptos de fotosíntesis y fisiología del cafeto.</p>
+                <p>Tu calificación final es:</p>
+                <div class="final-grade" id="final-grade">5.0</div>
+                <div class="scroll-down-hint">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <p>Desliza hacia abajo para leer la teoría completa y desarrollar el taller</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ZONA DE LECTURA Y TALLER (SIEMPRE VISIBLE) -->
+        <section id="zona-lectura">
+            <div class="article-container">
+                <h2>Fotosíntesis y Fisiología Vegetal: Mecanismos en Plantas C3 y Dinámica del Cafeto</h2>
+                
+                <p>La fotosíntesis es el proceso bioquímico más importante de la biosfera. A través de este mecanismo, los organismos autótrofos como las plantas convierten la energía lumínica del sol en energía química almacenable en moléculas orgánicas, sirviendo como base alimentaria para prácticamente todas las formas de vida en el planeta. En las plantas terrestres, este complejo fenómeno se divide fundamentalmente en dos grandes etapas: las reacciones dependientes de la luz (fase lumínica) y las reacciones independientes de la luz (fase oscura o Ciclo de Calvin).</p>
+
+                <p>Específicamente, el cafeto (<em>Coffea arabica</em>) es clasificado botánicamente como una planta de tipo <strong>C3</strong>. Esto significa que utiliza la vía clásica de fijación del carbono de tres carbonos, lo que condiciona de manera determinante su relación fisiológica con la temperatura, la disponibilidad hídrica y la intensidad lumínica del entorno agrícola donde se cultiva.</p>
+
+                <h3>Fase Lumínica: Captura de Fotones y Fotólisis</h3>
+                <p>Las reacciones lumínicas ocurren en las membranas de los tilacoides dentro de los cloroplastos y requieren de la presencia directa de luz solar. Sus procesos principales son:</p>
+                <ul>
+                    <li><strong>Excitación de Clorofila:</strong> Los pigmentos fotosintéticos (clorofila a y b) absorben fotones de luz, elevando electrones a niveles de energía superiores.</li>
+                    <li><strong>Fotólisis del Agua ($H_2O$):</strong> Las moléculas de agua se rompen por acción de la energía lumínica, liberando oxígeno molecular ($O_2$) a la atmósfera, protones ($H^+$) y electrones de reemplazo.</li>
+                    <li><strong>Síntesis de ATP y NADPH:</strong> El flujo de electrones a través de la cadena transportadora genera energía química almacenada en forma de trifosfato de adenosina (ATP) y poder reductor (NADPH), insumos indispensables para la siguiente fase.</li>
+                </ul>
+
+                <h3>Fase Oscura: Ciclo de Calvin y Fijación del Carbono</h3>
+                <p>Aunque se denomine oscura, no significa que ocurra únicamente de noche, sino que no requiere luz de manera directa. Se desarrolla en el estroma del cloroplasto:</p>
+                <ul>
+                    <li><strong>Fijación del $CO_2$:</strong> El dióxido de carbono capturado del aire a través de los estomas se incorpora a una molécula aceptora de 5 carbonos (RuBP) gracias a la enzima RuBisCO.</li>
+                    <li><strong>Reducción y Formación de Azúcares:</strong> Utilizando el ATP y NADPH producidos en la fase lumínica, el carbono fijado se reduce para formar gliceraldehído-3-fosfato (G3P), molécula precursora de glucosa, almidón y sacarosa.</li>
+                </ul>
+
+                <h3>Fisiología del Cafeto: Relación entre Radiación Solar y Sombrío</h3>
+                <p>Como planta C3 adaptada originalmente a los sotobosques tropicales húmedos, el cafeto posee un punto de saturación lumínica relativamente bajo. Cuando se expone a radiación solar excesiva y directa (cultivos a libre exposición), su aparato fotosintético experimenta estrés por fotoinhibición, desviando energía hacia la producción de radicales libres y cerrando estomas para evitar la pérdida de agua, lo que reduce la eficiencia fotosintética.</p>
+
+                <div class="highlight-box">
+                    <strong>☀️ Dinámica de la Sombra en el Cafetal:</strong><br>
+                    Cultivar café bajo la sombra de árboles nativos modera la temperatura ambiental, optimiza la temperatura foliar y permite que las hojas aprovechen de manera difusa la luz solar, maximizando la eficiencia de la fotosíntesis neta y protegiendo la planta contra el estrés térmico e hídrico.
+                </div>
+
+                <h3>Importancia Agrícola y Climática</h3>
+                <p>Comprender la fisiología vegetal y los mecanismos fotosintéticos permite a los caficultores diseñar sistemas agroforestales más eficientes, mejorando la calidad del grano, la longevidad del cultivo y la captura de carbono frente al cambio climático global.</p>
+
+                <div class="taller-section">
+                    <h3>Taller de Repaso y Consolidación</h3>
+                    
+                    <div class="instruction-alert">
+                        ✍️ INSTRUCCIÓN OBLIGATORIA: Escribe y resuelve de forma ordenada las siguientes 10 actividades en tu cuaderno de Biología.
+                    </div>
+
+                    <ul class="taller-list">
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Define con tus propias palabras qué es la fotosíntesis y explica por qué se considera el motor energético fundamental de la biosfera.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Analiza qué ocurre a nivel molecular durante la fotólisis del agua en la fase lumínica y cuál es el destino final del oxígeno liberado al ambiente.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Ilustra un cloroplasto detallando sus partes principales (tilacoides, grana y estroma) y señala espacialmente dónde ocurren la fase lumínica y la fase oscura.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Conceptual</span><br>
+                            Elabora un mapa conceptual que contraste las diferencias clave entre la fase lumínica y la fase oscura de la fotosíntesis (reactivos, productos y ubicación).
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            ¿Qué características fisiológicas definen a una planta de tipo C3 y por qué el cafeto (<em>Coffea arabica</em>) pertenece a esta categoría?
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Un caficultor nota que sus plantas a pleno sol presentan quemaduras foliares y menor rendimiento en comparación con las que tienen árboles de sombrío. Explica este fenómeno relacionándolo con la saturación lumínica y el estrés oxidativo.
+                        </li>
+                        <li>
+                            <span class="badge">Dibujo / Ilustración</span><br>
+                            Dibuja un esquema comparativo de una hoja de cafeto bajo sombra frente a una hoja a libre exposición, mostrando adaptaciones anatómicas visibles como el grosor de la cutícula y los cloroplastos.
+                        </li>
+                        <li>
+                            <span class="badge">Mapa Mental</span><br>
+                            Diseña un mapa mental titulado "Fisiología del Cafeto y Radiación Solar", incluyendo ramas sobre temperatura, apertura estomática, eficiencia fotosintética y calidad del grano.
+                        </li>
+                        <li>
+                            <span class="badge">Respuesta Directa</span><br>
+                            Explica el papel fundamental que cumple la enzima RuBisCO dentro del Ciclo de Calvin durante la fijación del dióxido de carbono.
+                        </li>
+                        <li>
+                            <span class="badge">Análisis Crítico</span><br>
+                            Argumenta cómo el conocimiento avanzado de la fisiología vegetal y la fotosíntesis puede guiar a los agrónomos hacia prácticas de cultivo de café más sostenibles y resilientes frente al calentamiento global.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 1. Datos del Juego (12 conceptos distribuidos en 3 categorías)
+        const concepts = [
+            // CATEGORÍA 1: FASE LUMINICA
+            { id: 1, text: "Fotólisis del agua: Ruptura de H2O por acción de fotones", category: "FASE LUMINICA" },
+            { id: 2, text: "Excitación de clorofila y liberación de electrones energéticos", category: "FASE LUMINICA" },
+            { id: 3, text: "Producción de trifosfato de adenosina (ATP) tilacoidal", category: "FASE LUMINICA" },
+            { id: 4, text: "Generación de poder reductor en forma de NADPH", category: "FASE LUMINICA" },
+            
+            // CATEGORÍA 2: FASE OSCURA
+            { id: 5, text: "Ciclo de Calvin: Fijación enzimática del dióxido de carbono", category: "FASE OSCURA" },
+            { id: 6, text: "Acción de la enzima RuBisCO en el estroma del cloroplasto", category: "FASE OSCURA" },
+            { id: 7, text: "Síntesis de gliceraldehído-3-fosfato (G3P) precursor de azúcares", category: "FASE OSCURA" },
+            { id: 8, text: "Regeneración de la ribulosa-1,5-bisfosfato (RuBP)", category: "FASE OSCURA" },
+            
+            // CATEGORÍA 3: FISIOLOGIA DEL CAFETO
+            { id: 9, text: "Metabolismo C3 típico de Coffea arabica", category: "FISIOLOGIA DEL CAFETO" },
+            { id: 10, text: "Efecto protector del sombrío contra la fotoinhibición lumínica", category: "FISIOLOGIA DEL CAFETO" },
+            { id: 11, text: "Regulación estomática frente al estrés hídrico y térmico", category: "FISIOLOGIA DEL CAFETO" },
+            { id: 12, text: "Optimización de la tasa fotosintética neta bajo luz difusa", category: "FISIOLOGIA DEL CAFETO" }
+        ];
+
+        // 2. Estado del Juego
+        let state = {
+            score: 0,
+            errors: 0,
+            total: concepts.length,
+            selectedChipId: null,
+            shuffledConcepts: []
+        };
+
+        // 3. Función para barajar aleatoriamente
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // 4. Inicialización
+        function initGame() {
+            state.shuffledConcepts = shuffleArray([...concepts]);
+            renderChips();
+            updateHUD();
+        }
+
+        // 5. Renderizar Fichas
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = '';
+
+            state.shuffledConcepts.forEach(concept => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${concept.id}`;
+                chip.textContent = concept.text;
+                
+                chip.addEventListener('click', () => selectChip(concept.id));
+                container.appendChild(chip);
+            });
+        }
+
+        // 6. Selección de Ficha
+        function selectChip(id) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            const chip = document.getElementById(`chip-${id}`);
+            if (chip && !chip.classList.contains('hidden')) {
+                chip.classList.add('selected');
+                state.selectedChipId = id;
+            }
+        }
+
+        // 7. Validación con Categoría
+        function checkCategory(categoryName) {
+            if (!state.selectedChipId) return;
+
+            const concept = state.shuffledConcepts.find(c => c.id === state.selectedChipId);
+            const chipElement = document.getElementById(`chip-${state.selectedChipId}`);
+            const btnElement = document.getElementById(`btn-${categoryName}`);
+
+            if (concept.category === categoryName) {
+                state.score++;
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('hidden');
+                state.selectedChipId = null;
+                
+                btnElement.classList.add('success-btn-anim');
+                setTimeout(() => btnElement.classList.remove('success-btn-anim'), 500);
+
+                updateHUD();
+                checkWinCondition();
+            } else {
+                state.errors++;
+                updateHUD();
+                
+                chipElement.classList.remove('selected');
+                chipElement.classList.add('error-anim');
+                state.selectedChipId = null;
+                
+                setTimeout(() => {
+                    chipElement.classList.remove('error-anim');
+                }, 500);
+            }
+        }
+
+        // 8. Actualizar HUD
+        function updateHUD() {
+            document.getElementById('score-display').textContent = `Puntuación: ${state.score} / ${state.total}`;
+            document.getElementById('errors-display').textContent = `Errores: ${state.errors}`;
+        }
+
+        // 9. Condición de Victoria
+        function checkWinCondition() {
+            if (state.score === state.total) {
+                setTimeout(showEndScreen, 600);
+            }
+        }
+
+        function showEndScreen() {
+            const endScreen = document.getElementById('end-screen');
+            const gradeDisplay = document.getElementById('final-grade');
+            
+            let grade = 5.0 - (state.errors * 0.2);
+            if (grade < 1.0) grade = 1.0;
+            
+            gradeDisplay.textContent = grade.toFixed(1);
+            
+            if (grade >= 4.0) {
+                gradeDisplay.style.color = 'var(--success)';
+            } else if (grade >= 3.0) {
+                gradeDisplay.style.color = '#fbbf24';
+            } else {
+                gradeDisplay.style.color = 'var(--danger)';
+            }
+
+            endScreen.classList.add('visible');
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>

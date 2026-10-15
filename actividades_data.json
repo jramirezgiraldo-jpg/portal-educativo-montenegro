@@ -529,6 +529,134 @@
     },
     {
         "id":  34,
+        "title":  "Mis Primeras Palabras: El Fenómeno Cotidiano de la Estática",
+        "h1":  "Mis Primeras Palabras",
+        "area":  "Física 6° (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "Grado 6° (Inclusión)",
+        "categoryKey":  "fisica-6-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#0891b2",
+        "desc":  "Mis Primeras Palabras. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/4p Fisica 6 Adpataciones curriculares/g1 CL mis_primeras_palabras_est_tica.html",
+        "fileName":  "g1 CL mis_primeras_palabras_est_tica.html",
+        "sizeKB":  56.6
+    },
+    {
+        "id":  35,
+        "title":  "Mis Primeras Palabras: El Átomo y la Materia",
+        "h1":  "",
+        "area":  "Física 6° (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "Grado 6° (Inclusión)",
+        "categoryKey":  "fisica-6-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#0891b2",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/4p Fisica 6 Adpataciones curriculares/g2 CL mis_primeras_palabras_tomo_y_cargas.html",
+        "fileName":  "g2 CL mis_primeras_palabras_tomo_y_cargas.html",
+        "sizeKB":  55.7
+    },
+    {
+        "id":  36,
+        "title":  "Mis Primeras Palabras: Electrización por Frotamiento",
+        "h1":  "",
+        "area":  "Física 6° (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "Grado 6° (Inclusión)",
+        "categoryKey":  "fisica-6-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#0891b2",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/4p Fisica 6 Adpataciones curriculares/G3 CL mis_primeras_palabras_electrizaci_n_por_frotamiento.html",
+        "fileName":  "G3 CL mis_primeras_palabras_electrizaci_n_por_frotamiento.html",
+        "sizeKB":  45.6
+    },
+    {
+        "id":  37,
+        "title":  "Mis Primeras Palabras: Atracción y Repulsión",
+        "h1":  "",
+        "area":  "Física 6° (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "Grado 6° (Inclusión)",
+        "categoryKey":  "fisica-6-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#0891b2",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/4p Fisica 6 Adpataciones curriculares/G4 CL mis_primeras_palabras_atraccion_y_repulsion.html",
+        "fileName":  "G4 CL mis_primeras_palabras_atraccion_y_repulsion.html",
+        "sizeKB":  41.7
+    },
+    {
+        "id":  38,
+        "title":  "Mis Primeras Palabras: Conductores y Aislantes",
+        "h1":  "Mis Primeras Palabras",
+        "area":  "Física 6° (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "Grado 6° (Inclusión)",
+        "categoryKey":  "fisica-6-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#0891b2",
+        "desc":  "Mis Primeras Palabras. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/4p Fisica 6 Adpataciones curriculares/g5 CL mis_primeras_palabras_conductores_y_aislantes.html",
+        "fileName":  "g5 CL mis_primeras_palabras_conductores_y_aislantes.html",
+        "sizeKB":  56.8
+    },
+    {
+        "id":  39,
+        "title":  "Mis Primeras Palabras: Detección de Cargas y Electroscopio",
+        "h1":  "",
+        "area":  "Física 6° (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "Grado 6° (Inclusión)",
+        "categoryKey":  "fisica-6-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#0891b2",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/4p Fisica 6 Adpataciones curriculares/g6 CL mis_primeras_palabras_detecci_n_de_cargas.html",
+        "fileName":  "g6 CL mis_primeras_palabras_detecci_n_de_cargas.html",
+        "sizeKB":  55.8
+    },
+    {
+        "id":  40,
+        "title":  "Mis Primeras Palabras: Socialización de Comprensiones",
+        "h1":  "",
+        "area":  "Física 6° (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "Grado 6° (Inclusión)",
+        "categoryKey":  "fisica-6-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#0891b2",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/4p Fisica 6 Adpataciones curriculares/g7 CL mis_primeras_palabras_socializaci_n_de_comprensiones.html",
+        "fileName":  "g7 CL mis_primeras_palabras_socializaci_n_de_comprensiones.html",
+        "sizeKB":  46
+    },
+    {
+        "id":  41,
+        "title":  "Mis Primeras Palabras: Átomos y Modelos",
+        "h1":  "",
+        "area":  "Física 6° (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "Grado 6° (Inclusión)",
+        "categoryKey":  "fisica-6-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#0891b2",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/4p Fisica 6 Adpataciones curriculares/g8 CL socializacion_final.html",
+        "fileName":  "g8 CL socializacion_final.html",
+        "sizeKB":  42.9
+    },
+    {
+        "id":  42,
         "title":  "Geografía del Piano y el Patrón Cíclico de las Notas Naturales - Objeto Virtual de Aprendizaje",
         "h1":  "Geografía del Piano y el Patrón Cíclico de las Notas Naturales",
         "area":  "Educación Artística y Musical",
@@ -544,7 +672,7 @@
         "sizeKB":  116.6
     },
     {
-        "id":  35,
+        "id":  43,
         "title":  "Estación Musical EpC: Fundamentos de Posición y Digitación Básica en el Piano - Objeto Virtual de Aprendizaje",
         "h1":  "Estación Musical EpC: Fundamentos de Posición y Digitación Básica en el Piano",
         "area":  "Educación Artística y Musical",
@@ -560,7 +688,7 @@
         "sizeKB":  116.7
     },
     {
-        "id":  36,
+        "id":  44,
         "title":  "Investigación Guiada: Solfeo Rítmico con Negras y Blancas en Métrica de 3/4 - Objeto Virtual de Aprendizaje",
         "h1":  "Investigación Guiada: Solfeo Rítmico con Negras y Blancas en Métrica de 3/4",
         "area":  "Educación Artística y Musical",
@@ -576,7 +704,7 @@
         "sizeKB":  113
     },
     {
-        "id":  37,
+        "id":  45,
         "title":  "Investigación Guiada: Lectura en Clave de Sol y Práctica en el Simulador de Piano - Objeto Virtual de Aprendizaje",
         "h1":  "Investigación Guiada: Lectura en Clave de Sol y Práctica en el Simulador de Piano",
         "area":  "Educación Artística y Musical",
@@ -592,7 +720,7 @@
         "sizeKB":  115.7
     },
     {
-        "id":  38,
+        "id":  46,
         "title":  "Investigación Guiada: Coordinación Rítmica y Métrica Andina - Objeto Virtual de Aprendizaje",
         "h1":  "Investigación Guiada: Coordinación Rítmica y Métrica Andina",
         "area":  "Educación Artística y Musical",
@@ -608,7 +736,7 @@
         "sizeKB":  110.7
     },
     {
-        "id":  39,
+        "id":  47,
         "title":  "Investigación Guiada: Coordinación rítmica y métrica andina - Objeto Virtual de Aprendizaje",
         "h1":  "Investigación Guiada: Coordinación rítmica y métrica andina",
         "area":  "Educación Artística y Musical",
@@ -624,7 +752,7 @@
         "sizeKB":  111
     },
     {
-        "id":  40,
+        "id":  48,
         "title":  "Síntesis: Lectura y ejecución de un motivo campesino corto - Objeto Virtual de Aprendizaje",
         "h1":  "Síntesis: Lectura y ejecución de un motivo campesino corto",
         "area":  "Educación Artística y Musical",
@@ -640,7 +768,7 @@
         "sizeKB":  112
     },
     {
-        "id":  41,
+        "id":  49,
         "title":  "Síntesis y Recital Individual de Lectura al Piano - Objeto Virtual de Aprendizaje",
         "h1":  "Síntesis y Recital Individual de Lectura al Piano",
         "area":  "Educación Artística y Musical",
@@ -656,7 +784,7 @@
         "sizeKB":  113.6
     },
     {
-        "id":  42,
+        "id":  50,
         "title":  "Introducción a la Materia y sus Estados",
         "h1":  "La Materia y sus Estados",
         "area":  "Pensar la Química",
@@ -672,7 +800,7 @@
         "sizeKB":  28.6
     },
     {
-        "id":  43,
+        "id":  51,
         "title":  "Clasificación de la Materia en el Campo",
         "h1":  "Clasificando la Materia en la Finca",
         "area":  "Pensar la Química",
@@ -688,7 +816,7 @@
         "sizeKB":  35.9
     },
     {
-        "id":  44,
+        "id":  52,
         "title":  "Mezclas Homogéneas: Sopa de Letras y Taller",
         "h1":  "Mezclas Homogéneas",
         "area":  "Pensar la Química",
@@ -704,7 +832,7 @@
         "sizeKB":  32.6
     },
     {
-        "id":  45,
+        "id":  53,
         "title":  "Explorando la Materia: Mezclas y Sustancias Puras",
         "h1":  "Explorando la Materia",
         "area":  "Pensar la Química",
@@ -720,7 +848,103 @@
         "sizeKB":  36.8
     },
     {
-        "id":  46,
+        "id":  54,
+        "title":  "Mis Primeras Palabras: Tipos de Ecosistemas",
+        "h1":  "Mis Primeras Palabras",
+        "area":  "Ciclo II (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "CLEI II (Inclusión)",
+        "categoryKey":  "ciclo-ii-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#15803d",
+        "desc":  "Mis Primeras Palabras. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo II Adpataciones curriculares/g1 Cl mis_primeras_palabras_ecosistemas.html",
+        "fileName":  "g1 Cl mis_primeras_palabras_ecosistemas.html",
+        "sizeKB":  57.1
+    },
+    {
+        "id":  55,
+        "title":  "Mis Primeras Palabras: Adaptaciones de los Seres Vivos",
+        "h1":  "",
+        "area":  "Ciclo II (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "CLEI II (Inclusión)",
+        "categoryKey":  "ciclo-ii-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#15803d",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/Ciclo II Adpataciones curriculares/g2 CL mis_primeras_palabras_adaptaciones.html",
+        "fileName":  "g2 CL mis_primeras_palabras_adaptaciones.html",
+        "sizeKB":  56.8
+    },
+    {
+        "id":  56,
+        "title":  "Mis Primeras Palabras: Factores Bióticos y Abióticos",
+        "h1":  "",
+        "area":  "Ciclo II (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "CLEI II (Inclusión)",
+        "categoryKey":  "ciclo-ii-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#15803d",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/Ciclo II Adpataciones curriculares/g3 CLmis_primeras_palabras_bioticos_abioticos.html",
+        "fileName":  "g3 CLmis_primeras_palabras_bioticos_abioticos.html",
+        "sizeKB":  47.4
+    },
+    {
+        "id":  57,
+        "title":  "Mis Primeras Palabras: Cadenas y Relaciones Tróficas",
+        "h1":  "Mis Primeras Palabras",
+        "area":  "Ciclo II (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "CLEI II (Inclusión)",
+        "categoryKey":  "ciclo-ii-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#15803d",
+        "desc":  "Mis Primeras Palabras. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo II Adpataciones curriculares/g5 CL mis_primeras_palabras_cadenas_tr_ficas.html",
+        "fileName":  "g5 CL mis_primeras_palabras_cadenas_tr_ficas.html",
+        "sizeKB":  56.7
+    },
+    {
+        "id":  58,
+        "title":  "Mis Primeras Palabras: Redes Tróficas y Café",
+        "h1":  "",
+        "area":  "Ciclo II (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "CLEI II (Inclusión)",
+        "categoryKey":  "ciclo-ii-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#15803d",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/Ciclo II Adpataciones curriculares/g6 CL mis_primeras_palabras_redes_tr_ficas_y_caf.html",
+        "fileName":  "g6 CL mis_primeras_palabras_redes_tr_ficas_y_caf.html",
+        "sizeKB":  56.6
+    },
+    {
+        "id":  59,
+        "title":  "Mis Primeras Palabras: Flujo de Energía y Nutrientes",
+        "h1":  "",
+        "area":  "Ciclo II (Adaptaciones Curriculares)",
+        "subArea":  "Adaptaciones",
+        "grade":  "CLEI II (Inclusión)",
+        "categoryKey":  "ciclo-ii-adaptaciones",
+        "type":  "Taller de Inclusión y Lectoescritura",
+        "typeKey":  "taller",
+        "themeColor":  "#15803d",
+        "desc":  "Recurso didáctico e interactivo diseñado para fortalecer competencias formativas.",
+        "path":  "actividades/Ciclo II Adpataciones curriculares/g7 CL mis_primeras_palabras_flujo_energia.html",
+        "fileName":  "g7 CL mis_primeras_palabras_flujo_energia.html",
+        "sizeKB":  45.6
+    },
+    {
+        "id":  60,
         "title":  "Módulo Comunitario: Tipos de Ecosistemas y Riqueza Local",
         "h1":  "Tipos de Ecosistemas y Riqueza Local",
         "area":  "Nocturno - Ciclo II",
@@ -736,7 +960,7 @@
         "sizeKB":  39.4
     },
     {
-        "id":  47,
+        "id":  61,
         "title":  "Biología: Ecosistemas Terrestres y Acuáticos",
         "h1":  "Tipos de Ecosistemas",
         "area":  "Nocturno - Ciclo II",
@@ -752,7 +976,7 @@
         "sizeKB":  35
     },
     {
-        "id":  48,
+        "id":  62,
         "title":  "Biología: Adaptaciones de los Seres Vivos",
         "h1":  "Adaptaciones de los Seres Vivos",
         "area":  "Nocturno - Ciclo II",
@@ -768,7 +992,7 @@
         "sizeKB":  36.3
     },
     {
-        "id":  49,
+        "id":  63,
         "title":  "Clasificador de Ecosistemas: Factores Bióticos y Abióticos",
         "h1":  "El Equilibrio del Ecosistema",
         "area":  "Nocturno - Ciclo II",
@@ -784,7 +1008,7 @@
         "sizeKB":  33.8
     },
     {
-        "id":  50,
+        "id":  64,
         "title":  "Juego y Estudio: Niveles Tróficos",
         "h1":  "El Equilibrio del Ecosistema",
         "area":  "Nocturno - Ciclo II",
@@ -800,7 +1024,7 @@
         "sizeKB":  32
     },
     {
-        "id":  51,
+        "id":  65,
         "title":  "Biología: Productores y Consumidores",
         "h1":  "Productores y Consumidores",
         "area":  "Nocturno - Ciclo II",
@@ -816,7 +1040,7 @@
         "sizeKB":  28.7
     },
     {
-        "id":  52,
+        "id":  66,
         "title":  "Redes Tróficas: Región Cafetera",
         "h1":  "Clasificador Trófico Cafetero",
         "area":  "Nocturno - Ciclo II",
@@ -832,7 +1056,7 @@
         "sizeKB":  32.8
     },
     {
-        "id":  53,
+        "id":  67,
         "title":  "Biología: Flujo de Energía Cyber-Cafetero",
         "h1":  "Terminal Trófica",
         "area":  "Nocturno - Ciclo II",
@@ -848,7 +1072,7 @@
         "sizeKB":  29.4
     },
     {
-        "id":  54,
+        "id":  68,
         "title":  "Biología: Pirámides Ecológicas",
         "h1":  "Pirámides Ecológicas",
         "area":  "Nocturno - Ciclo II",
@@ -864,7 +1088,7 @@
         "sizeKB":  32.4
     },
     {
-        "id":  55,
+        "id":  69,
         "title":  "Sopa de Letras: La Célula",
         "h1":  "Biología: La Célula",
         "area":  "Nocturno - Ciclo III",
@@ -880,7 +1104,7 @@
         "sizeKB":  39.3
     },
     {
-        "id":  56,
+        "id":  70,
         "title":  "Biología: Organelos Celulares",
         "h1":  "Organelos Celulares",
         "area":  "Nocturno - Ciclo III",
@@ -896,7 +1120,7 @@
         "sizeKB":  33.3
     },
     {
-        "id":  57,
+        "id":  71,
         "title":  "Clasificador Celular: Respiración y División",
         "h1":  "Clasificador Celular",
         "area":  "Nocturno - Ciclo III",
@@ -912,7 +1136,7 @@
         "sizeKB":  31
     },
     {
-        "id":  58,
+        "id":  72,
         "title":  "Niveles de Organización Biológica",
         "h1":  "La Organización de la Vida",
         "area":  "Nocturno - Ciclo III",
@@ -928,7 +1152,7 @@
         "sizeKB":  32.1
     },
     {
-        "id":  59,
+        "id":  73,
         "title":  "Taxonomía y Dominios",
         "h1":  "Taxonomía y Dominios",
         "area":  "Nocturno - Ciclo III",
@@ -944,7 +1168,7 @@
         "sizeKB":  32.9
     },
     {
-        "id":  60,
+        "id":  74,
         "title":  "Fotosíntesis: La Magia Biológica",
         "h1":  "Clasificador de Fotosíntesis",
         "area":  "Nocturno - Ciclo III",
@@ -960,7 +1184,7 @@
         "sizeKB":  30.5
     },
     {
-        "id":  61,
+        "id":  75,
         "title":  "Biología: Cadenas Tróficas y Control Ecológico",
         "h1":  "Simulador Trófico",
         "area":  "Nocturno - Ciclo III",
@@ -976,7 +1200,7 @@
         "sizeKB":  30.4
     },
     {
-        "id":  62,
+        "id":  76,
         "title":  "Biología: Ciclos Biogeoquímicos",
         "h1":  "Ciclos Biogeoquímicos",
         "area":  "Nocturno - Ciclo III",
@@ -992,7 +1216,7 @@
         "sizeKB":  31.4
     },
     {
-        "id":  63,
+        "id":  77,
         "title":  "Biología: Estructura del ADN y ARN",
         "h1":  "SecuenciaGenética",
         "area":  "Nocturno Ciclo IV: Biología",
@@ -1008,7 +1232,7 @@
         "sizeKB":  34.7
     },
     {
-        "id":  64,
+        "id":  78,
         "title":  "Biología: Reproducción Celular (Mitosis y Meiosis)",
         "h1":  "Reproducción Celular",
         "area":  "Nocturno Ciclo IV: Biología",
@@ -1024,7 +1248,7 @@
         "sizeKB":  35.6
     },
     {
-        "id":  65,
+        "id":  79,
         "title":  "Biología: Genética Mendeliana - Tap \u0026 Sort",
         "h1":  "Genética Mendeliana",
         "area":  "Nocturno Ciclo IV: Biología",
@@ -1040,7 +1264,7 @@
         "sizeKB":  30.3
     },
     {
-        "id":  66,
+        "id":  80,
         "title":  "Biología: Evolución y Selección Natural",
         "h1":  "Evolución y Selección Natural",
         "area":  "Nocturno Ciclo IV: Biología",
@@ -1056,7 +1280,7 @@
         "sizeKB":  34.6
     },
     {
-        "id":  67,
+        "id":  81,
         "title":  "Biología: Taxonomía y Reinos de la Naturaleza",
         "h1":  "Taxonomía y Reinos",
         "area":  "Nocturno Ciclo IV: Biología",
@@ -1072,7 +1296,7 @@
         "sizeKB":  31.9
     },
     {
-        "id":  68,
+        "id":  82,
         "title":  "Biología: Ecología y Niveles de Organización - Tap \u0026 Sort",
         "h1":  "Ecología y Ecosistemas",
         "area":  "Nocturno Ciclo IV: Biología",
@@ -1088,7 +1312,7 @@
         "sizeKB":  30.9
     },
     {
-        "id":  69,
+        "id":  83,
         "title":  "Biología: Redes Tróficas y Flujo de Energía",
         "h1":  "Red TróficaActiva",
         "area":  "Nocturno Ciclo IV: Biología",
@@ -1104,7 +1328,7 @@
         "sizeKB":  34.6
     },
     {
-        "id":  70,
+        "id":  84,
         "title":  "Biología: Ciclos Biogeoquímicos y la Biosfera",
         "h1":  "Ciclos Biogeoquímicos de la Tierra",
         "area":  "Nocturno Ciclo IV: Biología",
@@ -1120,7 +1344,7 @@
         "sizeKB":  32.3
     },
     {
-        "id":  71,
+        "id":  85,
         "title":  "Biología: Reproducción Celular (Mitosis y Meiosis)",
         "h1":  "Reproducción Celular",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1136,7 +1360,7 @@
         "sizeKB":  35.6
     },
     {
-        "id":  72,
+        "id":  86,
         "title":  "Sopa de Letras: Máquinas Térmicas",
         "h1":  "Física: Máquinas Térmicas",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1152,7 +1376,7 @@
         "sizeKB":  30
     },
     {
-        "id":  73,
+        "id":  87,
         "title":  "Física: Máquinas Térmicas - Sopa de Letras",
         "h1":  "Máquinas Térmicas",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1168,7 +1392,7 @@
         "sizeKB":  26.8
     },
     {
-        "id":  74,
+        "id":  88,
         "title":  "Máquinas Térmicas: Fundamentos y Aplicaciones - Objeto Virtual de Aprendizaje",
         "h1":  "Máquinas Térmicas: Fundamentos y Aplicaciones",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1184,7 +1408,7 @@
         "sizeKB":  111.2
     },
     {
-        "id":  75,
+        "id":  89,
         "title":  "Máquinas Térmicas: Comprende su Funcionamiento - Objeto Virtual de Aprendizaje",
         "h1":  "Máquinas Térmicas: Comprende su Funcionamiento",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1200,7 +1424,7 @@
         "sizeKB":  140.3
     },
     {
-        "id":  76,
+        "id":  90,
         "title":  "Física: Transferencia de Calor",
         "h1":  "Física: Transferencia de Calor",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1216,7 +1440,7 @@
         "sizeKB":  37.7
     },
     {
-        "id":  77,
+        "id":  91,
         "title":  "Física: Trabajo Mecánico",
         "h1":  "Trabajo Mecánico",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1232,7 +1456,7 @@
         "sizeKB":  34.7
     },
     {
-        "id":  78,
+        "id":  92,
         "title":  "Física: Potencia Mecánica - Tap \u0026 Sort",
         "h1":  "Tap \u0026 Sort: Potencia Mecánica",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1248,7 +1472,7 @@
         "sizeKB":  29
     },
     {
-        "id":  79,
+        "id":  93,
         "title":  "Física: Eficiencia Termodinámica",
         "h1":  "FirewallTermodinámico",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1264,7 +1488,7 @@
         "sizeKB":  32.8
     },
     {
-        "id":  80,
+        "id":  94,
         "title":  "Física: Entropía y Desorden",
         "h1":  "Física: Entropía y Desorden",
         "area":  "Nocturno Ciclo IV: Física",
@@ -1280,7 +1504,7 @@
         "sizeKB":  32.2
     },
     {
-        "id":  81,
+        "id":  95,
         "title":  "Química: Tabla Periódica y Propiedades",
         "h1":  "Tabla Periódica",
         "area":  "Nocturno Ciclo IV: Química",
@@ -1296,7 +1520,7 @@
         "sizeKB":  34.5
     },
     {
-        "id":  82,
+        "id":  96,
         "title":  "Química: Enlaces Químicos",
         "h1":  "Clasificador de Enlaces",
         "area":  "Nocturno Ciclo IV: Química",
@@ -1312,7 +1536,7 @@
         "sizeKB":  31.9
     },
     {
-        "id":  83,
+        "id":  97,
         "title":  "Guía Interactiva: Nomenclatura Inorgánica",
         "h1":  "LaboratorioInorgánico",
         "area":  "Nocturno Ciclo IV: Química",
@@ -1328,7 +1552,7 @@
         "sizeKB":  33.8
     },
     {
-        "id":  84,
+        "id":  98,
         "title":  "Química: Reacciones y Ecuaciones",
         "h1":  "Reacciones Químicas y Ecuaciones",
         "area":  "Nocturno Ciclo IV: Química",
@@ -1344,7 +1568,7 @@
         "sizeKB":  30.9
     },
     {
-        "id":  85,
+        "id":  99,
         "title":  "Química: Estequiometría y Conservación de la Masa",
         "h1":  "Estequiometría y Masa",
         "area":  "Nocturno Ciclo IV: Química",
@@ -1360,7 +1584,7 @@
         "sizeKB":  33.3
     },
     {
-        "id":  86,
+        "id":  100,
         "title":  "Química: Soluciones y Concentración",
         "h1":  "Clasificador de Soluciones",
         "area":  "Nocturno Ciclo IV: Química",
@@ -1376,7 +1600,7 @@
         "sizeKB":  30.8
     },
     {
-        "id":  87,
+        "id":  101,
         "title":  "Guía Interactiva: Ácidos y Bases (pH)",
         "h1":  "Analizadorde pH",
         "area":  "Nocturno Ciclo IV: Química",
@@ -1392,7 +1616,7 @@
         "sizeKB":  33.3
     },
     {
-        "id":  88,
+        "id":  102,
         "title":  "Química: Leyes de los Gases e Higiene Ambiental",
         "h1":  "Leyes de los Gases e Higiene Ambiental",
         "area":  "Nocturno Ciclo IV: Química",
@@ -1408,7 +1632,151 @@
         "sizeKB":  33.2
     },
     {
-        "id":  89,
+        "id":  103,
+        "title":  "Ecología de Poblaciones y Ecosistemas Cafeteros",
+        "h1":  "Ecología en Cafetales",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "Ecología en Cafetales. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g1 ecolog_a_de_poblaciones_y_ecosistemas_cafeteros.html",
+        "fileName":  "g1 ecolog_a_de_poblaciones_y_ecosistemas_cafeteros.html",
+        "sizeKB":  34.2
+    },
+    {
+        "id":  104,
+        "title":  "Biología: Redes Tróficas y Flujo de Energía",
+        "h1":  "Clasificador Trófico Cafetero",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "Clasificador Trófico Cafetero. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g1 redes_troficas_flujo_energia.html",
+        "fileName":  "g1 redes_troficas_flujo_energia.html",
+        "sizeKB":  29.5
+    },
+    {
+        "id":  105,
+        "title":  "Biología: Redes Tróficas y Flujo de Energía",
+        "h1":  "Clasificador Trófico Cafetero",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "Clasificador Trófico Cafetero. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g2 redes_troficas_flujo_energia.html",
+        "fileName":  "g2 redes_troficas_flujo_energia.html",
+        "sizeKB":  29.5
+    },
+    {
+        "id":  106,
+        "title":  "Ciclos Biogeoquímicos en Suelos Cafeteros",
+        "h1":  "Ciclos Biogeoquímicos",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "Ciclos Biogeoquímicos. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g3ciclos_biogeoquimicos_suelos_cafeteros.html",
+        "fileName":  "g3ciclos_biogeoquimicos_suelos_cafeteros.html",
+        "sizeKB":  32
+    },
+    {
+        "id":  107,
+        "title":  "Biología: Biodiversidad y Servicios Ecosistémicos",
+        "h1":  "Biodiversidad y Servicios Ecosistémicos",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "Biodiversidad y Servicios Ecosistémicos. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g4 biodiversidad_servicion_ecosistemicos.html",
+        "fileName":  "g4 biodiversidad_servicion_ecosistemicos.html",
+        "sizeKB":  33.1
+    },
+    {
+        "id":  108,
+        "title":  "Química: Oxigenados II y el Café",
+        "h1":  "Oxigenados II y el Café",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "Oxigenados II y el Café. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g5 quimica_oxigenados_cafe.html",
+        "fileName":  "g5 quimica_oxigenados_cafe.html",
+        "sizeKB":  37.8
+    },
+    {
+        "id":  109,
+        "title":  "Biología: Fotosíntesis y Fisiología Vegetal en el Cafeto",
+        "h1":  "Clasificador de Fisiología y Fotosíntesis",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "Clasificador de Fisiología y Fotosíntesis. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g6 fotosintesis_fisiologia_vegetal.html",
+        "fileName":  "g6 fotosintesis_fisiologia_vegetal.html",
+        "sizeKB":  29.6
+    },
+    {
+        "id":  110,
+        "title":  "Respiración Celular y Fermentación del Café",
+        "h1":  "BiotecnologíaCelular",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "BiotecnologíaCelular. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g7 respiracion_fermentacion_cafe.html",
+        "fileName":  "g7 respiracion_fermentacion_cafe.html",
+        "sizeKB":  34
+    },
+    {
+        "id":  111,
+        "title":  "Biología: Biotecnología Aplicada al Campo",
+        "h1":  "Biotecnología Aplicada al Campo",
+        "area":  "Nocturno Ciclo VI: Biología",
+        "subArea":  "Biología",
+        "grade":  "CLEI VI (Grados 10° - 11°)",
+        "categoryKey":  "ciclo-vi",
+        "type":  "Actividad Interactiva",
+        "typeKey":  "interactivo",
+        "themeColor":  "#4f46e5",
+        "desc":  "Biotecnología Aplicada al Campo. Actividad de conceptualización y ejercitación práctica con retroalimentación inmediata.",
+        "path":  "actividades/Ciclo VI/Biologia/g8 biotecnologia_aplicada_campo.html",
+        "fileName":  "g8 biotecnologia_aplicada_campo.html",
+        "sizeKB":  33.5
+    },
+    {
+        "id":  112,
         "title":  "Física: Primera Ley de Newton y el Equilibrio - Objeto Virtual de Aprendizaje",
         "h1":  "Física: Primera Ley de Newton y el Equilibrio",
         "area":  "Nocturno Ciclo VI: Física",
@@ -1424,7 +1792,7 @@
         "sizeKB":  113.1
     },
     {
-        "id":  90,
+        "id":  113,
         "title":  "Física: Ondas y Luz",
         "h1":  "Física: Ondas y Luz",
         "area":  "Nocturno Ciclo VI: Física",
@@ -1440,7 +1808,7 @@
         "sizeKB":  25
     },
     {
-        "id":  91,
+        "id":  114,
         "title":  "Física: Ondas y Luz Comprende la naturaleza de la propagación del sonido y de la luz como fenómenos ondulatorios. Comprender que la luz solar que permite que los cultivos germinen viaja a través del espacio como una onda. - Objeto Virtual de Aprendizaje",
         "h1":  "Física: Ondas y Luz Comprende la naturaleza de la propagación del sonido y de la luz como fenómenos ondulatorios. Comprender que la luz solar que permite que los cultivos germinen viaja a través del espacio como una onda.",
         "area":  "Nocturno Ciclo VI: Física",
@@ -1456,7 +1824,7 @@
         "sizeKB":  146.1
     },
     {
-        "id":  92,
+        "id":  115,
         "title":  "Física: Fenómenos Acústicos en Contextos Agrícolas",
         "h1":  "Fenómenos Acústicos en el Entorno Agrícola: Efecto Doppler y Resonancia",
         "area":  "Nocturno Ciclo VI: Física",
@@ -1472,7 +1840,7 @@
         "sizeKB":  30.4
     },
     {
-        "id":  93,
+        "id":  116,
         "title":  "Óptica Geométrica - Escape Room \u0026 Taller",
         "h1":  "Módulo Óptico",
         "area":  "Nocturno Ciclo VI: Física",
@@ -1488,7 +1856,7 @@
         "sizeKB":  29.4
     },
     {
-        "id":  94,
+        "id":  117,
         "title":  "Química: Carbono y Tetravalencia",
         "h1":  "Química del Carbono",
         "area":  "Nocturno Ciclo VI: Química",
@@ -1504,7 +1872,7 @@
         "sizeKB":  34.4
     },
     {
-        "id":  95,
+        "id":  118,
         "title":  "Química: Hidrocarburos Alifáticos - Tap \u0026 Sort",
         "h1":  "Clasificador de Hidrocarburos",
         "area":  "Nocturno Ciclo VI: Química",
@@ -1520,7 +1888,7 @@
         "sizeKB":  31
     },
     {
-        "id":  96,
+        "id":  119,
         "title":  "Química: Hidrocarburos Aromáticos y Benceno",
         "h1":  "QuímicaAromática",
         "area":  "Nocturno Ciclo VI: Química",
@@ -1536,7 +1904,7 @@
         "sizeKB":  35.6
     },
     {
-        "id":  97,
+        "id":  120,
         "title":  "Química: Oxigenados y Café",
         "h1":  "Oxigenados I y Fermentación del Café",
         "area":  "Nocturno Ciclo VI: Química",
@@ -1552,7 +1920,7 @@
         "sizeKB":  32
     },
     {
-        "id":  98,
+        "id":  121,
         "title":  "Química: Oxigenados II y el Café",
         "h1":  "Oxigenados II y el Café",
         "area":  "Nocturno Ciclo VI: Química",
@@ -1568,7 +1936,7 @@
         "sizeKB":  34.7
     },
     {
-        "id":  99,
+        "id":  122,
         "title":  "Química: Nitrogenados (Aminas, Amidas y Nitrilos)",
         "h1":  "Clasificador Nitrogenado",
         "area":  "Nocturno Ciclo VI: Química",
@@ -1584,7 +1952,7 @@
         "sizeKB":  30.5
     },
     {
-        "id":  100,
+        "id":  123,
         "title":  "Biomoléculas I: Carbohidratos y Lípidos",
         "h1":  "SíntesisBiológica",
         "area":  "Nocturno Ciclo VI: Química",
@@ -1600,7 +1968,7 @@
         "sizeKB":  34.1
     },
     {
-        "id":  101,
+        "id":  124,
         "title":  "Biología: Proteínas y Ácidos Nucleicos",
         "h1":  "Proteínas y Ácidos Nucleicos",
         "area":  "Nocturno Ciclo VI: Química",

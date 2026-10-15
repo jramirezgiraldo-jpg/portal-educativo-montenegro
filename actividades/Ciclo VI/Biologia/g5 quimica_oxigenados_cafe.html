@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Química: Oxigenados II y el Café</title>
+    <style>
+        :root {
+            /* Tema: Química y Café (Marrones, Naranjas, Tonos Tierra) */
+            --primary: #4e342e;      /* Brown 800 */
+            --primary-dark: #3e2723; /* Brown 900 */
+            --primary-light: #d7ccc8;/* Brown 100 */
+            --secondary: #d84315;    /* Deep Orange 800 */
+            --secondary-light: #fbe9e7;/* Deep Orange 50 */
+            --accent: #ff8f00;       /* Amber 800 */
+            --text-main: #212121;    /* Grey 900 */
+            --text-light: #f5f5f5;   /* Grey 100 */
+            --bg-body: #efebe9;      /* Brown 50 */
+            --bg-card: #ffffff;      /* White */
+            --success: #2e7d32;      /* Green 800 */
+            --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: clamp(10px, 3vw, 20px);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: var(--text-light);
+            padding: clamp(15px, 4vw, 30px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(62, 39, 35, 0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Patrón decorativo imitando moléculas / granos */
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 250px;
+            height: 250px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255, 255, 255, 0.08)' stroke-width='1.5'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-5.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-4c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E");
+            background-size: 80px 80px;
+            pointer-events: none;
+            transform: rotate(15deg);
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 5vw, 2.6rem);
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instruction {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: #d7ccc8;
+            margin-bottom: 25px;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: clamp(10px, 2vw, 20px);
+            background: rgba(0, 0, 0, 0.25);
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(4px);
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-weight: 700;
+        }
+
+        .stat-icon {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+
+        .stars {
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(255, 143, 0, 0.4);
+        }
+
+        #zona-juego {
+            background: var(--bg-card);
+            padding: clamp(15px, 4vw, 30px);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(78, 52, 46, 0.08);
+            margin-bottom: 40px;
+        }
+
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 12px);
+            margin-bottom: 25px;
+        }
+
+        .word-item {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: 700;
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .word-item.found {
+            background: var(--success);
+            color: white;
+            text-decoration: line-through;
+            transform: scale(0.95);
+            opacity: 0.9;
+        }
+
+        .grid-wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: clamp(1px, 0.5vw, 4px);
+            /* CRÍTICO PARA MÓVILES: Evita scroll al arrastrar */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            background: var(--primary-light);
+            border: 6px solid var(--primary);
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            background: var(--bg-card);
+            aspect-ratio: 1; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(12px, 3.5vw, 24px);
+            font-weight: 800;
+            color: var(--primary-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s, transform 0.1s;
+        }
+
+        /* Estados de celda */
+        .cell.selecting {
+            background: var(--secondary);
+            color: white;
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(216, 67, 21, 0.4);
+        }
+
+        .cell.found {
+            background: var(--success);
+            color: white;
+        }
+
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(33, 33, 33, 0.95);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: clamp(30px, 6vw, 50px);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-restart {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-weight: 800;
+            width: 100%;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(216, 67, 21, 0.3);
+        }
+
+        .btn-restart:hover {
+            background: #bf360c;
+            transform: translateY(-2px);
+        }
+
+        #zona-lectura {
+            background: var(--bg-card);
+            padding: clamp(25px, 5vw, 50px);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(78, 52, 46, 0.05);
+        }
+
+        .article-content {
+            font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+            color: #374151;
+        }
+
+        .article-content h2 {
+            color: var(--primary-dark);
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid var(--primary-light);
+            line-height: 1.2;
+        }
+
+        .article-content h3 {
+            color: var(--secondary);
+            font-size: clamp(1.4rem, 3vw, 1.7rem);
+            margin: 35px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Icono decorativo para h3 */
+        .article-content h3::before {
+            content: "";
+            display: block;
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d84315'%3E%3Cpath d='M12 2L2 22h20L12 2zm0 3.8l7.2 14.2H4.8L12 5.8z'/%3E%3C/svg%3E");
+            background-size: cover;
+        }
+
+        .article-content p {
+            margin-bottom: 18px;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        .article-content ul {
+            margin: 20px 0 25px 35px;
+            background: var(--bg-body);
+            padding: 20px 20px 20px 40px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .article-content li {
+            margin-bottom: 12px;
+        }
+
+        .highlight-box {
+            background: var(--secondary-light);
+            border-left: 6px solid var(--secondary);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 10px 10px 0;
+            font-style: italic;
+            font-weight: 600;
+            color: #a3320f;
+        }
+
+        .workshop-section {
+            margin-top: 60px;
+            background: #fafafa;
+            padding: clamp(25px, 5vw, 45px);
+            border-radius: 16px;
+            border: 2px solid #eeeeee;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+        }
+
+        .workshop-section h2 {
+            color: var(--primary);
+            border-bottom: none;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: clamp(1.8rem, 4vw, 2.2rem);
+        }
+
+        .workshop-instruction {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 35px;
+            color: #1b5e20;
+            border: 2px dashed #4caf50;
+            font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-list li {
+            margin-bottom: 25px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border-left: 5px solid var(--primary-light);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+        
+        .activity-list li:hover {
+            transform: translateY(-3px);
+            border-left-color: var(--secondary);
+        }
+
+        @media (min-width: 700px) {
+            .activity-list li {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .activity-type {
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            white-space: nowrap;
+            text-align: center;
+            width: fit-content;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Etiquetas visuales por tipo de actividad */
+        .activity-type.respond { background: #1976d2; } /* Blue */
+        .activity-type.analysis { background: #d32f2f; } /* Red */
+        .activity-type.drawing { background: #7b1fa2; } /* Purple */
+        .activity-type.map { background: #00796b; }     /* Teal */
+
+        .activity-text {
+            font-size: clamp(1.05rem, 2vw, 1.15rem);
+            color: #424242;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Oxigenados II y el Café</h1>
+        <p class="instruction">Encuentra las 10 palabras sobre química orgánica y la calidad de la taza de café.</p>
+        
+        <div class="dashboard">
+            <div class="stat-box">
+                <!-- SVG Reloj -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <span id="timer">00:00</span>
+            </div>
+            <div class="stat-box">
+                <!-- SVG Contador -->
+                <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                <span id="counter">0 / 10</span>
+            </div>
+            <div class="stat-box">
+                <span id="rating" class="stars">★★★★★</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="zona-juego">
+            <div id="words-list" class="words-container">
+                <!-- Palabras inyectadas por JS -->
+            </div>
+            
+            <div class="grid-wrapper">
+                <div id="grid" class="letter-grid">
+                    <!-- Cuadrícula inyectada por JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="zona-lectura">
+            <article class="article-content">
+                <h2>Química en tu Taza: Aldehídos, Cetonas y Ácidos Carboxílicos</h2>
+                
+                <p>Cuando disfrutas de una excelente taza de café, el aroma vibrante que te despierta en la mañana, la acidez brillante que sientes en la lengua y el cuerpo denso de la bebida están dictados, casi en su totalidad, por una intrincada danza de compuestos oxigenados. La química orgánica no es solo un conjunto de fórmulas abstractas en un tablero, sino el lenguaje secreto que explica por qué algunos cafés saben a frutos rojos y otros a chocolate oscuro o caramelo. Hoy nos enfocaremos en tres de los grupos funcionales más determinantes en esta experiencia: los aldehídos, las cetonas y los ácidos carboxílicos.</p>
+
+                <h3>El Grupo Carbonilo: Aldehídos y Cetonas</h3>
+                <p>Para entender los aromas y sabores, primero debemos conocer el <strong>grupo carbonilo</strong>. Este grupo estructural consiste fundamentalmente en un átomo de carbono fuertemente unido a un átomo de oxígeno mediante un enlace doble (C=O). Dependiendo de dónde se ubique este enlace en la cadena molecular, obtenemos sustancias muy distintas:</p>
+                
+                <ul>
+                    <li><strong>En los Aldehídos:</strong> El grupo carbonilo se encuentra posicionado obligatoriamente en el <em>extremo</em> de la cadena de carbonos. Por esta razón anatómica, el carbono del carbonilo siempre está unido al menos a un átomo de hidrógeno (R-CHO). En el ecosistema del café tostado, los aldehídos, como el acetaldehído y el isobutanal, son los grandes responsables de desencadenar esas penetrantes notas aromáticas frutales, maltosas y florales que percibimos al oler el café recién molido.</li>
+                    <li><strong>En las Cetonas:</strong> El grupo carbonilo se halla incrustado en el <em>medio</em> de la cadena de carbonos, puenteado entre otros dos átomos de carbono (R-CO-R'). En el universo cafetero, las cetonas como el diacetilo o las dicetonas aportan a la taza notas deliciosamente pesadas, cremosas, y aromas que recuerdan a la mantequilla derretida, el dulce de leche y el caramelo tostado.</li>
+                </ul>
+
+                <h3>El Grupo Carboxilo y los Ácidos Orgánicos</h3>
+                <p>Si la naturaleza toma ese mismo grupo carbonilo (C=O) y le añade un grupo hidroxilo (-OH) en el mismo carbono, el resultado es el nacimiento de un nuevo súper-grupo funcional: el <strong>grupo carboxilo</strong> (-COOH). A las moléculas orgánicas estructuradas en torno a él se les denomina <strong>ácidos carboxílicos</strong>.</p>
+                
+                <p>Una de las propiedades químicas más importantes de los ácidos carboxílicos es, predeciblemente, su <strong>acidez</strong>. En un medio acuoso como tu taza de café, el enlace covalente polar entre el oxígeno y el hidrógeno del grupo hidroxilo se debilita y puede romperse, liberando un protón (ion H+). Aunque en el rigor químico son clasificados como ácidos "débiles" si los comparamos con potencias inorgánicas (como el ácido clorhídrico), esta liberación controlada de protones es precisamente lo que le otorga vida, vibrancia y "brillo" a muchos alimentos y bebidas en nuestra dieta diaria.</p>
+
+                <div class="highlight-box">
+                    En el fascinante metabolismo de la química orgánica, existe una ruta directa y lineal de transformación mediante reacciones de <strong>oxidación</strong>. Un alcohol primario (como el etanol) se somete a oxidación para perder electrones e hidrógenos, convirtiéndose en un aldehído. Si este proceso de oxidación continúa expuesto al ambiente o a la acción microbiana, ese aldehído terminará transformándose irreversiblemente en un ácido carboxílico. Controlar rigurosamente esta cadena de oxidación es el secreto mayor guardado durante la etapa de fermentación en el beneficio del café.
+                </div>
+
+                <h3>Los Ácidos que Definen la Calidad en Taza</h3>
+                <p>En el mundo de la cata profesional, un café sobresaliente no puede ser simplemente amargo y plano; debe ostentar una acidez balanceada, jugosa y compleja. A lo largo del ciclo de vida del café —crecimiento en el arbusto, proceso de fermentación húmeda y la crucial reacción de Maillard durante el tueste—, una orquesta de ácidos carboxílicos dicta el veredicto de calidad:</p>
+
+                <ul>
+                    <li><strong>Ácido Clorogénico:</strong> Dominante e imponente, es el ácido más abundante presente en la composición de la semilla de café verde crudo. Al enfrentar las altas temperaturas del tueste, gran parte del ácido <strong>clorogénico</strong> sufre una violenta degradación. Sin embargo, la fracción que sobrevive en la taza final es determinante: aporta notas de ligera astringencia y amargor característico, y lo más destacable, actúa como un potente antioxidante celular que brinda demostrados beneficios a la salud cardiovascular humana.</li>
+                    <li><strong>Ácido Cítrico:</strong> Sí, es químicamente idéntico al que encuentras en los limones o naranjas. Es sintetizado naturalmente durante el metabolismo celular y respiratorio de la planta (Ciclo de Krebs). En el análisis sensorial de la taza, la presencia de ácido <strong>cítrico</strong> aporta destellos vibrantes, notas punzantes a frutas cítricas y una acidez asombrosamente limpia. Este ácido es el tesoro más valorado por los catadores en los exquisitos cafés cultivados a gran altitud, donde el frío ralentiza la maduración.</li>
+                    <li><strong>Ácido Acético:</strong> A diferencia de los anteriores, no proviene directamente de la planta, sino que se genera masivamente durante la fermentación post-cosecha (beneficio húmedo), mediante la acción de bacterias que oxidan los azúcares del mucílago. Cuando se maneja en concentraciones muy bajas y delicadas, dota a la taza de una complejidad exótica con agradables notas a frutas fermentadas y vino tinto. No obstante, si el caficultor permite que la fermentación se descontrole, sufriendo una sobre-oxidación, la concentración de ácido acético se dispara y arruinará irremediablemente la taza, confiriéndole un perfil áspero y sabor penetrante a vinagre comercial.</li>
+                </ul>
+
+                <p>En conclusión, el aprendizaje de la química orgánica nos demuestra que la habilidad de diferenciar estructuralmente un grupo carbonilo de un carboxilo trasciende la teoría de un aula. Es la ciencia dura, medible y exacta que dota a agrónomos, caficultores, fermentadores y maestros tostadores de las herramientas predictivas para modular bioquímicamente los procesos, y lograr así ofrecer la taza perfecta en cada amanecer.</p>
+            </article>
+
+            <div class="workshop-section">
+                <h2>Taller de Análisis Químico</h2>
+                <div class="workshop-instruction">
+                    ¡ATENCIÓN! Lee atentamente el texto científico superior. Luego, escribe y resuelve las siguientes 10 actividades en tu cuaderno de química.
+                </div>
+                <ul class="activity-list">
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>1.</strong> Explica con tus propias palabras la diferencia estructural principal y anatómica entre un Aldehído y una Cetona, considerando específicamente la ubicación del grupo carbonilo en la cadena de carbonos.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Dibujar</span>
+                        <div class="activity-text"><strong>2.</strong> Basándote en la información detallada de la lectura, dibuja esquemáticamente y a color un "Grupo Carbonilo" (C=O) y, justo al lado, dibuja un "Grupo Carboxilo" (-COOH). Usa flechas para señalar sus diferencias atómicas.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>3.</strong> Según el texto, los ácidos carboxílicos tienen la propiedad de liberar protones (H+) al entrar en contacto con el agua. ¿Por qué se les cataloga químicamente como ácidos "débiles" y por qué esta "debilidad" resulta ser una gran ventaja organoléptica en la industria alimentaria?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Conceptual</span>
+                        <div class="activity-text"><strong>4.</strong> Elabora un mapa conceptual preciso sobre el "Grupo Carbonilo". Ramifica este mapa hacia las categorías "Aldehídos" y "Cetonas", indicando debajo de cada rama qué tipo específico de aroma o nota sensorial aportan al café tostado.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>5.</strong> Describe detalladamente la ruta química secuencial de oxidación abordada en el cuadro resaltado de la lectura: ¿Qué compuesto original se oxida inicialmente para formar un aldehído, y en qué molécula se convierte finalmente el aldehído si se permite que la oxidación siga avanzando?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>6.</strong> El ácido acético es producto de las bacterias durante la fermentación en el beneficio húmedo del café. Si te contratan como agrónomo supervisor en una finca cafetera de alta calidad, explica científicamente por qué debes imponer un control estricto sobre el tiempo de oxidación de los tanques de fermentación.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type drawing">Ilustrar</span>
+                        <div class="activity-text"><strong>7.</strong> Ilustra de manera creativa y grande una taza de café humeante. Señala utilizando flechas indicadoras los tres ácidos carboxílicos clave mencionados (Clorogénico, Cítrico, Acético). Junto a cada flecha, describe brevemente qué atributo sensorial y de sabor aporta cada uno a la experiencia de cata.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type map">Mapa Mental</span>
+                        <div class="activity-text"><strong>8.</strong> Diseña un mapa mental exclusivo y expansivo sobre el "Ácido Clorogénico". Incorpora ramas que detallen sus propiedades únicas: dónde se encuentra en mayor abundancia, qué transformación sufre ante las altas temperaturas del tueste, qué sabor específico aporta a la infusión y cuál es su impacto médico en la salud humana.</div>
+                    </li>
+                    <li>
+                        <span class="activity-type respond">Responder</span>
+                        <div class="activity-text"><strong>9.</strong> De acuerdo con la lectura, ¿qué ácido orgánico, originado en el metabolismo respiratorio celular de la planta (Ciclo de Krebs), es el máximo responsable de conferir una acidez "brillante, limpia y punzante", siendo el rasgo más premiado en los cafés cultivados en fincas de gran altitud?</div>
+                    </li>
+                    <li>
+                        <span class="activity-type analysis">Analizar</span>
+                        <div class="activity-text"><strong>10.</strong> Aplica el pensamiento crítico: Basado en tus nuevos conocimientos, redacta un argumento de venta persuasivo dirigido a un caficultor empírico, explicándole cómo el estudio formal de la química orgánica (entender aldehídos y ácidos) puede transformar su finca, permitiéndole modular los procesos para multiplicar el valor comercial de su cosecha y asegurar la máxima calidad en taza.</div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="win-modal">
+    <div class="modal-content">
+        <!-- SVG Matraz Erlenmeyer / Café -->
+        <svg style="width: 90px; height: 90px; margin: 0 auto 15px auto; display: block; fill: var(--secondary);" viewBox="0 0 24 24">
+            <path d="M21 2H3v2h2v4l7 9v3h-3v2h6v-2h-3v-3l7-9V4h2V2zm-5.7 6l-3.3 4.2V14l-3-3.8V4h6.3v4z"/>
+        </svg>
+        <h2 style="color: var(--primary-dark); font-size: 2.2rem; margin-bottom: 15px;">¡Síntesis Perfecta!</h2>
+        <p style="font-size: 1.25rem; margin-bottom: 25px; color: #555;">Has extraído todos los compuestos clave de la matriz de letras.</p>
+        <div style="background: var(--bg-body); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="font-size: 1.15rem; margin-bottom: 8px;"><strong>Tiempo de Reacción:</strong> <span id="final-time" style="color: var(--secondary); font-weight: 800;"></span></p>
+            <p style="font-size: 1.15rem;"><strong>Calidad en Taza:</strong> <span id="final-stars" class="stars"></span></p>
+        </div>
+        <button class="btn-restart" onclick="initGame()">Realizar Nueva Extracción</button>
+    </div>
+</div>
+
+<script>
+    /* Configuración: Exactamente 10 palabras sobre Química Oxigenada y Café */
+    const RAW_WORDS = [
+        "ALDEHIDOS", 
+        "CETONAS", 
+        "CARBOXILICOS", 
+        "CARBONILO", 
+        "CARBOXILO", 
+        "ACIDEZ", 
+        "OXIDACION", 
+        "CLOROGENICO", 
+        "CITRICO", 
+        "ACETICO"
+    ];
+    
+    const GRID_SIZE = 15; // Grid amplio requerido
+    const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+    
+    // Variables Globales de Estado
+    let wordsToFind = [];
+    let foundWords = [];
+    let grid = [];
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    
+    // Variables de Interacción Táctil y Ratón
+    let isDragging = false;
+    let startRow = -1;
+    let startCol = -1;
+    let currentPath = []; // Elementos DOM seleccionados
+
+    // Normalización de seguridad (Mayúsculas, sin tildes)
+    function normalizeWords(words) {
+        return words.map(w => w.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    }
+
+    // Inicialización Principal
+    function initGame() {
+        wordsToFind = normalizeWords(RAW_WORDS);
+        foundWords = [];
+        secondsElapsed = 0;
+        
+        if(timerInterval) clearInterval(timerInterval);
+        
+        document.getElementById("win-modal").style.display = "none";
+        document.getElementById("timer").textContent = "00:00";
+        document.getElementById("counter").textContent = `0 / ${wordsToFind.length}`;
+        updateRating();
+
+        renderWordsList();
+        generateBoard();
+        
+        // Iniciar Cronómetro
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById("timer").textContent = `${m}:${s}`;
+            updateRating();
+        }, 1000);
+    }
+
+    // CRÍTICO: Garantiza matemáticamente que las 10 palabras sean colocadas.
+    function generateBoard() {
+        let boardPlaced = false;
+        
+        while (!boardPlaced) {
+            grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(''));
+            boardPlaced = true;
+
+            // Ordenar por longitud descendente facilita empacar palabras largas primero
+            const sortedWords = [...wordsToFind].sort((a, b) => b.length - a.length);
+
+            for (const word of sortedWords) {
+                let placed = false;
+                let attempts = 0;
+                const maxAttempts = 800; // Límite alto para búsqueda profunda
+
+                while (!placed && attempts < maxAttempts) {
+                    // Direcciones: 0: N, 1: NE, 2: E, 3: SE, 4: S, 5: SW, 6: W, 7: NW
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * GRID_SIZE);
+                    const col = Math.floor(Math.random() * GRID_SIZE);
+
+                    if (canPlaceWord(word, row, col, direction)) {
+                        placeWord(word, row, col, direction);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+
+                if (!placed) {
+                    // El algoritmo no pudo acomodar esta palabra.
+                    // Rompe el bucle for y el while reiniciará la cuadrícula desde cero.
+                    boardPlaced = false;
+                    break; 
+                }
+            }
+        }
+
+        // Rellenar vacíos con letras aleatorias
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+                }
+            }
+        }
+
+        renderGrid();
+    }
+
+    function canPlaceWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            const nr = r + i * dr[dir];
+            const nc = c + i * dc[dir];
+
+            // Límites del tablero
+            if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+            // Choques: la celda debe estar vacía o compartir la misma letra
+            if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
+        }
+        return true;
+    }
+
+    function placeWord(word, r, c, dir) {
+        const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+        const dc = [0, 1, 1, 1, 0, -1, -1, -1];
+
+        for (let i = 0; i < word.length; i++) {
+            grid[r + i * dr[dir]][c + i * dc[dir]] = word[i];
+        }
+    }
+
+    function renderWordsList() {
+        const container = document.getElementById("words-list");
+        container.innerHTML = "";
+        wordsToFind.forEach(word => {
+            const div = document.createElement("div");
+            div.className = "word-item";
+            div.id = `word-${word}`;
+            div.textContent = word;
+            container.appendChild(div);
+        });
+    }
+
+    function renderGrid() {
+        const container = document.getElementById("grid");
+        container.innerHTML = "";
+
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                cell.textContent = grid[r][c];
+                container.appendChild(cell);
+            }
+        }
+        
+        setupPointerInteractions();
+    }
+
+    function updateRating() {
+        let stars = 5;
+        if (secondsElapsed > 300) stars = 1;      // > 5 mins
+        else if (secondsElapsed > 240) stars = 2; // > 4 mins
+        else if (secondsElapsed > 180) stars = 3; // > 3 mins
+        else if (secondsElapsed > 120) stars = 4; // > 2 mins
+
+        const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+        document.getElementById("rating").textContent = starStr;
+    }
+
+    function setupPointerInteractions() {
+        const gridEl = document.getElementById("grid");
+        
+        // Prevenir comportamiento táctil por defecto (scroll/zoom) sobre la cuadrícula
+        gridEl.addEventListener('touchstart', (e) => {
+            if(e.target.classList.contains('cell')) {
+                e.preventDefault(); 
+            }
+        }, { passive: false });
+
+        gridEl.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("pointermove", handlePointerMove); 
+        document.addEventListener("pointerup", handlePointerUp);
+    }
+
+    function handlePointerDown(e) {
+        if (e.target.classList.contains('cell')) {
+            isDragging = true;
+            startRow = parseInt(e.target.dataset.row);
+            startCol = parseInt(e.target.dataset.col);
+            
+            clearSelection();
+            e.target.classList.add('selecting');
+            currentPath = [e.target];
+        }
+    }
+
+    function handlePointerMove(e) {
+        if (!isDragging) return;
+        
+        // elementFromPoint permite saber sobre qué celda está pasando el dedo en móviles
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        
+        if (target && target.classList.contains('cell')) {
+            const currentRow = parseInt(target.dataset.row);
+            const currentCol = parseInt(target.dataset.col);
+            
+            updateSelectionLine(startRow, startCol, currentRow, currentCol);
+        }
+    }
+
+    function handlePointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        validateFoundWord();
+        clearSelection();
+    }
+
+    // Valida y traza una línea recta matemáticamente válida
+    function updateSelectionLine(r1, c1, r2, c2) {
+        const dr = r2 - r1;
+        const dc = c2 - c1;
+        
+        // Verificación geométrica: Horizontal, Vertical o Diagonal a 45 grados
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
+            return; // No es una línea recta permitida
+        }
+
+        clearSelection();
+        currentPath = [];
+
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+        for (let i = 0; i <= steps; i++) {
+            const currR = r1 + i * stepR;
+            const currC = c1 + i * stepC;
+            const cell = document.querySelector(`.cell[data-row="${currR}"][data-col="${currC}"]`);
+            if (cell) {
+                cell.classList.add('selecting');
+                currentPath.push(cell);
+            }
+        }
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('.selecting').forEach(el => el.classList.remove('selecting'));
+    }
+
+    function validateFoundWord() {
+        if (currentPath.length < 2) return;
+
+        let selectedWord = currentPath.map(cell => cell.textContent).join('');
+        let selectedWordReverse = currentPath.map(cell => cell.textContent).reverse().join('');
+        
+        let found = false;
+        let wordMatched = "";
+
+        // Chequear lectura normal e invertida
+        if (wordsToFind.includes(selectedWord) && !foundWords.includes(selectedWord)) {
+            found = true;
+            wordMatched = selectedWord;
+        } else if (wordsToFind.includes(selectedWordReverse) && !foundWords.includes(selectedWordReverse)) {
+            found = true;
+            wordMatched = selectedWordReverse;
+        }
+
+        if (found) {
+            foundWords.push(wordMatched);
+            
+            // Efecto visual en la cuadrícula
+            currentPath.forEach(cell => {
+                cell.classList.add('found');
+                cell.style.transform = 'scale(1.15)';
+                setTimeout(() => cell.style.transform = 'scale(1)', 150);
+            });
+
+            // Actualizar interfaz (lista y contador)
+            document.getElementById(`word-${wordMatched}`).classList.add('found');
+            document.getElementById("counter").textContent = `${foundWords.length} / ${wordsToFind.length}`;
+
+            // Validar condición de victoria
+            if (foundWords.length === wordsToFind.length) {
+                clearInterval(timerInterval);
+                setTimeout(showWinModal, 600);
+            }
+        }
+    }
+
+    function showWinModal() {
+        document.getElementById("final-time").textContent = document.getElementById("timer").textContent;
+        document.getElementById("final-stars").textContent = document.getElementById("rating").textContent;
+        document.getElementById("win-modal").style.display = "flex";
+    }
+
+    // Arrancar aplicación al cargar
+    window.onload = initGame;
+
+</script>
+
+</body>
+</html>

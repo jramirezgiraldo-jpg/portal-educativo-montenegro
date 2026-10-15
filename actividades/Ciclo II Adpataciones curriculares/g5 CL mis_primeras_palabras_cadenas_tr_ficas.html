@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mis Primeras Palabras: Cadenas y Relaciones Tróficas</title>
+    <style>
+        :root {
+            --bg-color: #FFFDF7;
+            --primary: #1b5e20;
+            --primary-dark: #0f3812;
+            --secondary: #d84315;
+            --accent: #2e7d32;
+            --yellow-star: #ffb300;
+            --text-main: #263238;
+            --card-bg: #ffffff;
+            --shadow: 0 6px 16px rgba(0,0,0,0.08);
+            --radius: 24px;
+            --font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --syl1: #0277bd;
+            --syl2: #c62828;
+        }
+
+        body.uppercase-mode * {
+            text-transform: uppercase !important;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding-top: 75px;
+            padding-bottom: 50px;
+        }
+
+        /* 1. TOP BAR */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background: linear-gradient(135deg, #1b5e20, #2e7d32);
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 0 10px;
+        }
+
+        .top-bar-btn {
+            background: white;
+            color: var(--primary-dark);
+            border: none;
+            padding: 8px 14px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: clamp(0.75rem, 2vw, 0.95rem);
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .top-bar-btn:hover {
+            transform: scale(1.05);
+            background: #e8f5e9;
+        }
+
+        .stars-counter {
+            background: #fff8e1;
+            color: #ff8f00;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-weight: 900;
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            border: 2px solid #ffe082;
+        }
+
+        /* CONTAINER GENERAL */
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        /* HEADER TITLE */
+        .main-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .main-header h1 {
+            font-size: clamp(1.8rem, 5vw, 2.6rem);
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 0px #c8e6c9;
+        }
+
+        .main-header p {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        /* 2. STATIONS NAVIGATION (5 TABS) */
+        .stations-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .station-tab {
+            background: white;
+            border: 3px solid #c8e6c9;
+            border-radius: 18px;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: clamp(0.85rem, 2vw, 1.05rem);
+            color: var(--primary-dark);
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .station-tab span.icon {
+            font-size: 1.8rem;
+        }
+
+        .station-tab:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            background: #f1f8e9;
+        }
+
+        .station-tab.active {
+            background: linear-gradient(135deg, #2e7d32, #43a047);
+            color: white;
+            border-color: #1b5e20;
+            box-shadow: 0 6px 15px rgba(46, 125, 50, 0.3);
+        }
+
+        /* STATION PANELS */
+        .station-panel {
+            display: none;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: clamp(15px, 4vw, 30px);
+            box-shadow: var(--shadow);
+            border: 4px solid #e8f5e9;
+            margin-bottom: 30px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .station-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-title {
+            font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 3px dashed #c8e6c9;
+            padding-bottom: 10px;
+        }
+
+        .instruction-box {
+            background: #fff8e1;
+            border-left: 6px solid #ffa000;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-weight: bold;
+            color: #5d4037;
+        }
+
+        .audio-prompt-btn {
+            background: #ffb300;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+        .audio-prompt-btn:hover { transform: scale(1.1); }
+
+        /* SYLLABLE COLOR MODES */
+        body:not(.syllable-mode) .syllable-colored span {
+            color: var(--text-main) !important;
+        }
+        .s1 { color: var(--syl1); font-weight: 900; }
+        .s2 { color: var(--syl2); font-weight: 900; }
+        .s-sep { color: #90a4ae; margin: 0 1px; }
+
+        /* ESTACIÓN 1: SONIDOS Y VOCALES */
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .vocab-card {
+            background: #f1f8e9;
+            border: 3px solid #aed581;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
+        }
+        .vocab-card:hover { transform: translateY(-4px); }
+
+        .big-picto {
+            font-size: 4rem;
+            background: white;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+            border: 3px solid #c8e6c9;
+        }
+
+        .word-title {
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+
+        .clap-indicator {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+
+        .card-listen-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Interactive Vowel Challenge */
+        .vowel-quiz-container {
+            background: #e8f5e9;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            border: 3px dashed var(--primary);
+        }
+
+        .quiz-picto {
+            font-size: 5rem;
+            margin-bottom: 10px;
+        }
+
+        .quiz-word-slot {
+            font-size: 2.4rem;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+            font-weight: 900;
+        }
+
+        .vowels-options {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .vowel-btn {
+            background: white;
+            color: var(--secondary);
+            border: 3px solid var(--secondary);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.8rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .vowel-btn:hover {
+            background: var(--secondary);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* ESTACIÓN 2: EL TREN DE LAS SÍLABAS */
+        .train-game-box {
+            text-align: center;
+        }
+
+        .train-picto {
+            font-size: 5rem;
+            margin-bottom: 10px;
+        }
+
+        .syllable-slots {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 25px 0;
+            min-height: 70px;
+            align-items: center;
+        }
+
+        .slot-box {
+            width: 85px;
+            height: 70px;
+            border: 3px dashed #b0bec5;
+            border-radius: 14px;
+            background: #eceff1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #78909c;
+        }
+
+        .slot-box.filled {
+            border: 3px solid var(--accent);
+            background: #e8f5e9;
+            color: var(--accent);
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.7); }
+            70% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .syllable-bank {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .syl-chip {
+            background: white;
+            color: var(--primary-dark);
+            border: 3px solid var(--primary);
+            padding: 12px 22px;
+            border-radius: 16px;
+            font-size: 1.6rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s, background 0.2s;
+        }
+        .syl-chip:hover {
+            transform: translateY(-3px);
+            background: #e8f5e9;
+        }
+        .syl-chip.used {
+            opacity: 0.3;
+            pointer-events: none;
+            transform: scale(0.9);
+        }
+
+        .train-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); }
+        .action-btn.secondary {
+            background: #78909c;
+        }
+
+        /* ESTACIÓN 3: LEO CON DIBUJOS (CUENTO PICTOGRÁFICO) */
+        .story-scene {
+            background: #e8f5e9;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            border: 3px solid #aed581;
+            margin-bottom: 25px;
+        }
+
+        .picto-sentence {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 25px 0;
+        }
+
+        .picto-word {
+            background: white;
+            border: 3px solid #c8e6c9;
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            min-width: 90px;
+        }
+
+        .picto-word:hover, .picto-word.speaking {
+            transform: scale(1.08);
+            border-color: var(--secondary);
+            background: #fff8e1;
+            box-shadow: 0 6px 15px rgba(230,81,0,0.2);
+        }
+
+        .pw-icon {
+            font-size: 2.8rem;
+            margin-bottom: 5px;
+        }
+
+        .pw-text {
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .scene-question {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+        }
+
+        .scene-question p {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary-dark);
+        }
+
+        .scene-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .scene-option-btn {
+            background: #f1f8e9;
+            border: 3px solid #aed581;
+            border-radius: 16px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        .scene-option-btn:hover {
+            background: #dcedc8;
+            transform: scale(1.05);
+        }
+
+        /* ESTACIÓN 4: COMPRENSIÓN INICIAL (LEO Y UNO) */
+        .quiz-retos-box {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .reto-card {
+            background: #f1f8e9;
+            border: 3px solid #c8e6c9;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .reto-title {
+            font-size: 1.3rem;
+            color: var(--primary-dark);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .reto-options-grid {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quiz-option {
+            background: white;
+            border: 3px solid var(--accent);
+            border-radius: 16px;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .quiz-option:hover {
+            transform: scale(1.06);
+            background: #e8f5e9;
+        }
+        .quiz-option span.opt-icon { font-size: 2.5rem; }
+
+        /* ESTACIÓN 5: ESCRIBO CON FICHAS Y PIZARRA DE TRAZO */
+        .write-station-box {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .sentence-builder-box {
+            background: #e8f5e9;
+            border: 3px solid #a5d6a7;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .sb-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            min-height: 80px;
+            align-items: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .sb-slot {
+            width: 120px;
+            height: 75px;
+            border: 3px dashed #81c784;
+            border-radius: 14px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #81c784;
+        }
+
+        .sb-cards-bank {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .sb-card {
+            background: white;
+            border: 3px solid var(--accent);
+            border-radius: 14px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .sb-card:hover { transform: scale(1.05); }
+
+        /* CANVAS TRACE PIZARRA */
+        .canvas-box {
+            background: #fff;
+            border: 3px solid #aed581;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .canvas-words-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .cw-btn {
+            background: #e8f5e9;
+            color: var(--primary-dark);
+            border: 2px solid var(--primary);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .cw-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .railroad-canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: repeating-linear-gradient(
+                to bottom,
+                #fff,
+                #fff 30%,
+                #e8f5e9 30%,
+                #e8f5e9 70%,
+                #fff 70%,
+                #fff 100%
+            );
+            background-size: 100% 120px;
+            border: 3px solid #81c784;
+        }
+
+        #trace-canvas {
+            display: block;
+            width: 100%;
+            height: 180px;
+            cursor: crosshair;
+        }
+
+        .canvas-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* 3. TALLER DE PRE-ESCRITURA EN EL CUADERNO */
+        .notebook-card {
+            background: #fffde7;
+            border: 4px solid #fbc02d;
+            border-radius: var(--radius);
+            padding: clamp(20px, 4vw, 35px);
+            box-shadow: var(--shadow);
+            margin-top: 40px;
+        }
+
+        .notebook-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px dashed #ffe082;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .notebook-header h2 {
+            font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+            color: #f57f17;
+        }
+
+        .notebook-tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .task-item {
+            background: white;
+            border: 2px solid #fff59d;
+            border-radius: 14px;
+            padding: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: clamp(1.05rem, 2.5vw, 1.2rem);
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .task-item span.emoji-bullet {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        /* MODAL / FEEDBACK POPUP */
+        .feedback-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .feedback-modal {
+            background: white;
+            border-radius: 28px;
+            padding: 35px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            animation: bounceIn 0.5s ease;
+            border: 5px solid #81c784;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .feedback-modal h3 {
+            font-size: 2.2rem;
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .feedback-modal p {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #455a64;
+            font-weight: bold;
+        }
+
+        .modal-close-btn {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* PRINT STYLES */
+        @media print {
+            .top-bar, .stations-nav, .audio-prompt-btn, .action-btn, .card-listen-btn, .vowel-btn, .syl-chip, .scene-option-btn, .quiz-option, .sb-card, .canvas-actions, .cw-btn {
+                display: none !important;
+            }
+            body {
+                background: white;
+                padding-top: 0;
+            }
+            .station-panel {
+                display: block !important;
+                border: none;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .notebook-card {
+                border: 2px solid #000;
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="uppercase-mode syllable-mode">
+
+    <!-- 1. BARRA SUPERIOR PERSISTENTE -->
+    <header class="top-bar">
+        <button class="top-bar-btn" onclick="toggleUppercase()">🔤 <span id="upper-label">MAYÚSCULA / minúscula</span></button>
+        <button class="top-bar-btn" onclick="toggleSyllableColor()">👏 <span id="syl-label">SÍLABAS COLOR</span></button>
+        <button class="top-bar-btn" onclick="speakHelpPrompt()">🔊 VOZ DE AYUDA</button>
+        <div class="stars-counter">⭐ <span id="star-count">0</span></div>
+    </header>
+
+    <div class="container">
+        <div class="main-header">
+            <h1>Mis Primeras Palabras</h1>
+            <p>🌿 Tema: Cadenas y Relaciones Tróficas 🐾</p>
+        </div>
+
+        <!-- 2. NAVEGACIÓN VISUAL DE 5 ESTACIONES -->
+        <nav class="stations-nav">
+            <button class="station-tab active" onclick="switchStation(0)">
+                <span class="icon">👂🔤</span>
+                <span>1. SONIDOS</span>
+            </button>
+            <button class="station-tab" onclick="switchStation(1)">
+                <span class="icon">🚂👏</span>
+                <span>2. SÍLABAS</span>
+            </button>
+            <button class="station-tab" onclick="switchStation(2)">
+                <span class="icon">🖼️📖</span>
+                <span>3. CUENTO</span>
+            </button>
+            <button class="station-tab" onclick="switchStation(3)">
+                <span class="icon">🎯🧠</span>
+                <span>4. RETOS</span>
+            </button>
+            <button class="station-tab" onclick="switchStation(4)">
+                <span class="icon">✏️🎨</span>
+                <span>5. ESCRIBO</span>
+            </button>
+        </nav>
+
+        <main>
+            <!-- ESTACIÓN 1: SONIDOS Y VOCALES -->
+            <section class="station-panel active" id="panel-0">
+                <h2 class="panel-title">👂 Estación 1: Sonidos, Vocales y Palabras</h2>
+                <div class="instruction-box">
+                    <span>Toca los botones para escuchar y aprender las palabras clave de la cadena trófica. ¡Cuenta las palmas!</span>
+                    <button class="audio-prompt-btn" onclick="speakText('Toca los botones para escuchar y aprender las palabras clave de la cadena trófica.')">🔊</button>
+                </div>
+
+                <div class="vocab-grid" id="vocab-grid-container">
+                    <!-- Inyectado por JS -->
+                </div>
+
+                <!-- Juego Vocales -->
+                <div class="vowel-quiz-container">
+                    <h3 style="color:var(--primary-dark); margin-bottom:10px; font-size:1.4rem;">🎯 ¿Con qué vocal empieza?</h3>
+                    <div class="quiz-picto" id="quiz-picto">🌿</div>
+                    <div class="quiz-word-slot" id="quiz-word-slot">_ L A N T A</div>
+                    <p style="font-weight:bold; margin-bottom:15px; color:#455a64;">Toca la vocal correcta:</p>
+                    <div class="vowels-options" id="vowels-options-container">
+                        <!-- Inyectado por JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ESTACIÓN 2: EL TREN DE LAS SÍLABAS -->
+            <section class="station-panel" id="panel-1">
+                <h2 class="panel-title">🚂 Estación 2: El Tren de las Sílabas</h2>
+                <div class="instruction-box">
+                    <span>Escucha la palabra y toca las fichas de sílabas en orden para armarla correctamente.</span>
+                    <button class="audio-prompt-btn" onclick="speakText('Escucha la palabra y toca las fichas de sílabas en orden para armarla correctamente.')">🔊</button>
+                </div>
+
+                <div class="train-game-box">
+                    <div class="train-picto" id="train-picto">🌿</div>
+                    <button class="action-btn" onclick="playCurrentTrainWordAudio()">🔊 Escuchar Palabra</button>
+                    
+                    <div class="syllable-slots" id="syllable-slots-container">
+                        <!-- Slots dinámicos -->
+                    </div>
+
+                    <div class="syllable-bank" id="syllable-bank-container">
+                        <!-- Fichas desordenadas -->
+                    </div>
+
+                    <div class="train-controls">
+                        <button class="action-btn secondary" onclick="resetTrainWord()">🔄 Borrar e Intentar</button>
+                        <button class="action-btn" onclick="nextTrainWord()">➡️ Siguiente Palabra</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ESTACIÓN 3: LEO CON DIBUJOS (CUENTO PICTOGRÁFICO) -->
+            <section class="station-panel" id="panel-2">
+                <h2 class="panel-title">🖼️ Estación 3: Cuento Pictográfico Trófico</h2>
+                <div class="instruction-box">
+                    <span>Toca cada palabra con dibujo para escuchar su sonido. ¡Luego lee toda la frase!</span>
+                    <button class="audio-prompt-btn" onclick="speakText('Toca cada palabra con dibujo para escuchar su sonido. Luego lee toda la frase!')">🔊</button>
+                </div>
+
+                <div id="story-scenes-container">
+                    <!-- 3 escenas inyectadas por JS -->
+                </div>
+            </section>
+
+            <!-- ESTACIÓN 4: COMPRENSIÓN LECTORA INICIAL -->
+            <section class="station-panel" id="panel-3">
+                <h2 class="panel-title">🎯 Estación 4: Comprensión Lectora Inicial</h2>
+                <div class="instruction-box">
+                    <span>Lee y elige el dibujo o la respuesta correcta tocando el botón grande.</span>
+                    <button class="audio-prompt-btn" onclick="speakText('Lee y elige el dibujo o la respuesta correcta tocando el botón grande.')">🔊</button>
+                </div>
+
+                <div class="quiz-retos-box">
+                    <!-- Reto 1 -->
+                    <div class="reto-card">
+                        <div class="reto-title">Reto 1: Lee la palabra y busca su dibujo</div>
+                        <p style="font-size:1.5rem; font-weight:900; color:var(--primary); margin-bottom:15px;" id="reto1-word">PLANTA</p>
+                        <button class="action-btn" style="margin-bottom:15px;" onclick="speakText(document.getElementById('reto1-word').innerText)">🔊 Escuchar</button>
+                        <div class="reto-options-grid" id="reto1-options"></div>
+                    </div>
+
+                    <!-- Reto 2 -->
+                    <div class="reto-card">
+                        <div class="reto-title">Reto 2: ¿Qué dice la frase corta?</div>
+                        <p style="font-size:1.3rem; font-weight:bold; margin-bottom:15px;" id="reto2-phrase">EL ÁGUILA CAZA</p>
+                        <button class="action-btn" style="margin-bottom:15px;" onclick="speakText(document.getElementById('reto2-phrase').innerText)">🔊 Escuchar Frase</button>
+                        <div class="reto-options-grid" id="reto2-options"></div>
+                    </div>
+
+                    <!-- Reto 3 -->
+                    <div class="reto-card">
+                        <div class="reto-title">Reto 3: ¿Sí es verdad o No es verdad?</div>
+                        <p style="font-size:1.3rem; font-weight:bold; margin-bottom:15px;" id="reto3-stmt">LAS PLANTAS SON PRODUCTORES.</p>
+                        <button class="action-btn" style="margin-bottom:15px;" onclick="speakText(document.getElementById('reto3-stmt').innerText)">🔊 Escuchar Afirmación</button>
+                        <div class="reto-options-grid">
+                            <button class="quiz-option" onclick="checkVerdad(true)">
+                                <span class="opt-icon">✅</span>
+                                <span>SÍ ES VERDAD</span>
+                            </button>
+                            <button class="quiz-option" onclick="checkVerdad(false)">
+                                <span class="opt-icon">❌</span>
+                                <span>NO ES VERDAD</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ESTACIÓN 5: ESCRIBO Y PIZARRA DE TRAZO -->
+            <section class="station-panel" id="panel-4">
+                <h2 class="panel-title">✏️ Estación 5: Escribo y Pizarra Mágica</h2>
+                <div class="instruction-box">
+                    <span>Arma oraciones tocando las tarjetas en orden y repasa el trazo en la pizarra.</span>
+                    <button class="audio-prompt-btn" onclick="speakText('Arma oraciones tocando las tarjetas en orden y repasa el trazo en la pizarra.')">🔊</button>
+                </div>
+
+                <div class="write-station-box">
+                    <!-- Paso 1: Arma la oración -->
+                    <div class="sentence-builder-box">
+                        <h3 style="color:var(--accent); margin-bottom:10px;">Arma la Frase Toca en Orden</h3>
+                        <p id="sb-model-text" style="font-weight:bold; font-size:1.2rem; color:#2e7d32; margin-bottom:10px;">Modelo: EL ZORRO COME</p>
+                        <button class="action-btn secondary" style="font-size:0.9rem; padding:8px 16px;" onclick="speakText(currentSentenceModel.text)">🔊 Escuchar Modelo</button>
+                        
+                        <div class="sb-slots" id="sb-slots"></div>
+                        <div class="sb-cards-bank" id="sb-bank"></div>
+                    </div>
+
+                    <!-- Paso 2: Pizarra Mágica Canvas -->
+                    <div class="canvas-box">
+                        <h3 style="color:var(--primary-dark); margin-bottom:10px;">Pizarra Mágica de Trazo</h3>
+                        <p style="font-size:0.95rem; color:#607d8b; margin-bottom:10px;">Elige una palabra y repasa encima con tu dedo o ratón:</p>
+                        
+                        <div class="canvas-words-selector" id="canvas-words-sel"></div>
+
+                        <div class="railroad-canvas-container">
+                            <canvas id="trace-canvas" width="640" height="180"></canvas>
+                        </div>
+
+                        <div class="canvas-actions">
+                            <button class="action-btn secondary" onclick="clearCanvas()">🧽 Borrar Pizarra</button>
+                            <button class="action-btn" onclick="window.print()">🖨️ Imprimir Guía</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 3. TALLER DE PRE-ESCRITURA EN EL CUADERNO (SIEMPRE VISIBLE) -->
+        <section class="notebook-card">
+            <div class="notebook-header">
+                <h2>📒 MIS 5 RETOS EN EL CUADERNO</h2>
+                <button class="audio-prompt-btn" onclick="speakText('Mis 5 retos en el cuaderno. Con dibujos y letra grande.')">🔊</button>
+            </div>
+            <div class="notebook-tasks">
+                <div class="task-item">
+                    <span class="emoji-bullet">🎨</span>
+                    <div>Pinto las vocales de las palabras clave de la cadena trófica (planta, zorro, águila, sol) con color amarillo brillante.</div>
+                </div>
+                <div class="task-item">
+                    <span class="emoji-bullet">☀️</span>
+                    <div>Dibujo una cadena trófica sencilla de mi región en mi hoja y copio sus nombres en letra grande.</div>
+                </div>
+                <div class="task-item">
+                    <span class="emoji-bullet">🖐️</span>
+                    <div>Imito cómo se mueve un animal herbívoro y cómo caza un animal carnívoro en compañía de mi familia.</div>
+                </div>
+                <div class="task-item">
+                    <span class="emoji-bullet">👏</span>
+                    <div>Cuento con palmas y dibujo un círculo (⚪) por cada sílaba de las palabras: PLAN-TA, ZOR-RO, Á-GUI-LA.</div>
+                </div>
+                <div class="task-item">
+                    <span class="emoji-bullet">✍️</span>
+                    <div>Escribo mi NOMBRE en el cuaderno empezando desde el margen de la izquierda con trazo firme.</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- MODAL FEEDBACK -->
+    <div class="feedback-overlay" id="feedback-overlay">
+        <div class="feedback-modal">
+            <h3 id="fb-title">¡Muy bien!</h3>
+            <p id="fb-text">¡Lo lograste!</p>
+            <button class="modal-close-btn" onclick="closeFeedbackModal()">¡Siguiente! 🌟</button>
+        </div>
+    </div>
+
+    <script>
+        /* --- GLOBAL DATA & STATE --- */
+        let stars = 0;
+        let currentStation = 0;
+
+        // 6 Palabras clave esenciales del tema cadenas tróficas
+        const vocabData = [
+            { word: "PLANTA", syllables: ["PLAN", "TA"], parts: ["PLAN", "TA"], picto: "🌿", count: "2 palmas", desc: "Productor primario que capta la luz del sol" },
+            { word: "ZORRO", syllables: ["ZOR", "RO"], parts: ["ZOR", "RO"], picto: "🦊", count: "2 palmas", desc: "Consumidor carnívoro de la región" },
+            { word: "ÁGUILA", syllables: ["Á", "GUI", "LA"], parts: ["Á", "GUI", "LA"], picto: "🦅", count: "3 palmas", desc: "Depredador en la cima de la cadena" },
+            { word: "SOL", syllables: ["SOL"], parts: ["SOL"], picto: "☀️", count: "1 palma", desc: "Fuente inicial de energía natural" },
+            { word: "CONEJO", syllables: ["CO", "NE", "JO"], parts: ["CO", "NE", "JO"], picto: "🐰", count: "3 palmas", desc: "Consumidor herbívoro" },
+            { word: "HONGO", syllables: ["HON", "GO"], parts: ["HON", "GO"], picto: "🍄", count: "2 palmas", desc: "Organismo descomponedor vital" }
+        ];
+
+        // Speech synthesis wrapper
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                utterance.rate = 0.82;
+                utterance.pitch = 1.05;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function speakHelpPrompt() {
+            speakText("Bienvenido a Mis Primeras Palabras sobre Cadenas y Relaciones Tróficas. Toca las pestañas superiores para navegar entre las cinco estaciones de aprendizaje.");
+        }
+
+        function addStars(amount) {
+            stars += amount;
+            document.getElementById('star-count').innerText = stars;
+        }
+
+        // Toggles
+        function toggleUppercase() {
+            const body = document.body;
+            body.classList.toggle('uppercase-mode');
+            speakText("Cambiando modo de letras");
+        }
+
+        function toggleSyllableColor() {
+            const body = document.body;
+            body.classList.toggle('syllable-mode');
+            speakText("Cambiando colores de sílabas");
+        }
+
+        // Station switching
+        function switchStation(index) {
+            const tabs = document.querySelectorAll('.station-tab');
+            const panels = document.querySelectorAll('.station-panel');
+            
+            tabs.forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+            panels.forEach((p, i) => {
+                p.classList.toggle('active', i === index);
+            });
+            currentStation = index;
+
+            if(index === 4) {
+                initCanvas();
+            }
+        }
+
+        // Modal feedback
+        function showFeedback(title, text, audioMsg) {
+            document.getElementById('fb-title').innerText = title;
+            document.getElementById('fb-text').innerText = text;
+            document.getElementById('feedback-overlay').style.display = 'flex';
+            if(audioMsg) speakText(audioMsg);
+            addStars(5);
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedback-overlay').style.display = 'none';
+        }
+
+        /* --- ESTACIÓN 1: SONIDOS Y VOCALES --- */
+        function initStation1() {
+            const grid = document.getElementById('vocab-grid-container');
+            grid.innerHTML = vocabData.map((item, idx) => `
+                <div class="vocab-card">
+                    <div class="big-picto">${item.picto}</div>
+                    <div class="word-title syllable-colored">
+                        <span class="s1">${item.parts[0]}</span>${item.parts[1] ? '<span class="s-sep">-</span><span class="s2">'+item.parts[1]+'</span>':''} ${item.parts[2] ? '<span class="s-sep">-</span><span class="s1">'+item.parts[2]+'</span>':''}
+                    </div>
+                    <div class="clap-indicator">👏 ${item.count}</div>
+                    <p style="font-size:0.9rem; color:#607d8b;">${item.desc}</p>
+                    <button class="card-listen-btn" onclick="playVocabWord('${item.word}', '${item.parts.join('...')}')">🔊 Escuchar</button>
+                </div>
+            `).join('');
+
+            initVowelQuiz();
+        }
+
+        function playVocabWord(word, spelled) {
+            speakText(`${word}. Escucha las sílabas: ${spelled}. ¡Muy bien!`);
+            addStars(2);
+        }
+
+        // Vowel Quiz state
+        const vowelChallenges = [
+            { word: "PLANTA", picto: "🌿", masked: "_ L A N T A", correct: "P" },
+            { word: "ZORRO", picto: "🦊", masked: "_ O R R O", correct: "Z" },
+            { word: "ÁGUILA", picto: "🦅", masked: "_ G U I L A", correct: "A" },
+            { word: "SOL", picto: "☀️", masked: "_ O L", correct: "S" }
+        ];
+        let currentVowelIdx = 0;
+
+        function initVowelQuiz() {
+            const challenge = vowelChallenges[currentVowelIdx];
+            document.getElementById('quiz-picto').innerText = challenge.picto;
+            document.getElementById('quiz-word-slot').innerText = challenge.masked;
+
+            const vowels = ["A", "E", "I", "O", "U", "P", "Z", "S"];
+            const optContainer = document.getElementById('vowels-options-container');
+            optContainer.innerHTML = vowels.map(v => `
+                <button class="vowel-btn" onclick="checkVowelQuiz('${v}', '${challenge.correct}')">${v}</button>
+            `).join('');
+        }
+
+        function checkVowelQuiz(selected, correct) {
+            if(selected === correct) {
+                showFeedback("¡Excelente! 🎉", `¡La letra ${correct} es correcta!`, `¡Muy bien! Es la letra ${correct}`);
+                currentVowelIdx = (currentVowelIdx + 1) % vowelChallenges.length;
+                setTimeout(() => {
+                    closeFeedbackModal();
+                    initVowelQuiz();
+                }, 1500);
+            } else {
+                speakText("Inténtalo de nuevo");
+            }
+        }
+
+        /* --- ESTACIÓN 2: EL TREN DE LAS SÍLABAS --- */
+        const trainWords = [
+            { word: "PLANTA", picto: "🌿", syllables: ["PLAN", "TA"] },
+            { word: "ZORRO", picto: "🦊", syllables: ["ZOR", "RO"] },
+            { word: "ÁGUILA", picto: "🦅", syllables: ["Á", "GUI", "LA"] },
+            { word: "CONEJO", picto: "🐰", syllables: ["CO", "NE", "JO"] },
+            { word: "HONGO", picto: "🍄", syllables: ["HON", "GO"] }
+        ];
+        let currentTrainIdx = 0;
+        let selectedTrainSyllables = [];
+
+        function initStation2() {
+            loadTrainWord();
+        }
+
+        function loadTrainWord() {
+            const item = trainWords[currentTrainIdx];
+            document.getElementById('train-picto').innerText = item.picto;
+            selectedTrainSyllables = [];
+            
+            const slotsContainer = document.getElementById('syllable-slots-container');
+            slotsContainer.innerHTML = item.syllables.map((_, i) => `
+                <div class="slot-box" id="slot-${i}">?</div>
+            `).join('');
+
+            let shuffled = [...item.syllables].sort(() => Math.random() - 0.5);
+            if(shuffled.length === 1) shuffled.push("TA");
+
+            const bankContainer = document.getElementById('syllable-bank-container');
+            bankContainer.innerHTML = shuffled.map((s, idx) => `
+                <div class="syl-chip" id="chip-${idx}" onclick="selectTrainSyllable('${s}', 'chip-${idx}')">${s}</div>
+            `).join('');
+        }
+
+        function playCurrentTrainWordAudio() {
+            const item = trainWords[currentTrainIdx];
+            speakText(`Arma la palabra: ${item.word}. Sílabas: ${item.syllables.join(' - ')}`);
+        }
+
+        function selectTrainSyllable(syl, chipId) {
+            const item = trainWords[currentTrainIdx];
+            speakText(syl);
+            if(selectedTrainSyllables.length < item.syllables.length) {
+                selectedTrainSyllables.push(syl);
+                document.getElementById(chipId).classList.add('used');
+
+                selectedTrainSyllables.forEach((s, idx) => {
+                    const slot = document.getElementById(`slot-${idx}`);
+                    slot.innerText = s;
+                    slot.classList.add('filled');
+                });
+
+                if(selectedTrainSyllables.length === item.syllables.length) {
+                    const isCorrect = selectedTrainSyllables.every((s, idx) => s === item.syllables[idx]);
+                    if(isCorrect) {
+                        showFeedback("¡Palabra Armada! 🚂", `¡Has escrito ${item.word} correctamente!`, `¡Excelente! ${item.word}`);
+                        addStars(10);
+                    } else {
+                        speakText("Ops, el orden no es correcto. Inténtalo de nuevo.");
+                        setTimeout(resetTrainWord, 1000);
+                    }
+                }
+            }
+        }
+
+        function resetTrainWord() {
+            loadTrainWord();
+            speakText("Reiniciando palabra");
+        }
+
+        function nextTrainWord() {
+            currentTrainIdx = (currentTrainIdx + 1) % trainWords.length;
+            loadTrainWord();
+            playCurrentTrainWordAudio();
+        }
+
+        /* --- ESTACIÓN 3: LEO CON DIBUJOS (CUENTO PICTOGRÁFICO) --- */
+        const storyScenesData = [
+            {
+                title: "Escena 1: El Productor",
+                sentence: [
+                    { word: "LA", icon: "☀️", text: "LA" },
+                    { word: "PLANTA", icon: "🌿", text: "PLANTA" },
+                    { word: "CRECE", icon: "🌱", text: "CRECE" },
+                    { word: "CON", icon: "💧", text: "CON EL SOL" }
+                ],
+                question: "¿Qué hace la planta con el sol?",
+                options: [
+                    { icon: "🌿", text: "CRECE Y ALIMENTA", correct: true },
+                    { icon: "🚗", text: "MANEJA", correct: false }
+                ]
+            },
+            {
+                title: "Escena 2: El Consumidor",
+                sentence: [
+                    { word: "EL", icon: "🦊", text: "EL" },
+                    { word: "ZORRO", icon: "🦊", text: "ZORRO" },
+                    { word: "CAZA", icon: "🏃", text: "CAZA" },
+                    { word: "AL", icon: "🐰", text: "CONEJO" }
+                ],
+                question: "¿A quién caza el zorro?",
+                options: [
+                    { icon: "🐰", text: "AL CONEJO", correct: true },
+                    { icon: "🌿", text: "A LA PLANTA", correct: false }
+                ]
+            },
+            {
+                title: "Escena 3: El Descomponedor",
+                sentence: [
+                    { word: "EL", icon: "🍄", text: "EL" },
+                    { word: "HONGO", icon: "🍄", text: "HONGO" },
+                    { word: "CUIDA", icon: "🏡", text: "CUIDA" },
+                    { word: "EL", icon: "🌍", text: "SUELO" }
+                ],
+                question: "¿Qué cuida el hongo?",
+                options: [
+                    { icon: "🌍", text: "EL SUELO", correct: true },
+                    { icon: "☁️", text: "LAS NUBES", correct: false }
+                ]
+            }
+        ];
+
+        function initStation3() {
+            const container = document.getElementById('story-scenes-container');
+            container.innerHTML = storyScenesData.map((scene, sIdx) => `
+                <div class="story-scene">
+                    <h3 style="color:var(--primary-dark); margin-bottom:10px;">${scene.title}</h3>
+                    <button class="action-btn" style="font-size:0.9rem; padding:8px 16px; margin-bottom:10px;" onclick="speakSceneSentence(${sIdx})">🔊 Leer Toda la Frase</button>
+                    
+                    <div class="picto-sentence">
+                        ${scene.sentence.map(w => `
+                            <div class="picto-word" onclick="speakPictoWord('${w.text}')">
+                                <span class="pw-icon">${w.icon}</span>
+                                <span class="pw-text">${w.text}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="scene-question">
+                        <p>${scene.question}</p>
+                        <div class="scene-options">
+                            ${scene.options.map(opt => `
+                                <button class="scene-option-btn" onclick="checkSceneAnswer(${opt.correct})">
+                                    <span style="font-size:1.8rem;">${opt.icon}</span>
+                                    <span>${opt.text}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function speakPictoWord(word) {
+            speakText(word);
+        }
+
+        function speakSceneSentence(sIdx) {
+            const scene = storyScenesData[sIdx];
+            const fullText = scene.sentence.map(w => w.text).join(' ');
+            speakText(fullText);
+        }
+
+        function checkSceneAnswer(isCorrect) {
+            if(isCorrect) {
+                showFeedback("¡Muy bien! 🌟", "¡Esa es la respuesta correcta!", "¡Correcto!");
+            } else {
+                speakText("Inténtalo otra vez");
+            }
+        }
+
+        /* --- ESTACIÓN 4: COMPRENSIÓN INICIAL --- */
+        function initStation4() {
+            const r1Opts = [
+                { icon: "🌿", text: "PLANTA", correct: true },
+                { icon: "🦊", text: "ZORRO", correct: false },
+                { icon: "☀️", text: "SOL", correct: false }
+            ];
+            document.getElementById('reto1-options').innerHTML = r1Opts.map(o => `
+                <div class="quiz-option" onclick="checkReto1(${o.correct})">
+                    <span class="opt-icon">${o.icon}</span>
+                    <span>${o.text}</span>
+                </div>
+            `).join('');
+
+            const r2Opts = [
+                { icon: "🦅", text: "EL ÁGUILA CAZA", correct: true },
+                { icon: "🚗", text: "EL AUTO VUELA", correct: false }
+            ];
+            document.getElementById('reto2-options').innerHTML = r2Opts.map(o => `
+                <div class="quiz-option" onclick="checkReto2(${o.correct})">
+                    <span class="opt-icon">${o.icon}</span>
+                    <span>${o.text}</span>
+                </div>
+            `).join('');
+        }
+
+        function checkReto1(isCorrect) {
+            if(isCorrect) showFeedback("¡Acertaste! 🎯", "¡Encontraste el dibujo de la planta!", "¡Correcto!");
+            else speakText("Esa no es la planta. Intenta otra vez.");
+        }
+
+        function checkReto2(isCorrect) {
+            if(isCorrect) showFeedback("¡Muy bien! 🦅", "¡El águila es un gran cazador!", "¡Correcto!");
+            else speakText("Inténtalo de nuevo.");
+        }
+
+        function checkVerdad(val) {
+            if(val === true) {
+                showFeedback("¡Correcto! 🌿", "¡Las plantas producen su propio alimento con la luz del sol!", "¡Sí es verdad!");
+            } else {
+                speakText("Las plantas sí son productores. Intenta otra vez.");
+            }
+        }
+
+        /* --- ESTACIÓN 5: ESCRIBO Y PIZARRA DE TRAZO --- */
+        const currentSentenceModel = {
+            text: "EL ZORRO COME",
+            cards: ["EL", "ZORRO", "COME"],
+            icons: ["🦊", "🦊", "🍽️"]
+        };
+
+        function initStation5() {
+            const slots = document.getElementById('sb-slots');
+            slots.innerHTML = currentSentenceModel.cards.map((_, i) => `
+                <div class="sb-slot">Espacio ${i+1}</div>
+            `).join('');
+
+            let shuffledCards = [...currentSentenceModel.cards].map((c, i) => ({ text: c, icon: currentSentenceModel.icons[i] }))
+                .sort(() => Math.random() - 0.5);
+
+            const bank = document.getElementById('sb-bank');
+            bank.innerHTML = shuffledCards.map((c, idx) => `
+                <div class="sb-card" id="sb-c-${idx}" onclick="selectSbCard('${c.text}', 'sb-c-${idx}')">
+                    <span style="font-size:1.8rem;">${c.icon}</span>
+                    <span>${c.text}</span>
+                </div>
+            `).join('');
+
+            initCanvasWordsSelector();
+        }
+
+        let sbSelected = [];
+        function selectSbCard(word, cardId) {
+            speakText(word);
+            if(sbSelected.length < currentSentenceModel.cards.length) {
+                sbSelected.push(word);
+                document.getElementById(cardId).style.opacity = '0.3';
+                document.getElementById(cardId).style.pointerEvents = 'none';
+
+                sbSelected.forEach((w, idx) => {
+                    const slot = document.getElementById(`sb-slots`).children[idx];
+                    slot.innerText = w;
+                    slot.style.background = '#e8f5e9';
+                    slot.style.borderColor = '#2e7d32';
+                    slot.style.color = '#2e7d32';
+                });
+
+                if(sbSelected.length === currentSentenceModel.cards.length) {
+                    const isOk = sbSelected.every((w, idx) => w === currentSentenceModel.cards[idx]);
+                    if(isOk) {
+                        showFeedback("¡Oración Armada! ✏️", `¡Armaste: ${currentSentenceModel.text}!`, `¡Muy bien! ${currentSentenceModel.text}`);
+                        addStars(10);
+                    } else {
+                        speakText("El orden no es el correcto. Reiniciando frase.");
+                        setTimeout(() => { sbSelected = []; initStation5(); }, 1200);
+                    }
+                }
+            }
+        }
+
+        const canvasWords = ["PLANTA", "ZORRO", "ÁGUILA", "SOL", "HONGO"];
+        let activeCanvasWord = "PLANTA";
+
+        function initCanvasWordsSelector() {
+            const sel = document.getElementById('canvas-words-sel');
+            sel.innerHTML = canvasWords.map(w => `
+                <button class="cw-btn ${w === activeCanvasWord ? 'active':''}" onclick="setActiveCanvasWord('${w}')">${w}</button>
+            `).join('');
+            drawCanvasWord(activeCanvasWord);
+        }
+
+        function setActiveCanvasWord(w) {
+            activeCanvasWord = w;
+            speakText(w);
+            initCanvasWordsSelector();
+        }
+
+        let canvas, ctx, drawing = false;
+
+        function initCanvas() {
+            canvas = document.getElementById('trace-canvas');
+            ctx = canvas.getContext('2d');
+            
+            canvas.onmousedown = startDraw;
+            canvas.onmousemove = drawMove;
+            canvas.onmouseup = endDraw;
+            canvas.onmouseleave = endDraw;
+
+            canvas.ontouchstart = (e) => { e.preventDefault(); startDraw(e.touches[0]); };
+            canvas.ontouchmove = (e) => { e.preventDefault(); drawMove(e.touches[0]); };
+            canvas.ontouchend = (e) => { e.preventDefault(); endDraw(); };
+
+            drawCanvasWord(activeCanvasWord);
+        }
+
+        function drawCanvasWord(word) {
+            if(!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#c8e6c9';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(0, 54); ctx.lineTo(canvas.width, 54);
+            ctx.moveTo(0, 126); ctx.lineTo(canvas.width, 126);
+            ctx.stroke();
+
+            ctx.font = 'bold 70px var(--font-family)';
+            ctx.fillStyle = '#b0bec5';
+            ctx.strokeStyle = '#90a4ae';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 10]);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            ctx.fillText(word, canvas.width / 2, canvas.height / 2);
+            ctx.strokeText(word, canvas.width / 2, canvas.height / 2);
+        }
+
+        function startDraw(e) {
+            drawing = true;
+            ctx.beginPath();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+            ctx.strokeStyle = '#1b5e20';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.setLineDash([]);
+        }
+
+        function drawMove(e) {
+            if(!drawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+            ctx.stroke();
+        }
+
+        function endDraw() {
+            drawing = false;
+        }
+
+        function clearCanvas() {
+            drawCanvasWord(activeCanvasWord);
+            speakText("Pizarra limpia");
+        }
+
+        /* --- INITIALIZATION ON LOAD --- */
+        window.onload = function() {
+            initStation1();
+            initStation2();
+            initStation3();
+            initStation4();
+            initStation5();
+            speakHelpPrompt();
+        };
+    </script>
+</body>
+</html>
